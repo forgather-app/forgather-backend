@@ -1,5 +1,6 @@
 package com.forgather.domain.space.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -62,6 +63,13 @@ public class SpaceService {
             return new SpaceCapacityResponse(space.getMaxCapacity(), usedValue);
         }
         throw new UnauthorizedException();
+    }
+
+    public List<Space> getExpiredSpaces() {
+        return spaceRepository.findAll()
+            .stream()
+            .filter(space -> space.isExpired(LocalDateTime.now()))
+            .toList();
     }
 
     @Transactional

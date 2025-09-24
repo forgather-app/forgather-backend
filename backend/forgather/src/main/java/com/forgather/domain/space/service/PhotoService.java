@@ -57,6 +57,12 @@ public class PhotoService {
         return PhotoResponse.from(photo);
     }
 
+    public List<String> getPathsBySpace(Space space) {
+        return photoRepository.findAllBySpace(space).stream()
+            .map(Photo::getPath)
+            .toList();
+    }
+
     public PhotosResponse getAll(String spaceCode, Pageable pageable, Host host) {
         Space space = spaceRepository.getUnexpiredSpaceByCode(spaceCode);
         if (!canAccess(space, host)) {
@@ -232,5 +238,10 @@ public class PhotoService {
         // photoRepository.deleteAll(photos);
         space.getContents().removeAll(photos); // // orphanRemoval이 설정되어 있어 자동으로 삭제됨
         contentsStorage.deleteContents(paths);
+    }
+
+    @Transactional
+    public void deleteAllInSpace(Space space) {
+        space.getContents().clear();
     }
 }
