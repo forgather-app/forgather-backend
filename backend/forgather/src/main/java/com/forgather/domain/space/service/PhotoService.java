@@ -242,6 +242,8 @@ public class PhotoService {
 
     @Transactional
     public void deleteAllInSpace(Space space) {
+        List<String> paths = getPathsBySpace(space);
         space.getContents().clear();
+        contentsStorage.deleteContents(paths);
     }
 }

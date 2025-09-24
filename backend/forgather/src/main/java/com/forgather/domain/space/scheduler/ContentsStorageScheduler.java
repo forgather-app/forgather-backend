@@ -30,11 +30,7 @@ public class ContentsStorageScheduler {
             return;
         }
 
-        for (Space expiredSpace : expiredSpaces) {
-            List<String> paths = photoService.getPathsBySpace(expiredSpace);
-            photoService.deleteAllInSpace(expiredSpace);
-            contentsStorage.deleteContents(paths);
-        }
+        expiredSpaces.forEach(photoService::deleteAllInSpace);
     }
 
     /**
