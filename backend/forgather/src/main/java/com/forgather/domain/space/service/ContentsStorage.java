@@ -22,6 +22,8 @@ public interface ContentsStorage {
 
     void deleteContents(List<String> contentPaths);
 
+    void deleteOrphanContents(String spaceCode, List<String> contentPaths);
+
     String issueSignedUrl(String path);
 
     String getRootDirectory();

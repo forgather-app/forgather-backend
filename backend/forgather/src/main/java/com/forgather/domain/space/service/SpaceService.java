@@ -101,4 +101,12 @@ public class SpaceService {
             )
             .toList();
     }
+
+    public List<Space> getActivatedSpaces() {
+        LocalDateTime now = LocalDateTime.now();
+        return spaceRepository.findAll()
+            .stream()
+            .filter(space -> !space.isExpired(now))
+            .toList();
+    }
 }

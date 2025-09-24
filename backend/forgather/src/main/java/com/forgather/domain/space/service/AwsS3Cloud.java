@@ -33,6 +33,7 @@ import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Error;
+import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
@@ -147,7 +148,6 @@ public class AwsS3Cloud implements ContentsStorage {
             );
     }
 
-    // TODO: 추후 스케줄로 DB에 존재하지 않는 S3 객체 삭제 기능 필요
     @Override
     public void deleteContent(String contentPath) {
         List<String> deletePaths = getPathWithThumbnails(contentPath);
@@ -160,6 +160,18 @@ public class AwsS3Cloud implements ContentsStorage {
             .flatMap(path -> getPathWithThumbnails(path).stream())
             .toList();
         executeBatchDeletion(deletePaths);
+    }
+
+    @Override
+    public void deleteOrphanContents(String spaceCode, List<String> contentPaths) {
+        List<String> validContentPaths = contentPaths.stream()
+            .flatMap(path -> getPathWithThumbnails(path).stream())
+            .toList();
+
+        List<String> orphanObjectPaths = getOrphanObjectPaths(spaceCode, validContentPaths);
+        if (!orphanObjectPaths.isEmpty()) {
+            executeBatchDeletion(orphanObjectPaths);
+        }
     }
 
     private List<String> getPathWithThumbnails(String contentPath) {
@@ -177,6 +189,16 @@ public class AwsS3Cloud implements ContentsStorage {
 
         return String.format("%s/%s/%s_%s.%s", contentDirectory, THUMBNAILS_INNER_PATH, fileName, thumbnailSize,
             THUMBNAIL_EXTENSION);
+    }
+
+    private List<String> getOrphanObjectPaths(String spaceCode, List<String> paths) {
+        return s3Client.listObjectsV2(builder -> builder.bucket(s3Properties.getBucketName())
+                .prefix("%s/%s/%s".formatted(s3Properties.getRootDirectory(), CONTENTS_INNER_PATH, spaceCode)))
+            .contents()
+            .stream()
+            .map(S3Object::key)
+            .filter(key -> !paths.contains(key))
+            .toList();
     }
 
     private void executeBatchDeletion(List<String> deletePaths) {

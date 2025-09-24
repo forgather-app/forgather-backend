@@ -20,6 +20,9 @@ public class ContentsStorageScheduler {
     private final PhotoService photoService;
     private final ContentsStorage contentsStorage;
 
+    /**
+     * 만료된 스페이스의 컨텐츠를 삭제합니다.
+     */
     @Scheduled(cron = "0 0 3 * * *")
     public void deleteExpiredContents() {
         List<Space> expiredSpaces = spaceService.getExpiredSpaces();
@@ -34,5 +37,19 @@ public class ContentsStorageScheduler {
         }
     }
 
-    // TODO: 활성화된 스페이스들의 고아 객체 제거
+    /**
+     * 활성화된 스페이스의 DB에 존재하지 않는 컨텐츠를 삭제합니다.
+     */
+    @Scheduled(cron = "0 0 3 * * *")
+    public void deleteOrphanContents() {
+        List<Space> activatedSpaces = spaceService.getActivatedSpaces();
+        if (activatedSpaces.isEmpty()) {
+            return;
+        }
+
+        for (Space activatedSpace : activatedSpaces) {
+            List<String> paths = photoService.getPathsBySpace(activatedSpace);
+            contentsStorage.deleteOrphanContents(activatedSpace.getCode(), paths);
+        }
+    }
 }
