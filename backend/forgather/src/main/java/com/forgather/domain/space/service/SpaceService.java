@@ -42,33 +42,33 @@ public class SpaceService {
 
     public SpaceCapacityResponse getSpaceCapacity(String spaceCode, Host host) {
         Space space = spaceRepository.getUnexpiredSpaceByCode(spaceCode);
-        if (host != null) {
-            // TODO: 추후 스페이스가 만료되어 소프트 딜리트 되는 경우 용량 정보 제공 고려
-            if (!space.isPublic()) {
-                space.validateHost(host);
-            }
-            // TODO: 부하 발생 때 최적화 고려
-            long usedValue = photoRepository.findAllBySpace(space)
-                .stream()
-                .mapToLong(Photo::getCapacity)
-                .sum();
-            return new SpaceCapacityResponse(space.getMaxCapacity(), usedValue);
+        if (!canAccess(space, host)) {
+            throw new UnauthorizedException();
         }
+        // TODO: 부하 발생 때 최적화 고려
+        long usedValue = photoRepository.findAllBySpace(space)
+            .stream()
+            .mapToLong(Photo::getCapacity)
+            .sum();
+        return new SpaceCapacityResponse(space.getMaxCapacity(), usedValue);
+    }
 
+    private boolean canAccess(Space space, Host host) {
         if (space.isPublic()) {
-            long usedValue = photoRepository.findAllBySpace(space)
-                .stream()
-                .mapToLong(Photo::getCapacity)
-                .sum();
-            return new SpaceCapacityResponse(space.getMaxCapacity(), usedValue);
+            return true;
         }
-        throw new UnauthorizedException();
+        if (host != null) {
+            space.validateHost(host);
+            return true;
+        }
+        return false;
     }
 
     public List<Space> getExpiredSpaces() {
+        LocalDateTime currentDateTime = LocalDateTime.now();
         return spaceRepository.findAll()
             .stream()
-            .filter(space -> space.isExpired(LocalDateTime.now()))
+            .filter(space -> space.isExpired(currentDateTime))
             .toList();
     }
 
