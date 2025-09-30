@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DiamondImg as diamondImage } from '../../../@assets/images';
 import StepProgressBar from '../../../components/@common/progressBar/step/StepProgressBar';
@@ -6,7 +6,7 @@ import { ROUTES } from '../../../constants/routes';
 import useConfirmBeforeRefresh from '../../../hooks/@common/useConfirmBeforeRefresh';
 import useAgreements from '../../../hooks/domain/auth/useAgreements';
 import useAuthConditionTasks from '../../../hooks/domain/auth/useAuthConditionTasks';
-import useFunnel from '../../../hooks/useFunnel';
+import useFormFunnel from '../../../hooks/useFormFunnel';
 import type { SpaceFunnelInfo } from '../../../types/space.type';
 import AccessTypeElement from '../funnelElements/accessTypeElement/AccessTypeElement';
 import AgreementElement from '../funnelElements/agreementElement/AgreementElement';
@@ -32,14 +32,18 @@ const SpaceCreateFunnel = () => {
   useConfirmBeforeRefresh();
   const { handleAgree, isAgree, loadingAgreements } = useAgreements();
   const needsAgreement = !isAgree;
-  const { Step, funnelStep, setFunnelStep, goNextStep } =
-    useFunnel<STEP>('name');
+
+  const {
+    Step,
+    form: spaceInfo,
+    updateFormData: updateSpaceInfo,
+    funnelStep,
+    goNextWithData,
+    setFunnelStep,
+  } = useFormFunnel<STEP, SpaceFunnelInfo>('name', initialFunnelValue);
   useEffect(() => {
     if (!loadingAgreements && needsAgreement) setFunnelStep('agreement');
   }, [needsAgreement, loadingAgreements, setFunnelStep]);
-
-  const [spaceInfo, setSpaceInfo] =
-    useState<SpaceFunnelInfo>(initialFunnelValue);
 
   const PROGRESS_STEP_LIST: STEP[] = [
     'name',
@@ -75,19 +79,17 @@ const SpaceCreateFunnel = () => {
               }
             }
             onChange={(agreements) => {
-              setSpaceInfo((prev) => ({ ...prev, agreements }));
+              updateSpaceInfo({ agreements });
             }}
-            onNext={(agreement) => {
-              setSpaceInfo((prev) => ({ ...prev, agreement }));
-              goNextStep('name');
+            onNext={(agreements) => {
+              goNextWithData('name', { agreements });
             }}
           />
         </Step>
         <Step name="name">
           <NameInputElement
             onNext={(name) => {
-              goNextStep('date');
-              setSpaceInfo((prev) => ({ ...prev, name }));
+              goNextWithData('date', { name });
             }}
             initialValue={spaceInfo.name}
           />
@@ -95,13 +97,11 @@ const SpaceCreateFunnel = () => {
         <Step name="date">
           <ImmediateOpenElement
             onNext={({ date, time, isImmediateOpen }) => {
-              goNextStep('accessType');
-              setSpaceInfo((prev) => ({
-                ...prev,
+              goNextWithData('accessType', {
                 date,
                 time,
                 isImmediateOpen: isImmediateOpen ?? false,
-              }));
+              });
             }}
             initialValue={{
               date: spaceInfo.date,
@@ -113,11 +113,7 @@ const SpaceCreateFunnel = () => {
         <Step name="accessType">
           <AccessTypeElement
             onNext={(accessType) => {
-              goNextStep('inbox');
-              setSpaceInfo((prev) => ({
-                ...prev,
-                accessType: accessType,
-              }));
+              goNextWithData('inbox', { accessType });
             }}
             initialValue={spaceInfo.accessType}
           />
@@ -125,11 +121,7 @@ const SpaceCreateFunnel = () => {
         <Step name="inbox">
           <InboxElement
             onNext={(isInboxEnabled) => {
-              goNextStep('check');
-              setSpaceInfo((prev) => ({
-                ...prev,
-                isInboxEnabled,
-              }));
+              goNextWithData('check', { isInboxEnabled });
             }}
             initialValue={spaceInfo.isInboxEnabled}
           />
@@ -138,7 +130,7 @@ const SpaceCreateFunnel = () => {
           <CheckSpaceInfoElement
             spaceInfo={spaceInfo}
             onNext={(isImmediateOpen) => {
-              setSpaceInfo((prev) => ({ ...prev, isImmediateOpen }));
+              updateSpaceInfo({ isImmediateOpen });
               handleAgree();
             }}
           />
