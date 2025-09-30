@@ -6,7 +6,7 @@ import { ROUTES } from '../../../constants/routes';
 import useConfirmBeforeRefresh from '../../../hooks/@common/useConfirmBeforeRefresh';
 import useAgreements from '../../../hooks/domain/auth/useAgreements';
 import useAuthConditionTasks from '../../../hooks/domain/auth/useAuthConditionTasks';
-import useFunnelHistory from '../../../hooks/useFunnelHistory';
+import useFunnel from '../../../hooks/useFunnel';
 import type { SpaceFunnelInfo } from '../../../types/space.type';
 import AccessTypeElement from '../funnelElements/accessTypeElement/AccessTypeElement';
 import AgreementElement from '../funnelElements/agreementElement/AgreementElement';
@@ -32,6 +32,15 @@ const SpaceCreateFunnel = () => {
   useConfirmBeforeRefresh();
   const { handleAgree, isAgree, loadingAgreements } = useAgreements();
   const needsAgreement = !isAgree;
+  const { Step, funnelStep, setFunnelStep, goNextStep } =
+    useFunnel<STEP>('name');
+  useEffect(() => {
+    if (!loadingAgreements && needsAgreement) setFunnelStep('agreement');
+  }, [needsAgreement, loadingAgreements, setFunnelStep]);
+
+  const [spaceInfo, setSpaceInfo] =
+    useState<SpaceFunnelInfo>(initialFunnelValue);
+
   const PROGRESS_STEP_LIST: STEP[] = [
     'name',
     'date',
@@ -39,22 +48,8 @@ const SpaceCreateFunnel = () => {
     'inbox',
     'check',
   ];
-  const [step, setStep] = useState<STEP>('name');
-  useEffect(() => {
-    if (!loadingAgreements && needsAgreement) setStep('agreement');
-  }, [needsAgreement, loadingAgreements]);
-
-  const [spaceInfo, setSpaceInfo] =
-    useState<SpaceFunnelInfo>(initialFunnelValue);
-  const { navigateToNext } = useFunnelHistory<STEP>(step, setStep);
-
-  const goNextStep = (nextStep: STEP) => {
-    navigateToNext(nextStep);
-    setStep(nextStep);
-  };
-
   const currentStep =
-    PROGRESS_STEP_LIST.findIndex((oneStep) => oneStep === step) + 1;
+    PROGRESS_STEP_LIST.findIndex((oneStep) => oneStep === funnelStep) + 1;
 
   const navigate = useNavigate();
   useAuthConditionTasks({ taskWhenNoAuth: () => navigate(ROUTES.MAIN) });
@@ -71,7 +66,7 @@ const SpaceCreateFunnel = () => {
         </S.IconContainer>
       </S.TopContainer>
       <S.ContentContainer>
-        {step === 'agreement' && (
+        <Step name="agreement">
           <AgreementElement
             value={
               spaceInfo.agreements ?? {
@@ -87,8 +82,8 @@ const SpaceCreateFunnel = () => {
               goNextStep('name');
             }}
           />
-        )}
-        {step === 'name' && (
+        </Step>
+        <Step name="name">
           <NameInputElement
             onNext={(name) => {
               goNextStep('date');
@@ -96,8 +91,8 @@ const SpaceCreateFunnel = () => {
             }}
             initialValue={spaceInfo.name}
           />
-        )}
-        {step === 'date' && (
+        </Step>
+        <Step name="date">
           <ImmediateOpenElement
             onNext={({ date, time, isImmediateOpen }) => {
               goNextStep('accessType');
@@ -114,8 +109,8 @@ const SpaceCreateFunnel = () => {
               isImmediateOpen: spaceInfo.isImmediateOpen,
             }}
           />
-        )}
-        {step === 'accessType' && (
+        </Step>
+        <Step name="accessType">
           <AccessTypeElement
             onNext={(accessType) => {
               goNextStep('inbox');
@@ -126,8 +121,8 @@ const SpaceCreateFunnel = () => {
             }}
             initialValue={spaceInfo.accessType}
           />
-        )}
-        {step === 'inbox' && (
+        </Step>
+        <Step name="inbox">
           <InboxElement
             onNext={(isInboxEnabled) => {
               goNextStep('check');
@@ -138,8 +133,8 @@ const SpaceCreateFunnel = () => {
             }}
             initialValue={spaceInfo.isInboxEnabled}
           />
-        )}
-        {step === 'check' && (
+        </Step>
+        <Step name="check">
           <CheckSpaceInfoElement
             spaceInfo={spaceInfo}
             onNext={(isImmediateOpen) => {
@@ -147,7 +142,7 @@ const SpaceCreateFunnel = () => {
               handleAgree();
             }}
           />
-        )}
+        </Step>
       </S.ContentContainer>
     </S.Wrapper>
   );
