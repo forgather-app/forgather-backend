@@ -1,15 +1,21 @@
-import { useNavigate } from 'react-router-dom';
-import { ROUTES } from '../constants/routes';
-import useAuthConditionTasks from '../hooks/domain/auth/useAuthConditionTasks';
+import { MdInsertEmoticon } from 'react-icons/md';
+import { useToast } from '../hooks/@common/useToast';
 
 const MainPage = () => {
-  const navigate = useNavigate();
-  useAuthConditionTasks({
-    taskWhenAuth: () => navigate(ROUTES.MYPAGE),
-    taskWhenNoAuth: () => navigate(ROUTES.LANDING),
-  });
+  const { showToast } = useToast();
 
-  return null;
+  return (
+    <div>
+      <MdInsertEmoticon />
+      <p>글꼴 확인</p>
+      <button
+        type="button"
+        onClick={() => showToast({ text: '토스트 테스트' })}
+      >
+        토스트 테스트
+      </button>
+    </div>
+  );
 };
 
 export default MainPage;

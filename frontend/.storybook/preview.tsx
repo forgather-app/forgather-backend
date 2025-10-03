@@ -1,6 +1,6 @@
 import { ThemeProvider } from '@emotion/react';
-import type { Decorator, Preview } from '@storybook/react-webpack5';
-import GlobalStyles from '../src/styles/GlobalStyles';
+import type { Decorator, Preview } from '@storybook/react-vite';
+import GlobalStyles from '../src/styles/GlobalStyle';
 import { theme } from '../src/styles/theme';
 
 const withGlobalStyle: Decorator = (Story) => (
