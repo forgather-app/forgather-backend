@@ -1,12 +1,10 @@
 package com.forgather.domain.space.model;
 
 import java.text.BreakIterator;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import com.forgather.domain.guest.model.Guest;
 import com.forgather.domain.model.BaseTimeEntity;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHostMap;
@@ -15,16 +13,12 @@ import com.forgather.global.exception.BaseException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.PostLoad;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Transient;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,8 +27,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Space extends BaseTimeEntity {
-
-    private static final long DEFAULT_MAX_CAPACITY_VALUE = 10_737_418_240L; // 10GB
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,69 +41,32 @@ public class Space extends BaseTimeEntity {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "valid_hours", nullable = false)
-    private int validHours;
+    @Column(name = "description")
+    private String description;
 
-    @Column(name = "opened_at", nullable = false)
-    private LocalDateTime openedAt;
+    @Column(name = "picture_url")
+    private String pictureUrl;
 
-    @OneToMany(mappedBy = "space", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Guest> guests = new ArrayList<>();
+    @Column(name = "is_public", nullable = false)
+    private boolean isPublic;
 
-    @OneToMany(mappedBy = "space", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SpaceContent> contents = new ArrayList<>();
+    @Column(name = "instagram_username")
+    private String instagramUsername;
 
-    @Transient
-    private long guestCount = 0;
+    @Column(name = "email")
+    private String email;
 
-    @Transient
-    private long photoCount = 0;
-
-    @Column(name = "max_capacity", nullable = false)
-    private Long maxCapacity; // bytes
-
-    @Column(name = "type", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private SpaceType type = SpaceType.PRIVATE;
-
-    public Space(Host host, String code, String name, int validHours, LocalDateTime openedAt, SpaceType type) {
-        validate(code, name, validHours, openedAt, DEFAULT_MAX_CAPACITY_VALUE);
+    public Space(Host host, String code, String name, String description, String pictureUrl, boolean isPublic,
+        String instagramUsername, String email) {
+        validate(code, name);
         spaceHostMap.add(new SpaceHostMap(this, host));
         this.code = code;
         this.name = name;
-        this.openedAt = openedAt;
-        this.validHours = validHours;
-        this.maxCapacity = DEFAULT_MAX_CAPACITY_VALUE;
-        if (type != null) {
-            this.type = type;
-        }
-    }
-
-    public Space(Host host, String code, String name, int validHours, LocalDateTime openedAt, Long capacity,
-        SpaceType type) {
-        validate(code, name, validHours, openedAt, capacity);
-        spaceHostMap.add(new SpaceHostMap(this, host));
-        this.code = code;
-        this.name = name;
-        this.openedAt = openedAt;
-        this.validHours = validHours;
-        this.maxCapacity = capacity;
-        this.type = type;
-    }
-
-    @PostLoad
-    private void postLoad() {
-        this.guestCount = guests.size();
-        this.photoCount = contents.stream()
-            .filter(content -> content instanceof Photo)
-            .count();
-    }
-
-    public void validateExpiration(LocalDateTime currentDateTime) {
-        LocalDateTime expiredAt = openedAt.plusHours(validHours);
-        if (expiredAt.isBefore(currentDateTime)) {
-            throw new BaseException("만료된 스페이스입니다. spaceCode: " + code);
-        }
+        this.description = description;
+        this.pictureUrl = pictureUrl;
+        this.isPublic = isPublic;
+        this.instagramUsername = instagramUsername;
+        this.email = email;
     }
 
     public void validateHost(Host host) {
@@ -124,30 +79,12 @@ public class Space extends BaseTimeEntity {
         }
     }
 
-    public boolean isExpired(LocalDateTime now) {
-        return getExpiredAt().isBefore(now);
-    }
-
-    public boolean isOpened(LocalDateTime now) {
-        return openedAt.isBefore(now);
-    }
-
-    public LocalDateTime getExpiredAt() {
-        return openedAt.plusHours(validHours);
-    }
-
-    public void update(String name, Integer validHours, LocalDateTime openedAt, String password, SpaceType type) {
+    public void update(String name, String description, String instagramUsername, String email) {
         if (name != null) {
             setName(name);
         }
-        if (validHours != null) {
-            setValidHours(validHours);
-        }
-        if (openedAt != null) {
-            setOpenedAt(openedAt);
-        }
-        if (type != null) {
-            this.type = type;
+        if (description != null) {
+            setDescription(description);
         }
     }
 
@@ -158,47 +95,19 @@ public class Space extends BaseTimeEntity {
         this.name = name;
     }
 
-    private void setValidHours(Integer validHours) {
-        if (validHours <= 0) {
-            throw new BaseException("스페이스 유효 시간은 1시간 이상이어야 합니다. 생성 시도 유효 시간: " + validHours);
+    private void setDescription(String description) {
+        if (description.length() > 200) {
+            throw new BaseException("스페이스 설명은 최대 200자여야 합니다. 생성 시도 설명: " + description);
         }
-        this.validHours = validHours;
+        this.description = description;
     }
 
-    private void setOpenedAt(LocalDateTime newOpenedAt) {
-        validateOpenedAt(newOpenedAt);
-        if (isExpired(LocalDateTime.now())) {
-            throw new BaseException("만료된 스페이스의 오픈 시각을 변경할 수 없습니다.");
-        }
-        if (isOpened(LocalDateTime.now())) {
-            throw new BaseException("이미 열린 스페이스의 오픈 시각을 변경할 수 없습니다.");
-        }
-        this.openedAt = newOpenedAt;
-    }
-
-    private void validate(String code, String name, int validHours, LocalDateTime openedAt, Long maxCapacity) {
+    private void validate(String code, String name) {
         if (code == null || code.length() != 10) {
             throw new BaseException("스페이스 코드는 10자리여야 합니다. 생성 시도 코드: " + code);
         }
-        if (name == null || name.isBlank() || getCharacterCount(name) > 10) {
-            throw new BaseException("스페이스 이름은 비어있을 수 없고, 최대 10자여야 합니다. 생성 시도 이름: " + name);
-        }
-        if (validHours <= 0) {
-            throw new BaseException("스페이스 유효 시간은 1시간 이상이어야 합니다. 생성 시도 유효 시간: " + validHours);
-        }
-        if (maxCapacity == null || maxCapacity <= 0L) {
-            throw new BaseException("스페이스 최대 용량은 비어있을 수 없고, 0보다 커야 합니다. 생성 시도 용량: " + maxCapacity);
-        }
-        validateOpenedAt(openedAt);
-    }
-
-    private void validateOpenedAt(LocalDateTime openedAt) {
-        if (openedAt == null) {
-            throw new BaseException("스페이스 오픈 시각은 비어있을 수 없습니다.");
-        }
-        // 네트워크 지연 고려해서 1시간 과거 생성까지는 허용
-        if (openedAt.isBefore(LocalDateTime.now().minusHours(1L))) {
-            throw new BaseException("스페이스 오픈 시각은 현재 시각 이후여야 합니다. 생성 시도 시각: " + openedAt);
+        if (name == null || name.isBlank() || getCharacterCount(name) > 15) {
+            throw new BaseException("스페이스 이름은 비어있을 수 없고, 최대 15자여야 합니다. 생성 시도 이름: " + name);
         }
     }
 
@@ -211,14 +120,8 @@ public class Space extends BaseTimeEntity {
         if (name == null || name.isBlank()) {
             throw new BaseException("스페이스 이름은 비어있을 수 없습니다. 생성 시도 이름: " + name);
         }
-        if (getCharacterCount(name) > 10) {
-            throw new BaseException("스페이스 이름은 10자를 초과할 수 없습니다. 생성 시도 이름: " + name);
-        }
-        if (openedAt == null) {
-            throw new BaseException("스페이스 오픈 시각은 비어있을 수 없습니다.");
-        }
-        if (maxCapacity == null || maxCapacity <= 0L) {
-            throw new BaseException("스페이스 최대 용량은 비어있을 수 없고, 0보다 커야 합니다. 생성 시도 용량: " + maxCapacity);
+        if (getCharacterCount(name) > 15) {
+            throw new BaseException("스페이스 이름은 15자를 초과할 수 없습니다. 생성 시도 이름: " + name);
         }
     }
 
@@ -233,20 +136,8 @@ public class Space extends BaseTimeEntity {
         return count;
     }
 
-    public void validateCode(String code) {
-        if (!this.code.equals(code)) {
-            throw new BaseException("스페이스 코드가 잘못되었습니다.");
-        }
-    }
-
-    public void validateGuest(Guest guest) {
-        if (guest == null) {
-            throw new BaseException("게스트 정보가 없습니다.");
-        }
-        if (guest.getSpace() == null || !Objects.equals(guest.getSpace().getId(), this.id)) {
-            throw new BaseException(
-                "해당 게스트는 이 스페이스에 속하지 않습니다. 게스트 ID: " + guest.getId() + ", 스페이스 ID: " + this.id);
-        }
+    public boolean isPublic() {
+        return this.isPublic;
     }
 
     @Override
@@ -260,9 +151,5 @@ public class Space extends BaseTimeEntity {
     @Override
     public int hashCode() {
         return Objects.hashCode(id);
-    }
-
-    public boolean isPublic() {
-        return type == SpaceType.PUBLIC;
     }
 }

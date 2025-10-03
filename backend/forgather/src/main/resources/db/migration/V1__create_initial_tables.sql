@@ -9,11 +9,12 @@ CREATE TABLE `guest`
 
 CREATE TABLE `host`
 (
-    `id`          BIGINT    NOT NULL AUTO_INCREMENT,
-    `name`        VARCHAR(255) NULL,
-    `picture_url` VARCHAR(255) NULL,
-    `created_at`  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at`  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `id`           BIGINT    NOT NULL AUTO_INCREMENT,
+    `name`         VARCHAR(255) NULL,
+    `picture_url`  VARCHAR(255) NULL,
+    `agreed_terms` TINYINT(1) NOT NULL DEFAULT 0,
+    `created_at`   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
 );
 
@@ -26,7 +27,6 @@ CREATE TABLE `space`
     `is_public`          TINYINT(1)	NOT NULL DEFAULT 0,
     `instagram_username` VARCHAR(255) NULL,
     `email`              VARCHAR(255) NULL,
-    `opened_at`          TIMESTAMP    NOT NULL,
     `created_at`         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
@@ -67,7 +67,6 @@ CREATE TABLE `guest_book_card_photo`
     `guest_book_card_id` BIGINT       NOT NULL,
     `original_name`      VARCHAR(255) NOT NULL,
     `path`               VARCHAR(255) NOT NULL,
-    `captured_at`        TIMESTAMP NULL,
     `capacity`           BIGINT       NOT NULL,
     `created_at`         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -95,7 +94,6 @@ CREATE TABLE `product_photo`
     `original_name` VARCHAR(255) NULL,
     `path`          VARCHAR(255) NULL,
     `capacity`      BIGINT NULL,
-    `captured_at`   TIMESTAMP NULL,
     `created_at`    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
@@ -108,7 +106,6 @@ CREATE TABLE `space_photo`
     `original_name` VARCHAR(255) NULL,
     `path`          VARCHAR(255) NULL,
     `capacity`      BIGINT NULL,
-    `captured_at`   TIMESTAMP NULL,
     `created_at`    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
