@@ -36,8 +36,10 @@ export const Toast = ({ text, type = 'info', duration = 1500 }: ToastBase) => {
           background: `conic-gradient(${
             type === 'error' ? theme.colors.error : theme.colors.info
           } ${progress * 360}deg, ${theme.colors.white} ${progress * 360}deg)`,
+          WebkitMask: 'radial-gradient(transparent 40%, black 41%)',
+          mask: 'radial-gradient(transparent 40%, black 41%)',
         }}
-      ><S.CircleContainer/></S.TimerContainer>
+      ></S.TimerContainer>
       <S.TextContainer>{text}</S.TextContainer>
     </S.Wrapper>
   );
