@@ -8,6 +8,7 @@ export const theme = {
     gray05: '#4B4B4B',
     gray06: '#2C2C2C',
     error: '#B00020',
+    info: '#4CAF50',
   },
   typography: {
     header01: {
