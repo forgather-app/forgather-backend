@@ -17,7 +17,6 @@ interface HeaderProps {
 }
 
 const Header = ({ mode = 'light', icons = [], onLogoClick }: HeaderProps) => {
-  console.log(icons);
   return (
     <S.HeaderContainer $mode={mode}>
       <S.Logo $mode={mode} onClick={onLogoClick}>
