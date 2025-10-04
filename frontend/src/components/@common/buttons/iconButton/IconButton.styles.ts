@@ -1,9 +1,9 @@
 import { css, type Theme } from '@emotion/react';
 import styled from '@emotion/styled';
-import type { IconLabelButtonVariant } from '../../../../types/button.type';
+import type { IconButtonVariant } from '../../../../types/button.type';
 import { hexToRgba } from '../../../../utils/hexToRgba';
 
-export const IconLabelButtonStyles = {
+export const IconButtonStyles = {
   default: (theme: Theme) => css`
     color: ${theme.colors.gray06};
     padding: 0;
@@ -29,16 +29,8 @@ export const IconLabelButtonStyles = {
   `,
 };
 
-export const Wrapper = styled.div`
-  display: inline-flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-`;
-
 export const IconContainer = styled.button<{
-  $variant: IconLabelButtonVariant;
+  $variant: IconButtonVariant;
 }>`
   max-width: 44px;
   aspect-ratio: 1/1;
@@ -56,18 +48,5 @@ export const IconContainer = styled.button<{
     height: 25px;
   }
 
-  ${({ $variant, theme }) => $variant && IconLabelButtonStyles[$variant](theme)}
-`;
-
-export const Icon = styled.div`
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-export const Text = styled.p`
-  color: ${({ theme }) => theme.colors.gray04};
-  ${({ theme }) => ({ ...theme.typography.captionSmall })}
+  ${({ $variant, theme }) => $variant && IconButtonStyles[$variant](theme)}
 `;

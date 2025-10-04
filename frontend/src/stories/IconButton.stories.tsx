@@ -1,20 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import IconLabelButton from '../components/@common/buttons/iconLabelButton/IconLabelButton';
+import IconButton from '../components/@common/buttons/iconButton/IconButton';
 import { theme } from '../styles/theme';
 import { FiLink, FiSave, FiTrash2 } from 'react-icons/fi';
 
-const meta: Meta<typeof IconLabelButton> = {
-  title: 'Components/Button/IconLabelButton',
-  component: IconLabelButton,
+const meta: Meta<typeof IconButton> = {
+  title: 'Components/Button/IconButton',
+  component: IconButton,
   parameters: {
     layout: 'centered',
   },
   argTypes: {
     icon: {
       control: false,
-    },
-    label: {
-      control: 'text',
     },
   },
 };
@@ -25,15 +22,14 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     icon: <FiLink />,
-    label: '링크 복사',
     variant: 'default',
   },
 };
 
-export const NoLabel: Story = {
+export const Outline: Story = {
   args: {
     icon: <FiLink />,
-    variant: 'default',
+    variant: 'outline',
   },
 };
 
@@ -44,7 +40,7 @@ export const Dark: Story = {
   },
 };
 
-export const Light: Story = {
+export const DarkWithWhiteIcon: Story = {
   args: {
     icon: <FiSave color={theme.colors.white} />,
     variant: 'dark',
