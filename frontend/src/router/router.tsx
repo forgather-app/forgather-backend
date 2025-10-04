@@ -12,9 +12,6 @@ const routes: AppRouteObject[] = [
       {
         path: '/',
         element: <MainPage />,
-        handle: {
-          highlight: false,
-        },
       },
       {
         path: 'host',
@@ -22,6 +19,9 @@ const routes: AppRouteObject[] = [
           {
             path: 'main',
             element: <HostMainPage />,
+            handle: {
+              headerIcons: ['share', 'settings'],
+            },
           },
         ],
       },

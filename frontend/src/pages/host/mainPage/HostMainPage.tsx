@@ -1,4 +1,5 @@
-import { FaInstagram, FaRegEnvelope } from 'react-icons/fa';
+import { IoLogoInstagram, IoMailOutline } from 'react-icons/io5';
+
 import IconButton from '../../../components/@common/buttons/iconButton/IconButton';
 import { getInstagramUrl } from '../../../utils/createExternalLinks';
 import { mockData } from '../../mockData';
@@ -17,7 +18,7 @@ const HostMainPage = () => {
       <S.IconButtonContainer>
         <IconButton
           aria-label="인스타그램"
-          icon={<FaInstagram />}
+          icon={<IoLogoInstagram />}
           variant="default"
           onClick={() =>
             window.open(getInstagramUrl(mockData.instagramId), '_blank')
@@ -25,7 +26,7 @@ const HostMainPage = () => {
         />
         <IconButton
           aria-label="이메일"
-          icon={<FaRegEnvelope />}
+          icon={<IoMailOutline />}
           variant="default"
           onClick={() => window.open(`mailto:${mockData.email}`, '_blank')}
         />
