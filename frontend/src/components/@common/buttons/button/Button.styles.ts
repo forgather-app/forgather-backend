@@ -2,7 +2,6 @@ import { css, type Theme } from '@emotion/react';
 import styled from '@emotion/styled';
 import type { ButtonVariant } from '../../../../types/button.type';
 
-
 export const buttonStyles = {
   primary: (theme: Theme) => css`
     border-radius: 4px;
