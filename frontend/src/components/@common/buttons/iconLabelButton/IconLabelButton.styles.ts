@@ -51,6 +51,11 @@ export const IconContainer = styled.button<{
   gap: 10px;
   border-radius: 12px;
 
+  svg {
+    width: 25px;
+    height: 25px;
+  }
+
   ${({ $variant, theme }) => $variant && IconLabelButtonStyles[$variant](theme)}
 `;
 

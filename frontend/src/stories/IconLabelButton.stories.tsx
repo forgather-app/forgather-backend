@@ -4,7 +4,7 @@ import { theme } from '../styles/theme';
 import { FiLink, FiSave, FiTrash2 } from 'react-icons/fi';
 
 const meta: Meta<typeof IconLabelButton> = {
-  title: 'Components/IconLabelButton',
+  title: 'Components/Button/IconLabelButton',
   component: IconLabelButton,
   parameters: {
     layout: 'centered',
@@ -26,12 +26,14 @@ export const Default: Story = {
   args: {
     icon: <FiLink />,
     label: '링크 복사',
+    variant: 'default',
   },
 };
 
 export const NoLabel: Story = {
   args: {
     icon: <FiLink />,
+    variant: 'default',
   },
 };
 
@@ -51,7 +53,7 @@ export const Light: Story = {
 
 export const Danger: Story = {
   args: {
-    icon: <FiTrash2 color={theme.colors.error} size={16} />,
+    icon: <FiTrash2 color={theme.colors.error} />,
     variant: 'danger',
   },
   decorators: [
