@@ -1,6 +1,6 @@
 import styled from '@emotion/styled';
 
-export const Container = styled.div<{ $isHighlightPage: boolean }>`
+export const Container = styled.main<{ $isHighlightPage: boolean }>`
   position: relative;
   margin: 0 auto;
   max-width: ${({ theme }) => theme.layout.width};
