@@ -8,19 +8,19 @@ export const ContentContainer = styled.div`
 `;
 
 export const Label = styled.dt`
-width: 100%;
-text-align: left;
- ${({ theme }) => ({
-   ...theme.typography.bodyLarge,
- })}
- color: ${({ theme }) => theme.colors.gray06};
+  width: 100%;
+  text-align: left;
+  ${({ theme }) => ({
+    ...theme.typography.bodyLarge,
+  })}
+  color: ${({ theme }) => theme.colors.gray06};
 `;
 
 export const Value = styled.dd`
-width: 100%;
-text-align: left;
- ${({ theme }) => ({
-   ...theme.typography.bodyRegular,
- })}
- color: ${({ theme }) => theme.colors.gray04};
+  width: 100%;
+  text-align: left;
+  ${({ theme }) => ({
+    ...theme.typography.bodyRegular,
+  })}
+  color: ${({ theme }) => theme.colors.gray04};
 `;
