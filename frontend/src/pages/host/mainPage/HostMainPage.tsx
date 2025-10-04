@@ -3,7 +3,7 @@ import FooterLogo from '../../../@assets/footer-logo.svg?react';
 import Button from '../../../components/@common/buttons/button/Button';
 import IconButton from '../../../components/@common/buttons/iconButton/IconButton';
 import { DividerLine } from '../../../styles/@common/DividerLine.styles';
-import { getInstagramUrl } from '../../../utils/createExternalLinks';
+import { createInstagramUrl } from '../../../utils/createExternalLinks';
 import { mockData } from '../../mockData';
 import * as S from './HostMainPage.styles';
 
@@ -23,7 +23,7 @@ const HostMainPage = () => {
           icon={<IoLogoInstagram />}
           variant="default"
           onClick={() =>
-            window.open(getInstagramUrl(mockData.instagramId), '_blank')
+            window.open(createInstagramUrl(mockData.instagramId), '_blank')
           }
         />
         <IconButton
