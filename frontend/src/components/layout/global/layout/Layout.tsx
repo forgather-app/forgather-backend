@@ -7,8 +7,14 @@ import * as S from './Layout.styles';
 
 const Layout = () => {
   const headerIcons = {
-    share: <IoShareOutline />,
-    settings: <IoSettingsSharp />,
+    share: {
+      icon: <IoShareOutline />,
+      onClick: () => console.log('Share clicked'),
+    },
+    settings: {
+      icon: <IoSettingsSharp />,
+      onClick: () => console.log('Settings clicked'),
+    },
   };
 
   const matches = useMatches() as AppRouteObject[];

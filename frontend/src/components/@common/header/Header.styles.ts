@@ -43,11 +43,12 @@ export const IconButton = styled.button<{ $mode: HeaderMode }>`
   color: ${({ theme, $mode }) => ($mode === 'dark' ? theme.colors.white : theme.colors.gray06)};
   transition: opacity 0.2s;
 
-  &:hover {
-    opacity: 0.7;
+  svg {
+    width: 24px;
+    height: 24px;
   }
 
   &:active {
-    opacity: 0.5;
+    scale: 0.95;
   }
 `;
