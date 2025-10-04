@@ -11,8 +11,7 @@ export const Wrapper = styled.div<{
     `${parseInt(theme.layout.width) - parseInt(theme.layout.padding.leftRight)}px`};
   max-height: 100px;
   gap: 12px;
-  background-color: ${({ theme, $type }) =>
-    $type === 'error' ? theme.colors.error : theme.colors.white};
+  background-color: ${({ theme }) => theme.colors.gray06};
   padding: 8px 12px;
   border-radius: 50px;
   align-items: center;
@@ -34,16 +33,18 @@ export const TimerContainer = styled.div<{ $type: string }>`
   flex-shrink: 0;
 `;
 
-export const IconContainer = styled.div`
+export const CircleContainer = styled.div`
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  width: 18px;
+  width: 16px;
+  height: 16px;
+  background-color: ${({ theme }) => theme.colors.gray06};
 `;
 
 export const TextContainer = styled.p`
-  color: ${({ theme }) => theme.colors.gray06};
+  color: ${({ theme }) => theme.colors.white};
   ${({ theme }) => theme.typography.bodyRegular};
   white-space: pre-line;
 `;

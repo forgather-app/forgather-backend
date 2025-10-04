@@ -34,10 +34,10 @@ export const Toast = ({ text, type = 'info', duration = 1500 }: ToastBase) => {
         $type={type}
         style={{
           background: `conic-gradient(${
-            type === 'error' ? theme.colors.error : theme.colors.white
+            type === 'error' ? theme.colors.error : theme.colors.info
           } ${progress * 360}deg, ${theme.colors.white} ${progress * 360}deg)`,
         }}
-      ></S.TimerContainer>
+      ><S.CircleContainer/></S.TimerContainer>
       <S.TextContainer>{text}</S.TextContainer>
     </S.Wrapper>
   );
