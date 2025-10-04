@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import Layout from '../components/layout/global/layout/Layout';
+import HostMainPage from '../pages/host/mainPage/HostMainPage';
 import MainPage from '../pages/MainPage';
 import type { AppRouteObject } from '../types/route.type';
 
@@ -14,6 +15,15 @@ const routes: AppRouteObject[] = [
         handle: {
           highlight: false,
         },
+      },
+      {
+        path: 'host',
+        children: [
+          {
+            path: 'main',
+            element: <HostMainPage />,
+          },
+        ],
       },
     ],
   },
