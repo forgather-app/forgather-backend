@@ -9,8 +9,7 @@ export const HeaderContainer = styled.header<{ $mode: HeaderMode }>`
   height: 60px;
   padding: 0 ${({ theme }) => theme.layout.padding.leftRight};
   background-color: ${({ theme, $mode }) =>
-    $mode === 'dark' ? theme.colors.gray06 : theme.colors.white};
-  border-bottom: 1px solid ${({ theme }) => theme.colors.gray02};
+    $mode === 'dark' ? theme.colors.gray06 : theme.colors.background};
 `;
 
 export const Logo = styled.div<{ $mode: HeaderMode }>`

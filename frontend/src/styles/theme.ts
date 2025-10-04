@@ -9,6 +9,7 @@ export const theme = {
     gray06: '#2C2C2C',
     error: '#B00020',
     info: '#4CAF50',
+    background: "#FCFCFC"
   },
   typography: {
     header01: {
