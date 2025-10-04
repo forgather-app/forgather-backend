@@ -1,10 +1,12 @@
 import styled from '@emotion/styled';
 
 export const Wrapper = styled.div`
-width: 100%;
-display: flex;
-align-items: center;
-justify-content: center;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
 `;
 
 export const ProfileContainer = styled.section`
@@ -37,4 +39,9 @@ export const Name = styled.h1`
 export const Introduction = styled.p`
   ${({ theme }) => theme.typography.bodyRegular}
   color: ${({ theme }) => theme.colors.gray04};
+`;
+
+export const IconButtonContainer = styled.div`
+  display: flex;
+  gap: 16px;
 `;
