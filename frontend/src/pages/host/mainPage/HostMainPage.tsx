@@ -1,6 +1,7 @@
 import { IoLogoInstagram, IoMailOutline } from 'react-icons/io5';
-
+import Button from '../../../components/@common/buttons/button/Button';
 import IconButton from '../../../components/@common/buttons/iconButton/IconButton';
+import { DividerLine } from '../../../styles/@common/DividerLine.styles';
 import { getInstagramUrl } from '../../../utils/createExternalLinks';
 import { mockData } from '../../mockData';
 import * as S from './HostMainPage.styles';
@@ -31,6 +32,11 @@ const HostMainPage = () => {
           onClick={() => window.open(`mailto:${mockData.email}`, '_blank')}
         />
       </S.IconButtonContainer>
+      <DividerLine width="10%" />
+      <S.ButtonContainer>
+        <Button variant="elevated" text="작품 소개 관리" onClick={() => {}} />
+        <Button variant="elevated" text="방명록 관리" onClick={() => {}} />
+      </S.ButtonContainer>
     </S.Wrapper>
   );
 };

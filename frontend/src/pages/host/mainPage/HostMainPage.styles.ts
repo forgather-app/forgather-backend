@@ -6,7 +6,7 @@ export const Wrapper = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: 32px;
 `;
 
 export const ProfileContainer = styled.section`
@@ -23,6 +23,7 @@ export const Thumbnail = styled.img`
   aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 `;
 
 export const InfoContainer = styled.div`
@@ -44,4 +45,11 @@ export const Introduction = styled.p`
 export const IconButtonContainer = styled.div`
   display: flex;
   gap: 16px;
+`;
+
+export const ButtonContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
 `;
