@@ -41,7 +41,7 @@ export const buttonStyles = {
     border-radius: 4px;
     background-color: ${theme.colors.white};
     color: ${theme.colors.gray06};
-  box-shadow: 2px 2px 6px 0 rgba(0, 0, 0, 0.08);
+    box-shadow: 2px 2px 6px 0 rgba(0, 0, 0, 0.08);
 
     &:disabled {
       pointer-events: none;
