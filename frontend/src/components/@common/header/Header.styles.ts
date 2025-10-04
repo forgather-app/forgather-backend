@@ -5,8 +5,10 @@ export const HeaderContainer = styled.header<{ $mode: HeaderMode }>`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  max-width: ${({ theme }) => theme.layout.width};
   width: 100%;
   height: 60px;
+  margin: 0 auto;
   padding: 0 ${({ theme }) => theme.layout.padding.leftRight};
   background-color: ${({ theme, $mode }) =>
     $mode === 'dark' ? theme.colors.gray06 : theme.colors.background};
@@ -41,11 +43,12 @@ export const IconButton = styled.button<{ $mode: HeaderMode }>`
   color: ${({ theme, $mode }) => ($mode === 'dark' ? theme.colors.white : theme.colors.gray06)};
   transition: opacity 0.2s;
 
-  &:hover {
-    opacity: 0.7;
+  svg {
+    width: 24px;
+    height: 24px;
   }
 
   &:active {
-    opacity: 0.5;
+    scale: 0.95;
   }
 `;

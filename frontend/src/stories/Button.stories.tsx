@@ -54,3 +54,12 @@ export const Disabled: Story = {
     disabled: true,
   },
 };
+
+export const Elevated: Story = {
+  args: {
+    variant: 'elevated',
+    text: 'Elevated Button',
+    onClick: () => {},
+    disabled: false,
+  },
+};

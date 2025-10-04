@@ -1,6 +1,6 @@
+import LogoSvg from '../../../@assets/logo.svg?react';
 import type { HeaderMode } from '../../../types/header.type';
 import * as S from './Header.styles';
-import LogoSvg from '../../../@assets/logo.svg?react';
 
 interface IconItem {
   icon: React.ReactNode;

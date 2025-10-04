@@ -6,7 +6,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "exclude": ["node_modules", "dist", "build"]
+    "experimentalScannerIgnores": ["node_modules", "dist", "build"]
   },
   "formatter": {
     "enabled": true,

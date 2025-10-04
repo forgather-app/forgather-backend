@@ -7,6 +7,7 @@ export const IconButtonStyles = {
   default: (theme: Theme) => css`
     color: ${theme.colors.gray06};
     padding: 0;
+    border-radius: 0;
     &:active {
       scale: 0.95;
     }
@@ -44,8 +45,8 @@ export const IconContainer = styled.button<{
   border-radius: 12px;
 
   svg {
-    width: 25px;
-    height: 25px;
+    width: 28px;
+    height: 28px;
   }
 
   ${({ $variant, theme }) => $variant && IconButtonStyles[$variant](theme)}
