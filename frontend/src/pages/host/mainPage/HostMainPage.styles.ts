@@ -7,6 +7,7 @@ export const Wrapper = styled.div`
   align-items: center;
   justify-content: center;
   gap: 32px;
+  min-height: calc(100dvh - 2 * ${({ theme }) => theme.layout.padding.topBottom} - ${({ theme }) => theme.layout.headerHeight});
 `;
 
 export const ProfileContainer = styled.section`
@@ -52,4 +53,8 @@ export const ButtonContainer = styled.div`
   flex-direction: column;
   gap: 24px;
   width: 100%;
+`;
+
+export const Footer = styled.footer`
+margin-top: auto;
 `;

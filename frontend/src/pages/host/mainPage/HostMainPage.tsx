@@ -1,4 +1,5 @@
 import { IoLogoInstagram, IoMailOutline } from 'react-icons/io5';
+import FooterLogo from '../../../@assets/footer-logo.svg?react';
 import Button from '../../../components/@common/buttons/button/Button';
 import IconButton from '../../../components/@common/buttons/iconButton/IconButton';
 import { DividerLine } from '../../../styles/@common/DividerLine.styles';
@@ -37,6 +38,9 @@ const HostMainPage = () => {
         <Button variant="elevated" text="작품 소개 관리" onClick={() => {}} />
         <Button variant="elevated" text="방명록 관리" onClick={() => {}} />
       </S.ButtonContainer>
+      <S.Footer>
+        <FooterLogo />
+      </S.Footer>
     </S.Wrapper>
   );
 };
