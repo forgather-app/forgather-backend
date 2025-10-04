@@ -8,7 +8,7 @@ import * as S from './DashBoard.styles';
 const DashBoard = () => {
   return (
     <S.Wrapper>
-      <C.Title>스페이스 대시보드</C.Title>
+      <C.Title>스페이스 정보</C.Title>
       <Thumbnail src={mockDashboardData.thumbnail} />
       <S.InfoRowContainer>
         <InfoRow label="스페이스 이름" value={mockDashboardData.title} />
