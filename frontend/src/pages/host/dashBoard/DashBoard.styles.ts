@@ -8,6 +8,13 @@ export const Wrapper = styled.div`
   justify-content: center;
 `;
 
+export const Title = styled.h1`
+  width: 100%;
+  ${({ theme }) => ({
+    ...theme.typography.header02,
+  })}
+`;
+
 export const InfoRowContainer = styled.div`
   display: flex;
   flex-direction: column;

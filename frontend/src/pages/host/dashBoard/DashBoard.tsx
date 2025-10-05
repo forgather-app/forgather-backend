@@ -1,6 +1,5 @@
 import Button from '../../../components/@common/buttons/button/Button';
 import InfoRow from '../../../components/host/infoRow/InfoRow';
-import * as C from '../../../styles/@common/Typography.styles';
 import { mockDashboardData } from '../../mockData';
 import { Thumbnail } from '../Host.common.styles';
 import * as S from './DashBoard.styles';
@@ -8,7 +7,7 @@ import * as S from './DashBoard.styles';
 const DashBoard = () => {
   return (
     <S.Wrapper>
-      <C.Title>스페이스 정보</C.Title>
+      <S.Title>스페이스 정보</S.Title>
       <Thumbnail src={mockDashboardData.thumbnail} />
       <S.InfoRowContainer>
         <InfoRow label="스페이스 이름" value={mockDashboardData.title} />
