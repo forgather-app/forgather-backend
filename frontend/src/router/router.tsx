@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import Layout from '../components/layout/global/layout/Layout';
+import Dashboard from '../pages/host/dashboard/Dashboard';
 import HostMainPage from '../pages/host/mainPage/HostMainPage';
 import MainPage from '../pages/MainPage';
 import type { AppRouteObject } from '../types/route.type';
@@ -21,6 +22,13 @@ const routes: AppRouteObject[] = [
             element: <HostMainPage />,
             handle: {
               headerIcons: ['share', 'settings'],
+            },
+          },
+          {
+            path: 'dashboard',
+            element: <Dashboard />,
+            handle: {
+              headerIcons: ['settings'],
             },
           },
         ],
