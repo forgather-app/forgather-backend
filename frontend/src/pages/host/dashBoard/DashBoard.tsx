@@ -2,9 +2,9 @@ import Button from '../../../components/@common/buttons/button/Button';
 import InfoRow from '../../../components/host/infoRow/InfoRow';
 import { mockDashboardData } from '../../mockData';
 import { Thumbnail } from '../Host.common.styles';
-import * as S from './DashBoard.styles';
+import * as S from './Dashboard.styles';
 
-const DashBoard = () => {
+const Dashboard = () => {
   return (
     <S.Wrapper>
       <S.Title>스페이스 정보</S.Title>
@@ -29,4 +29,4 @@ const DashBoard = () => {
   );
 };
 
-export default DashBoard;
+export default Dashboard;
