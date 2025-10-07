@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { FiLink } from 'react-icons/fi';
-import IconButton from '../components/@common/buttons/iconButton/IconButton';
+import IconButton from '../../components/@common/buttons/iconButton/IconButton';
 
 const meta: Meta<typeof IconButton> = {
   title: 'Components/Button/IconButton',

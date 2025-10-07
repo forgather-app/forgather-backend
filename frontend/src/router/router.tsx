@@ -3,6 +3,7 @@ import Layout from '../components/layout/global/layout/Layout';
 import GuestMainPage from '../pages/guest/mainpage/GuestMainPage';
 import Dashboard from '../pages/host/dashboard/Dashboard';
 import HostMainPage from '../pages/host/mainPage/HostMainPage';
+import SpaceEditPage from '../pages/host/spaceEditPage/SpaceEditPage';
 import MainPage from '../pages/MainPage';
 import type { AppRouteObject } from '../types/route.type';
 
@@ -28,6 +29,13 @@ const routes: AppRouteObject[] = [
           {
             path: 'dashboard',
             element: <Dashboard />,
+            handle: {
+              headerIcons: ['settings'],
+            },
+          },
+          {
+            path: 'dashboard-edit',
+            element: <SpaceEditPage />,
             handle: {
               headerIcons: ['settings'],
             },
