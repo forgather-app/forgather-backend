@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { CONSTRAINTS } from '../../constants/constraints';
 import { heicToJpegBlob, isHeic } from '../../utils/heic';
 import {
