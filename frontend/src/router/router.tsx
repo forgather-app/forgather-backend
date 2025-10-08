@@ -5,6 +5,7 @@ import GuestWorkDetail from '../pages/guest/workDetail/GuestWorkDetail';
 import Dashboard from '../pages/host/dashboard/DashBoard';
 import HostMainPage from '../pages/host/mainPage/HostMainPage';
 import MyPage from '../pages/host/mypage/MyPage';
+import SpaceCreateFunnel from '../pages/host/spaceCreate/funnel/SpaceCreateFunnel';
 import SpaceEditPage from '../pages/host/spaceEditPage/SpaceEditPage';
 import HostWorkDetail from '../pages/host/workDetail/HostWorkDetail';
 import WorkForm from '../pages/host/workForm/WorkForm';
@@ -50,6 +51,13 @@ const routes: AppRouteObject[] = [
             element: <SpaceEditPage />,
             handle: {
               headerIcons: ['settings'],
+            },
+          },
+          {
+            path: 'create-space',
+            element: <SpaceCreateFunnel />,
+            handle: {
+              noHeader: true,
             },
           },
           {

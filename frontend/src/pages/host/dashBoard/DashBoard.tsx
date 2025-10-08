@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import Button from '../../../components/@common/buttons/button/Button';
 import DeleteModal from '../../../components/@common/modal/deleteModal/DeleteModal';
-import Thumbnail from '../../../components/@common/thumbnail/Thumbnail';
 import InfoRow from '../../../components/specific/infoRow/InfoRow';
 import { useToast } from '../../../hooks/@common/useToast';
+import { Thumbnail } from '../../MainPage.common.styles';
 import { mockDashboardData } from '../../mockData';
 import * as S from './Dashboard.styles';
 
