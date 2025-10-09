@@ -61,7 +61,7 @@ const SpaceInfoPage = () => {
         />
       </S.DeleteButtonContainer>
       <Button
-        variant="primary"
+        variant="fixed"
         text="수정하기"
         onClick={() => navigate(createSpaceInfoEditRoute(spaceCode ?? ''))}
       />
