@@ -40,12 +40,16 @@ const HostMainPage = () => {
               '_blank',
             )
           }
+          disabled={
+            !spaceInfo.instagramUsername || spaceInfo.instagramUsername === ''
+          }
         />
         <IconButton
           aria-label="이메일"
           icon={<MdEmail />}
           variant="default"
           onClick={() => window.open(`mailto:${spaceInfo.email}`, '_blank')}
+          disabled={!spaceInfo.email || spaceInfo.email === ''}
         />
       </MainPageStyles.IconButtonContainer>
       <DividerLine width="10%" />

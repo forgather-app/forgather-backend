@@ -11,7 +11,8 @@ export const IconButtonStyles = {
       scale: 0.95;
     }
     &:disabled {
-      color: ${theme.colors.gray04};
+      pointer-events: none;
+      color: ${theme.colors.gray03};
     }
   `,
   outline: (theme: Theme) => css`
