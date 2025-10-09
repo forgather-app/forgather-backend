@@ -48,6 +48,7 @@ const EditForm = () => {
     handleSubmit,
     watch,
     reset,
+    trigger,
     setValue,
     formState: { errors, isValid: isAllValid, dirtyFields },
   } = useForm<SpaceInfoFormData>({
@@ -128,6 +129,16 @@ const EditForm = () => {
         placeholder="forgather@forgather.me"
         errorMessage={errors.email?.message}
         maxLength={CONSTRAINTS.MAX_LENGTH.SPACE.EMAIL}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+          setValue('email', e.target.value, {
+            shouldValidate: false,
+            shouldDirty: true,
+          });
+          if (errors.email) {
+            trigger('email');
+          }
+        }}
+        onBlur={() => trigger('email')}
       />
       <TextInput
         {...register('instagramUsername')}
