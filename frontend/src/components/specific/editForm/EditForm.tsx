@@ -127,12 +127,14 @@ const EditForm = () => {
         label="E-mail"
         placeholder="forgather@forgather.me"
         errorMessage={errors.email?.message}
+        maxLength={CONSTRAINTS.MAX_LENGTH.SPACE.EMAIL}
       />
       <TextInput
         {...register('instagramUsername')}
         label="Instagram ID"
         placeholder="forgather_official"
         errorMessage={errors.instagramUsername?.message}
+        maxLength={CONSTRAINTS.MAX_LENGTH.SPACE.INSTAGRAM_USERNAME}
       />
       <Button
         variant="primary"

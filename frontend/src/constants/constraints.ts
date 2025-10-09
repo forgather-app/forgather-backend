@@ -3,6 +3,8 @@ export const CONSTRAINTS = {
     SPACE: {
       NAME: 10,
       DESCRIPTION: 100,
+      EMAIL: 50,
+      INSTAGRAM_USERNAME: 30,
     },
     WORK: {
       TITLE: 50,
