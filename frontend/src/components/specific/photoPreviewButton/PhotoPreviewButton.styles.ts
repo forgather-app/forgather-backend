@@ -11,11 +11,14 @@ export const Label = styled.label`
   position: relative;
 `;
 
-export const Overlay = styled.div`
+export const Overlay = styled.div<{ isPhotoExist: boolean }>`
   position: absolute;
   top: 0;
   left: 0;
-  background: ${({ theme }) => hexToRgba(theme.colors.gray06, 0.3)};
+  background: ${({ theme, isPhotoExist }) =>
+    isPhotoExist
+      ? hexToRgba(theme.colors.gray06, 0.1)
+      : hexToRgba(theme.colors.gray06, 0.3)};
   z-index: 1000;
   width: 100%;
   height: 100%;
@@ -27,7 +30,8 @@ export const Overlay = styled.div`
   svg {
     width: 32px;
     height: 32px;
-    color: ${({ theme }) => theme.colors.white};
+    color: ${({ theme, isPhotoExist }) =>
+      isPhotoExist ? hexToRgba(theme.colors.white, 0.5) : theme.colors.white};
     opacity: 0.8;
 
     &:active {

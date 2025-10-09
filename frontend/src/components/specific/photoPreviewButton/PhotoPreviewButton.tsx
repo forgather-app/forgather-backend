@@ -30,7 +30,7 @@ const PhotoPreviewButton = ({
           src={matchThumbnailImage()}
           onError={createImageErrorHandler(defaultImage)}
         />
-        <S.Overlay>
+        <S.Overlay isPhotoExist={!!previewFile[0]?.previewUrl}>
           <IoCamera />
         </S.Overlay>
       </S.Label>
