@@ -81,6 +81,10 @@ const EditForm = () => {
         originalSrc={`${import.meta.env.VITE_IMAGE_BASE_URL}${spaceInfo?.spacePhoto.path}`}
         previewFile={previewFile}
         uploadImage={handleFilesUploadClick}
+        clearFiles={clearFiles}
+        deleteImage={() => {
+          console.log('사진 삭제 로직');
+        }}
       />
       <TextInput
         {...register('name', {
