@@ -24,6 +24,8 @@ const PhotoPreviewButton = ({
   const matchThumbnailImage = () =>
     previewFile[0]?.previewUrl || originalSrc || defaultImage;
 
+  const isPhotoExist = !!previewFile[0]?.previewUrl && !!originalSrc;
+
   return (
     <S.Wrapper>
       <S.Label htmlFor={fileInputId}>
@@ -31,7 +33,7 @@ const PhotoPreviewButton = ({
           src={matchThumbnailImage()}
           onError={createImageErrorHandler(defaultImage)}
         />
-        <S.Overlay isPhotoExist={!!previewFile[0]?.previewUrl}>
+        <S.Overlay isPhotoExist={isPhotoExist}>
           <IoCamera />
         </S.Overlay>
       </S.Label>
@@ -41,12 +43,14 @@ const PhotoPreviewButton = ({
         accept="image/*"
         onChange={uploadImage}
       />
-      <Button
-        type="button"
-        variant="tertiary"
-        text="사진 삭제"
-        onClick={() => {}}
-      />
+      {isPhotoExist && (
+        <Button
+          type="button"
+          variant="tertiary"
+          text="사진 삭제"
+          onClick={() => {}}
+        />
+      )}
     </S.Wrapper>
   );
 };
