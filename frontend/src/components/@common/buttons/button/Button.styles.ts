@@ -41,19 +41,11 @@ export const buttonStyles = {
   `,
 
   tertiary: (theme: Theme) => css`
-    background-color: ${theme.colors.gray06};
-    color: ${theme.colors.white};
+    color: ${theme.colors.gray04};
+    ${theme.typography.captionSmall}
 
     &:active {
-      background-color: ${theme.colors.gray06};
-      box-shadow: 0px 2px 3px 0px rgba(0, 0, 0, 0.6) inset;
-      color: ${theme.colors.gray02};
-    }
-
-    &:disabled {
-      pointer-events: none;
-      background-color: ${theme.colors.gray02};
-      color: ${theme.colors.white};
+      color: ${theme.colors.gray05};
     }
   `,
 

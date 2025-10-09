@@ -4,6 +4,7 @@ import defaultImage from '../../../@assets/images/default-image.png';
 import { Thumbnail } from '../../../pages/MainPage.common.styles';
 import type { PreviewFile } from '../../../types/file.type';
 import { createImageErrorHandler } from '../../../utils/createImageErrorHandler';
+import Button from '../../@common/buttons/button/Button';
 import * as S from './PhotoPreviewButton.styles';
 
 interface PhotoPreviewButtonProps
@@ -24,7 +25,7 @@ const PhotoPreviewButton = ({
     previewFile[0]?.previewUrl || originalSrc || defaultImage;
 
   return (
-    <>
+    <S.Wrapper>
       <S.Label htmlFor={fileInputId}>
         <Thumbnail
           src={matchThumbnailImage()}
@@ -40,15 +41,14 @@ const PhotoPreviewButton = ({
         accept="image/*"
         onChange={uploadImage}
       />
-    </>
+      <Button
+        type="button"
+        variant="tertiary"
+        text="사진 삭제"
+        onClick={() => {}}
+      />
+    </S.Wrapper>
   );
 };
 
-/**
- * 
- * <label for="fileInput" class="custom-upload">
-  <img src="/camera-icon.svg" alt="" />
-</label>
-<input type="file" id="fileInput" style="display:none" />
- */
 export default PhotoPreviewButton;

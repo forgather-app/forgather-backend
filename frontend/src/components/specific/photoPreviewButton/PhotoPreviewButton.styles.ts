@@ -1,6 +1,12 @@
 import styled from '@emotion/styled';
 import { hexToRgba } from '../../../utils/hexToRgba';
 
+export const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
 export const Label = styled.label`
   display: flex;
   flex-direction: column;
