@@ -21,6 +21,7 @@ export const Value = styled.dd`
   width: 100%;
   text-align: left;
   min-height: 24px;
+  white-space: pre-wrap;
   ${({ theme }) => ({
     ...theme.typography.bodyRegular,
   })}
