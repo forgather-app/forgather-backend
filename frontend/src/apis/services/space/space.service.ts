@@ -1,0 +1,12 @@
+import type { SpaceInfo } from '../../../types/domain/space.type';
+import { http } from '../../http';
+
+export const spaceService = {
+  getSpaceInfo: (spaceCode: string) =>
+    http.get<SpaceInfo>(`/spaces/${spaceCode}`),
+
+  deleteSpace: (spaceCode: string) => http.delete(`/spaces/${spaceCode}`),
+
+  patchSpaceInfo: (spaceCode: string, data: FormData) =>
+    http.patch(`/spaces/${spaceCode}`, data),
+};
