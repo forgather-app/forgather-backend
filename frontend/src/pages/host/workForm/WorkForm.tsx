@@ -136,7 +136,7 @@ const WorkForm = () => {
         <Button
           type="submit"
           text="작품 소개 등록하기"
-          variant="tertiary"
+          variant="fixed"
           disabled={!isAllValid}
         />
       </S.ButtonContainer>

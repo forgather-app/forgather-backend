@@ -43,10 +43,6 @@ export const buttonStyles = {
   tertiary: (theme: Theme) => css`
     color: ${theme.colors.gray04};
     ${theme.typography.captionSmall}
-
-    &:active {
-      color: ${theme.colors.gray05};
-    }
   `,
 
   danger: (theme: Theme) => css`
