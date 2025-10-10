@@ -39,7 +39,7 @@ public class Product extends BaseTimeEntity {
     @Column(name = "author_name", nullable = false)
     private String authorName;
 
-    @Column(name = "description", nullable = false)
+    @Column(name = "description", length = 1000, nullable = false)
     private String description;
 
     /**

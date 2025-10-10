@@ -33,6 +33,6 @@ public class GuestBookCard extends BaseTimeEntity {
     @JoinColumn(name = "guest_id", nullable = false)
     private Guest guest;
 
-    @Column(name = "message", nullable = false)
+    @Column(name = "message", length = 500, nullable = false)
     private String message;
 }
