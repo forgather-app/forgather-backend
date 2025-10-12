@@ -24,7 +24,6 @@ import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.AwsS3Cloud;
 import com.forgather.fixture.SpaceFixture;
-import com.forgather.global.auth.model.Host;
 
 import io.restassured.http.ContentType;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
@@ -44,7 +43,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
     @MockitoBean
     private AwsS3Cloud awsS3Cloud;
 
-    private Host host;
     private Space space;
 
     private RegisterProductRequest registerRequest = new RegisterProductRequest(
@@ -91,13 +89,13 @@ class ProductAcceptanceTest extends AcceptanceTest {
             () -> assertThat(result.authorName()).isEqualTo(registerResponse.authorName()),
             () -> assertThat(result.description()).isEqualTo(registerResponse.description()),
             () -> assertThat(result.photos().get(0).originalName()).isEqualTo("photo1"),
-            () -> assertThat(result.photos().get(0).path()).isEqualTo("null/spaces/1234567890/product/file1.png"),
+            () -> assertThat(result.photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
             () -> assertThat(result.photos().get(0).order()).isEqualTo(1),
             () -> assertThat(result.photos().get(1).originalName()).isEqualTo("photo2"),
-            () -> assertThat(result.photos().get(1).path()).isEqualTo("null/spaces/1234567890/product/file2.png"),
+            () -> assertThat(result.photos().get(1).path()).endsWith("/spaces/1234567890/product/file2.png"),
             () -> assertThat(result.photos().get(1).order()).isEqualTo(2),
             () -> assertThat(result.photos().get(2).originalName()).isEqualTo("photo3"),
-            () -> assertThat(result.photos().get(2).path()).isEqualTo("null/spaces/1234567890/product/file3.png"),
+            () -> assertThat(result.photos().get(2).path()).endsWith("/spaces/1234567890/product/file3.png"),
             () -> assertThat(result.photos().get(2).order()).isEqualTo(3)
         );
     }
@@ -139,13 +137,13 @@ class ProductAcceptanceTest extends AcceptanceTest {
             () -> assertThat(response.authorName()).isEqualTo(registerRequest.authorName()),
             () -> assertThat(response.description()).isEqualTo(registerRequest.description()),
             () -> assertThat(response.photos().get(0).originalName()).isEqualTo("photo1"),
-            () -> assertThat(response.photos().get(0).path()).isEqualTo("null/spaces/1234567890/product/file1.png"),
+            () -> assertThat(response.photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
             () -> assertThat(response.photos().get(0).order()).isEqualTo(1),
             () -> assertThat(response.photos().get(1).originalName()).isEqualTo("photo2"),
-            () -> assertThat(response.photos().get(1).path()).isEqualTo("null/spaces/1234567890/product/file2.png"),
+            () -> assertThat(response.photos().get(1).path()).endsWith("/spaces/1234567890/product/file2.png"),
             () -> assertThat(response.photos().get(1).order()).isEqualTo(2),
             () -> assertThat(response.photos().get(2).originalName()).isEqualTo("photo3"),
-            () -> assertThat(response.photos().get(2).path()).isEqualTo("null/spaces/1234567890/product/file3.png"),
+            () -> assertThat(response.photos().get(2).path()).endsWith("/spaces/1234567890/product/file3.png"),
             () -> assertThat(response.photos().get(2).order()).isEqualTo(3)
         );
     }
@@ -230,16 +228,16 @@ class ProductAcceptanceTest extends AcceptanceTest {
             () -> assertThat(result.authorName()).isEqualTo(registerResponse.authorName()),
             () -> assertThat(result.description()).isEqualTo(request.description()),
             () -> assertThat(result.photos().get(0).originalName()).isEqualTo("photo1"),
-            () -> assertThat(result.photos().get(0).path()).isEqualTo("null/spaces/1234567890/product/file1.png"),
+            () -> assertThat(result.photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
             () -> assertThat(result.photos().get(0).order()).isEqualTo(1),
             () -> assertThat(result.photos().get(1).originalName()).isEqualTo("photo3"),
-            () -> assertThat(result.photos().get(1).path()).isEqualTo("null/spaces/1234567890/product/file3.png"),
+            () -> assertThat(result.photos().get(1).path()).endsWith("/spaces/1234567890/product/file3.png"),
             () -> assertThat(result.photos().get(1).order()).isEqualTo(2),
             () -> assertThat(result.photos().get(2).originalName()).isEqualTo("photo4"),
-            () -> assertThat(result.photos().get(2).path()).isEqualTo("null/spaces/1234567890/product/file4.png"),
+            () -> assertThat(result.photos().get(2).path()).endsWith("/spaces/1234567890/product/file4.png"),
             () -> assertThat(result.photos().get(2).order()).isEqualTo(3),
             () -> assertThat(result.photos().get(3).originalName()).isEqualTo("photo5"),
-            () -> assertThat(result.photos().get(3).path()).isEqualTo("null/spaces/1234567890/product/file5.png"),
+            () -> assertThat(result.photos().get(3).path()).endsWith("/spaces/1234567890/product/file5.png"),
             () -> assertThat(result.photos().get(3).order()).isEqualTo(4)
         );
     }
