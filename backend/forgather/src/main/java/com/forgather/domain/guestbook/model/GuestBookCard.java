@@ -72,7 +72,11 @@ public class GuestBookCard extends BaseTimeEntity {
         }
     }
 
-    public String getGuestNickname() {
+    public String getNickname() {
         return guest.getNickname();
+    }
+
+    public boolean equalsSpace(Space other) {
+        return space.equals(other);
     }
 }
