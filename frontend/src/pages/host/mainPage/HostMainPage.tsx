@@ -9,7 +9,6 @@ import useSpaceInfo from '../../../hooks/domain/space/useSpaceInfo';
 import { DividerLine } from '../../../styles/@common/DividerLine.styles';
 import { createInstagramUrl } from '../../../utils/createExternalLinks';
 import * as MainPageStyles from '../../MainPage.common.styles';
-import { mockData } from '../../mockData';
 
 const HostMainPage = () => {
   const { spaceCode } = useParams();
@@ -36,14 +35,21 @@ const HostMainPage = () => {
           icon={<IoLogoInstagram />}
           variant="default"
           onClick={() =>
-            window.open(createInstagramUrl(mockData.instagramId), '_blank')
+            window.open(
+              createInstagramUrl(spaceInfo.instagramUsername),
+              '_blank',
+            )
+          }
+          disabled={
+            !spaceInfo.instagramUsername || spaceInfo.instagramUsername === ''
           }
         />
         <IconButton
           aria-label="이메일"
           icon={<MdEmail />}
           variant="default"
-          onClick={() => window.open(`mailto:${mockData.email}`, '_blank')}
+          onClick={() => window.open(`mailto:${spaceInfo.email}`, '_blank')}
+          disabled={!spaceInfo.email || spaceInfo.email === ''}
         />
       </MainPageStyles.IconButtonContainer>
       <DividerLine width="10%" />

@@ -7,6 +7,7 @@ import {
 } from '../../../../constants/routes';
 import type { AppRouteObject } from '../../../../types/route.type';
 import Header from '../../../@common/header/Header';
+import ScrollToTop from '../../../@common/scrollToTop/ScrollToTop';
 import SpaceShareModal from '../../../specific/modal/spaceShareModal/SpaceShareModal';
 import * as S from './Layout.styles';
 
@@ -43,6 +44,7 @@ const Layout = () => {
 
   return (
     <>
+      <ScrollToTop />
       <Activity mode={isNoHeader ? 'hidden' : 'visible'}>
         <Header
           mode={isDarkPage ? 'dark' : 'light'}

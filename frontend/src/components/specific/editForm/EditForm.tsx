@@ -48,6 +48,7 @@ const EditForm = () => {
     handleSubmit,
     watch,
     reset,
+    trigger,
     setValue,
     formState: { errors, isValid: isAllValid, dirtyFields },
   } = useForm<SpaceInfoFormData>({
@@ -74,12 +75,26 @@ const EditForm = () => {
     patchSpaceInfo(data);
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setValue('email', e.target.value, {
+      shouldValidate: false,
+      shouldDirty: true,
+    });
+    if (errors.email) {
+      trigger('email');
+    }
+  };
+
   return (
     <S.Form onSubmit={handleSubmit(onSubmit)}>
       <PhotoPreviewButton
-        originalSrc={`${import.meta.env.VITE_IMAGE_BASE_URL}${spaceInfo?.spacePhoto.path}`}
+        originalSrc={spaceInfo?.spacePhoto.path}
         previewFile={previewFile}
         uploadImage={handleFilesUploadClick}
+        clearFiles={clearFiles}
+        deleteImage={() => {
+          console.log('사진 삭제 로직');
+        }}
       />
       <TextInput
         {...register('name', {
@@ -127,12 +142,16 @@ const EditForm = () => {
         label="E-mail"
         placeholder="forgather@forgather.me"
         errorMessage={errors.email?.message}
+        maxLength={CONSTRAINTS.MAX_LENGTH.SPACE.EMAIL}
+        onChange={handleChange}
+        onBlur={() => trigger('email')}
       />
       <TextInput
         {...register('instagramUsername')}
         label="Instagram ID"
         placeholder="forgather_official"
         errorMessage={errors.instagramUsername?.message}
+        maxLength={CONSTRAINTS.MAX_LENGTH.SPACE.INSTAGRAM_USERNAME}
       />
       <Button
         variant="primary"

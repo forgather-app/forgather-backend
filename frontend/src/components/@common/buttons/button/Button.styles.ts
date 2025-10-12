@@ -41,26 +41,15 @@ export const buttonStyles = {
   `,
 
   tertiary: (theme: Theme) => css`
-    background-color: ${theme.colors.gray06};
-    color: ${theme.colors.white};
-
-    &:active {
-      background-color: ${theme.colors.gray06};
-      box-shadow: 0px 2px 3px 0px rgba(0, 0, 0, 0.6) inset;
-      color: ${theme.colors.gray02};
-    }
-
-    &:disabled {
-      pointer-events: none;
-      background-color: ${theme.colors.gray02};
-      color: ${theme.colors.white};
-    }
+    color: ${theme.colors.gray04};
+    ${theme.typography.captionSmall}
   `,
 
   danger: (theme: Theme) => css`
     background-color: ${theme.colors.error};
     color: ${theme.colors.white};
   `,
+
   error: (theme: Theme) => css`
     ${theme.typography.captionSmall}
     color: ${theme.colors.error};
@@ -72,6 +61,7 @@ export const buttonStyles = {
       color: ${theme.colors.gray03};
     }
   `,
+
   elevated: (theme: Theme) => css`
     border-radius: 4px;
     background-color: ${theme.colors.white};
@@ -87,6 +77,31 @@ export const buttonStyles = {
 
     &:active {
       background-color: ${theme.colors.gray01};
+    }
+  `,
+
+  fixed: (theme: Theme) => css`
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: ${theme.layout.width};
+    margin: 0 auto;
+    background-color: ${theme.colors.gray06};
+    color: ${theme.colors.white};
+    z-index: ${theme.zIndex.fixedButton};
+
+    &:active {
+      background-color: ${theme.colors.gray06};
+      box-shadow: 0px 2px 3px 0px rgba(0, 0, 0, 0.6) inset;
+      color: ${theme.colors.gray02};
+    }
+
+    &:disabled {
+      pointer-events: none;
+      background-color: ${theme.colors.gray02};
+      color: ${theme.colors.white};
     }
   `,
 };
