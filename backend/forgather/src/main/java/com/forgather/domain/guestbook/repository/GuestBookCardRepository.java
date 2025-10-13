@@ -15,6 +15,8 @@ public interface GuestBookCardRepository {
 
     Optional<GuestBookCard> findById(Long id);
 
+    void delete(GuestBookCard guestBookCard);
+
     Long countBySpace(Space space);
 
     default GuestBookCard getByIdOrThrow(Long id) {
