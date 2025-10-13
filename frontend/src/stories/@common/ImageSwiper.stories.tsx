@@ -21,6 +21,8 @@ export const Default: Story = {
       { src: 'https://picsum.photos/200/300?random=7', alt: 'image7' },
       { src: 'https://picsum.photos/200/300?random=8', alt: 'image8' },
     ],
+    activeIndex: 0,
+    onSlideChange: () => {},
   },
 };
 
