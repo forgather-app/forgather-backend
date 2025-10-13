@@ -16,11 +16,7 @@ export const TopButtonContainer = styled.div`
 
 export const EditButton = styled.button`
   ${({ theme }) => theme.typography.captionSmall}
-  color: ${({ theme }) => theme.colors.gray02};
-`;
-export const DeleteButton = styled.button`
-  ${({ theme }) => theme.typography.captionSmall}
-  color: ${({ theme }) => theme.colors.error};
+  color: ${({ theme }) => theme.colors.gray04};
 `;
 
 export const EmptyStateContainer = styled.div`

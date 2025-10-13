@@ -62,7 +62,7 @@ export const EmptyGridItem = styled.div`
   color: ${({ theme }) => theme.colors.gray03};
 `;
 
-export const DeleteButton = styled.button`
+export const ImageDeleteButton = styled.button`
   position: absolute;
   top: 4px;
   right: 4px;
@@ -93,4 +93,16 @@ export const ButtonContainer = styled.div`
   margin-bottom: calc(-1 * ${({ theme }) => theme.layout.padding.topBottom});
   background-color: ${({ theme }) => theme.colors.background};
   z-index: 10;
+`;
+
+export const DeleteButton = styled.button`
+  ${({ theme }) => theme.typography.captionSmall}
+  color: ${({ theme }) => theme.colors.error};
+  display: block;
+  margin-left: auto;
+`;
+
+export const TopContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
 `;
