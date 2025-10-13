@@ -23,3 +23,9 @@ export const Default: Story = {
     ],
   },
 };
+
+export const NoImage: Story = {
+  args: {
+    imageInfo: [],
+  },
+};
