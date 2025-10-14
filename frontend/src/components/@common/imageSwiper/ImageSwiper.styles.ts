@@ -2,6 +2,7 @@ import styled from '@emotion/styled';
 
 export const NoImageContainer = styled.div`
   width: 100%;
+  min-height: 300px;
   height: 100%;
   display: flex;
   justify-content: center;
@@ -15,18 +16,18 @@ export const NoImageComment = styled.h2`
 `;
 
 export const ImageSwiperContainer = styled.div`
+  width: 100%;
   & .swiper {
-    max-width: ${({ theme }) => theme.layout.width};
-    max-height: 300px;
-    height: fit-content;
-    padding-bottom: 30px;
+    width: 100%;
+    min-height: ${({ theme }) => theme.layout.swiper.minHeight};
+    padding-bottom: ${({ theme }) => theme.layout.swiper.paddingBottom};
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
   }
   & .swiper-slide {
-    width: 45%;
+    width: 50%;
     height: 100%;
     display: flex;
     justify-content: center;
@@ -48,6 +49,8 @@ export const ImageSwiperContainer = styled.div`
   }
   & img {
     width: 100%;
+    max-width: ${({ theme }) => theme.layout.swiper.imageMaxWidth};
+    aspect-ratio: 3/4;
     height: 100%;
     border-radius: 4px;
     object-fit: cover;
