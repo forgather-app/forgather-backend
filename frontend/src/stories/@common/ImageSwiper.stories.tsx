@@ -1,4 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import image1 from '../../@assets/workDetail_mock_1.png';
+import image2 from '../../@assets/workDetail_mock_2.png';
+import image3 from '../../@assets/workDetail_mock_3.png';
 import ImageSwiper from '../../components/@common/imageSwiper/ImageSwiper';
 
 const meta: Meta<typeof ImageSwiper> = {
@@ -11,23 +14,26 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
+    initialIndex: 0,
     imageInfo: [
-      { src: 'https://picsum.photos/200/300?random=1`', alt: 'image1' },
-      { src: 'https://picsum.photos/200/300?random=2', alt: 'image2' },
-      { src: 'https://picsum.photos/200/300?random=3', alt: 'image3' },
-      { src: 'https://picsum.photos/200/300?random=4', alt: 'image4' },
-      { src: 'https://picsum.photos/200/300?random=5', alt: 'image5' },
-      { src: 'https://picsum.photos/200/300?random=6', alt: 'image6' },
-      { src: 'https://picsum.photos/200/300?random=7', alt: 'image7' },
-      { src: 'https://picsum.photos/200/300?random=8', alt: 'image8' },
+      { id: 1, src: image1, alt: 'image1' },
+      { id: 2, src: image2, alt: 'image2' },
+      { id: 3, src: image3, alt: 'image3' },
+      { id: 4, src: image1, alt: 'image4' },
+      { id: 5, src: image2, alt: 'image5' },
+      { id: 6, src: image3, alt: 'image6' },
+      { id: 7, src: image1, alt: 'image7' },
+      { id: 8, src: image2, alt: 'image8' },
     ],
-    activeIndex: 0,
-    onSlideChange: () => {},
+    updateCurrentIndex: () => {},
   },
 };
 
 export const NoImage: Story = {
   args: {
     imageInfo: [],
+    updateCurrentIndex: (index: number) => {
+      console.log('Current index:', index);
+    },
   },
 };
