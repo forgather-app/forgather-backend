@@ -168,6 +168,9 @@ const SpaceHomePage = () => {
     photosListLoadingState,
   ]);
 
+  const progressBarWidth =
+    parseInt(theme.layout.width) - parseInt(theme.layout.padding.leftRight) * 8;
+
   const renderBodyContent = () => {
     if (isEarlyTime) return <EarlyPage openedAt={spaceInfo?.openedAt ?? ''} />;
     if (isSpaceExpired) return <ExpiredPage />;
@@ -240,6 +243,7 @@ const SpaceHomePage = () => {
     <C.Wrapper>
       {isDownloading && (
         <LoadingLayout
+          progressBarWidth={progressBarWidth}
           loadingContents={loadingContents}
           totalAmount={totalProgress}
           currentAmount={currentProgress}
