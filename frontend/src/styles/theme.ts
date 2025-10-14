@@ -59,6 +59,11 @@ export const theme = {
       topBottom: '32px',
       leftRight: '16px',
     },
+    swiper: {
+      minHeight: '300px',
+      paddingBottom: '30px',
+      imageMaxWidth: '280px',
+    },
     headerHeight: '60px',
   },
 };
