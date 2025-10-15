@@ -3,6 +3,7 @@ import Layout from '../components/layout/global/layout/Layout';
 import GuestMainPage from '../pages/guest/mainpage/GuestMainPage';
 import GuestWorkDetail from '../pages/guest/workDetail/GuestWorkDetail';
 import GuestbookCardPage from '../pages/host/guestbook/card/GuestbookCardPage';
+import GuestbookListPage from '../pages/host/guestbook/list/GuestbookListPage';
 import HostMainPage from '../pages/host/mainPage/HostMainPage';
 import MyPage from '../pages/host/mypage/MyPage';
 import SharePage from '../pages/host/share/SharePage';
@@ -80,7 +81,14 @@ const routes: AppRouteObject[] = [
             },
           },
           {
-            path: 'guestbook/card',
+            path: ':spaceCode/guestbook',
+            element: <GuestbookListPage />,
+            handle: {
+              headerIcons: ['share', 'settings'],
+            },
+          },
+          {
+            path: ':spaceCode/guestbook/:guestbookCardId',
             element: <GuestbookCardPage />,
           },
         ],
