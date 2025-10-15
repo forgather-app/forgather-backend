@@ -1,4 +1,5 @@
 import type {
+  GuestbookForm
   GuestbookCard,
   GuestbookList,
   GuestbookListQuery,
@@ -6,6 +7,10 @@ import type {
 import { http } from '../../http';
 
 export const guestbookService = {
+  createGuestbook: (spaceCode: string, data: GuestbookForm) => {
+    return http.post(`/spaces/${spaceCode}/guestbook`, data);
+  },
+  
   getList: (spaceCode: string, query?: GuestbookListQuery) =>
     http.get<GuestbookList>(`/spaces/${spaceCode}/guestbook`, { ...query }),
 
