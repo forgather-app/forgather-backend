@@ -19,6 +19,9 @@ export const guestbookService = {
       `/spaces/${spaceCode}/guestbook/${guestbookCardId}`,
     ),
 
+  deleteCard: (spaceCode: string, guestbookCardId: number | string) =>
+    http.delete(`/spaces/${spaceCode}/guestbook/${guestbookCardId}`),
+
   deleteGuestbookCardPhotos: (
     spaceCode: string,
     guestBookCardId: number,
