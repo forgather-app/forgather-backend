@@ -1,8 +1,9 @@
 import type { buttonStyles } from '../components/@common/buttons/button/Button.styles';
-import type { FloatingActionButtonStyles } from '../components/@common/buttons/floatingActionButton/FloatingActionButton.styles';
-import type { IconLabelButtonStyles } from '../components/@common/buttons/iconLabelButton/IconLabelButton.styles';
+import type {
+  IconButtonSizes,
+  IconButtonStyles,
+} from '../components/@common/buttons/iconButton/IconButton.styles';
 
 export type ButtonVariant = keyof typeof buttonStyles;
-export type FloatingActionButtonVariant =
-  keyof typeof FloatingActionButtonStyles;
-export type IconLabelButtonVariant = keyof typeof IconLabelButtonStyles;
+export type IconButtonVariant = keyof typeof IconButtonStyles;
+export type IconButtonSize = keyof typeof IconButtonSizes;

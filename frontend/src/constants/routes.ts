@@ -1,37 +1,51 @@
 export const ROUTES = {
   MAIN: '/',
-  LANDING: '/landing',
-  LOGIN: '/login',
-  AUTH: {
-    KAKAO: '/auth/login/kakao',
-  },
-  CREATE: '/create',
-  MANAGER: {
-    SPACE_HOME: (spaceCode: string) => `/space/${spaceCode}`,
-    DASHBOARD: (spaceCode: string) => `/space/${spaceCode}/dashboard`,
-    SETTING: (spaceCode: string) => `/space/${spaceCode}/settings`,
-    INBOX: (spaceCode: string) => `/space/${spaceCode}/inbox`,
+  HOST: {
+    MY_PAGE: '/host/my-page',
+    CREATE_SPACE: '/host/create-space',
+    SHARE: '/host/share',
   },
   GUEST: {
-    IMAGE_UPLOAD: (spaceCode: string) => `/guest/image-upload/${spaceCode}`,
-    SHARE: '/share',
+    MAIN: '/guest/main',
+    CREATE_GUESTBOOK_COMPLETE: '/guest/create-guestbook-complete',
   },
-  COMPLETE: {
-    UPLOAD: '/complete/upload',
-    DOWNLOAD: '/complete/download',
-    SPACE_CREATED: '/complete/space-created',
-  },
-  MYPAGE: '/mypage',
-  LOGOUT: '/logout',
-  ERROR: {
-    NETWORK: '/network-error',
-    NOT_FOUND: '*',
-  },
-  IN_APP_BROWSER: '/in-app-browser',
-  DEMO: '/demo',
-  POLICY: {
-    PRIVACY_POLICY: '/policy/privacy-policy',
-    TERMS_OF_SERVICE: '/policy/terms-of-service',
-    PRIVACY_CONSENT: '/policy/privacy-consent',
-  },
-} as const;
+};
+
+export const createSpaceMainRoute = (spaceCode: string) => {
+  return `/host/${spaceCode}/main`;
+};
+
+export const createSpaceInfoRoute = (spaceCode: string) => {
+  return `/host/${spaceCode}/space-info`;
+};
+
+export const createSpaceInfoEditRoute = (spaceCode: string) => {
+  return `/host/${spaceCode}/space-info/edit`;
+};
+
+export const createWorkDetailRoute = (spaceCode: string) => {
+  return `/host/${spaceCode}/work-detail`;
+};
+
+export const createWorkEditRoute = (spaceCode: string) => {
+  return `/host/${spaceCode}/work-detail/edit`;
+};
+
+export const createGuestWorkDetailRoute = (spaceCode: string) => {
+  return `/guest/${spaceCode}/work-detail`;
+};
+
+export const createGuestbookRoute = (spaceCode: string) => {
+  return `/host/${spaceCode}/guestbook`;
+};
+
+export const createCreateGuestbookRoute = (spaceCode: string) => {
+  return `/guest/${spaceCode}/create-guestbook`;
+};
+
+export const createGuestbookCardRoute = (
+  spaceCode: string,
+  guestbookCardId: number | string,
+) => {
+  return `/host/${spaceCode}/guestbook/${guestbookCardId}`;
+};

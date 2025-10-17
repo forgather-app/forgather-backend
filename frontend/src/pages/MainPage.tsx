@@ -1,15 +1,57 @@
 import { useNavigate } from 'react-router-dom';
-import { ROUTES } from '../constants/routes';
-import useAuthConditionTasks from '../hooks/domain/auth/useAuthConditionTasks';
+import Button from '../components/@common/buttons/button/Button';
+import {
+  createCreateGuestbookRoute,
+  createGuestbookRoute,
+  createGuestWorkDetailRoute,
+  createWorkDetailRoute,
+  ROUTES,
+} from '../constants/routes';
+import { DividerLine } from '../styles/@common/DividerLine.styles';
 
 const MainPage = () => {
   const navigate = useNavigate();
-  useAuthConditionTasks({
-    taskWhenAuth: () => navigate(ROUTES.MYPAGE),
-    taskWhenNoAuth: () => navigate(ROUTES.LANDING),
-  });
-
-  return null;
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        alignItems: 'center',
+      }}
+    >
+      <h1>포게더 2.0 데모페이지</h1>
+      <Button
+        text="[Host] Mypage 이동 (로그인)"
+        onClick={() => navigate(ROUTES.HOST.MY_PAGE)}
+      />
+      <Button
+        text="[GUEST] 스페이스 메인 이동"
+        onClick={() => navigate(ROUTES.GUEST.MAIN)}
+        variant="secondary"
+      />
+      <DividerLine width="100%" />
+      <Button
+        text="[HOST] 작품 소개 이동"
+        onClick={() => navigate(createWorkDetailRoute('b17359bb41'))}
+      />
+      <Button
+        text="[GUEST] 작품 소개 이동"
+        onClick={() => navigate(createGuestWorkDetailRoute('b17359bb41'))}
+        variant="secondary"
+      />
+      <DividerLine width="100%" />
+      <Button
+        text="[HOST] 방명록 이동"
+        onClick={() => navigate(createGuestbookRoute('f205850861'))}
+      />
+      <Button
+        text="[GUEST] 방명록 작성 이동"
+        onClick={() => navigate(createCreateGuestbookRoute('f205850861'))}
+        variant="secondary"
+      />
+    </div>
+  );
 };
 
 export default MainPage;

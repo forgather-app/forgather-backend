@@ -4,30 +4,29 @@ import { hexToRgba } from '../../../../utils/hexToRgba';
 
 export const borderButtonStyles = {
   selected: (theme: Theme) => css`
-    color: ${theme.colors.primary};
+    color: ${theme.colors.gray06};
     background-color: ${theme.colors.white};
-    border: 1px solid ${theme.colors.primary};
-    ${theme.typography.buttonSecondary}
-    transition: color 0.3s, border-color 0.3s, background-color 0.3s;
+    border: 1px solid ${theme.colors.gray06};
+    ${theme.typography.button}
 
     &:disabled {
       pointer-events: none;
       color: ${theme.colors.gray04};
-      background-color: ${theme.colors.grayBackground};
+      background-color: ${theme.colors.gray01};
       border: 1px solid ${theme.colors.gray03};
     }
 
     &:active {
-      background-color: ${theme.colors.primary10};
-      border: 1px solid ${theme.colors.primary};
+      background-color: ${theme.colors.gray01};
+      border: 1px solid ${theme.colors.gray03};
     }
   `,
 
   unselected: (theme: Theme) => css`
-    background-color: transparent;
+    background-color: ${theme.colors.white};
     color: ${theme.colors.gray03};
     border: 1px solid ${theme.colors.gray03};
-    ${theme.typography.buttonSecondary}
+    ${theme.typography.button}
 
     &:active {
       background-color: ${theme.colors.gray01};
@@ -46,10 +45,11 @@ export const Wrapper = styled.button<{
   align-items: center;
   border-radius: 12px;
   ${({ $variant, theme }) => borderButtonStyles[$variant](theme)}
+  transition: color 0.3s, border-color 0.3s, background-color 0.2s;
 
   &:disabled {
     pointer-events: none;
-    color: ${({ theme }) => hexToRgba(theme.colors.gray01, 0.5)};
+    color: ${({ theme }) => hexToRgba(theme.colors.gray03, 0.5)};
     border-color: ${({ theme }) => hexToRgba(theme.colors.gray01, 0.5)};
   }
 `;
@@ -69,7 +69,7 @@ export const TitleContainer = styled.div`
 `;
 
 export const Title = styled.p`
-  ${({ theme }) => ({ ...theme.typography.buttonPrimary })}
+  ${({ theme }) => ({ ...theme.typography.button })}
 `;
 
 export const Description = styled.p`

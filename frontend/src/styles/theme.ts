@@ -1,38 +1,17 @@
 export const theme = {
   colors: {
     white: '#FFFFFF',
-    grayBackground: '#F5F5F5',
-    gray01: '#E0E0E0',
-    gray02: '#BDBDBD',
-    gray03: '#9E9E9E',
+    gray01: '#FAFAFA',
+    gray02: '#E0E0E0',
+    gray03: '#BBBBBB',
     gray04: '#6D6D6D',
     gray05: '#4B4B4B',
-    gray06: '#2B2B2B',
-    primary: '#6639DF',
-    primary10: '#F0EBFC',
-    primary20: '#E0D7F9',
-    primary60: '#A388EC',
-    primary80: '#8561E5',
-    accent: '#CEF763',
-    lightAccent: '#F4FFBE',
-    darkAccent: '#BAD84F',
-    error: '#FF5A5A',
-    lightError: '#FFB3B3',
-    gradient: {
-      start: '#472998',
-      end: '#19132A',
-    },
-    scrollableBlur: {
-      start: '#4B4B4B',
-      end: '#19132A',
-    },
-    uploadBox: {
-      active: '#F0EBFCB3',
-      default: '#F0EBFC66',
-    },
-    overlay: '#000000B3',
-    kakaoTalk: '#FEE500',
-    naver: '#03C75A',
+    gray06: '#2C2C2C',
+    error: '#B00020',
+    info: '#4CAF50',
+    newGuestbook: '#6DFFAF',
+    background: '#FCFCFC',
+    black: '#121212',
   },
   typography: {
     header01: {
@@ -55,6 +34,11 @@ export const theme = {
       fontSize: '16px',
       lineHeight: '150%',
     },
+    bodyWideLineHeight: {
+      fontWeight: 500,
+      fontSize: '16px',
+      lineHeight: '200%',
+    },
     bodyRegular: {
       fontWeight: 400,
       fontSize: '16px',
@@ -65,33 +49,15 @@ export const theme = {
       fontSize: '14px',
       lineHeight: '160%',
     },
-    buttonPrimary: {
+    button: {
       fontWeight: 600,
       fontSize: '16px',
       lineHeight: '120%',
     },
-    buttonSecondary: {
-      fontWeight: 600,
-      fontSize: '14px',
-      lineHeight: '120%',
-    },
-    buttonTertiary: {
-      fontWeight: 500,
-      fontSize: '14px',
-      lineHeight: '120%',
-    },
   },
   zIndex: {
-    overlayIcon: 1,
-    imageGrid: 2,
-    text: 3,
-    scrollableArea: 3,
-    topActionButton: 4,
-    loadingSpinner: 5,
-    floatingActionButton: 6,
-    backdrop: 100,
-    backdropContainer: 101,
     toast: 500,
+    fixedButton: 600,
   },
   layout: {
     width: '400px',
@@ -99,10 +65,12 @@ export const theme = {
       topBottom: '32px',
       leftRight: '16px',
     },
-    headerHeight: '44px',
-  },
-  breakpoints: {
-    desktop: '',
-    mobile: '375px',
+    swiper: {
+      minHeight: '300px',
+      paddingBottom: '30px',
+      imageMaxWidth: '280px',
+    },
+    headerHeight: '60px',
+    footerHeight: '60px',
   },
 };

@@ -1,95 +1,119 @@
 import { css, type Theme } from '@emotion/react';
 import styled from '@emotion/styled';
 import type { ButtonVariant } from '../../../../types/button.type';
-import { hexToRgba } from '../../../../utils/hexToRgba';
 
 export const buttonStyles = {
   primary: (theme: Theme) => css`
-    border-radius: 12px;
-    background-color: ${theme.colors.primary};
+    background-color: ${theme.colors.gray06};
     color: ${theme.colors.white};
+    border-radius: 4px;
 
     &:active {
-      border-radius: 12px;
-      background-color: ${theme.colors.primary};
+      background-color: ${theme.colors.gray06};
       box-shadow: 0px 2px 3px 0px rgba(0, 0, 0, 0.6) inset;
+      color: ${theme.colors.gray02};
     }
 
     &:disabled {
       pointer-events: none;
-      border-radius: 12px;
-      background-color: ${theme.colors.grayBackground};
-      color: ${theme.colors.gray04};
+      background-color: ${theme.colors.gray02};
+      color: ${theme.colors.white};
     }
   `,
 
   secondary: (theme: Theme) => css`
-    border-radius: 12px;
-    color: ${theme.colors.primary};
+    color: ${theme.colors.gray04};
     background-color: ${theme.colors.white};
-    border: 1px solid ${theme.colors.primary};
-    ${theme.typography.buttonSecondary}
+    border: 1px solid ${theme.colors.gray04};
+    border-radius: 4px;
 
     &:disabled {
-      border-radius: 12px;
       pointer-events: none;
-      color: ${theme.colors.gray04};
-      background-color: ${theme.colors.grayBackground};
-      border: 1px solid ${theme.colors.gray03};
+      color: ${theme.colors.gray03};
+      background-color: ${theme.colors.gray01};
+      border: 1px solid ${theme.colors.gray02};
+      color: ${theme.colors.gray03};
     }
 
     &:active {
-      border-radius: 12px;
-      background-color: ${theme.colors.primary10};
-      border: 1px solid ${theme.colors.primary};
+      background-color: ${theme.colors.gray01};
     }
   `,
 
   tertiary: (theme: Theme) => css`
-    width: fit-content;
+    color: ${theme.colors.gray04};
+    ${theme.typography.captionSmall}
+  `,
+
+  danger: (theme: Theme) => css`
+    background-color: ${theme.colors.error};
+    color: ${theme.colors.white};
+  `,
+
+  error: (theme: Theme) => css`
+    ${theme.typography.captionSmall}
+    color: ${theme.colors.error};
     padding: 0;
-    background-color: transparent;
-    color: ${theme.colors.gray03};
-    ${theme.typography.buttonTertiary}
+    width: fit-content;
+
+    &:disabled {
+      pointer-events: none;
+      color: ${theme.colors.gray03};
+    }
+  `,
+
+  fit: (theme: Theme) => css`
+    ${theme.typography.captionSmall}
+    color: ${theme.colors.gray06};
+    padding: 0;
+    width: fit-content;
+
+    &:disabled {
+      pointer-events: none;
+      color: ${theme.colors.gray03};
+    }
+  `,
+
+  elevated: (theme: Theme) => css`
+    border-radius: 4px;
+    background-color: ${theme.colors.white};
+    color: ${theme.colors.gray06};
+    box-shadow: 2px 2px 6px 0 rgba(0, 0, 0, 0.08);
+
+    &:disabled {
+      pointer-events: none;
+      color: ${theme.colors.gray03};
+      background-color: ${theme.colors.gray01};
+      color: ${theme.colors.gray03};
+    }
 
     &:active {
-      color: ${theme.colors.primary};
+      background-color: ${theme.colors.gray01};
+    }
+  `,
+
+  fixed: (theme: Theme) => css`
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: ${theme.layout.width};
+    margin: 0 auto;
+    background-color: ${theme.colors.gray06};
+    color: ${theme.colors.white};
+    z-index: ${theme.zIndex.fixedButton};
+
+    &:active {
+      background-color: ${theme.colors.gray06};
+      box-shadow: 0px 2px 3px 0px rgba(0, 0, 0, 0.6) inset;
+      color: ${theme.colors.gray02};
     }
 
     &:disabled {
       pointer-events: none;
-      background-color: transparent;
-      color: ${theme.colors.gray01};
-    }
-  `,
-  darkRounded: (theme: Theme) => css`
-    ${theme.typography.captionSmall}
-    width: auto;
-    border-radius: 500px;
-    padding: 2px 12px;
-    background: ${hexToRgba(theme.colors.gray06, 0.7)};
-    backdrop-filter: blur(5px);
-    color: ${theme.colors.white};
-    &:active {
-      background: ${hexToRgba(theme.colors.gray06, 0.3)};
-    }
-    &:disabled {
-      background: ${hexToRgba(theme.colors.gray01, 0.5)};
-    }
-  `,
-  darkRoundedSelected: (theme: Theme) => css`
-    ${theme.typography.captionSmall}
-    width: auto;
-    border-radius: 500px;
-    padding: 2px 12px;
-    background: ${hexToRgba(theme.colors.gray06, 0.7)};
-    backdrop-filter: blur(5px);
-    color: ${theme.colors.accent};
-    &:active {
-      background: ${hexToRgba(theme.colors.gray06, 0.3)};
-    }
-    &:disabled {
-      background: ${hexToRgba(theme.colors.gray01, 0.5)};
+      background-color: ${theme.colors.gray02};
+      color: ${theme.colors.white};
     }
   `,
 };
@@ -98,6 +122,7 @@ export const StyledButton = styled.button<{
   $variant: ButtonVariant;
 }>`
   width: 100%;
+
   display: flex;
   padding: 12px 20px;
   justify-content: center;
@@ -105,7 +130,7 @@ export const StyledButton = styled.button<{
   gap: 4px;
   white-space: nowrap;
 
-  ${({ theme }) => ({ ...theme.typography.buttonPrimary })}
+  ${({ theme }) => ({ ...theme.typography.button })}
   ${({ $variant, theme }) => buttonStyles[$variant](theme)}
 `;
 

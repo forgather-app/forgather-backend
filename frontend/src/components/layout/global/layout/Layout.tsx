@@ -1,71 +1,62 @@
-import { useEffect, useState } from 'react';
-import { Outlet, useLocation, useMatches } from 'react-router-dom';
-import { DefaultProfileImg as defaultProfile } from '../../../../@assets/images';
-import { authService } from '../../../../apis/services/auth.service';
-import OverlayProvider from '../../../../contexts/OverlayProvider';
-import useInAppRedirect from '../../../../hooks/@common/useInAppRedirect';
-import useTaskHandler from '../../../../hooks/@common/useTaskHandler';
-import useGoogleAnalytics from '../../../../hooks/useGoogleAnalytics';
-import type { MyInfo } from '../../../../types/api.type';
+import { useState } from 'react';
+import { IoSettingsSharp, IoShareOutline } from 'react-icons/io5';
+import { Outlet, useMatches, useNavigate, useParams } from 'react-router-dom';
+import { createSpaceInfoRoute, ROUTES } from '../../../../constants/routes';
 import type { AppRouteObject } from '../../../../types/route.type';
-import { StarField } from '../../../@common/starField/StarField';
-import Header from '../header/Header';
+import Footer from '../../../@common/footer/Footer';
+import Header from '../../../@common/header/Header';
+import ScrollToTop from '../../../@common/scrollToTop/ScrollToTop';
+import SpaceShareModal from '../../../specific/modal/spaceShareModal/SpaceShareModal';
 import * as S from './Layout.styles';
 
 const Layout = () => {
-  const [myInfo, setMyInfo] = useState<MyInfo | null>(null);
-  const { loadingState, tryFetch } = useTaskHandler();
-  const location = useLocation().pathname;
-  const { redirectToExternalBrowser } = useInAppRedirect();
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const navigate = useNavigate();
+  const { spaceCode } = useParams();
 
-  useGoogleAnalytics();
+  const openShareModal = () => {
+    setIsShareModalOpen(true);
+  };
+  const closeShareModal = () => {
+    setIsShareModalOpen(false);
+  };
+
+  const headerIcons = {
+    share: {
+      icon: <IoShareOutline />,
+      onClick: openShareModal,
+    },
+    settings: {
+      icon: <IoSettingsSharp />,
+      onClick: () => navigate(createSpaceInfoRoute(spaceCode ?? '')),
+    },
+  };
 
   const matches = useMatches() as AppRouteObject[];
   const current = matches[matches.length - 1];
-  const isHighlightPage = current?.handle?.highlight;
-  const isStarFieldPage = current?.handle?.starField;
-  const isHeaderExistPage = current?.handle?.header;
-  const isInAppBrowserAllowPage = current?.handle?.isInAppBrowserAllow;
-
-  const targetUrl = `${process.env.DOMAIN}${location}`;
-
-  //biome-ignore lint/correctness/useExhaustiveDependencies: 페이지 접속 시 처음 한 번만 실행
-  useEffect(() => {
-    if (isInAppBrowserAllowPage) return;
-    redirectToExternalBrowser(targetUrl);
-  }, []);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: tryFetch를 dependency에 추가하면 무한 루프 발생
-  useEffect(() => {
-    const fetchAuthStatus = async () => {
-      const result = await tryFetch({
-        task: async () => {
-          const response = await authService.status();
-          return response.data;
-        },
-        errorActions: [],
-        loadingStateKey: 'auth',
-        useCommonCodeErrorHandler: false,
-      });
-      setMyInfo(result.data ? result.data : null);
-    };
-    fetchAuthStatus();
-  }, []);
+  const isDarkPage = current?.handle?.highlight;
+  const matchedIcons = current?.handle?.headerIcons?.map(
+    (icon: keyof typeof headerIcons) => headerIcons[icon],
+  );
+  const isNoHeader = current?.handle?.noHeader;
+  const isNoFooter = current?.handle?.noFooter;
 
   return (
-    <OverlayProvider>
-      <S.Container $isHighlightPage={isHighlightPage}>
-        {isHeaderExistPage && (
-          <Header
-            profileImageSrc={myInfo?.pictureUrl || defaultProfile}
-            isLoggedIn={!!myInfo}
-            isLoading={loadingState.auth === 'loading'}
-          />
-        )}
-        {isStarFieldPage && <StarField />}
+    <>
+      <ScrollToTop />
+      {!isNoHeader && (
+        <Header
+          mode={isDarkPage ? 'dark' : 'light'}
+          icons={matchedIcons}
+          onLogoClick={() => navigate(ROUTES.MAIN)}
+        />
+      )}
+      <S.Container $isDarkPage={isDarkPage}>
+        <SpaceShareModal isOpen={isShareModalOpen} onClose={closeShareModal} />
         <Outlet />
       </S.Container>
-    </OverlayProvider>
+      {!isNoFooter && <Footer />}
+    </>
   );
 };
 

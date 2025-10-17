@@ -1,2 +1,1 @@
-export const BASE_URL = process.env.BASE_URL;
-export const DOMAIN = process.env.DOMAIN;
+export const BASE_URL = import.meta.env.VITE_BASE_URL;

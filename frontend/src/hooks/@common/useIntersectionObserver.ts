@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { DEBUG_MESSAGES } from '../../constants/debugMessages';
 
 interface UseIntersectionObserverProps {
   threshold?: number;
@@ -25,7 +24,7 @@ const useIntersectionObserver = ({
 
   useEffect(() => {
     if (!('IntersectionObserver' in window)) {
-      console.warn(DEBUG_MESSAGES.INTERSECTION_OBSERVER);
+      console.warn('IntersectionObserver를 지원하지 않습니다.');
       return;
     }
 

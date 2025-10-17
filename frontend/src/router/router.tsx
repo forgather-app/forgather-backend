@@ -1,26 +1,20 @@
 import { createBrowserRouter } from 'react-router-dom';
 import Layout from '../components/layout/global/layout/Layout';
-import KakaoAuthPage from '../pages/auth/KakaoAuthPage';
-import DownloadCompletePage from '../pages/complete/DownloadCompletePage';
-import UploadCompletePage from '../pages/complete/UploadCompletePage';
-import SpaceCreateFunnel from '../pages/create/funnel/SpaceCreateFunnel';
-import NetworkErrorPage from '../pages/error/NetworkErrorPage';
-import NotFoundErrorPage from '../pages/error/NotFoundErrorPage';
-import ImageUploadPage from '../pages/guest/imageUploadPage/ImageUploadPage';
-import SharePage from '../pages/guest/sharePage/SharePage';
-import InAppBrowserPage from '../pages/inAppBrowser/InAppBrowserPage';
-import LandingPage from '../pages/landing/LandingPage';
-import LoginPage from '../pages/login/LoginPage';
-import LogoutPage from '../pages/logout/LogoutPage';
+import CompletePage from '../pages/guest/completePage/CompletePage';
+import GuestBookFunnel from '../pages/guest/guestbookPage/funnel/GuestbookFunnel';
+import GuestMainPage from '../pages/guest/mainpage/GuestMainPage';
+import GuestWorkDetail from '../pages/guest/workDetail/GuestWorkDetail';
+import GuestbookCardPage from '../pages/host/guestbook/card/GuestbookCardPage';
+import GuestbookListPage from '../pages/host/guestbook/list/GuestbookListPage';
+import HostMainPage from '../pages/host/mainPage/HostMainPage';
+import MyPage from '../pages/host/mypage/MyPage';
+import SharePage from '../pages/host/share/SharePage';
+import SpaceCreateFunnel from '../pages/host/spaceCreate/funnel/SpaceCreateFunnel';
+import SpaceEditPage from '../pages/host/spaceEditPage/SpaceEditPage';
+import SpaceInfoPage from '../pages/host/spaceInfoPage/SpaceInfoPage';
+import HostWorkDetail from '../pages/host/workDetail/HostWorkDetail';
+import WorkForm from '../pages/host/workForm/WorkForm';
 import MainPage from '../pages/MainPage';
-import DashboardPage from '../pages/manager/dashboard/DashboardPage';
-import InboxPage from '../pages/manager/inbox/InboxPage';
-import SettingsPage from '../pages/manager/settings/SettingsPage';
-import SpaceHomePage from '../pages/manager/spaceHome/SpaceHomePage';
-import MyPage from '../pages/mypage/MyPage';
-import PrivacyConsentPage from '../pages/policies/PrivacyConsentPage';
-import PrivacyPolicyPage from '../pages/policies/PrivacyPolicyPage';
-import TermsOfServicePage from '../pages/policies/TermsOfServicePage';
 import type { AppRouteObject } from '../types/route.type';
 
 const routes: AppRouteObject[] = [
@@ -31,148 +25,99 @@ const routes: AppRouteObject[] = [
       {
         path: '/',
         element: <MainPage />,
-        handle: {
-          header: true,
-          starField: true,
-          highlight: true,
-        },
       },
       {
-        path: '/landing',
-        element: <LandingPage />,
-        handle: {
-          header: true,
-          starField: true,
-          highlight: true,
-        },
-      },
-      // {
-      //   path: '/demo',
-      //   element: <DemoHome />,
-      //   handle: {
-      //     header: true,
-      //   },
-      // },
-      {
-        path: 'create',
-        element: <SpaceCreateFunnel />,
-      },
-      {
-        path: 'space/:spaceCode',
-        element: <SpaceHomePage />,
-        handle: {
-          header: true,
-          starField: true,
-          highlight: true,
-        },
-      },
-
-      {
-        path: 'space/:spaceCode/dashboard',
-        element: <DashboardPage />,
-        handle: {
-          header: true,
-          highlight: true,
-        },
-      },
-      {
-        path: 'space/:spaceCode/settings',
-        element: <SettingsPage />,
-        handle: {
-          header: true,
-          highlight: true,
-        },
-      },
-      {
-        path: 'space/:spaceCode/inbox',
-        element: <InboxPage />,
-        handle: {
-          header: true,
-          highlight: true,
-        },
-      },
-      {
-        path: 'guest/image-upload/:spaceCode',
-        element: <ImageUploadPage />,
-        handle: {
-          starField: true,
-          highlight: true,
-          isInAppBrowserAllow: true,
-        },
-      },
-      {
-        path: 'share',
-        element: <SharePage />,
-      },
-      {
-        path: 'mypage',
-        element: <MyPage />,
-        handle: {
-          header: true,
-          highlight: true,
-        },
-      },
-      {
-        path: 'logout',
-        element: <LogoutPage />,
-        handle: {
-          header: true,
-          highlight: true,
-        },
-      },
-      {
-        path: 'complete',
+        path: 'host',
         children: [
           {
-            path: 'upload',
-            element: <UploadCompletePage />,
+            path: ':spaceCode/main',
+            element: <HostMainPage />,
             handle: {
-              isInAppBrowserAllow: true,
+              headerIcons: ['share', 'settings'],
             },
           },
           {
-            path: 'download',
-            element: <DownloadCompletePage />,
+            path: ':spaceCode/space-info',
+            element: <SpaceInfoPage />,
+            handle: {
+              headerIcons: ['settings'],
+            },
+          },
+          {
+            path: 'my-page',
+            element: <MyPage />,
+            handle: {
+              highlight: true,
+              headerIcons: ['settings'],
+              noFooter: true,
+            },
+          },
+          {
+            path: ':spaceCode/space-info/edit',
+            element: <SpaceEditPage />,
+            handle: {
+              headerIcons: ['settings'],
+            },
+          },
+          {
+            path: 'create-space',
+            element: <SpaceCreateFunnel />,
+            handle: {
+              noHeader: true,
+              noFooter: true,
+            },
+          },
+          {
+            path: ':spaceCode/work-detail',
+            element: <HostWorkDetail />,
+          },
+          {
+            path: ':spaceCode/work-detail/edit',
+            element: <WorkForm />,
+          },
+          {
+            path: 'share',
+            element: <SharePage />,
+            handle: {
+              noFooter: true,
+            },
+          },
+          {
+            path: ':spaceCode/guestbook',
+            element: <GuestbookListPage />,
+            handle: {
+              headerIcons: ['share', 'settings'],
+            },
+          },
+          {
+            path: ':spaceCode/guestbook/:guestbookCardId',
+            element: <GuestbookCardPage />,
           },
         ],
       },
       {
-        path: 'login',
-        element: <LoginPage />,
-      },
-      {
-        path: 'auth',
+        path: 'guest',
         children: [
           {
-            path: 'login',
-            children: [
-              {
-                path: 'kakao',
-                element: <KakaoAuthPage />,
-              },
-            ],
+            path: 'main',
+            element: <GuestMainPage />,
+          },
+          {
+            path: ':spaceCode/create-guestbook',
+            element: <GuestBookFunnel />,
+            handle: {
+              noHeader: true,
+            },
+          },
+          {
+            path: 'create-guestbook-complete',
+            element: <CompletePage />,
+          },
+          {
+            path: ':spaceCode/work-detail',
+            element: <GuestWorkDetail />,
           },
         ],
-      },
-      {
-        path: 'policy',
-        children: [
-          { path: 'privacy-policy', element: <PrivacyPolicyPage /> },
-          { path: 'terms-of-service', element: <TermsOfServicePage /> },
-          { path: 'privacy-consent', element: <PrivacyConsentPage /> },
-        ],
-      },
-      {
-        path: 'in-app-browser',
-        element: <InAppBrowserPage />,
-      },
-      {
-        path: 'network-error',
-        element: <NetworkErrorPage />,
-      },
-      {
-        path: '*',
-        element: <NotFoundErrorPage />,
       },
     ],
   },

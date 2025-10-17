@@ -1,30 +1,14 @@
-import type { Guest } from './guest.type';
+export interface PresignedUrlResponse {
+  signedUrls: Record<string, string>;
+}
+
+export interface UploadedPhoto {
+  uploadFileName: string;
+  originalName: string;
+}
 
 export interface Photo {
   id: number;
+  originalName: string;
   path: string;
-  originalName: string;
-  guest: Guest;
-  capturedAt: Date | string | null;
-}
-
-export interface PhotoWithContent extends Photo {
-  contentType: string;
-  spaceId: number;
-}
-
-export interface CreatePhotoInput {
-  id: number;
-  path: string;
-  originalName: string;
-  capturedAt?: Date | string | null;
-}
-
-export interface DownloadInfo {
-  originalName: string;
-  url: string;
-}
-
-export interface DownloadInfoList {
-  downloadUrls: DownloadInfo[];
 }

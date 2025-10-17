@@ -11,8 +11,6 @@ interface BorderButtonProps
   description: string;
   /** 버튼의 variant */
   variant?: keyof typeof S.borderButtonStyles;
-  /** 클릭 시 실행할 함수 */
-  onClick: () => void;
   /** 비활성화 여부 */
   disabled?: boolean;
 }
@@ -21,17 +19,11 @@ const BorderButton = ({
   heading,
   description,
   variant = 'unselected',
-  onClick,
   disabled,
   ...buttonProps
 }: BorderButtonProps) => {
   return (
-    <S.Wrapper
-      {...buttonProps}
-      $variant={variant}
-      onClick={onClick}
-      disabled={disabled}
-    >
+    <S.Wrapper {...buttonProps} $variant={variant} disabled={disabled}>
       <S.ContentContainer>
         <S.TitleContainer>
           <S.Title>{heading.text}</S.Title>

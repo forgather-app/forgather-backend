@@ -13,7 +13,7 @@ export const ProgressElement = styled.div<{ $isFilled: boolean }>`
   flex: 1;
   height: 5px;
   border-radius: 20px;
-  background-color: ${({ theme }) => theme.colors.gray01};
+  background-color: ${({ theme }) => theme.colors.gray02};
   overflow: hidden;
 
   &::after {
@@ -23,7 +23,7 @@ export const ProgressElement = styled.div<{ $isFilled: boolean }>`
     left: 0;
     height: 100%;
     width: 100%;
-    background-color: ${({ theme }) => theme.colors.primary60};
+    background-color: ${({ theme }) => theme.colors.gray06};
     border-radius: 20px;
     transform: scaleX(${({ $isFilled }) => ($isFilled ? 1 : 0)});
     transform-origin: left;

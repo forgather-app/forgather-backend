@@ -1,8 +1,30 @@
+import type { LocalFile } from './file.type';
+import type { SpaceVisibility } from './space.type';
+
+export type CreateFunnelStep =
+  | 'name'
+  | 'description'
+  | 'check'
+  | 'detail'
+  | 'accessType';
+
+export interface CreateFunnelForm {
+  name: string;
+  description: string;
+  visibility: SpaceVisibility;
+  profileImage: LocalFile[];
+  email: string;
+  instagram: string;
+}
+
+export interface SpaceDetailElementInfos {
+  profileImage: LocalFile[];
+  email: string;
+  instagram: string;
+}
+
 export interface FunnelBaseElementProps {
-  title: {
-    text: string;
-    highlightTextArray: string[];
-  };
+  title: string;
   description: string;
   element: React.ReactNode;
   onNextButtonClick: () => void;

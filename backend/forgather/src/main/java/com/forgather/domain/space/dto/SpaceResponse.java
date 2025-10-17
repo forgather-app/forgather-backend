@@ -1,10 +1,6 @@
 package com.forgather.domain.space.dto;
 
-import java.time.LocalDateTime;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.forgather.domain.space.model.Space;
-import com.forgather.global.auth.dto.HostResponse;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -19,47 +15,46 @@ public record SpaceResponse(
     @Schema(description = "스페이스 이름", example = "My Space")
     String name,
 
-    @Schema(description = "스페이스 유효 시간", example = "72")
-    int validHours,
+    @Schema(description = "스페이스 설명", example = "나의 졸업 전시.")
+    String description,
 
-    @Schema(description = "스페이스 시작 시간", example = "2023-10-01T10:00:00")
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    LocalDateTime openedAt,
+    @Schema(description = "스페이스 공개여부", example = "true")
+    boolean isPublic,
 
-    @Schema(description = "스페이스 만료 시간", example = "2023-10-04T10:00:00")
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    LocalDateTime expiredAt,
+    @Schema(description = "스페이스 호스트 인스타그램 아이디", example = "forgather_official")
+    String instagramUsername,
 
-    @Schema(description = "스페이스 만료 여부", example = "false")
-    boolean isExpired,
+    @Schema(description = "스페이스 호스트 이메일", example = "forgather@forgather.me")
+    String email,
 
-    @Schema(description = "호스트 정보")
-    HostResponse host,
+    // @Schema(description = "호스트 정보")
+    // HostResponse host,
 
-    @Schema(description = "스페이스에 참여한 게스트 수", example = "10")
-    long guestCount,
+    @Schema(description = "스페이스 프로필 사진", example = """
+        {
+            "isExists": true,
+            "path": "forgather/1234567890/profile.png"
+        }
+        """)
+    SpacePhotoResponse spacePhoto,
 
-    @Schema(description = "스페이스에 업로드된 사진 수", example = "500")
-    long photoCount,
-
-    @Schema(description = "스페이스 타입", example = "PRIVATE")
-    String type
+    @Schema(description = "스페이스 방명록 카드 개수", example = "15")
+    Long guestBookCardCount
 ) {
 
-    public static SpaceResponse from(Space space) {
+    public static SpaceResponse from(Space space, SpacePhotoResponse spacePhoto, Long guestBookCardCount) {
         return new SpaceResponse(
             space.getId(),
             space.getCode(),
             space.getName(),
-            space.getValidHours(),
-            space.getOpenedAt(),
-            space.getExpiredAt(),
-            space.isExpired(LocalDateTime.now()),
+            space.getDescription(),
+            space.isPublic(),
+            space.getInstagramUsername(),
+            space.getEmail(),
             // TODO: 스페이스 : 호스트 m:n 관계로 변경 후 수정 필요
-            HostResponse.from(space.getSpaceHostMap().getFirst().getHost()),
-            space.getGuestCount(),
-            space.getPhotoCount(),
-            space.getType().name()
+            // HostResponse.from(space.getSpaceHostMap().getFirst().getHost()),
+            spacePhoto,
+            guestBookCardCount
         );
     }
 }

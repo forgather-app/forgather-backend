@@ -11,12 +11,9 @@ export interface PreviewFile {
   previewUrl: string;
 }
 
-export type UploadFileState =
-  | 'idle'
-  | 'signed'
-  | 'uploaded'
-  | 'success'
-  | 'failed';
+export type ImageCategoryType = 'PRODUCT ' | 'GUESTBOOK';
+
+export type UploadFileState = 'idle' | 'signed' | 'uploaded' | 'failed';
 
 export interface UploadFile {
   id: number;
