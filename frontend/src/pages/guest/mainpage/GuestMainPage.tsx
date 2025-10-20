@@ -4,6 +4,7 @@ import Button from '../../../components/@common/buttons/button/Button';
 import IconButton from '../../../components/@common/buttons/iconButton/IconButton';
 import {
   createCreateGuestbookRoute,
+  createGuestGuestbookRoute,
   createGuestWorkDetailRoute,
 } from '../../../constants/routes';
 import useSpaceInfo from '../../../hooks/domain/space/useSpaceInfo';
@@ -84,8 +85,7 @@ const GuestMainPage = () => {
         <Button
           variant="elevated"
           text="방명록 구경하기"
-          // TODO : 게스트용 방명록 페이지 구현 후 연동
-          onClick={() => {}}
+          onClick={() => navigate(createGuestGuestbookRoute(spaceCode ?? ''))}
           disabled={!spaceInfo.isPublic}
         />
       </MainPageStyles.ButtonContainer>
