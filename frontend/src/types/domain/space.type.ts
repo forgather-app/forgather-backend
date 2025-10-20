@@ -1,11 +1,13 @@
 export interface MySpace {
   id: number;
   spaceCode: string;
-  title: string;
-  thumbnail: string;
-  guestCount: number;
-  createdAt: string;
+  name: string;
+  description: string;
   isPublic: boolean;
+  instagramUsername: string;
+  email: string;
+  spacePhoto: SpacePhoto;
+  guestBookCardCount: number;
 }
 
 export interface SpacePhoto {
@@ -25,4 +27,5 @@ export interface SpaceInfoFormData {
   isPublic: boolean;
   email: string;
   instagramUsername: string;
+  isDeletePhoto?: boolean;
 }

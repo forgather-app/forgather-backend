@@ -1,6 +1,7 @@
+import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { guestbookService } from '../../../apis/services/guestbook/guestbook.service';
-import { ROUTES } from '../../../constants/routes';
+import { createGuestbookCompleteRoute } from '../../../constants/routes';
 import type { GuestbookForm } from '../../../types/domain/guestbook.type';
 import type { LocalFile } from '../../../types/file.type';
 import { clearFiles } from '../../../utils/clearFiles';
@@ -53,9 +54,8 @@ const usePostGuestbook = ({
     };
   };
 
-  const submitForm = async (photos: LocalFile[]) => {
-    console.log(photos);
-    try {
+  const mutation = useMutation({
+    mutationFn: async (photos: LocalFile[]) => {
       const form = await createGuestbookForm(photos);
       const result = await guestbookService.createGuestbook(
         spaceCode ?? '',
@@ -66,21 +66,26 @@ const usePostGuestbook = ({
         throw new Error('createGuestbook is failed');
       }
 
-      navigate(ROUTES.GUEST.CREATE_GUESTBOOK_COMPLETE, {
+      return { photos };
+    },
+    onSuccess: (data) => {
+      navigate(createGuestbookCompleteRoute(spaceCode), {
         state: {
           receiver: receiver,
           guestNickName: formData.nickname,
         },
       });
-      clearFiles(photos);
-    } catch (error) {
+      clearFiles(data.photos);
+    },
+    onError: (error) => {
       console.error(error);
       showToast({ text: '전송에 실패했습니다.', type: 'error' });
-    }
-  };
+    },
+  });
 
   return {
-    submitForm,
+    submitForm: mutation.mutate,
+    isLoading: mutation.isPending,
   };
 };
 

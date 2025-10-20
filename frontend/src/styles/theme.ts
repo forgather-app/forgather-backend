@@ -12,6 +12,7 @@ export const theme = {
     newGuestbook: '#6DFFAF',
     background: '#FCFCFC',
     black: '#121212',
+    kakaoTalk: '#FEE500',
   },
   typography: {
     header01: {
@@ -56,8 +57,10 @@ export const theme = {
     },
   },
   zIndex: {
-    toast: 500,
     fixedButton: 600,
+    modalBackdrop: 650,
+    modal: 700,
+    toast: 800,
   },
   layout: {
     width: '400px',

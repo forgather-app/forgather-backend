@@ -1,20 +1,40 @@
 import { IoLogoInstagram, IoMailOutline } from 'react-icons/io5';
+import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../../../components/@common/buttons/button/Button';
 import IconButton from '../../../components/@common/buttons/iconButton/IconButton';
+import {
+  createCreateGuestbookRoute,
+  createGuestGuestbookRoute,
+  createGuestWorkDetailRoute,
+} from '../../../constants/routes';
+import useSpaceInfo from '../../../hooks/domain/space/useSpaceInfo';
 import { DividerLine } from '../../../styles/@common/DividerLine.styles';
+import { buildOriginalImageUrl } from '../../../utils/buildImageUrl';
 import { createInstagramUrl } from '../../../utils/createExternalLinks';
 import * as MainPageStyles from '../../MainPage.common.styles';
-import { mockAccess, mockData } from '../../mockData';
+import { mockAccess } from '../../mockData';
 
 const GuestMainPage = () => {
+  const navigate = useNavigate();
+  const { spaceCode } = useParams();
+  const { spaceInfo, isLoading } = useSpaceInfo({ spaceCode: spaceCode ?? '' });
+
+  if (isLoading) {
+    return <MainPageStyles.Wrapper>로딩 중...</MainPageStyles.Wrapper>;
+  }
+
+  const thumbnailUrl = spaceInfo.spacePhoto.isExists
+    ? buildOriginalImageUrl(spaceInfo.spacePhoto.path)
+    : '';
+
   return (
     <MainPageStyles.Wrapper>
       <MainPageStyles.ProfileContainer>
-        <MainPageStyles.Thumbnail src={mockData.thumbnail} />
+        <MainPageStyles.Thumbnail src={thumbnailUrl} />
         <MainPageStyles.InfoContainer>
-          <MainPageStyles.Name>{mockData.title}</MainPageStyles.Name>
+          <MainPageStyles.Name>{spaceInfo.name}</MainPageStyles.Name>
           <MainPageStyles.Introduction>
-            {mockData.introduction}
+            {spaceInfo.description}
           </MainPageStyles.Introduction>
         </MainPageStyles.InfoContainer>
       </MainPageStyles.ProfileContainer>
@@ -25,10 +45,13 @@ const GuestMainPage = () => {
           variant="default"
           onClick={() =>
             window.open(
-              createInstagramUrl(mockData.instagramId),
+              createInstagramUrl(spaceInfo.instagramUsername),
               '_blank',
               'noopener,noreferrer',
             )
+          }
+          disabled={
+            !spaceInfo.instagramUsername || spaceInfo.instagramUsername === ''
           }
         />
         <IconButton
@@ -37,11 +60,12 @@ const GuestMainPage = () => {
           variant="default"
           onClick={() =>
             window.open(
-              `mailto:${mockData.email}`,
+              `mailto:${spaceInfo.email}`,
               '_blank',
               'noopener,noreferrer',
             )
           }
+          disabled={!spaceInfo.email || spaceInfo.email === ''}
         />
       </MainPageStyles.IconButtonContainer>
       <DividerLine width="10%" />
@@ -49,20 +73,20 @@ const GuestMainPage = () => {
         <Button
           variant="elevated"
           text="작품 소개"
-          onClick={() => {}}
+          onClick={() => navigate(createGuestWorkDetailRoute(spaceCode ?? ''))}
           disabled={!mockAccess.introduce}
         />
         <Button
           variant="elevated"
           text="방명록 작성하기"
-          onClick={() => {}}
-          disabled={!mockAccess.writeGuestbook}
+          onClick={() => navigate(createCreateGuestbookRoute(spaceCode ?? ''))}
+          disabled={!spaceInfo}
         />
         <Button
           variant="elevated"
           text="방명록 구경하기"
-          onClick={() => {}}
-          disabled={!mockAccess.viewGuestbook}
+          onClick={() => navigate(createGuestGuestbookRoute(spaceCode ?? ''))}
+          disabled={!spaceInfo.isPublic}
         />
       </MainPageStyles.ButtonContainer>
       <MainPageStyles.Footer></MainPageStyles.Footer>

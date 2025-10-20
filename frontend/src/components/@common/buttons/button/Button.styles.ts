@@ -42,7 +42,9 @@ export const buttonStyles = {
 
   tertiary: (theme: Theme) => css`
     color: ${theme.colors.gray04};
-    ${theme.typography.captionSmall}
+    ${theme.typography.captionSmall};
+    border-radius: 4px;
+    border: solid 1px ${theme.colors.gray02};
   `,
 
   danger: (theme: Theme) => css`
@@ -102,7 +104,6 @@ export const buttonStyles = {
     margin: 0 auto;
     background-color: ${theme.colors.gray06};
     color: ${theme.colors.white};
-    z-index: ${theme.zIndex.fixedButton};
 
     &:active {
       background-color: ${theme.colors.gray06};
@@ -129,6 +130,7 @@ export const StyledButton = styled.button<{
   align-items: center;
   gap: 4px;
   white-space: nowrap;
+  z-index: ${({ theme }) => theme.zIndex.fixedButton};
 
   ${({ theme }) => ({ ...theme.typography.button })}
   ${({ $variant, theme }) => buttonStyles[$variant](theme)}

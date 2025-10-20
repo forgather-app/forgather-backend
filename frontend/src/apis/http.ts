@@ -1,21 +1,44 @@
 import type { ApiResponse, RequestOptions } from '../types/api.type';
+import { HttpError } from '../types/error.type';
 import { createQueryString } from '../utils/createQueryString';
 import { BASE_URL } from './config';
 import { matchBody, matchHeaders } from './helper';
+import { retryAuth } from './refresh';
 
 const request = async <T>(
   endpoint: string,
   options: RequestOptions,
 ): Promise<ApiResponse<T>> => {
-  const { method, body, params, headers } = options;
+  const { method, body, params, headers, token } = options;
   const url = `${BASE_URL}${endpoint}${createQueryString(params)}`;
 
-  try {
+  const doFetch = async (newToken?: string) => {
     const response = await fetch(url, {
       method,
-      headers: matchHeaders(body, headers ?? {}),
+      headers: matchHeaders(body, headers ?? {}, newToken ?? token),
       body: matchBody(body),
     });
+    return response;
+  };
+
+  try {
+    let response = await doFetch();
+    if (response.status === 401) {
+      try {
+        response = await retryAuth(doFetch);
+      } catch (error) {
+        if (error instanceof HttpError) {
+          return {
+            success: false,
+            error: {
+              type: 'http',
+              status: error.status,
+              message: error.message,
+            },
+          };
+        }
+      }
+    }
 
     const text = await response.text();
     const data = text ? JSON.parse(text) : null;
@@ -47,18 +70,21 @@ const request = async <T>(
 };
 
 export const http = {
-  get: <T>(endpoint: string, params?: Record<string, unknown>) =>
-    request<T>(endpoint, { method: 'GET', params }),
+  get: <T>(
+    endpoint: string,
+    params?: Record<string, unknown>,
+    token?: string | undefined,
+  ) => request<T>(endpoint, { method: 'GET', params, token }),
 
-  post: <T>(endpoint: string, body?: unknown) =>
-    request<T>(endpoint, { method: 'POST', body }),
+  post: <T>(endpoint: string, body?: unknown, token?: string) =>
+    request<T>(endpoint, { method: 'POST', body, token }),
 
-  put: <T>(endpoint: string, body?: unknown) =>
-    request<T>(endpoint, { method: 'PUT', body }),
+  put: <T>(endpoint: string, body?: unknown, token?: string) =>
+    request<T>(endpoint, { method: 'PUT', body, token }),
 
-  patch: <T>(endpoint: string, body?: unknown) =>
-    request<T>(endpoint, { method: 'PATCH', body }),
+  patch: <T>(endpoint: string, body?: unknown, token?: string) =>
+    request<T>(endpoint, { method: 'PATCH', body, token }),
 
-  delete: <T>(endpoint: string, body?: unknown) =>
-    request<T>(endpoint, { method: 'DELETE', body }),
+  delete: <T>(endpoint: string, body?: unknown, token?: string) =>
+    request<T>(endpoint, { method: 'DELETE', body, token }),
 };
