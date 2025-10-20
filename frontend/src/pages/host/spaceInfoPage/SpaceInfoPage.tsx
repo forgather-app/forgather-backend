@@ -7,7 +7,7 @@ import InfoRow from '../../../components/specific/infoRow/InfoRow';
 import { createSpaceInfoEditRoute } from '../../../constants/routes';
 import useSpaceDelete from '../../../hooks/domain/space/useSpaceDelete';
 import useSpaceInfo from '../../../hooks/domain/space/useSpaceInfo';
-import { buildImageUrl } from '../../../utils/buildImageUrl';
+import { buildOriginalImageUrl } from '../../../utils/buildImageUrl';
 import * as S from './SpaceInfoPage.styles';
 
 const SpaceInfoPage = () => {
@@ -42,7 +42,7 @@ const SpaceInfoPage = () => {
         buttonDisabled={isPending}
       />
       <S.Title>스페이스 정보</S.Title>
-      <Thumbnail src={buildImageUrl(spaceInfo.spacePhoto.path)} />
+      <Thumbnail src={buildOriginalImageUrl(spaceInfo.spacePhoto.path)} />
       <S.InfoRowContainer>
         <InfoRow label="스페이스 이름" value={spaceInfo.name} />
         <InfoRow
