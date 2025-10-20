@@ -59,6 +59,7 @@ const SpaceHomePage = () => {
     updatePhotos,
     isEndPage,
     thumbnailPhotoMap,
+    infiniteScrollAnnouncerRef,
   } = usePhotosBySpaceCode({
     reObserve,
     spaceCode: spaceInfo?.spaceCode ?? '',
@@ -163,10 +164,13 @@ const SpaceHomePage = () => {
     isSpaceExpired,
     isEarlyTime,
     hasAccess,
-    accessLoadingState,
-    spaceInfoLoadingState,
-    photosListLoadingState,
   ]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      document.querySelector('h1')?.focus();
+    }, 100);
+  }, []);
 
   const progressBarWidth =
     parseInt(theme.layout.width) - parseInt(theme.layout.padding.leftRight) * 8;
@@ -182,6 +186,9 @@ const SpaceHomePage = () => {
       return (
         <>
           <C.ImageManagementContainer>
+            <a href="#download-fab" className="skip-link">
+              모두 저장하기 바로가기
+            </a>
             {/* <Button
               text="수신함 📩"
               variant="darkRounded"
@@ -195,6 +202,24 @@ const SpaceHomePage = () => {
               onToggleSelectMode={toggleSelectMode}
               onToggleAllSelected={toggleAllSelected}
             />
+            {!isSelectMode && (
+              <S.DownloadButtonContainer>
+                <FloatingActionButton
+                  id="download-fab"
+                  label="모두 저장하기"
+                  icon={<DownloadIcon fill={theme.colors.gray06} />}
+                  onClick={() => {
+                    tryAllDownload();
+                    track.button('all_download_button', {
+                      page: 'space_home',
+                      section: 'space_home',
+                      action: 'download_all',
+                    });
+                  }}
+                  disabled={isDownloading}
+                />
+              </S.DownloadButtonContainer>
+            )}
             <SpaceManagerImageGrid
               isSelectMode={isSelectMode}
               selectedPhotoMap={selectedPhotoMap}
@@ -218,23 +243,6 @@ const SpaceHomePage = () => {
               onClick: () => trySelectedDownload(selectedPhotoIds),
             }}
           />
-          {!isSelectMode && (
-            <S.DownloadButtonContainer>
-              <FloatingActionButton
-                label="모두 저장하기"
-                icon={<DownloadIcon fill={theme.colors.gray06} />}
-                onClick={() => {
-                  tryAllDownload();
-                  track.button('all_download_button', {
-                    page: 'space_home',
-                    section: 'space_home',
-                    action: 'download_all',
-                  });
-                }}
-                disabled={isDownloading}
-              />
-            </S.DownloadButtonContainer>
-          )}
         </>
       );
   };
@@ -250,6 +258,11 @@ const SpaceHomePage = () => {
         />
       )}
 
+      <div
+        ref={infiniteScrollAnnouncerRef}
+        aria-live="polite"
+        className="sr-only"
+      />
       <C.HeaderContainer ref={scrollTopTriggerRef}>
         <ManagerHeader
           spaceName={spaceInfo?.name ?? ''}

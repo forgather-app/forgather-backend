@@ -26,8 +26,10 @@ const SpaceFooter = ({
       <S.TopButtonContainer $isVisible={!isAtPageTop}>
         {!isSelectMode && (
           <FloatingIconButton
+            ariaLabel="페이지 상단으로 이동"
             icon={<UpwardArrowIcon fill={theme.colors.white} />}
             onClick={goToTop}
+            role="link"
           />
         )}
       </S.TopButtonContainer>
