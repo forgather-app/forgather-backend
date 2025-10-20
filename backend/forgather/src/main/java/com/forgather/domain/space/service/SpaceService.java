@@ -1,6 +1,7 @@
 package com.forgather.domain.space.service;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -23,7 +24,10 @@ import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHostMap;
 import com.forgather.global.auth.repository.SpaceHostMapRepository;
 import com.forgather.global.exception.BaseException;
+import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.FileUploadException;
+import com.forgather.global.exception.ForbiddenException;
+import com.forgather.global.exception.UnauthorizedException;
 import com.forgather.global.util.RandomCodeGenerator;
 
 import lombok.RequiredArgsConstructor;
@@ -44,11 +48,9 @@ public class SpaceService {
     @Transactional
     public CreateSpaceResponse create(CreateSpaceRequest request, MultipartFile file, Host host) {
         String spaceCode = codeGenerator.generate(10);
+        validateHostNull(host);
         Space space = spaceRepository.save(request.toEntity(spaceCode));
-        // TODO: 호스트 검증 추가 & SpaceHostMap 등록 추가
-        if (host != null) {
-            spaceHostMapRepository.save(new SpaceHostMap(space, host));
-        }
+        spaceHostMapRepository.save(new SpaceHostMap(space, host));
         if (file == null || file.isEmpty()) {
             return CreateSpaceResponse.from(space);
         }
@@ -84,7 +86,8 @@ public class SpaceService {
     @Transactional
     public SpaceResponse update(String spaceCode, UpdateSpaceRequest request, MultipartFile file, Host host) {
         Space space = spaceRepository.getByCodeOrThrow(spaceCode);
-        // TODO: host 검증
+        validateSpaceHost(space, host);
+
         space.update(request.name(), request.description(), request.isPublic(), request.instagramUsername(),
             request.email());
 
@@ -142,7 +145,8 @@ public class SpaceService {
     @Transactional
     public void delete(String spaceCode, Host host) {
         Space space = spaceRepository.getByCodeOrThrow(spaceCode);
-        // TODO: host 검증
+        validateSpaceHost(space, host);
+
         spaceHostMapRepository.deleteBySpace(space);
         spacePhotoRepository.findBySpace(space)
             .ifPresent(spacePhoto -> {
@@ -163,10 +167,27 @@ public class SpaceService {
                 return spacePhotoRepository.findBySpace(space)
                     .map(photo -> SpaceResponse.from(space, SpacePhotoResponse.exists(photo.getPath()),
                         guestBookCardCount))
-                    .orElseGet(() -> SpaceResponse.from(space, SpacePhotoResponse.notExists(),
-                        guestBookCardCount));
+                    .orElseGet(() -> SpaceResponse.from(space, SpacePhotoResponse.notExists(), guestBookCardCount));
             })
+            .sorted(Comparator.comparingLong(SpaceResponse::id).reversed())
             .toList();
         return new HostSpaceResponse(spaceResponses);
+    }
+
+    private void validateSpaceHost(Space space, Host host) {
+        validateHostNull(host);
+        if (space == null) {
+            throw new BaseNullPointerException("스페이스는 null일 수 없습니다.");
+        }
+        if (spaceHostMapRepository.findBySpaceAndHost(space, host).isPresent()) {
+            return;
+        }
+        throw new ForbiddenException("권한이 존재하지 않습니다.");
+    }
+
+    private void validateHostNull(Host host) {
+        if (host == null) {
+            throw new UnauthorizedException("로그인이 필요합니다.");
+        }
     }
 }

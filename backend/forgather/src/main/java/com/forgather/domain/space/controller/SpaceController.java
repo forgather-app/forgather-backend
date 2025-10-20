@@ -28,6 +28,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -41,12 +42,13 @@ public class SpaceController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "스페이스 생성", description = "새로운 스페이스를 생성합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<CreateSpaceResponse> create(
         @Parameter(description = "스페이스 생성 정보 (JSON, text/plain)", required = true,
             content = @Content(schema = @Schema(implementation = CreateSpaceRequest.class)))
         @RequestPart("request") @Validated CreateSpaceRequest request,
         @RequestPart(value = "file", required = false) MultipartFile file,
-        @LoginHost(required = false) Host host
+        @LoginHost Host host
     ) {
         var response = spaceService.create(request, file, host);
         return ResponseEntity.status(CREATED).body(response);
@@ -61,8 +63,9 @@ public class SpaceController {
 
     @DeleteMapping("/{spaceCode}")
     @Operation(summary = "스페이스 삭제", description = "스페이스를 삭제합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<Void> delete(@PathVariable(name = "spaceCode") String spaceCode,
-        @LoginHost(required = false) Host host
+        @LoginHost Host host
     ) {
         spaceService.delete(spaceCode, host);
         return ResponseEntity.noContent().build();
@@ -70,20 +73,22 @@ public class SpaceController {
 
     @PatchMapping(value = "/{spaceCode}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "스페이스 정보 수정", description = "해당 스페이스 코드의 정보를 수정합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<SpaceResponse> update(
         @PathVariable(name = "spaceCode") String spaceCode,
-        @Parameter(description = "스페이스 생성 정보 (JSON, text/plain)", required = true,
+        @Parameter(description = "스페이스 수정 정보 (JSON, text/plain)", required = true,
             content = @Content(schema = @Schema(implementation = UpdateSpaceRequest.class)))
         @RequestPart("request") @Validated UpdateSpaceRequest request,
         @RequestPart(value = "file", required = false) MultipartFile file,
-        @LoginHost(required = false) Host host
+        @LoginHost Host host
     ) {
         var response = spaceService.update(spaceCode, request, file, host);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/me")
-    @Operation(summary = "호스트의 스페이스 목록 조회", description = "호스트 ID를 통해 해당 호스트의 스페이스 목록을 조회합니다.")
+    @Operation(summary = "호스트의 스페이스 목록 조회", description = "로그인한 호스트의 스페이스 목록을 조회합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<HostSpaceResponse> getSpacesInformation(@LoginHost Host host) {
         var response = spaceService.getSpacesInformation(host);
         return ResponseEntity.ok(response);
