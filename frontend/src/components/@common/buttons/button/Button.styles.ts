@@ -55,6 +55,7 @@ export const buttonStyles = {
   danger: (theme: Theme) => css`
     background-color: ${theme.colors.error};
     color: ${theme.colors.white};
+    border-radius: 4px;
   `,
 
   error: (theme: Theme) => css`
