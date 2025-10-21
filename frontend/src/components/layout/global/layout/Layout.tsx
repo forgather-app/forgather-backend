@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IoSettingsSharp, IoShareOutline } from 'react-icons/io5';
 import { MdPerson } from 'react-icons/md';
 import { Outlet, useMatches, useNavigate, useParams } from 'react-router-dom';
 import { createSpaceInfoRoute, ROUTES } from '../../../../constants/routes';
+import useInAppRedirect from '../../../../hooks/@common/useInAppRedirect';
 import type { AppRouteObject } from '../../../../types/route.type';
 import Footer from '../../../@common/footer/Footer';
 import Header from '../../../@common/header/Header';
@@ -14,6 +15,7 @@ const Layout = () => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const navigate = useNavigate();
   const { spaceCode } = useParams();
+  const { redirectToExternalBrowser } = useInAppRedirect();
 
   const openShareModal = () => {
     setIsShareModalOpen(true);
@@ -45,6 +47,11 @@ const Layout = () => {
   );
   const isNoHeader = current?.handle?.noHeader;
   const isNoFooter = current?.handle?.noFooter;
+
+  //biome-ignore lint/correctness/useExhaustiveDependencies: 페이지 접속 시 처음 한 번만 실행
+  useEffect(() => {
+    redirectToExternalBrowser(window.location.href);
+  }, []);
 
   return (
     <>
