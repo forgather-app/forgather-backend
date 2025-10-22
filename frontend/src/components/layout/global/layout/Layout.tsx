@@ -4,6 +4,7 @@ import { MdPerson } from 'react-icons/md';
 import { Outlet, useMatches, useNavigate, useParams } from 'react-router-dom';
 import { createSpaceInfoRoute, ROUTES } from '../../../../constants/routes';
 import useInAppRedirect from '../../../../hooks/@common/useInAppRedirect';
+import usePageTracking from '../../../../hooks/@common/usePageTracking';
 import type { AppRouteObject } from '../../../../types/route.type';
 import Footer from '../../../@common/footer/Footer';
 import Header from '../../../@common/header/Header';
@@ -12,6 +13,7 @@ import SpaceShareModal from '../../../specific/modal/spaceShareModal/SpaceShareM
 import * as S from './Layout.styles';
 
 const Layout = () => {
+  usePageTracking();
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const navigate = useNavigate();
   const { spaceCode } = useParams();
