@@ -40,7 +40,7 @@ public class SpaceService {
     }
 
     public SpaceCapacityResponse getSpaceCapacity(String spaceCode, Host host) {
-        Space space = spaceRepository.getUnexpiredSpaceByCode(spaceCode);
+        Space space = spaceRepository.getByCode(spaceCode);
         if (host != null) {
             // TODO: 추후 스페이스가 만료되어 소프트 딜리트 되는 경우 용량 정보 제공 고려
             if (!space.isPublic()) {
