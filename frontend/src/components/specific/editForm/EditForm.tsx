@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 import * as C from '../../../components/@common/inputs/input.common.styles';
 import { CONSTRAINTS } from '../../../constants/constraints';
+import useButtonTracking from '../../../hooks/@common/useButtonTracking';
 import useLocalFile from '../../../hooks/@common/useLocalFile';
 import useSpaceInfoContext from '../../../hooks/context/useSpaceInfoContext';
 import usePatchSpaceInfo from '../../../hooks/domain/space/usePatchSpaceInfo';
@@ -19,7 +20,12 @@ import { editFormValidators } from './editForm.validators';
 const EditForm = () => {
   // TODO : 변경사항이 없을 경우 막기
   const { spaceCode } = useParams();
+
   const { spaceInfo, isLoading: isSpaceInfoLoading } = useSpaceInfoContext();
+  const { trackClick } = useButtonTracking({
+    userType: 'host',
+    spaceCode,
+  });
 
   const initialData: SpaceInfoFormData = {
     name: '',
@@ -73,6 +79,14 @@ const EditForm = () => {
   });
 
   const onSubmit = (data: SpaceInfoFormData) => {
+    trackClick('edit_form_submit_button', {
+      page: '/space/edit',
+      hasPhoto: localFiles.length !== 0,
+      isPublic: data.isPublic,
+      hasEmail: !!data.email,
+      hasInstagram: !!data.instagramUsername,
+    });
+
     if (localFiles.length !== 0 && localFiles[0].originFile) {
       patchSpaceInfo(data, localFiles[0].originFile);
       return;
@@ -94,6 +108,27 @@ const EditForm = () => {
     }
   };
 
+  const handleVisibilityButtonClick = (isPublic: boolean) => {
+    trackClick(
+      isPublic ? 'edit_form_public_button' : 'edit_form_private_button',
+      {
+        page: '/space/edit',
+        action: isPublic ? 'set_public' : 'set_private',
+      },
+    );
+
+    setValue('isPublic', isPublic, { shouldDirty: true });
+  };
+
+  const handlePhotoUploadClick = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    trackClick('edit_form_photo_upload', {
+      page: `/host/${spaceCode}/space-info/edit`,
+    });
+    handleFilesUploadClick(event);
+  };
+
   return (
     <S.Form onSubmit={handleSubmit(onSubmit)}>
       <PhotoPreviewButton
@@ -101,7 +136,7 @@ const EditForm = () => {
           watch('isDeletePhoto') ? undefined : spaceInfo?.spacePhoto.path
         }
         previewFile={previewFiles}
-        uploadImage={handleFilesUploadClick}
+        uploadImage={handlePhotoUploadClick}
         clearFiles={() => {
           clearFiles(localFiles);
           clearLocalFiles();
@@ -126,13 +161,13 @@ const EditForm = () => {
             text="공개"
             type="button"
             variant={watch('isPublic') === true ? 'primary' : 'secondary'}
-            onClick={() => setValue('isPublic', true, { shouldDirty: true })}
+            onClick={() => handleVisibilityButtonClick(true)}
           />
           <Button
             text="비공개"
             type="button"
             variant={watch('isPublic') === false ? 'primary' : 'secondary'}
-            onClick={() => setValue('isPublic', false, { shouldDirty: true })}
+            onClick={() => handleVisibilityButtonClick(false)}
           />
         </S.PublicButtonContainer>
       </S.ContentContainer>

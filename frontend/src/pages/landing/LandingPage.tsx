@@ -10,6 +10,7 @@ import titleImage from '../../@assets/logo/main-logo.png';
 import Button from '../../components/@common/buttons/button/Button';
 import { AUTH_COOKIES } from '../../constants/cookie';
 import { ROUTES } from '../../constants/routes';
+import useButtonTracking from '../../hooks/@common/useButtonTracking';
 import { CookieUtils } from '../../utils/cookie';
 import * as S from './LandingPage.styles';
 
@@ -50,6 +51,27 @@ const sectionMotionProps: MotionProps = {
 const LandingPage = () => {
   const navigate = useNavigate();
   const isLoggedIn = CookieUtils.get(AUTH_COOKIES.ACCESS);
+  const { trackClick } = useButtonTracking({
+    userType: isLoggedIn ? 'host' : 'guest',
+  });
+
+  const handleStartButton = () => {
+    if (isLoggedIn) {
+      trackClick('landing_start_button', {
+        page: '/landing',
+        status: 'logged_in',
+        destination: ROUTES.HOST.MAIN,
+      });
+      navigate(ROUTES.HOST.MAIN);
+      return;
+    }
+    trackClick('landing_start_button', {
+      page: '/landing',
+      status: 'not_logged_in',
+      destination: ROUTES.AUTH.LOGIN,
+    });
+    navigate(ROUTES.AUTH.LOGIN);
+  };
 
   return (
     <S.Wrapper>
@@ -68,13 +90,7 @@ const LandingPage = () => {
             <Button
               text="시작하기"
               variant="secondary"
-              onClick={() => {
-                if (isLoggedIn) {
-                  navigate(ROUTES.HOST.MAIN);
-                  return;
-                }
-                navigate(ROUTES.AUTH.LOGIN);
-              }}
+              onClick={handleStartButton}
             />
           </MotionTitleContainer>
         </MotionSection>

@@ -5,6 +5,7 @@ import DeleteModal from '../../../components/@common/modal/deleteModal/DeleteMod
 import Thumbnail from '../../../components/@common/thumbnail/Thumbnail';
 import InfoRow from '../../../components/specific/infoRow/InfoRow';
 import { createSpaceInfoEditRoute } from '../../../constants/routes';
+import useButtonTracking from '../../../hooks/@common/useButtonTracking';
 import useSpaceInfoContext from '../../../hooks/context/useSpaceInfoContext';
 import useSpaceDelete from '../../../hooks/domain/space/useSpaceDelete';
 import { buildOriginalImageUrl } from '../../../utils/buildImageUrl';
@@ -12,17 +13,41 @@ import * as S from './SpaceInfoPage.styles';
 
 const SpaceInfoPage = () => {
   const navigate = useNavigate();
+  const { spaceCode } = useParams();
+  const { trackClick } = useButtonTracking({
+    userType: 'host',
+    spaceCode,
+  });
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const openDeleteModal = () => {
+    trackClick('open_space_delete_modal', {
+      page: 'space_info_page',
+    });
     setIsDeleteModalOpen(true);
   };
+
   const closeDeleteModal = () => {
+    trackClick('close_space_delete_modal', {
+      page: 'space_info_page',
+    });
     setIsDeleteModalOpen(false);
   };
 
-  const { spaceCode } = useParams();
+  const handleDeleteSpace = () => {
+    trackClick('confirm_space_delete', {
+      page: 'space_info_page',
+    });
+    deleteSpace();
+  };
+
+  const handleSpaceEdit = () => {
+    trackClick('space_edit_button', {
+      page: 'space_info_page',
+    });
+    navigate(createSpaceInfoEditRoute(spaceCode ?? ''));
+  };
   const { deleteSpace, isPending } = useSpaceDelete({
     closeDeleteModal,
     spaceCode: spaceCode ?? '',
@@ -34,7 +59,7 @@ const SpaceInfoPage = () => {
       <DeleteModal
         isOpen={isDeleteModalOpen}
         onCloseModal={closeDeleteModal}
-        onDelete={deleteSpace}
+        onDelete={handleDeleteSpace}
         buttonDisabled={isPending}
       />
       <S.Title>스페이스 정보</S.Title>
@@ -57,11 +82,7 @@ const SpaceInfoPage = () => {
           onClick={openDeleteModal}
         />
       </S.DeleteButtonContainer>
-      <Button
-        variant="fixed"
-        text="수정하기"
-        onClick={() => navigate(createSpaceInfoEditRoute(spaceCode ?? ''))}
-      />
+      <Button variant="fixed" text="수정하기" onClick={handleSpaceEdit} />
     </S.Wrapper>
   );
 };

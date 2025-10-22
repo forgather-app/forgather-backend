@@ -6,6 +6,7 @@ import Dropdown, {
 import Thumbnail from '../../../components/@common/thumbnail/Thumbnail';
 import SpaceCard from '../../../components/specific/spaceCard/SpaceCard';
 import { createSpaceMainRoute, ROUTES } from '../../../constants/routes';
+import useButtonTracking from '../../../hooks/@common/useButtonTracking';
 import useUserInfoContext from '../../../hooks/context/userInfoContext';
 import useMySpaces from '../../../hooks/domain/space/useMySpaces';
 import useSpacesDisplay from '../../../hooks/domain/useSpacesDisplay';
@@ -18,6 +19,9 @@ const MainPage = () => {
   const { displaySpaces, changeSortType, sortType } = useSpacesDisplay({
     mySpaces,
   });
+  const { trackClick } = useButtonTracking({
+    userType: 'host',
+  });
 
   const isSpacesEmpty = displaySpaces.length === 0;
 
@@ -25,6 +29,29 @@ const MainPage = () => {
     { value: 'latest', label: '등록순' },
     { value: 'guestCount', label: '방명록순' },
   ];
+
+  const handleCreateSpaceButton = () => {
+    trackClick('space_create_button', {
+      page: '/host/main',
+    });
+    navigate(ROUTES.HOST.CREATE_SPACE);
+  };
+
+  const handleDropdownChange = (value: string) => {
+    trackClick('space_sort_dropdown', {
+      page: '/host/main',
+      sortType: value,
+    });
+    changeSortType(value as 'latest' | 'guestCount');
+  };
+
+  const handleSpaceCardClick = (spaceCode: string) => {
+    trackClick('space_card', {
+      page: '/host/main',
+      spaceCode,
+    });
+    navigate(createSpaceMainRoute(spaceCode));
+  };
 
   return (
     <S.Wrapper>
@@ -37,7 +64,7 @@ const MainPage = () => {
           <S.NameContainer>{userInfo?.name}</S.NameContainer>
         </S.InfoContainer>
       </S.ProfileContainer>
-      <S.CreateSpaceButton onClick={() => navigate(ROUTES.HOST.CREATE_SPACE)}>
+      <S.CreateSpaceButton onClick={handleCreateSpaceButton}>
         <IoAddOutline size={16} />
         스페이스 생성
       </S.CreateSpaceButton>
@@ -59,9 +86,7 @@ const MainPage = () => {
             <Dropdown
               options={sortOptions}
               value={sortType}
-              onChange={(value) =>
-                changeSortType(value as 'latest' | 'guestCount')
-              }
+              onChange={handleDropdownChange}
             />
           </S.FilterContainer>
 
@@ -69,7 +94,7 @@ const MainPage = () => {
             <SpaceCard
               key={space.id}
               space={space}
-              onClick={() => navigate(createSpaceMainRoute(space.spaceCode))}
+              onClick={() => handleSpaceCardClick(space.spaceCode)}
             />
           ))}
         </S.SpaceList>
