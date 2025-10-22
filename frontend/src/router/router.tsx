@@ -1,6 +1,9 @@
 import { createBrowserRouter } from 'react-router-dom';
+import { PrivateRoute } from '../components/context/privateRoute/PrivateRoute';
+import SpaceInfoLayout from '../components/context/spaceInfoLayout/SpaceInfoLayout';
 import Layout from '../components/layout/global/layout/Layout';
-import { PrivateRoute } from '../components/layout/privateRoute/PrivateRoute';
+import GuestbookAccessGuard from '../components/layout/guestbookAccessGuard/GuestbookAccessGuard';
+import HostPageAccessGuard from '../components/layout/hostPageAccessGuard/HostPageAccessGuard';
 import KakaoAuthPage from '../pages/auth/KakaoAuthPage';
 import CompletePage from '../pages/guest/completePage/CompletePage';
 import GuestGuestbookCardPage from '../pages/guest/guestbookPage/card/GuestGuestbookCardPage';
@@ -11,7 +14,7 @@ import GuestWorkDetail from '../pages/guest/workDetail/GuestWorkDetail';
 import GuestbookCardPage from '../pages/host/guestbook/card/GuestbookCardPage';
 import GuestbookListPage from '../pages/host/guestbook/list/GuestbookListPage';
 import MainPage from '../pages/host/mainPage/MainPage';
-import MyPage from '../pages/host/myPage/MyPage';
+import MyPage from '../pages/host/mypage/MyPage';
 import SharePage from '../pages/host/share/SharePage';
 import SpaceCreateFunnel from '../pages/host/spaceCreate/funnel/SpaceCreateFunnel';
 import SpaceEditPage from '../pages/host/spaceEditPage/SpaceEditPage';
@@ -72,25 +75,6 @@ const routes: AppRouteObject[] = [
             element: <PrivateRoute />,
             children: [
               {
-                path: ':spaceCode/home',
-                element: <SpaceHomePage />,
-                handle: {
-                  // TODO : default를 logo와 hamburger로 변경 필요
-                  headerIcon: {
-                    leftIcon: 'logo',
-                  },
-                },
-              },
-              {
-                path: ':spaceCode/space-info',
-                element: <SpaceInfoPage />,
-                handle: {
-                  headerIcon: {
-                    leftIcon: 'profile',
-                  },
-                },
-              },
-              {
                 path: 'main',
                 element: <MainPage />,
                 handle: {
@@ -102,20 +86,93 @@ const routes: AppRouteObject[] = [
                 },
               },
               {
-                path: 'my-page',
-                element: <MyPage />,
+                path: '',
+                element: <HostPageAccessGuard />,
                 handle: {
                   headerIcon: {
                     leftIcon: 'logo',
                   },
                 },
+                children: [
+                  {
+                    path: '',
+                    element: <SpaceInfoLayout />,
+                    children: [
+                      {
+                        path: ':spaceCode/home',
+                        element: <SpaceHomePage />,
+                        handle: {
+                          // TODO : default를 logo와 hamburger로 변경 필요
+                          headerIcon: {
+                            leftIcon: 'logo',
+                          },
+                        },
+                      },
+                      {
+                        path: ':spaceCode/space-info',
+                        element: <SpaceInfoPage />,
+                        handle: {
+                          headerIcon: {
+                            leftIcon: 'profile',
+                          },
+                        },
+                      },
+                      {
+                        path: ':spaceCode/space-info/edit',
+                        element: <SpaceEditPage />,
+                        handle: {
+                          headerIcon: {
+                            leftIcon: 'profile',
+                          },
+                        },
+                      },
+                      {
+                        path: ':spaceCode/work-detail',
+                        element: <HostWorkDetail />,
+                        handle: {
+                          headerIcon: {
+                            leftIcon: 'profile',
+                          },
+                        },
+                      },
+                      {
+                        path: ':spaceCode/work-detail/edit',
+                        element: <WorkForm />,
+                        handle: {
+                          headerIcon: {
+                            leftIcon: 'profile',
+                          },
+                        },
+                      },
+                      {
+                        path: ':spaceCode/guestbook',
+                        element: <GuestbookListPage />,
+                        handle: {
+                          headerIcon: {
+                            leftIcon: 'profile',
+                          },
+                        },
+                      },
+                      {
+                        path: ':spaceCode/guestbook/:guestbookCardId',
+                        element: <GuestbookCardPage />,
+                        handle: {
+                          headerIcon: {
+                            leftIcon: 'profile',
+                          },
+                        },
+                      },
+                    ],
+                  },
+                ],
               },
+
               {
-                path: ':spaceCode/space-info/edit',
-                element: <SpaceEditPage />,
+                path: 'my-page',
+                element: <MyPage />,
                 handle: {
                   headerIcon: {
-                    leftIcon: 'profile',
+                    leftIcon: 'logo',
                   },
                 },
               },
@@ -129,24 +186,7 @@ const routes: AppRouteObject[] = [
                   },
                 },
               },
-              {
-                path: ':spaceCode/work-detail',
-                element: <HostWorkDetail />,
-                handle: {
-                  headerIcon: {
-                    leftIcon: 'profile',
-                  },
-                },
-              },
-              {
-                path: ':spaceCode/work-detail/edit',
-                element: <WorkForm />,
-                handle: {
-                  headerIcon: {
-                    leftIcon: 'profile',
-                  },
-                },
-              },
+
               {
                 path: 'share',
                 element: <SharePage />,
@@ -154,24 +194,6 @@ const routes: AppRouteObject[] = [
                   noFooter: true,
                   headerIcon: {
                     leftIcon: 'logo',
-                  },
-                },
-              },
-              {
-                path: ':spaceCode/guestbook',
-                element: <GuestbookListPage />,
-                handle: {
-                  headerIcon: {
-                    leftIcon: 'profile',
-                  },
-                },
-              },
-              {
-                path: ':spaceCode/guestbook/:guestbookCardId',
-                element: <GuestbookCardPage />,
-                handle: {
-                  headerIcon: {
-                    leftIcon: 'profile',
                   },
                 },
               },
@@ -183,59 +205,76 @@ const routes: AppRouteObject[] = [
         path: 'guest',
         children: [
           {
-            path: ':spaceCode/main',
-            element: <GuestMainPage />,
-            handle: {
-              headerIcon: {
-                leftIcon: 'profile',
+            path: '',
+            element: <SpaceInfoLayout />,
+            children: [
+              {
+                path: ':spaceCode/main',
+                element: <GuestMainPage />,
+                handle: {
+                  headerIcon: {
+                    leftIcon: 'profile',
+                  },
+                },
               },
-            },
-          },
-          {
-            path: ':spaceCode/create-guestbook',
-            element: <GuestBookFunnel />,
-            handle: {
-              noFooter: true,
-              headerIcon: {
-                leftIcon: 'profile',
+              {
+                path: ':spaceCode/create-guestbook',
+                element: <GuestBookFunnel />,
+                handle: {
+                  noFooter: true,
+                  headerIcon: {
+                    leftIcon: 'profile',
+                  },
+                },
               },
-            },
-          },
-          {
-            path: ':spaceCode/create-guestbook-complete',
-            element: <CompletePage />,
-            handle: {
-              headerIcon: {
-                leftIcon: 'profile',
+              {
+                path: ':spaceCode/create-guestbook-complete',
+                element: <CompletePage />,
+                handle: {
+                  headerIcon: {
+                    leftIcon: 'profile',
+                  },
+                },
               },
-            },
-          },
-          {
-            path: ':spaceCode/work-detail',
-            element: <GuestWorkDetail />,
-            handle: {
-              headerIcon: {
-                leftIcon: 'profile',
+              {
+                path: ':spaceCode/work-detail',
+                element: <GuestWorkDetail />,
+                handle: {
+                  headerIcon: {
+                    leftIcon: 'profile',
+                  },
+                },
               },
-            },
-          },
-          {
-            path: ':spaceCode/guestbook',
-            element: <GuestGuestbookListPage />,
-            handle: {
-              headerIcon: {
-                leftIcon: 'profile',
+              {
+                path: '',
+                element: <GuestbookAccessGuard />,
+                handle: {
+                  headerIcon: {
+                    leftIcon: 'profile',
+                  },
+                },
+                children: [
+                  {
+                    path: ':spaceCode/guestbook',
+                    element: <GuestGuestbookListPage />,
+                    handle: {
+                      headerIcon: {
+                        leftIcon: 'profile',
+                      },
+                    },
+                  },
+                  {
+                    path: ':spaceCode/guestbook/:guestbookCardId',
+                    element: <GuestGuestbookCardPage />,
+                    handle: {
+                      headerIcon: {
+                        leftIcon: 'profile',
+                      },
+                    },
+                  },
+                ],
               },
-            },
-          },
-          {
-            path: ':spaceCode/guestbook/:guestbookCardId',
-            element: <GuestGuestbookCardPage />,
-            handle: {
-              headerIcon: {
-                leftIcon: 'profile',
-              },
-            },
+            ],
           },
         ],
       },
