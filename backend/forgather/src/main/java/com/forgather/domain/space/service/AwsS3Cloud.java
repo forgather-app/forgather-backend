@@ -40,7 +40,6 @@ import software.amazon.awssdk.transfer.s3.S3TransferManager;
 import software.amazon.awssdk.transfer.s3.model.CompletedFileDownload;
 import software.amazon.awssdk.transfer.s3.model.DownloadFileRequest;
 
-@Component
 @Slf4j
 @RequiredArgsConstructor
 public class AwsS3Cloud implements ContentsStorage {
