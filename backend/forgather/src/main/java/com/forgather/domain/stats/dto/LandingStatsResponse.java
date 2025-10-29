@@ -9,9 +9,9 @@ public record LandingStatsResponse(LandingSpaceStats spaceStats, LandingGuestBoo
         );
     }
 
-    static record LandingSpaceStats(long spaceCount) {
+    public record LandingSpaceStats(long spaceCount) {
     }
 
-    static record LandingGuestBookStats(long cardCount) {
+    public record LandingGuestBookStats(long cardCount) {
     }
 }
