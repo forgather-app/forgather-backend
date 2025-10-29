@@ -127,3 +127,26 @@ export const Screenshot = styled.img`
   filter: drop-shadow(0 0 5px ${({ theme }) => theme.colors.white})
     drop-shadow(0 0 10px ${({ theme }) => hexToRgba(theme.colors.gray02, 0.5)});
 `;
+
+export const ScrollIconContainer = styled.div`
+  position: fixed;
+  left: 50%;
+  bottom: 0px;
+  color: ${({ theme }) => theme.colors.white};
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.5), transparent);
+  width: ${({ theme }) => theme.layout.width};
+  height: 48px;
+`;
+
+export const ScrollTopContainer = styled.div`
+  position: fixed;
+  right: calc(
+    (100vw - ${({ theme }) => theme.layout.width}) / 2 +
+      ${({ theme }) => theme.layout.padding.leftRight} * 2
+  );
+  bottom: ${({ theme }) => theme.layout.padding.topBottom};
+  z-index: ${({ theme }) => theme.zIndex.fixedButton};
+`;
