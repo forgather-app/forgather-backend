@@ -62,7 +62,10 @@ const SpaceInfoPage = () => {
         onDelete={handleDeleteSpace}
         buttonDisabled={isPending}
       />
-      <S.Title>스페이스 정보</S.Title>
+      <S.TitleSection>
+        <S.Title>스페이스 정보</S.Title>
+        <S.EditButton onClick={handleSpaceEdit}>수정</S.EditButton>
+      </S.TitleSection>
       <Thumbnail src={buildOriginalImageUrl(spaceInfo.spacePhoto.path)} />
       <S.InfoRowContainer>
         <InfoRow label="스페이스 이름" value={spaceInfo.name} />
@@ -74,7 +77,6 @@ const SpaceInfoPage = () => {
         <InfoRow label="E-mail" value={spaceInfo.email} />
         <InfoRow label="Instagram" value={spaceInfo.instagramUsername} />
       </S.InfoRowContainer>
-
       <S.DeleteButtonContainer>
         <Button
           variant="error"
@@ -82,7 +84,6 @@ const SpaceInfoPage = () => {
           onClick={openDeleteModal}
         />
       </S.DeleteButtonContainer>
-      <Button variant="fixed" text="수정하기" onClick={handleSpaceEdit} />
     </S.Wrapper>
   );
 };
