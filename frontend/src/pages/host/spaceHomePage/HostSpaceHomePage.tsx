@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../../../components/@common/buttons/button/Button';
 import IconButton from '../../../components/@common/buttons/iconButton/IconButton';
 import Thumbnail from '../../../components/@common/thumbnail/Thumbnail';
+import EventModal from '../../../components/specific/modal/eventModadl/EventModal';
 import SpaceShareModal from '../../../components/specific/modal/spaceShareModal/SpaceShareModal';
 import {
   createGuestbookRoute,
@@ -15,6 +16,7 @@ import useButtonTracking from '../../../hooks/@common/useButtonTracking';
 import useSpaceInfoContext from '../../../hooks/context/useSpaceInfoContext';
 import { DividerLine } from '../../../styles/@common/DividerLine.styles';
 import { buildOriginalImageUrl } from '../../../utils/buildImageUrl';
+import { canOpenEventModal } from '../../../utils/canOpenEventModal';
 import { createInstagramUrl } from '../../../utils/createExternalLinks';
 import * as MainPageStyles from '../../MainPage.common.styles';
 import * as S from './HostSpaceHomePage.styles';
@@ -23,13 +25,14 @@ const HostSpaceHomePage = () => {
   const navigate = useNavigate();
   const { spaceCode = '' } = useParams();
   const { spaceInfo } = useSpaceInfoContext();
+  const [isEventModalOpen, setIsEventModalOpen] = useState(canOpenEventModal);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const { trackClick } = useButtonTracking({
     userType: 'host',
     spaceCode,
   });
 
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const openShareModal = () => {
     trackClick('open_space_share_modal');
     setIsShareModalOpen(true);
@@ -63,8 +66,18 @@ const HostSpaceHomePage = () => {
     navigate(createGuestbookRoute(spaceCode));
   };
 
+  const handleCloseEventModal = () => {
+    trackClick('close_event_modal');
+    setIsEventModalOpen(false);
+  };
+
   return (
     <>
+      <EventModal
+        isOpen={isEventModalOpen}
+        onClose={handleCloseEventModal}
+        spaceCode={spaceCode}
+      />
       <SpaceShareModal isOpen={isShareModalOpen} onClose={closeShareModal} />
       <MainPageStyles.Wrapper>
         <S.ActionButtonContainer>
