@@ -39,7 +39,9 @@ public class UploadService {
 
             return path;
         } catch (IOException e) {
-            throw new FileUploadException("파일 업로드에 실패했습니다. 파일 이름: " + file.getOriginalFilename(), e);
+            throw new FileUploadException("파일 업로드 실패 spaceCode: %s, originalName: %s, size: %d".formatted(
+                spaceCode, file.getOriginalFilename(), file.getSize()
+            ), e);
         }
     }
 
