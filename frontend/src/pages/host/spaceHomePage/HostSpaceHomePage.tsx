@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
-import { IoLogoInstagram, IoShareOutline } from 'react-icons/io5';
-import { MdEmail, MdSettings } from 'react-icons/md';
+import {
+  IoLogoInstagram,
+  IoMailOutline,
+  IoShareOutline,
+} from 'react-icons/io5';
+import { MdSettings } from 'react-icons/md';
 import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../../../components/@common/buttons/button/Button';
 import IconButton from '../../../components/@common/buttons/iconButton/IconButton';
@@ -13,6 +17,7 @@ import {
   createWorkDetailRoute,
 } from '../../../constants/routes';
 import useButtonTracking from '../../../hooks/@common/useButtonTracking';
+import useUserInfoContext from '../../../hooks/context/userInfoContext';
 import useSpaceInfoContext from '../../../hooks/context/useSpaceInfoContext';
 import { DividerLine } from '../../../styles/@common/DividerLine.styles';
 import { buildOriginalImageUrl } from '../../../utils/buildImageUrl';
@@ -27,6 +32,7 @@ const HostSpaceHomePage = () => {
   const { spaceInfo } = useSpaceInfoContext();
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const userInfo = useUserInfoContext();
 
   useEffect(() => {
     setIsEventModalOpen(canOpenEventModal());
@@ -82,7 +88,12 @@ const HostSpaceHomePage = () => {
         onClose={handleCloseEventModal}
         spaceCode={spaceCode}
       />
-      <SpaceShareModal isOpen={isShareModalOpen} onClose={closeShareModal} />
+      <SpaceShareModal
+        isOpen={isShareModalOpen}
+        onClose={closeShareModal}
+        userName={userInfo.name}
+        spaceName={spaceInfo.name}
+      />
       <MainPageStyles.Wrapper>
         <S.ActionButtonContainer>
           <IconButton
@@ -110,22 +121,27 @@ const HostSpaceHomePage = () => {
           </MainPageStyles.InfoContainer>
         </MainPageStyles.ProfileContainer>
         <MainPageStyles.IconButtonContainer>
-          <IconButton
-            aria-label="인스타그램"
-            icon={<IoLogoInstagram size={24} />}
-            variant="default"
-            onClick={onInstagramClick}
-            disabled={
-              !spaceInfo.instagramUsername || spaceInfo.instagramUsername === ''
-            }
-          />
-          <IconButton
-            aria-label="이메일"
-            icon={<MdEmail size={24} />}
-            variant="default"
-            onClick={onEmailClick}
-            disabled={!spaceInfo.email || spaceInfo.email === ''}
-          />
+          {spaceInfo.instagramUsername && (
+            <IconButton
+              aria-label="인스타그램"
+              icon={<IoLogoInstagram size={24} />}
+              variant="default"
+              onClick={onInstagramClick}
+              disabled={
+                !spaceInfo.instagramUsername ||
+                spaceInfo.instagramUsername === ''
+              }
+            />
+          )}
+          {spaceInfo.email && (
+            <IconButton
+              aria-label="이메일"
+              icon={<IoMailOutline size={24} />}
+              variant="default"
+              onClick={onEmailClick}
+              disabled={!spaceInfo.email || spaceInfo.email === ''}
+            />
+          )}
         </MainPageStyles.IconButtonContainer>
         <DividerLine width="10%" />
         <MainPageStyles.ButtonContainer>
