@@ -136,7 +136,9 @@ public class ProductService {
      */
     private void deleteAllProductPhotos(Product product) {
         List<ProductPhoto> photos = productPhotoRepository.findAllByProduct(product);
-        deleteProductPhotos(photos);
+        if (!photos.isEmpty()) {
+            deleteProductPhotos(photos);
+        }
     }
 
     /**
