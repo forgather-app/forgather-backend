@@ -30,7 +30,15 @@
 
 > 포게더는 '작가와 방문객에 연결되는 공간 서비스'에요.
 
-시간과 공간이 부족해 전시 공간을 꾸미지 못하는 작가들의 문제에 주목했어요.  
+시간과 공간이 부족해 전시 공간을 꾸미지 못하는 작가들의 문제에 주목했어요.   
+그리고 전시를 앞둔 디자인 계열 대학생들을 상대로 진행한 설문을 기반으로, 서비스의 핵심 기능을 정의하고 개발했어요.  
+
+<br/>
+
+<img src="https://github.com/user-attachments/assets/31f88fa3-0ce6-4af4-8a24-36bb0bed8bab" width="50%"/> <img src="https://github.com/user-attachments/assets/04306a81-5c6c-48db-a3db-c3f735d032dd" width="42%"/>
+
+
+
 <br/>
 
 ## 주요 기능
