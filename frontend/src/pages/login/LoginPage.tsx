@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import KakaoLogo from '../../@assets/icons/kakaoTalk.svg?react';
+import KakaoLogo from '../../@assets/icons/kakaotalk.svg?react';
 import LogoSvg from '../../@assets/logo/logo.svg?react';
 import IconButton from '../../components/@common/buttons/iconButton/IconButton';
 import { TRY_IT_NOW_SPACE_CODE } from '../../constants/constants';
