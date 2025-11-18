@@ -1,8 +1,13 @@
 package com.forgather.acceptance;
 
+import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.verify;
 
 import java.util.List;
 
@@ -10,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -18,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.forgather.domain.product.dto.ProductResponseV2;
 import com.forgather.domain.product.dto.RegisterProductPhotoRequest;
 import com.forgather.domain.product.dto.RegisterProductRequestV2;
+import com.forgather.domain.product.dto.UpdateProductRequestV2;
 import com.forgather.domain.product.repository.ProductRepository;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.HostRepository;
@@ -208,6 +215,170 @@ public class ProductAcceptanceV2Test extends AcceptanceTest {
                 .accept(ContentType.JSON)
                 .when()
                 .post("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(403)
+                .body("message", containsString("해당 스페이스에 대한 접근 권한이 없습니다."));
+        }
+    }
+
+    @DisplayName("작품 수정")
+    @Nested
+    class updateProduct {
+        @DisplayName("작품 정보 수정")
+        @Test
+        void update() {
+            // given
+            ProductResponseV2 registerResponse = registerProduct();
+            Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
+            UpdateProductRequestV2 request = new UpdateProductRequestV2(
+                "foovar1",
+                null,
+                null,
+                "description",
+                "https://youtu.be/aaa",
+                true,
+                List.of(2L),
+                List.of(
+                    new RegisterProductPhotoRequest("photo4", "file4.png", 1024L),
+                    new RegisterProductPhotoRequest("photo5", "file5.png", 1024L)
+                )
+            );
+
+            // when
+            ProductResponseV2 result = RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "2")
+                .body(request)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .patch("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(ProductResponseV2.class);
+
+            // then
+            assertAll(
+                () -> assertThat(result.id()).isNotNull(),
+                () -> assertThat(result.title()).isEqualTo(request.title()),
+                () -> assertThat(result.category()).isEqualTo(registerResponse.category()),
+                () -> assertThat(result.authorName()).isEqualTo(registerResponse.authorName()),
+                () -> assertThat(result.description()).isEqualTo(request.description()),
+                () -> assertThat(result.videoUrl()).isEqualTo(request.videoUrl()),
+                () -> assertThat(result.isVideoAfterPhoto()).isEqualTo(request.isVideoAfterPhoto()),
+                () -> assertThat(result.photos().get(0).originalName()).isEqualTo("photo1"),
+                () -> assertThat(result.photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
+                () -> assertThat(result.photos().get(0).order()).isEqualTo(1),
+                () -> assertThat(result.photos().get(1).originalName()).isEqualTo("photo3"),
+                () -> assertThat(result.photos().get(1).path()).endsWith("/spaces/1234567890/product/file3.png"),
+                () -> assertThat(result.photos().get(1).order()).isEqualTo(2),
+                () -> assertThat(result.photos().get(2).originalName()).isEqualTo("photo4"),
+                () -> assertThat(result.photos().get(2).path()).endsWith("/spaces/1234567890/product/file4.png"),
+                () -> assertThat(result.photos().get(2).order()).isEqualTo(3),
+                () -> assertThat(result.photos().get(3).originalName()).isEqualTo("photo5"),
+                () -> assertThat(result.photos().get(3).path()).endsWith("/spaces/1234567890/product/file5.png"),
+                () -> assertThat(result.photos().get(3).order()).isEqualTo(4),
+
+                () -> {
+                    await()
+                        .atMost(ofSeconds(6))
+                        .untilAsserted(() -> verify(awsS3Cloud, atLeast(1)).deletePhotos(anyList()));
+                }
+            );
+        }
+
+        @DisplayName("작품 정보 수정 중 작품 것이 아닌 사진 삭제 시 예외를 던진다")
+        @Test
+        void throwExceptionWhenInvalidDeleteId() {
+            // given
+            ProductResponseV2 registerResponse = registerProduct();
+            UpdateProductRequestV2 request = new UpdateProductRequestV2(
+                "foovar1",
+                null,
+                null,
+                "description",
+                "https://youtu.be/aaa",
+                true,
+                List.of((long)(registerResponse.photos().size() + 10)),
+                List.of()
+            );
+
+            // when, then
+            RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "2")
+                .body(request)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .patch("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(400)
+                .body("message", containsString("작품에 존재하지 않는 사진입니다."));
+        }
+
+        @DisplayName("방문자가 작품 정보를 수정하면 예외를 던진다")
+        @Test
+        void throwExceptionWhenGuestUpdate() {
+            // given
+            Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
+            UpdateProductRequestV2 request = new UpdateProductRequestV2(
+                "foovar1",
+                null,
+                null,
+                "description",
+                "https://youtu.be/aaa",
+                true,
+                List.of(2L),
+                List.of(
+                    new RegisterProductPhotoRequest("photo4", "file4.png", 1024L),
+                    new RegisterProductPhotoRequest("photo5", "file5.png", 1024L)
+                )
+            );
+
+            // when
+            RestAssuredMockMvc.given()
+                .header("X-API-Version", "2")
+                .body(request)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .patch("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(401)
+                .body("message", containsString("로그인이 필요합니다."));
+        }
+
+        @DisplayName("다른 호스트가 작품 정보를 수정하면 예외를 던진다")
+        @Test
+        void throwExceptionWhenAnotherHostUpdate() {
+            // given
+            Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
+            UpdateProductRequestV2 request = new UpdateProductRequestV2(
+                "foovar1",
+                null,
+                null,
+                "description",
+                "https://youtu.be/aaa",
+                true,
+                List.of(2L),
+                List.of(
+                    new RegisterProductPhotoRequest("photo4", "file4.png", 1024L),
+                    new RegisterProductPhotoRequest("photo5", "file5.png", 1024L)
+                )
+            );
+
+            // when
+            RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + anotherAccessToken)
+                .header("X-API-Version", "2")
+                .body(request)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .patch("/spaces/%s/products".formatted(space.getCode()))
                 .then()
                 .statusCode(403)
                 .body("message", containsString("해당 스페이스에 대한 접근 권한이 없습니다."));
