@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.forgather.domain.product.dto.ProductResponse;
+import com.forgather.domain.product.dto.ProductResponseV2;
 import com.forgather.domain.product.dto.RegisterProductRequest;
+import com.forgather.domain.product.dto.RegisterProductRequestV2;
 import com.forgather.domain.product.dto.UpdateProductRequest;
 import com.forgather.domain.product.service.ProductService;
 import com.forgather.global.auth.annotation.LoginHost;
@@ -42,8 +44,7 @@ public class ProductController {
     }
 
     /**
-     * TODO
-     * 검증 걸릴 시 업로드 사진 삭제
+     * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
      */
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "작품 등록")
@@ -51,6 +52,18 @@ public class ProductController {
     public ResponseEntity<ProductResponse> register(
         @PathVariable(value = "spaceCode") String spaceCode,
         @RequestBody RegisterProductRequest request,
+        @LoginHost(required = true) Host host
+    ) {
+        var response = productService.register(host, spaceCode, request);
+        return ResponseEntity.status(CREATED).body(response);
+    }
+
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "작품 등록")
+    @PostMapping(headers = "X-API-Version=2")
+    public ResponseEntity<ProductResponseV2> registerV2(
+        @PathVariable(value = "spaceCode") String spaceCode,
+        @RequestBody RegisterProductRequestV2 request,
         @LoginHost(required = true) Host host
     ) {
         var response = productService.register(host, spaceCode, request);

@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.forgather.domain.product.dto.ProductResponse;
+import com.forgather.domain.product.dto.ProductResponseV2;
 import com.forgather.domain.product.dto.RegisterProductRequest;
+import com.forgather.domain.product.dto.RegisterProductRequestV2;
 import com.forgather.domain.product.dto.UpdateProductRequest;
 import com.forgather.domain.product.model.Product;
 import com.forgather.domain.product.model.ProductPhoto;
@@ -50,6 +52,9 @@ public class ProductService {
         return new ProductResponse(product, productPhotos.getAll());
     }
 
+    /**
+     * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
+     */
     @Transactional
     public ProductResponse register(Host host, String spaceCode, RegisterProductRequest request) {
         Space space = spaceRepository.getByCodeOrThrow(spaceCode);
@@ -69,6 +74,27 @@ public class ProductService {
         }
         productPhotoRepository.saveAll(productPhotos.getAll());
         return new ProductResponse(product, productPhotos.getAll());
+    }
+
+    @Transactional
+    public ProductResponseV2 register(Host host, String spaceCode, RegisterProductRequestV2 request) {
+        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        validateSpaceHost(host, space);
+        validateProductAlreadyExists(space);
+        Product product = productRepository.save(request.toEntity(space));
+
+        ProductPhotos productPhotos = new ProductPhotos();
+        for (var photoRequest : request.photos()) { // TODO NPE
+            String path = generateContentsFilePath(
+                contentsStorage.getRootDirectory(),
+                spaceCode,
+                PRODUCT,
+                photoRequest.uploadFileName()
+            );
+            productPhotos.add(photoRequest.toEntity(product, path));
+        }
+        productPhotoRepository.saveAll(productPhotos.getAll());
+        return new ProductResponseV2(product, productPhotos.getAll());
     }
 
     private void validateProductAlreadyExists(Space space) {

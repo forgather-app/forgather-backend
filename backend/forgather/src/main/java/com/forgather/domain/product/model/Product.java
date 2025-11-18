@@ -52,6 +52,7 @@ public class Product extends BaseTimeEntity {
     private boolean isVideoAfterImage;
 
     /**
+     * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
      * 작품을 생성합니다.
      *
      * @param space       작품이 속한 스페이스 (필수)
@@ -73,8 +74,44 @@ public class Product extends BaseTimeEntity {
         this.category = convertBlankToEmptyString(category);
         this.authorName = convertBlankToEmptyString(authorName);
         this.description = description;
+        this.videoUrl = "";
+        this.isVideoAfterImage = false;
     }
 
+    /**
+     * 임베드 영상 추가에 따른 생성자 오버라이드
+     *
+     * @param space       작품이 속한 스페이스 (필수)
+     * @param title       작품명 (필수, 최대 50자)
+     * @param category    카테고리 (선택, 최대 20자)
+     * @param authorName  작가명 (선택, 최대 20자)
+     * @param description 작품 설명 (필수, 최대 1000자)
+     * @param videoUrl 임베드 영상 링크 (선택, 최대 1000자)
+     * @param isVideoAfterImage 작품 설명 (선택)
+     *
+     * @throws BaseNullPointerException 필수 필드가 null인 경우
+     * @throws BaseException            필드 값이 유효하지 않은 경우
+     */
+    public Product(Space space, String title, String category, String authorName, String description, String videoUrl,
+        Boolean isVideoAfterImage) {
+        validateRequiredFields(space, title, category, authorName, description, videoUrl, isVideoAfterImage);
+        validateTitle(title);
+        validateCategory(category);
+        validateAuthorName(authorName);
+        validateDescription(description);
+        validateVideoUrl(videoUrl);
+        this.space = space;
+        this.title = title;
+        this.category = convertBlankToEmptyString(category);
+        this.authorName = convertBlankToEmptyString(authorName);
+        this.description = description;
+        this.videoUrl = convertBlankToEmptyString(videoUrl);
+        this.isVideoAfterImage = isVideoAfterImage;
+    }
+
+    /**
+     * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
+     */
     private void validateRequiredFields(
         Space space,
         String title,
@@ -96,6 +133,38 @@ public class Product extends BaseTimeEntity {
         }
         if (description == null) {
             throw new BaseNullPointerException("작품 설명은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private void validateRequiredFields(
+        Space space,
+        String title,
+        String category,
+        String authorName,
+        String description,
+        String videoUrl,
+        Boolean isVideoAfterImage
+    ) {
+        if (space == null) {
+            throw new BaseNullPointerException("스페이스는 null일 수 없습니다.");
+        }
+        if (title == null) {
+            throw new BaseNullPointerException("작품명은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+        if (category == null) {
+            throw new BaseNullPointerException("작품 카테고리는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+        if (authorName == null) {
+            throw new BaseNullPointerException("작가명은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+        if (description == null) {
+            throw new BaseNullPointerException("작품 설명은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+        if (videoUrl == null) {
+            throw new BaseNullPointerException("임베드 영상 링크는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+        if (isVideoAfterImage == null) {
+            throw new BaseNullPointerException("임베드 영상 위치는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -155,6 +224,12 @@ public class Product extends BaseTimeEntity {
         }
         if (TextLengthCounter.count(description) > 1000) {
             throw new BaseException("작품 설명은 최대 1000자까지 입력 가능합니다.");
+        }
+    }
+
+    private void validateVideoUrl(String videoUrl) {
+        if (TextLengthCounter.count(videoUrl) > 255) {
+            throw new BaseException("임베드 영상 링크는 최대 255자까지 입력 가능합니다.");
         }
     }
 
