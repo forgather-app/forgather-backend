@@ -143,7 +143,7 @@ public class Product extends BaseTimeEntity {
         String authorName,
         String description,
         String videoUrl,
-        Boolean isVideoAfterImage
+        Boolean isVideoAfterPhoto
     ) {
         if (space == null) {
             throw new BaseNullPointerException("스페이스는 null일 수 없습니다.");
@@ -163,7 +163,7 @@ public class Product extends BaseTimeEntity {
         if (videoUrl == null) {
             throw new BaseNullPointerException("임베드 영상 링크는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
         }
-        if (isVideoAfterImage == null) {
+        if (isVideoAfterPhoto == null) {
             throw new BaseNullPointerException("임베드 영상 위치는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
         }
     }
