@@ -271,8 +271,8 @@ public class Product extends BaseTimeEntity {
     }
 
     private void validateVideoUrl(String videoUrl) {
-        if (TextLengthCounter.count(videoUrl) > 255) {
-            throw new BaseException("임베드 영상 링크는 최대 255자까지 입력 가능합니다.");
+        if (TextLengthCounter.count(videoUrl) > 512) {
+            throw new BaseException("임베드 영상 링크는 최대 512자까지 입력 가능합니다.");
         }
     }
 
