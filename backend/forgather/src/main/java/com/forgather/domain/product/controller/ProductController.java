@@ -40,26 +40,23 @@ public class ProductController {
     /**
      * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
      */
-    @Operation(summary = "작품 조회")
     @GetMapping
     public ResponseEntity<ProductResponse> get(@PathVariable(value = "spaceCode") String spaceCode) {
         var response = productService.get(spaceCode);
         return ResponseEntity.ok().body(response);
     }
 
-    @Operation(summary = "작품 조회")
+    @Operation(summary = "작품 조회", description = "임베드 영상이 반영된 api는 version 2로 호출")
     @GetMapping(headers = "X-API-Version=2")
     public ResponseEntity<ProductResponseV2> getV2(@PathVariable(value = "spaceCode") String spaceCode) {
         var response = productService.getV2(spaceCode);
         return ResponseEntity.ok().body(response);
     }
 
-
     /**
      * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
      */
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "작품 등록")
     @PostMapping
     public ResponseEntity<ProductResponse> register(
         @PathVariable(value = "spaceCode") String spaceCode,
@@ -71,7 +68,7 @@ public class ProductController {
     }
 
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "작품 등록")
+    @Operation(summary = "작품 등록", description = "임베드 영상이 반영된 api는 version 2로 호출")
     @PostMapping(headers = "X-API-Version=2")
     public ResponseEntity<ProductResponseV2> registerV2(
         @PathVariable(value = "spaceCode") String spaceCode,
@@ -86,7 +83,6 @@ public class ProductController {
      * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
      */
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "작품 수정", description = "변경 사항이 없는 데이터는 json에 포함하지 않거나 null로 요청한다.")
     @PatchMapping
     public ResponseEntity<ProductResponse> update(
         @PathVariable(value = "spaceCode") String spaceCode,
@@ -98,7 +94,8 @@ public class ProductController {
     }
 
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "작품 수정", description = "변경 사항이 없는 데이터는 json에 포함하지 않거나 null로 요청한다.")
+    @Operation(summary = "작품 수정",
+        description = "변경 사항이 없는 데이터는 json에 포함하지 않거나 null로 요청한다.  임베드 영상이 반영된 api는 version 2로 호출")
     @PatchMapping(headers = "X-API-Version=2")
     public ResponseEntity<ProductResponseV2> updateV2(
         @PathVariable(value = "spaceCode") String spaceCode,
