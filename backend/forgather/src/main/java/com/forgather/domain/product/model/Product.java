@@ -86,8 +86,8 @@ public class Product extends BaseTimeEntity {
      * @param category    카테고리 (선택, 최대 20자)
      * @param authorName  작가명 (선택, 최대 20자)
      * @param description 작품 설명 (필수, 최대 1000자)
-     * @param videoUrl 임베드 영상 링크 (선택, 최대 1000자)
-     * @param isVideoAfterPhoto 작품 설명 (선택)
+     * @param videoUrl 임베드 영상 링크 (선택, 최대 255자)
+     * @param isVideoAfterPhoto 영상이 사진 뒤에 오는지 여부 (선택)
      *
      * @throws BaseNullPointerException 필수 필드가 null인 경우
      * @throws BaseException            필드 값이 유효하지 않은 경우
@@ -169,6 +169,8 @@ public class Product extends BaseTimeEntity {
     }
 
     /**
+     * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
+     *
      * 작품 정보를 부분 업데이트합니다.
      * null인 필드는 업데이트하지 않습니다.
      *
@@ -194,6 +196,47 @@ public class Product extends BaseTimeEntity {
         if (description != null) {
             validateDescription(description);
             this.description = description;
+        }
+    }
+
+    /**
+     * 임베드 영상 추가에 따른 오버라이드
+     *
+     * 작품 정보를 부분 업데이트합니다.
+     * null인 필드는 업데이트하지 않습니다.
+     *
+     * @param title       작품명 (선택)
+     * @param category    카테고리 (선택)
+     * @param authorName  작가명 (선택)
+     * @param description 작품 설명 (선택)
+     * @param videoUrl 임베드 영상 링크 (선택)
+     * @param isVideoAfterPhoto 영상이 사진 뒤에 오는지 여부 (선택)
+     * @throws BaseException 필드 값이 유효하지 않은 경우
+     */
+    public void update(String title, String category, String authorName, String description, String videoUrl,
+        Boolean isVideoAfterPhoto) {
+        if (title != null) {
+            validateTitle(title);
+            this.title = title;
+        }
+        if (category != null) {
+            validateCategory(category);
+            this.category = convertBlankToEmptyString(category);
+        }
+        if (authorName != null) {
+            validateAuthorName(authorName);
+            this.authorName = convertBlankToEmptyString(authorName);
+        }
+        if (description != null) {
+            validateDescription(description);
+            this.description = description;
+        }
+        if (videoUrl != null) {
+            validateVideoUrl(videoUrl);
+            this.videoUrl = convertBlankToEmptyString(videoUrl);
+        }
+        if (isVideoAfterPhoto != null) {
+            this.isVideoAfterPhoto = isVideoAfterPhoto;
         }
     }
 

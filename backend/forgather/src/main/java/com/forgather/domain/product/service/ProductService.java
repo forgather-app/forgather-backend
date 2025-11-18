@@ -16,6 +16,7 @@ import com.forgather.domain.product.dto.ProductResponseV2;
 import com.forgather.domain.product.dto.RegisterProductRequest;
 import com.forgather.domain.product.dto.RegisterProductRequestV2;
 import com.forgather.domain.product.dto.UpdateProductRequest;
+import com.forgather.domain.product.dto.UpdateProductRequestV2;
 import com.forgather.domain.product.model.Product;
 import com.forgather.domain.product.model.ProductPhoto;
 import com.forgather.domain.product.model.ProductPhotos;
@@ -105,8 +106,7 @@ public class ProductService {
     }
 
     /**
-     * TODO
-     * 검증 걸릴 시 업로드된 사진 삭제
+     * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
      */
     @Transactional
     public ProductResponse update(Host host, String spaceCode, UpdateProductRequest request) {
@@ -136,6 +136,37 @@ public class ProductService {
         productPhotoRepository.saveAll(newPhotos);
 
         return new ProductResponse(product, photos.getAll());
+    }
+
+    @Transactional
+    public ProductResponseV2 update(Host host, String spaceCode, UpdateProductRequestV2 request) {
+        // Product 정보 수정
+        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        validateSpaceHost(host, space);
+        Product product = productRepository.getBySpaceOrThrow(space);
+        product.update(request.title(), request.category(), request.authorName(), request.description(),
+            request.videoUrl(), request.isVideoAfterPhoto());
+
+        // 삭제 사진 db 및 클라우드 삭제
+        ProductPhotos photos = new ProductPhotos(productPhotoRepository.findAllByProduct(product));
+        List<ProductPhoto> deletedPhotos = photos.deleteByIds(request.deletePhotoIds());
+        deleteProductPhotos(deletedPhotos);
+
+        // 새로운 사진 추가 및 db 저장
+        List<ProductPhoto> newPhotos = new ArrayList<>();
+        for (var photoRequest : request.newPhotos()) {
+            String path = generateContentsFilePath(
+                contentsStorage.getRootDirectory(),
+                spaceCode,
+                PRODUCT,
+                photoRequest.uploadFileName()
+            );
+            newPhotos.add(photoRequest.toEntity(product, path));
+        }
+        photos.add(newPhotos);
+        productPhotoRepository.saveAll(newPhotos);
+
+        return new ProductResponseV2(product, photos.getAll());
     }
 
     @Transactional
