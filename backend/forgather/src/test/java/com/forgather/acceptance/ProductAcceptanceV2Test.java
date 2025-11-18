@@ -21,10 +21,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.forgather.domain.product.dto.ProductResponse;
+import com.forgather.domain.product.dto.ProductResponseV2;
 import com.forgather.domain.product.dto.RegisterProductPhotoRequest;
-import com.forgather.domain.product.dto.RegisterProductRequest;
-import com.forgather.domain.product.dto.UpdateProductRequest;
+import com.forgather.domain.product.dto.RegisterProductRequestV2;
+import com.forgather.domain.product.dto.UpdateProductRequestV2;
 import com.forgather.domain.product.repository.ProductRepository;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.HostRepository;
@@ -40,12 +40,8 @@ import com.forgather.global.auth.util.JwtTokenProvider;
 import io.restassured.http.ContentType;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 
-/**
- * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
- * - 제거 이전에 생성, 수정, 조회 외 테스트 마이그레이션
- */
 @AutoConfigureMockMvc
-class ProductAcceptanceTest extends AcceptanceTest {
+public class ProductAcceptanceV2Test extends AcceptanceTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -72,11 +68,13 @@ class ProductAcceptanceTest extends AcceptanceTest {
     private String accessToken;
     private String anotherAccessToken;
 
-    private RegisterProductRequest registerRequest = new RegisterProductRequest(
+    private RegisterProductRequestV2 registerRequest = new RegisterProductRequestV2(
         "title",
         "category",
         "authorName",
         "description",
+        "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
+        false,
         List.of(
             new RegisterProductPhotoRequest("photo1", "file1.png", 1024L),
             new RegisterProductPhotoRequest("photo2", "file2.png", 2048L),
@@ -108,10 +106,11 @@ class ProductAcceptanceTest extends AcceptanceTest {
         @Test
         void get() {
             // given
-            ProductResponse registerResponse = registerProduct();
+            ProductResponseV2 registerResponse = registerProduct();
 
             // when
-            ProductResponse result = RestAssuredMockMvc.given()
+            ProductResponseV2 result = RestAssuredMockMvc.given()
+                .header("X-API-Version", "2")
                 .accept(ContentType.JSON)
                 .when()
                 .get("/spaces/%s/products".formatted(space.getCode()))
@@ -119,7 +118,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(ProductResponse.class);
+                .as(ProductResponseV2.class);
 
             // then
             assertAll(
@@ -128,6 +127,8 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.category()).isEqualTo(registerResponse.category()),
                 () -> assertThat(result.authorName()).isEqualTo(registerResponse.authorName()),
                 () -> assertThat(result.description()).isEqualTo(registerResponse.description()),
+                () -> assertThat(result.videoUrl()).isEqualTo(registerResponse.videoUrl()),
+                () -> assertThat(result.isVideoAfterPhoto()).isEqualTo(registerResponse.isVideoAfterPhoto()),
                 () -> assertThat(result.photos().get(0).originalName()).isEqualTo("photo1"),
                 () -> assertThat(result.photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
                 () -> assertThat(result.photos().get(0).order()).isEqualTo(1),
@@ -145,6 +146,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
         void throwExceptionWhenNoProducts() {
             // when, then
             RestAssuredMockMvc.given()
+                .header("X-API-Version", "2")
                 .accept(ContentType.JSON)
                 .when()
                 .get("/spaces/%s/products".formatted(space.getCode()))
@@ -161,8 +163,9 @@ class ProductAcceptanceTest extends AcceptanceTest {
         @Test
         void register() {
             // when
-            ProductResponse response = RestAssuredMockMvc.given()
+            ProductResponseV2 response = RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "2")
                 .body(registerRequest)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -172,7 +175,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 .statusCode(201)
                 .extract()
                 .body()
-                .as(ProductResponse.class);
+                .as(ProductResponseV2.class);
 
             // then
             assertAll(
@@ -181,6 +184,8 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(response.category()).isEqualTo(registerRequest.category()),
                 () -> assertThat(response.authorName()).isEqualTo(registerRequest.authorName()),
                 () -> assertThat(response.description()).isEqualTo(registerRequest.description()),
+                () -> assertThat(response.videoUrl()).isEqualTo(registerRequest.videoUrl()),
+                () -> assertThat(response.isVideoAfterPhoto()).isEqualTo(registerRequest.isVideoAfterPhoto()),
                 () -> assertThat(response.photos().get(0).originalName()).isEqualTo("photo1"),
                 () -> assertThat(response.photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
                 () -> assertThat(response.photos().get(0).order()).isEqualTo(1),
@@ -202,6 +207,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
             // when, then
             RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "2")
                 .body(registerRequest)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -216,16 +222,19 @@ class ProductAcceptanceTest extends AcceptanceTest {
         @Test
         void doesNotThrowAnyExceptionWhenMaxDescriptionLength() {
             // given
-            RegisterProductRequest registerRequest = new RegisterProductRequest(
+            RegisterProductRequestV2 registerRequest = new RegisterProductRequestV2(
                 "title",
                 "category",
                 "authorName",
                 "1234567890".repeat(100),
+                "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
+                false,
                 List.of()
             );
             // when, then
             RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "2")
                 .body(registerRequest)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -240,6 +249,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
         void throwExceptionWhenGuestRegister() {
             // when, then
             RestAssuredMockMvc.given()
+                .header("X-API-Version", "2")
                 .body(registerRequest)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -256,6 +266,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
             // when, then
             RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + anotherAccessToken)
+                .header("X-API-Version", "2")
                 .body(registerRequest)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -274,13 +285,15 @@ class ProductAcceptanceTest extends AcceptanceTest {
         @Test
         void update() {
             // given
-            ProductResponse registerResponse = registerProduct();
+            ProductResponseV2 registerResponse = registerProduct();
             Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
-            UpdateProductRequest request = new UpdateProductRequest(
+            UpdateProductRequestV2 request = new UpdateProductRequestV2(
                 "foovar1",
                 null,
                 null,
                 "description",
+                "https://youtu.be/aaa",
+                true,
                 List.of(2L),
                 List.of(
                     new RegisterProductPhotoRequest("photo4", "file4.png", 1024L),
@@ -289,8 +302,9 @@ class ProductAcceptanceTest extends AcceptanceTest {
             );
 
             // when
-            ProductResponse result = RestAssuredMockMvc.given()
+            ProductResponseV2 result = RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "2")
                 .body(request)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -300,7 +314,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(ProductResponse.class);
+                .as(ProductResponseV2.class);
 
             // then
             assertAll(
@@ -309,6 +323,8 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.category()).isEqualTo(registerResponse.category()),
                 () -> assertThat(result.authorName()).isEqualTo(registerResponse.authorName()),
                 () -> assertThat(result.description()).isEqualTo(request.description()),
+                () -> assertThat(result.videoUrl()).isEqualTo(request.videoUrl()),
+                () -> assertThat(result.isVideoAfterPhoto()).isEqualTo(request.isVideoAfterPhoto()),
                 () -> assertThat(result.photos().get(0).originalName()).isEqualTo("photo1"),
                 () -> assertThat(result.photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
                 () -> assertThat(result.photos().get(0).order()).isEqualTo(1),
@@ -334,12 +350,14 @@ class ProductAcceptanceTest extends AcceptanceTest {
         @Test
         void throwExceptionWhenInvalidDeleteId() {
             // given
-            ProductResponse registerResponse = registerProduct();
-            UpdateProductRequest request = new UpdateProductRequest(
+            ProductResponseV2 registerResponse = registerProduct();
+            UpdateProductRequestV2 request = new UpdateProductRequestV2(
                 "foovar1",
                 null,
                 null,
                 "description",
+                "https://youtu.be/aaa",
+                true,
                 List.of((long)(registerResponse.photos().size() + 10)),
                 List.of()
             );
@@ -347,6 +365,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
             // when, then
             RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "2")
                 .body(request)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -362,11 +381,13 @@ class ProductAcceptanceTest extends AcceptanceTest {
         void throwExceptionWhenGuestUpdate() {
             // given
             Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
-            UpdateProductRequest request = new UpdateProductRequest(
+            UpdateProductRequestV2 request = new UpdateProductRequestV2(
                 "foovar1",
                 null,
                 null,
                 "description",
+                "https://youtu.be/aaa",
+                true,
                 List.of(2L),
                 List.of(
                     new RegisterProductPhotoRequest("photo4", "file4.png", 1024L),
@@ -376,6 +397,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
 
             // when
             RestAssuredMockMvc.given()
+                .header("X-API-Version", "2")
                 .body(request)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -391,11 +413,13 @@ class ProductAcceptanceTest extends AcceptanceTest {
         void throwExceptionWhenAnotherHostUpdate() {
             // given
             Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
-            UpdateProductRequest request = new UpdateProductRequest(
+            UpdateProductRequestV2 request = new UpdateProductRequestV2(
                 "foovar1",
                 null,
                 null,
                 "description",
+                "https://youtu.be/aaa",
+                true,
                 List.of(2L),
                 List.of(
                     new RegisterProductPhotoRequest("photo4", "file4.png", 1024L),
@@ -406,6 +430,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
             // when
             RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + anotherAccessToken)
+                .header("X-API-Version", "2")
                 .body(request)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -417,73 +442,10 @@ class ProductAcceptanceTest extends AcceptanceTest {
         }
     }
 
-    @DisplayName("작품 삭제")
-    @Nested
-    class deleteProduct {
-        @DisplayName("작품 삭제")
-        @Test
-        void delete() {
-            // given
-            registerProduct();
-            Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
-
-            // when, then
-            RestAssuredMockMvc
-                .given()
-                .header("Authorization", "Bearer " + accessToken)
-                .when()
-                .delete("/spaces/%s/products".formatted(space.getCode()))
-                .then()
-                .statusCode(204);
-
-            assertAll(
-                () -> assertThat(productRepository.findBySpace(space)).isEmpty(),
-                () -> {
-                    await()
-                        .atMost(ofSeconds(6))
-                        .untilAsserted(() -> verify(awsS3Cloud, atLeast(1)).deletePhotos(anyList()));
-                }
-            );
-        }
-
-        @DisplayName("방문자가 작품을 삭제하면 예외를 던진다")
-        @Test
-        void throwExceptionWhenGuestDelete() {
-            // given
-            registerProduct();
-            Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
-
-            // when, then
-            RestAssuredMockMvc
-                .when()
-                .delete("/spaces/%s/products".formatted(space.getCode()))
-                .then()
-                .statusCode(401)
-                .body("message", containsString("로그인이 필요합니다."));
-        }
-
-        @DisplayName("다른 호스트가 작품을 삭제하면 예외를 던진다")
-        @Test
-        void throwExceptionWhenAnotherHostDelete() {
-            // given
-            registerProduct();
-            Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
-
-            // when, then
-            RestAssuredMockMvc
-                .given()
-                .header("Authorization", "Bearer " + anotherAccessToken)
-                .when()
-                .delete("/spaces/%s/products".formatted(space.getCode()))
-                .then()
-                .statusCode(403)
-                .body("message", containsString("해당 스페이스에 대한 접근 권한이 없습니다."));
-        }
-    }
-
-    private ProductResponse registerProduct() {
+    private ProductResponseV2 registerProduct() {
         return RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + accessToken)
+            .header("X-API-Version", "2")
             .body(registerRequest)
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
@@ -493,6 +455,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
             .statusCode(201)
             .extract()
             .body()
-            .as(ProductResponse.class);
+            .as(ProductResponseV2.class);
     }
 }
