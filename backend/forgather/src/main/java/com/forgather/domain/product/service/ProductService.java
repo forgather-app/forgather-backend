@@ -45,12 +45,23 @@ public class ProductService {
     private final SpaceHostMapRepository spaceHostMapRepository;
     private final ContentsStorage contentsStorage;
 
+    /**
+     * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
+     */
     @Transactional(readOnly = true)
     public ProductResponse get(String spaceCode) {
         Space space = spaceRepository.getByCodeOrThrow(spaceCode);
         Product product = productRepository.getBySpaceOrThrow(space);
         ProductPhotos productPhotos = new ProductPhotos(productPhotoRepository.findAllByProduct(product));
         return new ProductResponse(product, productPhotos.getAll());
+    }
+
+    @Transactional(readOnly = true)
+    public ProductResponseV2 getV2(String spaceCode) {
+        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Product product = productRepository.getBySpaceOrThrow(space);
+        ProductPhotos productPhotos = new ProductPhotos(productPhotoRepository.findAllByProduct(product));
+        return new ProductResponseV2(product, productPhotos.getAll());
     }
 
     /**

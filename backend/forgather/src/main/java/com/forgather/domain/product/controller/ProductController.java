@@ -37,12 +37,23 @@ public class ProductController {
 
     private final ProductService productService;
 
+    /**
+     * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
+     */
     @Operation(summary = "작품 조회")
     @GetMapping
     public ResponseEntity<ProductResponse> get(@PathVariable(value = "spaceCode") String spaceCode) {
         var response = productService.get(spaceCode);
         return ResponseEntity.ok().body(response);
     }
+
+    @Operation(summary = "작품 조회")
+    @GetMapping(headers = "X-API-Version=2")
+    public ResponseEntity<ProductResponseV2> getV2(@PathVariable(value = "spaceCode") String spaceCode) {
+        var response = productService.getV2(spaceCode);
+        return ResponseEntity.ok().body(response);
+    }
+
 
     /**
      * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
