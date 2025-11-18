@@ -99,6 +99,63 @@ public class ProductAcceptanceV2Test extends AcceptanceTest {
         RestAssuredMockMvc.mockMvc(mockMvc);
     }
 
+    @DisplayName("작품 조회")
+    @Nested
+    class getProduct {
+        @DisplayName("작품 조회")
+        @Test
+        void get() {
+            // given
+            ProductResponseV2 registerResponse = registerProduct();
+
+            // when
+            ProductResponseV2 result = RestAssuredMockMvc.given()
+                .header("X-API-Version", "2")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(ProductResponseV2.class);
+
+            // then
+            assertAll(
+                () -> assertThat(result.id()).isNotNull(),
+                () -> assertThat(result.title()).isEqualTo(registerResponse.title()),
+                () -> assertThat(result.category()).isEqualTo(registerResponse.category()),
+                () -> assertThat(result.authorName()).isEqualTo(registerResponse.authorName()),
+                () -> assertThat(result.description()).isEqualTo(registerResponse.description()),
+                () -> assertThat(result.videoUrl()).isEqualTo(registerResponse.videoUrl()),
+                () -> assertThat(result.isVideoAfterPhoto()).isEqualTo(registerResponse.isVideoAfterPhoto()),
+                () -> assertThat(result.photos().get(0).originalName()).isEqualTo("photo1"),
+                () -> assertThat(result.photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
+                () -> assertThat(result.photos().get(0).order()).isEqualTo(1),
+                () -> assertThat(result.photos().get(1).originalName()).isEqualTo("photo2"),
+                () -> assertThat(result.photos().get(1).path()).endsWith("/spaces/1234567890/product/file2.png"),
+                () -> assertThat(result.photos().get(1).order()).isEqualTo(2),
+                () -> assertThat(result.photos().get(2).originalName()).isEqualTo("photo3"),
+                () -> assertThat(result.photos().get(2).path()).endsWith("/spaces/1234567890/product/file3.png"),
+                () -> assertThat(result.photos().get(2).order()).isEqualTo(3)
+            );
+        }
+
+        @DisplayName("작품 조회 시 등록된 작품이 없으면 예외를 던진다")
+        @Test
+        void throwExceptionWhenNoProducts() {
+            // when, then
+            RestAssuredMockMvc.given()
+                .header("X-API-Version", "2")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(404)
+                .body("message", containsString("등록된 작품이"));
+        }
+    }
+
     @DisplayName("작품 등록")
     @Nested
     class registerProduct {
