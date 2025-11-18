@@ -62,7 +62,7 @@ public record ProductResponseV2(
             product.getAuthorName(),
             product.getDescription(),
             product.getVideoUrl(),
-            product.isVideoAfterImage(),
+            product.isVideoAfterPhoto(),
             photos.stream().map(ProductPhotoResponse::new).toList()
         );
     }

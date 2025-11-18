@@ -48,8 +48,8 @@ public class Product extends BaseTimeEntity {
     @Column(name = "video_url", nullable = false)
     private String videoUrl;
 
-    @Column(name = "is_video_after_image", nullable = false)
-    private boolean isVideoAfterImage;
+    @Column(name = "is_video_after_photo", nullable = false)
+    private boolean isVideoAfterPhoto;
 
     /**
      * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
@@ -75,7 +75,7 @@ public class Product extends BaseTimeEntity {
         this.authorName = convertBlankToEmptyString(authorName);
         this.description = description;
         this.videoUrl = "";
-        this.isVideoAfterImage = false;
+        this.isVideoAfterPhoto = false;
     }
 
     /**
@@ -87,14 +87,14 @@ public class Product extends BaseTimeEntity {
      * @param authorName  작가명 (선택, 최대 20자)
      * @param description 작품 설명 (필수, 최대 1000자)
      * @param videoUrl 임베드 영상 링크 (선택, 최대 1000자)
-     * @param isVideoAfterImage 작품 설명 (선택)
+     * @param isVideoAfterPhoto 작품 설명 (선택)
      *
      * @throws BaseNullPointerException 필수 필드가 null인 경우
      * @throws BaseException            필드 값이 유효하지 않은 경우
      */
     public Product(Space space, String title, String category, String authorName, String description, String videoUrl,
-        Boolean isVideoAfterImage) {
-        validateRequiredFields(space, title, category, authorName, description, videoUrl, isVideoAfterImage);
+        Boolean isVideoAfterPhoto) {
+        validateRequiredFields(space, title, category, authorName, description, videoUrl, isVideoAfterPhoto);
         validateTitle(title);
         validateCategory(category);
         validateAuthorName(authorName);
@@ -106,7 +106,7 @@ public class Product extends BaseTimeEntity {
         this.authorName = convertBlankToEmptyString(authorName);
         this.description = description;
         this.videoUrl = convertBlankToEmptyString(videoUrl);
-        this.isVideoAfterImage = isVideoAfterImage;
+        this.isVideoAfterPhoto = isVideoAfterPhoto;
     }
 
     /**
