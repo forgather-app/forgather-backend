@@ -45,6 +45,12 @@ public class Product extends BaseTimeEntity {
     @Column(name = "description", length = 1000, nullable = false)
     private String description;
 
+    @Column(name = "video_url", nullable = false)
+    private String videoUrl;
+
+    @Column(name = "is_video_after_image", nullable = false)
+    private boolean isVideoAfterImage;
+
     /**
      * 작품을 생성합니다.
      *
