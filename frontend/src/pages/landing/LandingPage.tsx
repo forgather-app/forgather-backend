@@ -82,11 +82,11 @@ const LandingPage = () => {
           variants={delaySectionVariants}
         >
           <MotionTitleContainer variants={fadeVariants}>
-            <S.Title>당신을 위한 순간, 흩어지지 않게</S.Title>
+            <S.Title>당신을 위한 순간, 흩어지지 않게.</S.Title>
             <S.TitleImage src={titleImage} alt="포게더 로고 이미지" />
           </MotionTitleContainer>
           <MotionTitleContainer variants={fadeVariants}>
-            <S.SmallTitle>작가와 방문객이 연결되는 공간</S.SmallTitle>
+            <S.SmallTitle>작가와 방문객이 연결되는 공간.</S.SmallTitle>
             <Button
               text="시작하기"
               variant="secondary"
