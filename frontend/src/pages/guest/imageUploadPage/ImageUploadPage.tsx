@@ -9,9 +9,9 @@ import FloatingActionButton from '../../../components/@common/buttons/floatingAc
 import FloatingIconButton from '../../../components/@common/buttons/floatingIconButton/FloatingIconButton';
 import HighlightText from '../../../components/@common/highlightText/HighlightText';
 import GuestImageGrid from '../../../components/@common/imageLayout/imageGrid/guestImageGrid/GuestImageGrid';
-import PhotoModal from '../../../components/@common/modal/photoModal/PhotoModal';
 import UserBadge from '../../../components/@common/userBadge/UserBadge';
 import LoadingLayout from '../../../components/layout/loadingLayout/LoadingLayout';
+import GuestPhotoModal from '../../../components/specific/photoModal/GuestPhotoModal';
 import GuestSpaceHeader from '../../../components/specific/space/spaceHeader/guestSpaceHeader/GuestSpaceHeader';
 import UploadBox from '../../../components/specific/uploadBox/UploadBox';
 import { ROUTES } from '../../../constants/routes';
@@ -102,10 +102,10 @@ const ImageUploadPage = () => {
     if (!selectedPhoto) return;
 
     await overlay(
-      <PhotoModal
-        mode="guest"
-        previewFile={selectedPhoto}
-        onDelete={async () => await deletePhotoWithTracking(photoId)}
+      <GuestPhotoModal
+        previewFiles={previewFile}
+        currentId={selectedPhoto.id}
+        onDelete={deletePhotoWithTracking}
       />,
       {
         clickOverlayClose: true,
@@ -117,20 +117,20 @@ const ImageUploadPage = () => {
 
   const loadingContents = [
     {
-      icon: { src: messageIcon, alt: '데모 페이지 아이콘' },
+      icon: { src: messageIcon, alt: '메시지 아이콘' },
       description: '추억 담는 중',
     },
     {
-      icon: { src: messageIcon, alt: '데모 페이지 아이콘' },
+      icon: { src: messageIcon, alt: '메시지 아이콘' },
       description: '선물 상자 포장하는 중',
     },
     {
-      icon: { src: messageIcon, alt: '데모 페이지 아이콘' },
+      icon: { src: messageIcon, alt: '메시지 아이콘' },
       description: '배달 가는 중',
     },
     {
-      icon: { src: messageIcon, alt: '데모 페이지 아이콘' },
-      description: '당신에게 전달 중',
+      icon: { src: messageIcon, alt: '메시지 아이콘' },
+      description: '주인공에게 전달 중',
     },
   ];
 
@@ -226,6 +226,7 @@ const ImageUploadPage = () => {
             <FloatingIconButton
               icon={<ArrowUpSvg fill={theme.colors.white} />}
               onClick={goToTop}
+              ariaLabel={''}
             />
           </S.TopButtonContainer>
         </>
