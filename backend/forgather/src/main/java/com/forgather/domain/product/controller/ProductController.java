@@ -38,7 +38,6 @@ public class ProductController {
     /**
      * TODO 작품 복수 등록 마이그레이션 이후 제거
      */
-    @Operation(summary = "작품 조회", description = "임베드 영상이 반영된 api는 version 2로 호출")
     @GetMapping(headers = "X-API-Version=2")
     public ResponseEntity<ProductResponse> getV2(@PathVariable(value = "spaceCode") String spaceCode) {
         var response = productService.getV2(spaceCode);
@@ -48,7 +47,17 @@ public class ProductController {
     @Operation(summary = "작품 목록 조회", description = "작품 목록 조회가 반영된 api는 version 3으로 호출")
     @GetMapping(headers = "X-API-Version=3")
     public ResponseEntity<ProductsResponse> getV3(@PathVariable(value = "spaceCode") String spaceCode) {
-        var response = productService.getV3(spaceCode);
+        var response = productService.getAll(spaceCode);
+        return ResponseEntity.ok().body(response);
+    }
+
+    @Operation(summary = "작품 상세 조회")
+    @GetMapping(value = "/{productId}", headers = "X-API-Version=1")
+    public ResponseEntity<ProductResponse> get(
+        @PathVariable(value = "spaceCode") String spaceCode,
+        @PathVariable(value = "productId") Long productId
+    ) {
+        var response = productService.get(spaceCode, productId);
         return ResponseEntity.ok().body(response);
     }
 

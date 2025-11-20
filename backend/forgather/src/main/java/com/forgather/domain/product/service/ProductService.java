@@ -59,7 +59,7 @@ public class ProductService {
      * 스페이스에 등록된 작품 목록을 조회합니다.
      */
     @Transactional(readOnly = true)
-    public ProductsResponse getV3(String spaceCode) {
+    public ProductsResponse getAll(String spaceCode) {
         Space space = spaceRepository.getByCodeOrThrow(spaceCode);
         List<Product> products = productRepository.findAllBySpace(space);
         List<SimpleProductResponse> productResponses = products.stream()
@@ -68,6 +68,14 @@ public class ProductService {
                 productPhotoRepository.findFirstByProduct(product).orElse(null))
             ).toList();
         return new ProductsResponse(productResponses);
+    }
+
+    @Transactional(readOnly = true)
+    public ProductResponse get(String spaceCode, Long productId) {
+        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Product product = productRepository.getBySpaceAndIdOrThrow(space, productId);
+        ProductPhotos productPhotos = new ProductPhotos(productPhotoRepository.findAllByProduct(product));
+        return new ProductResponse(product, productPhotos.getAll());
     }
 
     @Transactional

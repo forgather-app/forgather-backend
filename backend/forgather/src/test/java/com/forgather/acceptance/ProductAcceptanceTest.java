@@ -100,6 +100,9 @@ public class ProductAcceptanceTest extends AcceptanceTest {
         RestAssuredMockMvc.mockMvc(mockMvc);
     }
 
+    /**
+     * TODO 작품 복수 등록 마이그레이션 이후 제거
+     */
     @DisplayName("작품 조회")
     @Nested
     class getProduct {
@@ -210,6 +213,66 @@ public class ProductAcceptanceTest extends AcceptanceTest {
 
             // then
             assertThat(result.products()).isEmpty();
+        }
+    }
+
+    /**
+     * TODO
+     * 다른 스페이스 작품
+     */
+    @Nested
+    class getProductDetail {
+        @DisplayName("작품 상세 조회")
+        @Test
+        void get() {
+            // given
+            ProductResponse registerResponse = registerProduct();
+
+            // when
+            ProductResponse result = RestAssuredMockMvc.given()
+                .header("X-API-Version", "1")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/spaces/%s/products/%d".formatted(space.getCode(), registerResponse.id()))
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(ProductResponse.class);
+
+            // then
+            assertAll(
+                () -> assertThat(result.id()).isEqualTo(registerResponse.id()),
+                () -> assertThat(result.title()).isEqualTo(registerResponse.title()),
+                () -> assertThat(result.category()).isEqualTo(registerResponse.category()),
+                () -> assertThat(result.authorName()).isEqualTo(registerResponse.authorName()),
+                () -> assertThat(result.description()).isEqualTo(registerResponse.description()),
+                () -> assertThat(result.videoUrl()).isEqualTo(registerResponse.videoUrl()),
+                () -> assertThat(result.isVideoAfterPhoto()).isEqualTo(registerResponse.isVideoAfterPhoto()),
+                () -> assertThat(result.photos().get(0).originalName()).isEqualTo("photo1"),
+                () -> assertThat(result.photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
+                () -> assertThat(result.photos().get(0).order()).isEqualTo(1),
+                () -> assertThat(result.photos().get(1).originalName()).isEqualTo("photo2"),
+                () -> assertThat(result.photos().get(1).path()).endsWith("/spaces/1234567890/product/file2.png"),
+                () -> assertThat(result.photos().get(1).order()).isEqualTo(2),
+                () -> assertThat(result.photos().get(2).originalName()).isEqualTo("photo3"),
+                () -> assertThat(result.photos().get(2).path()).endsWith("/spaces/1234567890/product/file3.png"),
+                () -> assertThat(result.photos().get(2).order()).isEqualTo(3)
+            );
+        }
+
+        @DisplayName("작품 조회 시 해당 id의 작품이 존재하지 않으면 예외를 던진다")
+        @Test
+        void throwExceptionWhenNoProducts() {
+            // when, then
+            RestAssuredMockMvc.given()
+                .header("X-API-Version", "1")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/spaces/%s/products/%d".formatted(space.getCode(), 1L))
+                .then()
+                .statusCode(404)
+                .body("message", containsString("해당 스페이스에 존재하지 않는 작품입니다"));
         }
     }
 
