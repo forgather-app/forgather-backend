@@ -15,8 +15,6 @@ public interface ProductRepository {
 
     void delete(Product product);
 
-    Optional<Product> findBySpace(Space space);
-
     List<Product> findAllBySpace(Space space);
 
     Optional<Product> findBySpaceAndId(Space space, Long id);

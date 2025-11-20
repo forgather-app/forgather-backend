@@ -888,7 +888,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
         @Test
         void delete() {
             // given
-            registerProduct();
+            ProductResponse registerResponse = registerProduct();
             Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
 
             // when, then
@@ -901,7 +901,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .statusCode(204);
 
             assertAll(
-                () -> assertThat(productRepository.findBySpace(space)).isEmpty(),
+                () -> assertThat(productRepository.findAllBySpace(space)).isEmpty(),
                 () -> {
                     await()
                         .atMost(ofSeconds(6))

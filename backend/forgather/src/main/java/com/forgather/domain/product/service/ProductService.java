@@ -5,7 +5,6 @@ import static com.forgather.domain.upload.domain.UploadCategory.PRODUCT;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -108,8 +107,8 @@ public class ProductService {
      * TODO 작품 복수 등록 마이그레이션 이후 제거
      */
     private void validateProductAlreadyExists(Space space) {
-        Optional<Product> optionalProduct = productRepository.findBySpace(space);
-        if (optionalProduct.isPresent()) {
+        List<Product> products = productRepository.findAllBySpace(space);
+        if (!products.isEmpty()) {
             throw new BaseException("이미 등록된 작품이 존재합니다. spaceCode: " + space.getCode());
         }
     }
@@ -228,10 +227,10 @@ public class ProductService {
     @Transactional
     public void deleteIfExists(Host host, Space space) {
         validateSpaceHost(host, space);
-        Optional<Product> product = productRepository.findBySpace(space);
-        if (product.isPresent()) {
-            deleteAllProductPhotos(product.get());
-            productRepository.delete(product.get());
+        List<Product> products = productRepository.findAllBySpace(space);
+        if (!products.isEmpty()) {
+            deleteAllProductPhotos(products.getFirst());
+            productRepository.delete(products.getFirst());
         }
     }
 
