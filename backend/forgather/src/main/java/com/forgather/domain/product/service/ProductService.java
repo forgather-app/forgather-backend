@@ -12,11 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.forgather.domain.product.dto.ProductResponse;
-import com.forgather.domain.product.dto.ProductResponseV2;
 import com.forgather.domain.product.dto.RegisterProductRequest;
-import com.forgather.domain.product.dto.RegisterProductRequestV2;
 import com.forgather.domain.product.dto.UpdateProductRequest;
-import com.forgather.domain.product.dto.UpdateProductRequestV2;
 import com.forgather.domain.product.model.Product;
 import com.forgather.domain.product.model.ProductPhoto;
 import com.forgather.domain.product.model.ProductPhotos;
@@ -45,28 +42,14 @@ public class ProductService {
     private final SpaceHostMapRepository spaceHostMapRepository;
     private final ContentsStorage contentsStorage;
 
-    /**
-     * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
-     */
     @Transactional(readOnly = true)
-    public ProductResponse get(String spaceCode) {
+    public ProductResponse getV2(String spaceCode) {
         Space space = spaceRepository.getByCodeOrThrow(spaceCode);
         Product product = productRepository.getBySpaceOrThrow(space);
         ProductPhotos productPhotos = new ProductPhotos(productPhotoRepository.findAllByProduct(product));
         return new ProductResponse(product, productPhotos.getAll());
     }
 
-    @Transactional(readOnly = true)
-    public ProductResponseV2 getV2(String spaceCode) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
-        Product product = productRepository.getBySpaceOrThrow(space);
-        ProductPhotos productPhotos = new ProductPhotos(productPhotoRepository.findAllByProduct(product));
-        return new ProductResponseV2(product, productPhotos.getAll());
-    }
-
-    /**
-     * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
-     */
     @Transactional
     public ProductResponse register(Host host, String spaceCode, RegisterProductRequest request) {
         Space space = spaceRepository.getByCodeOrThrow(spaceCode);
@@ -88,27 +71,6 @@ public class ProductService {
         return new ProductResponse(product, productPhotos.getAll());
     }
 
-    @Transactional
-    public ProductResponseV2 register(Host host, String spaceCode, RegisterProductRequestV2 request) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
-        validateSpaceHost(host, space);
-        validateProductAlreadyExists(space);
-        Product product = productRepository.save(request.toEntity(space));
-
-        ProductPhotos productPhotos = new ProductPhotos();
-        for (var photoRequest : request.photos()) { // TODO NPE
-            String path = generateContentsFilePath(
-                contentsStorage.getRootDirectory(),
-                spaceCode,
-                PRODUCT,
-                photoRequest.uploadFileName()
-            );
-            productPhotos.add(photoRequest.toEntity(product, path));
-        }
-        productPhotoRepository.saveAll(productPhotos.getAll());
-        return new ProductResponseV2(product, productPhotos.getAll());
-    }
-
     private void validateProductAlreadyExists(Space space) {
         Optional<Product> optionalProduct = productRepository.findBySpace(space);
         if (optionalProduct.isPresent()) {
@@ -116,41 +78,8 @@ public class ProductService {
         }
     }
 
-    /**
-     * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
-     */
     @Transactional
     public ProductResponse update(Host host, String spaceCode, UpdateProductRequest request) {
-        // Product 정보 수정
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
-        validateSpaceHost(host, space);
-        Product product = productRepository.getBySpaceOrThrow(space);
-        product.update(request.title(), request.category(), request.authorName(), request.description());
-
-        // 삭제 사진 db 및 클라우드 삭제
-        ProductPhotos photos = new ProductPhotos(productPhotoRepository.findAllByProduct(product));
-        List<ProductPhoto> deletedPhotos = photos.deleteByIds(request.deletePhotoIds());
-        deleteProductPhotos(deletedPhotos);
-
-        // 새로운 사진 추가 및 db 저장
-        List<ProductPhoto> newPhotos = new ArrayList<>();
-        for (var photoRequest : request.newPhotos()) {
-            String path = generateContentsFilePath(
-                contentsStorage.getRootDirectory(),
-                spaceCode,
-                PRODUCT,
-                photoRequest.uploadFileName()
-            );
-            newPhotos.add(photoRequest.toEntity(product, path));
-        }
-        photos.add(newPhotos);
-        productPhotoRepository.saveAll(newPhotos);
-
-        return new ProductResponse(product, photos.getAll());
-    }
-
-    @Transactional
-    public ProductResponseV2 update(Host host, String spaceCode, UpdateProductRequestV2 request) {
         // Product 정보 수정
         Space space = spaceRepository.getByCodeOrThrow(spaceCode);
         validateSpaceHost(host, space);
@@ -177,7 +106,7 @@ public class ProductService {
         photos.add(newPhotos);
         productPhotoRepository.saveAll(newPhotos);
 
-        return new ProductResponseV2(product, photos.getAll());
+        return new ProductResponse(product, photos.getAll());
     }
 
     @Transactional

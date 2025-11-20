@@ -40,12 +40,8 @@ import com.forgather.global.auth.util.JwtTokenProvider;
 import io.restassured.http.ContentType;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 
-/**
- * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
- * - 제거 이전에 생성, 수정, 조회 외 테스트 마이그레이션
- */
 @AutoConfigureMockMvc
-class ProductAcceptanceTest extends AcceptanceTest {
+public class ProductAcceptanceTest extends AcceptanceTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -77,6 +73,8 @@ class ProductAcceptanceTest extends AcceptanceTest {
         "category",
         "authorName",
         "description",
+        "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
+        false,
         List.of(
             new RegisterProductPhotoRequest("photo1", "file1.png", 1024L),
             new RegisterProductPhotoRequest("photo2", "file2.png", 2048L),
@@ -112,6 +110,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
 
             // when
             ProductResponse result = RestAssuredMockMvc.given()
+                .header("X-API-Version", "2")
                 .accept(ContentType.JSON)
                 .when()
                 .get("/spaces/%s/products".formatted(space.getCode()))
@@ -128,6 +127,8 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.category()).isEqualTo(registerResponse.category()),
                 () -> assertThat(result.authorName()).isEqualTo(registerResponse.authorName()),
                 () -> assertThat(result.description()).isEqualTo(registerResponse.description()),
+                () -> assertThat(result.videoUrl()).isEqualTo(registerResponse.videoUrl()),
+                () -> assertThat(result.isVideoAfterPhoto()).isEqualTo(registerResponse.isVideoAfterPhoto()),
                 () -> assertThat(result.photos().get(0).originalName()).isEqualTo("photo1"),
                 () -> assertThat(result.photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
                 () -> assertThat(result.photos().get(0).order()).isEqualTo(1),
@@ -145,6 +146,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
         void throwExceptionWhenNoProducts() {
             // when, then
             RestAssuredMockMvc.given()
+                .header("X-API-Version", "2")
                 .accept(ContentType.JSON)
                 .when()
                 .get("/spaces/%s/products".formatted(space.getCode()))
@@ -163,6 +165,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
             // when
             ProductResponse response = RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "2")
                 .body(registerRequest)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -181,6 +184,8 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(response.category()).isEqualTo(registerRequest.category()),
                 () -> assertThat(response.authorName()).isEqualTo(registerRequest.authorName()),
                 () -> assertThat(response.description()).isEqualTo(registerRequest.description()),
+                () -> assertThat(response.videoUrl()).isEqualTo(registerRequest.videoUrl()),
+                () -> assertThat(response.isVideoAfterPhoto()).isEqualTo(registerRequest.isVideoAfterPhoto()),
                 () -> assertThat(response.photos().get(0).originalName()).isEqualTo("photo1"),
                 () -> assertThat(response.photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
                 () -> assertThat(response.photos().get(0).order()).isEqualTo(1),
@@ -202,6 +207,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
             // when, then
             RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "2")
                 .body(registerRequest)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -221,11 +227,14 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 "category",
                 "authorName",
                 "1234567890".repeat(100),
+                "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
+                false,
                 List.of()
             );
             // when, then
             RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "2")
                 .body(registerRequest)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -240,6 +249,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
         void throwExceptionWhenGuestRegister() {
             // when, then
             RestAssuredMockMvc.given()
+                .header("X-API-Version", "2")
                 .body(registerRequest)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -256,6 +266,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
             // when, then
             RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + anotherAccessToken)
+                .header("X-API-Version", "2")
                 .body(registerRequest)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -281,6 +292,8 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 null,
                 null,
                 "description",
+                "https://youtu.be/aaa",
+                true,
                 List.of(2L),
                 List.of(
                     new RegisterProductPhotoRequest("photo4", "file4.png", 1024L),
@@ -291,6 +304,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
             // when
             ProductResponse result = RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "2")
                 .body(request)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -309,6 +323,8 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.category()).isEqualTo(registerResponse.category()),
                 () -> assertThat(result.authorName()).isEqualTo(registerResponse.authorName()),
                 () -> assertThat(result.description()).isEqualTo(request.description()),
+                () -> assertThat(result.videoUrl()).isEqualTo(request.videoUrl()),
+                () -> assertThat(result.isVideoAfterPhoto()).isEqualTo(request.isVideoAfterPhoto()),
                 () -> assertThat(result.photos().get(0).originalName()).isEqualTo("photo1"),
                 () -> assertThat(result.photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
                 () -> assertThat(result.photos().get(0).order()).isEqualTo(1),
@@ -340,6 +356,8 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 null,
                 null,
                 "description",
+                "https://youtu.be/aaa",
+                true,
                 List.of((long)(registerResponse.photos().size() + 10)),
                 List.of()
             );
@@ -347,6 +365,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
             // when, then
             RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "2")
                 .body(request)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -367,6 +386,8 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 null,
                 null,
                 "description",
+                "https://youtu.be/aaa",
+                true,
                 List.of(2L),
                 List.of(
                     new RegisterProductPhotoRequest("photo4", "file4.png", 1024L),
@@ -376,6 +397,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
 
             // when
             RestAssuredMockMvc.given()
+                .header("X-API-Version", "2")
                 .body(request)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -396,6 +418,8 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 null,
                 null,
                 "description",
+                "https://youtu.be/aaa",
+                true,
                 List.of(2L),
                 List.of(
                     new RegisterProductPhotoRequest("photo4", "file4.png", 1024L),
@@ -406,6 +430,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
             // when
             RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + anotherAccessToken)
+                .header("X-API-Version", "2")
                 .body(request)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -484,6 +509,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
     private ProductResponse registerProduct() {
         return RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + accessToken)
+            .header("X-API-Version", "2")
             .body(registerRequest)
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
