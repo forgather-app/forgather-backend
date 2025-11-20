@@ -22,6 +22,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.forgather.domain.product.dto.ProductResponse;
+import com.forgather.domain.product.dto.ProductsResponse;
 import com.forgather.domain.product.dto.RegisterProductPhotoRequest;
 import com.forgather.domain.product.dto.RegisterProductRequest;
 import com.forgather.domain.product.dto.UpdateProductRequest;
@@ -153,6 +154,62 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .then()
                 .statusCode(404)
                 .body("message", containsString("등록된 작품이"));
+        }
+    }
+
+    @DisplayName("작품 목록 조회")
+    @Nested
+    class getAll {
+        /**
+         * TODO 여러개 테스트
+         */
+        @DisplayName("작품 목록 조회")
+        @Test
+        void getAll() {
+            // given
+            ProductResponse registerResponse = registerProduct();
+
+            // when
+            ProductsResponse result = RestAssuredMockMvc.given()
+                .header("X-API-Version", "3")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(ProductsResponse.class);
+
+            // then
+            assertAll(
+                () -> assertThat(result.products().getFirst().id()).isNotNull(),
+                () -> assertThat(result.products().getFirst().title()).isEqualTo(registerResponse.title()),
+                () -> assertThat(result.products().getFirst().category()).isEqualTo(registerResponse.category()),
+                () -> assertThat(result.products().getFirst().videoUrl()).isEqualTo(registerResponse.videoUrl()),
+                () -> assertThat(result.products().getFirst().firstPhoto().originalName()).isEqualTo("photo1"),
+                () -> assertThat(result.products().getFirst().firstPhoto().path()).endsWith("/spaces/1234567890/product/file1.png"),
+                () -> assertThat(result.products().getFirst().firstPhoto().order()).isEqualTo(1)
+            );
+        }
+
+        @DisplayName("작품 목록 조회 시 등록된 작품이 없으면 빈 리스트를 반환한다")
+        @Test
+        void returnEmptyListWhenNoProducts() {
+            // when
+            ProductsResponse result = RestAssuredMockMvc.given()
+                .header("X-API-Version", "3")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(ProductsResponse.class);
+
+            // then
+            assertThat(result.products()).isEmpty();
         }
     }
 

@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.forgather.domain.product.dto.ProductResponse;
+import com.forgather.domain.product.dto.ProductsResponse;
 import com.forgather.domain.product.dto.RegisterProductRequest;
+import com.forgather.domain.product.dto.SimpleProductResponse;
 import com.forgather.domain.product.dto.UpdateProductRequest;
 import com.forgather.domain.product.model.Product;
 import com.forgather.domain.product.model.ProductPhoto;
@@ -42,12 +44,30 @@ public class ProductService {
     private final SpaceHostMapRepository spaceHostMapRepository;
     private final ContentsStorage contentsStorage;
 
+    /**
+     * TODO 작품 복수 등록 마이그레이션 이후 제거
+     */
     @Transactional(readOnly = true)
     public ProductResponse getV2(String spaceCode) {
         Space space = spaceRepository.getByCodeOrThrow(spaceCode);
         Product product = productRepository.getBySpaceOrThrow(space);
         ProductPhotos productPhotos = new ProductPhotos(productPhotoRepository.findAllByProduct(product));
         return new ProductResponse(product, productPhotos.getAll());
+    }
+
+    /**
+     * 스페이스에 등록된 작품 목록을 조회합니다.
+     */
+    @Transactional(readOnly = true)
+    public ProductsResponse getV3(String spaceCode) {
+        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        List<Product> products = productRepository.findAllBySpace(space);
+        List<SimpleProductResponse> productResponses = products.stream()
+            .map(product -> new SimpleProductResponse(
+                product,
+                productPhotoRepository.findFirstByProduct(product).orElse(null))
+            ).toList();
+        return new ProductsResponse(productResponses);
     }
 
     @Transactional

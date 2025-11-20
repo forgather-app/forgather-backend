@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.forgather.domain.product.dto.ProductResponse;
+import com.forgather.domain.product.dto.ProductsResponse;
 import com.forgather.domain.product.dto.RegisterProductRequest;
 import com.forgather.domain.product.dto.UpdateProductRequest;
 import com.forgather.domain.product.service.ProductService;
@@ -34,10 +35,20 @@ public class ProductController {
 
     private final ProductService productService;
 
+    /**
+     * TODO 작품 복수 등록 마이그레이션 이후 제거
+     */
     @Operation(summary = "작품 조회", description = "임베드 영상이 반영된 api는 version 2로 호출")
     @GetMapping(headers = "X-API-Version=2")
     public ResponseEntity<ProductResponse> getV2(@PathVariable(value = "spaceCode") String spaceCode) {
         var response = productService.getV2(spaceCode);
+        return ResponseEntity.ok().body(response);
+    }
+
+    @Operation(summary = "작품 목록 조회", description = "작품 목록 조회가 반영된 api는 version 3으로 호출")
+    @GetMapping(headers = "X-API-Version=3")
+    public ResponseEntity<ProductsResponse> getV3(@PathVariable(value = "spaceCode") String spaceCode) {
+        var response = productService.getV3(spaceCode);
         return ResponseEntity.ok().body(response);
     }
 

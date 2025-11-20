@@ -1,5 +1,6 @@
 package com.forgather.domain.product.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,8 @@ public interface ProductRepository {
     void delete(Product product);
 
     Optional<Product> findBySpace(Space space);
+
+    List<Product> findAllBySpace(Space space);
 
     default Product getBySpaceOrThrow(Space space) {
         if (space == null) {
