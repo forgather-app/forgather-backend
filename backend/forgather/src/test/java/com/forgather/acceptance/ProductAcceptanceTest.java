@@ -163,14 +163,12 @@ public class ProductAcceptanceTest extends AcceptanceTest {
     @DisplayName("작품 목록 조회")
     @Nested
     class getAll {
-        /**
-         * TODO 여러개 테스트
-         */
         @DisplayName("작품 목록 조회")
         @Test
         void getAll() {
             // given
-            ProductResponse registerResponse = registerProductV3();
+            ProductResponse registerResponse1 = registerProductV3();
+            ProductResponse registerResponse2 = registerProductV3();
 
             // when
             ProductsResponse result = RestAssuredMockMvc.given()
@@ -186,10 +184,16 @@ public class ProductAcceptanceTest extends AcceptanceTest {
 
             // then
             assertAll(
-                () -> assertThat(result.products().getFirst().id()).isNotNull(),
-                () -> assertThat(result.products().getFirst().title()).isEqualTo(registerResponse.title()),
-                () -> assertThat(result.products().getFirst().category()).isEqualTo(registerResponse.category()),
-                () -> assertThat(result.products().getFirst().videoUrl()).isEqualTo(registerResponse.videoUrl()),
+                () -> assertThat(result.products().getFirst().id()).isEqualTo(registerResponse1.id()),
+                () -> assertThat(result.products().getFirst().title()).isEqualTo(registerResponse1.title()),
+                () -> assertThat(result.products().getFirst().category()).isEqualTo(registerResponse1.category()),
+                () -> assertThat(result.products().getFirst().videoUrl()).isEqualTo(registerResponse1.videoUrl()),
+
+                () -> assertThat(result.products().get(1).id()).isEqualTo(registerResponse2.id()),
+                () -> assertThat(result.products().get(1).title()).isEqualTo(registerResponse2.title()),
+                () -> assertThat(result.products().get(1).category()).isEqualTo(registerResponse2.category()),
+                () -> assertThat(result.products().get(1).videoUrl()).isEqualTo(registerResponse2.videoUrl()),
+
                 () -> assertThat(result.products().getFirst().firstPhoto().originalName()).isEqualTo("photo1"),
                 () -> assertThat(result.products().getFirst().firstPhoto().path()).endsWith("/spaces/1234567890/product/file1.png"),
                 () -> assertThat(result.products().getFirst().firstPhoto().order()).isEqualTo(1)
@@ -216,10 +220,6 @@ public class ProductAcceptanceTest extends AcceptanceTest {
         }
     }
 
-    /**
-     * TODO
-     * 다른 스페이스 작품
-     */
     @Nested
     class getProductDetail {
         @DisplayName("작품 상세 조회")
