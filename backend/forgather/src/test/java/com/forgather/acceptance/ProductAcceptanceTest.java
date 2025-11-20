@@ -276,6 +276,9 @@ public class ProductAcceptanceTest extends AcceptanceTest {
         }
     }
 
+    /**
+     * TODO 작품 복수 등록 마이그레이션 이후 제거
+     */
     @DisplayName("작품 등록")
     @Nested
     class registerProduct {
@@ -387,6 +390,150 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + anotherAccessToken)
                 .header("X-API-Version", "2")
+                .body(registerRequest)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(403)
+                .body("message", containsString("해당 스페이스에 대한 접근 권한이 없습니다."));
+        }
+    }
+
+    @DisplayName("작품 등록")
+    @Nested
+    class registerProductV3 {
+        @DisplayName("작품 등록")
+        @Test
+        void register() {
+            // when
+            ProductResponse response = RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "3")
+                .body(registerRequest)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(201)
+                .extract()
+                .body()
+                .as(ProductResponse.class);
+
+            // then
+            assertAll(
+                () -> assertThat(response.id()).isNotNull(),
+                () -> assertThat(response.title()).isEqualTo(registerRequest.title()),
+                () -> assertThat(response.category()).isEqualTo(registerRequest.category()),
+                () -> assertThat(response.authorName()).isEqualTo(registerRequest.authorName()),
+                () -> assertThat(response.description()).isEqualTo(registerRequest.description()),
+                () -> assertThat(response.videoUrl()).isEqualTo(registerRequest.videoUrl()),
+                () -> assertThat(response.isVideoAfterPhoto()).isEqualTo(registerRequest.isVideoAfterPhoto()),
+                () -> assertThat(response.photos().get(0).originalName()).isEqualTo("photo1"),
+                () -> assertThat(response.photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
+                () -> assertThat(response.photos().get(0).order()).isEqualTo(1),
+                () -> assertThat(response.photos().get(1).originalName()).isEqualTo("photo2"),
+                () -> assertThat(response.photos().get(1).path()).endsWith("/spaces/1234567890/product/file2.png"),
+                () -> assertThat(response.photos().get(1).order()).isEqualTo(2),
+                () -> assertThat(response.photos().get(2).originalName()).isEqualTo("photo3"),
+                () -> assertThat(response.photos().get(2).path()).endsWith("/spaces/1234567890/product/file3.png"),
+                () -> assertThat(response.photos().get(2).order()).isEqualTo(3)
+            );
+        }
+
+        @DisplayName("작품 복수 등록이 가능하다")
+        @Test
+        void throwExceptionWhenProductAlreadyExists() {
+            // given
+            registerProductV3();
+            registerProductV3();
+
+            // when, then
+            RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "3")
+                .body(registerRequest)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(201);
+        }
+
+        @DisplayName("작품 3개를 초과해서 등록하면 예외를 던진다")
+        @Test
+        void throwExceptionWhenProductExceedMaxCount() {
+            // given
+            registerProductV3();
+            registerProductV3();
+            registerProductV3();
+
+            // when, then
+            RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "3")
+                .body(registerRequest)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(400)
+                .body("message", containsString("작품은 3개까지만 등록 가능"));
+        }
+
+        @DisplayName("작품 설명을 1000자까지 작성할 수 있다")
+        @Test
+        void doesNotThrowAnyExceptionWhenMaxDescriptionLength() {
+            // given
+            RegisterProductRequest registerRequest = new RegisterProductRequest(
+                "title",
+                "category",
+                "authorName",
+                "1234567890".repeat(100),
+                "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
+                false,
+                List.of()
+            );
+            // when, then
+            RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "3")
+                .body(registerRequest)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(201);
+        }
+
+        @DisplayName("방문자가 작품을 등록하면 예외를 던진다")
+        @Test
+        void throwExceptionWhenGuestRegister() {
+            // when, then
+            RestAssuredMockMvc.given()
+                .header("X-API-Version", "3")
+                .body(registerRequest)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(401)
+                .body("message", containsString("로그인이 필요합니다."));
+        }
+
+        @DisplayName("다른 호스트가 작품을 등록하면 예외를 던진다")
+        @Test
+        void throwExceptionWhenAnotherHostRegister() {
+            // when, then
+            RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + anotherAccessToken)
+                .header("X-API-Version", "3")
                 .body(registerRequest)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -626,10 +773,29 @@ public class ProductAcceptanceTest extends AcceptanceTest {
         }
     }
 
+    /**
+     * TODO 작품 복수 등록 마이그레이션 이후 제거
+     */
     private ProductResponse registerProduct() {
         return RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + accessToken)
             .header("X-API-Version", "2")
+            .body(registerRequest)
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .when()
+            .post("/spaces/%s/products".formatted(space.getCode()))
+            .then()
+            .statusCode(201)
+            .extract()
+            .body()
+            .as(ProductResponse.class);
+    }
+
+    private ProductResponse registerProductV3() {
+        return RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + accessToken)
+            .header("X-API-Version", "3")
             .body(registerRequest)
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)

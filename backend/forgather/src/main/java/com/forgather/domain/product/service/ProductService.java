@@ -37,6 +37,8 @@ import lombok.RequiredArgsConstructor;
 @Service
 public class ProductService {
 
+    private static final int PRODUCTS_MAX_COUNT = 3;
+
     private final ApplicationEventPublisher eventPublisher;
     private final ProductRepository productRepository;
     private final ProductPhotoRepository productPhotoRepository;
@@ -78,6 +80,9 @@ public class ProductService {
         return new ProductResponse(product, productPhotos.getAll());
     }
 
+    /**
+     * TODO 작품 복수 등록 마이그레이션 이후 제거
+     */
     @Transactional
     public ProductResponse register(Host host, String spaceCode, RegisterProductRequest request) {
         Space space = spaceRepository.getByCodeOrThrow(spaceCode);
@@ -99,10 +104,41 @@ public class ProductService {
         return new ProductResponse(product, productPhotos.getAll());
     }
 
+    /**
+     * TODO 작품 복수 등록 마이그레이션 이후 제거
+     */
     private void validateProductAlreadyExists(Space space) {
         Optional<Product> optionalProduct = productRepository.findBySpace(space);
         if (optionalProduct.isPresent()) {
             throw new BaseException("이미 등록된 작품이 존재합니다. spaceCode: " + space.getCode());
+        }
+    }
+
+    @Transactional
+    public ProductResponse registerV3(Host host, String spaceCode, RegisterProductRequest request) {
+        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        validateSpaceHost(host, space);
+        validateExceedProductMaxCount(space);
+        Product product = productRepository.save(request.toEntity(space));
+
+        ProductPhotos productPhotos = new ProductPhotos();
+        for (var photoRequest : request.photos()) { // TODO NPE
+            String path = generateContentsFilePath(
+                contentsStorage.getRootDirectory(),
+                spaceCode,
+                PRODUCT,
+                photoRequest.uploadFileName()
+            );
+            productPhotos.add(photoRequest.toEntity(product, path));
+        }
+        productPhotoRepository.saveAll(productPhotos.getAll());
+        return new ProductResponse(product, productPhotos.getAll());
+    }
+
+    private void validateExceedProductMaxCount(Space space) {
+        Long counts = productRepository.countBySpace(space);
+        if (counts >= PRODUCTS_MAX_COUNT) {
+            throw new BaseException("작품은 3개까지만 등록 가능합니다. spaceCode: " + space.getCode());
         }
     }
 

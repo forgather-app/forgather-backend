@@ -61,8 +61,11 @@ public class ProductController {
         return ResponseEntity.ok().body(response);
     }
 
+    /**
+     * TODO 작품 복수 등록 마이그레이션 이후 제거
+     */
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "작품 등록", description = "임베드 영상이 반영된 api는 version 2로 호출")
+    @Operation(summary = "작품 등록", description = "복수 작품 등록이 반영된 api는 version 3으로 호출")
     @PostMapping(headers = "X-API-Version=2")
     public ResponseEntity<ProductResponse> registerV2(
         @PathVariable(value = "spaceCode") String spaceCode,
@@ -70,6 +73,18 @@ public class ProductController {
         @LoginHost(required = true) Host host
     ) {
         var response = productService.register(host, spaceCode, request);
+        return ResponseEntity.status(CREATED).body(response);
+    }
+
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "작품 등록", description = "복수 작품 등록이 반영된 api는 version 3으로 호출")
+    @PostMapping(headers = "X-API-Version=3")
+    public ResponseEntity<ProductResponse> registerV3(
+        @PathVariable(value = "spaceCode") String spaceCode,
+        @RequestBody RegisterProductRequest request,
+        @LoginHost(required = true) Host host
+    ) {
+        var response = productService.registerV3(host, spaceCode, request);
         return ResponseEntity.status(CREATED).body(response);
     }
 

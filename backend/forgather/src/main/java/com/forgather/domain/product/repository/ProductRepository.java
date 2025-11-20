@@ -21,6 +21,8 @@ public interface ProductRepository {
 
     Optional<Product> findBySpaceAndId(Space space, Long id);
 
+    Long countBySpace(Space space);
+
     /**
      * TODO 작품 복수 등록 마이그레이션 이후 제거
      */
@@ -43,5 +45,4 @@ public interface ProductRepository {
             .orElseThrow(() -> new NotFoundException("해당 스페이스에 존재하지 않는 작품입니다. spaceCode: %s, productId: %d"
                 .formatted(space.getCode(), id)));
     }
-
 }
