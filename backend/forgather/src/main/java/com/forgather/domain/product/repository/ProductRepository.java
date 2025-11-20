@@ -30,8 +30,11 @@ public interface ProductRepository {
         if (space == null) {
             throw new BaseNullPointerException("스페이스는 null일 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return findBySpace(space)
-            .orElseThrow(() -> new NotFoundException("해당 스페이스에 등록된 작품이 없습니다. spaceCode: " + space.getCode()));
+        List<Product> products = findAllBySpace(space);
+        if (products.isEmpty()) {
+            throw new NotFoundException("해당 스페이스에 등록된 작품이 없습니다. spaceCode: " + space.getCode());
+        }
+        return products.get(0);
     }
 
     default Product getBySpaceAndIdOrThrow(Space space, Long id) {
