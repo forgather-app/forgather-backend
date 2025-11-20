@@ -107,7 +107,7 @@ public class ProductController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "작품 수정",
         description = "변경 사항이 없는 데이터는 json에 포함하지 않거나 null로 요청한다.  복수 작품 등록이 반영된 api는 version 3으로 호출")
-    @PatchMapping(value = "/{productId}", headers = "X-API-Version=3")
+    @PatchMapping(value = "/{productId}", headers = "X-API-Version=1")
     public ResponseEntity<ProductResponse> updateV3(
         @PathVariable(value = "spaceCode") String spaceCode,
         @PathVariable(value = "productId") Long productId,
@@ -134,7 +134,7 @@ public class ProductController {
 
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "작품 삭제", description = "복수 작품 등록이 반영된 api는 version 2로 호출")
-    @DeleteMapping(value = "/{productId}", headers = "X-API-Version=2")
+    @DeleteMapping(value = "/{productId}", headers = "X-API-Version=1")
     public ResponseEntity<Void> deleteV2(
         @PathVariable(value = "spaceCode") String spaceCode,
         @PathVariable(value = "productId") Long productId,

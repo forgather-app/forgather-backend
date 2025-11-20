@@ -738,7 +738,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             // when
             ProductResponse result = RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
-                .header("X-API-Version", "3")
+                .header("X-API-Version", "1")
                 .body(request)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -799,7 +799,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             // when, then
             RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
-                .header("X-API-Version", "3")
+                .header("X-API-Version", "1")
                 .body(request)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -832,7 +832,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
 
             // when
             RestAssuredMockMvc.given()
-                .header("X-API-Version", "3")
+                .header("X-API-Version", "1")
                 .body(request)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -866,7 +866,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             // when
             RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + anotherAccessToken)
-                .header("X-API-Version", "3")
+                .header("X-API-Version", "1")
                 .body(request)
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
@@ -959,7 +959,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             RestAssuredMockMvc
                 .given()
                 .header("Authorization", "Bearer " + accessToken)
-                .header("X-API-Version", "2")
+                .header("X-API-Version", "1")
                 .when()
                 .delete("/spaces/%s/products/%d".formatted(space.getCode(), registerResponse.id()))
                 .then()
@@ -985,7 +985,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             // when, then
             RestAssuredMockMvc
                 .given()
-                .header("X-API-Version", "2")
+                .header("X-API-Version", "1")
                 .when()
                 .delete("/spaces/%s/products/%d".formatted(space.getCode(), registerResponse.id()))
                 .then()
@@ -1004,7 +1004,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             RestAssuredMockMvc
                 .given()
                 .header("Authorization", "Bearer " + anotherAccessToken)
-                .header("X-API-Version", "2")
+                .header("X-API-Version", "1")
                 .when()
                 .delete("/spaces/%s/products/%d".formatted(space.getCode(), registerResponse.id()))
                 .then()
