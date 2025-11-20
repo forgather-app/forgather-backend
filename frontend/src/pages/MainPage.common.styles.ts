@@ -18,6 +18,7 @@ export const ProfileContainer = styled.section`
   align-items: center;
   justify-content: center;
   gap: 16px;
+  min-height: 140px;
 `;
 
 export const InfoContainer = styled.div`
@@ -34,6 +35,7 @@ export const Name = styled.h1`
 export const Introduction = styled.p`
   ${({ theme }) => theme.typography.bodyRegular}
   color: ${({ theme }) => theme.colors.gray04};
+  white-space: pre-line;
 `;
 
 export const IconButtonContainer = styled.div`

@@ -16,6 +16,7 @@ export const FormContainer = styled.form`
   display: flex;
   flex-direction: column;
   gap: 6px;
+  margin-bottom: 80px;
 `;
 
 export const LabelContainer = styled.label`
@@ -105,4 +106,10 @@ export const DeleteButton = styled.button`
 export const TopContainer = styled.div`
   display: flex;
   justify-content: space-between;
+`;
+
+export const ImageCount = styled.p`
+  color: ${({ theme }) => theme.colors.gray03};
+  ${({ theme }) => ({ ...theme.typography.captionSmall })};
+  align-self: flex-end;
 `;

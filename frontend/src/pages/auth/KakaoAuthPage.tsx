@@ -5,7 +5,7 @@ import { useToast } from '../../hooks/@common/useToast';
 import useKakaoAuth from '../../hooks/domain/auth/useKakaoAuth';
 
 const KakaoAuthPage = () => {
-  const { getAuth } = useKakaoAuth();
+  const { getServerToken } = useKakaoAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
@@ -25,14 +25,15 @@ const KakaoAuthPage = () => {
     const fetchKakaoCode = async () => {
       try {
         const kakaoCode = getKakaoCode();
-        await getAuth(kakaoCode);
+        await getServerToken(kakaoCode);
+        navigate(ROUTES.HOST.MAIN);
       } catch (error) {
         console.error(error);
         showToast({
           text: '로그인에 실패했습니다. 다시 시도해주세요.',
           type: 'error',
         });
-        navigate(ROUTES.MAIN);
+        navigate(ROUTES.LANDING);
       }
     };
     fetchKakaoCode();

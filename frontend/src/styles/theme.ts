@@ -57,7 +57,7 @@ export const theme = {
     },
   },
   zIndex: {
-    fixedButton: 600,
+    fixedButton: 620,
     modalBackdrop: 650,
     modal: 700,
     toast: 800,
@@ -74,6 +74,6 @@ export const theme = {
       imageMaxWidth: '280px',
     },
     headerHeight: '60px',
-    footerHeight: '60px',
+    footerHeight: '124px',
   },
 };

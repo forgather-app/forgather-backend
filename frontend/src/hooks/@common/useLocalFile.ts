@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { CONSTRAINTS } from '../../constants/constraints';
-import type { LocalFile } from '../../types/file.type';
+import type { LocalFile, PreviewFile } from '../../types/file.type';
 import { heicToJpegBlob, isHeic } from '../../utils/heic';
 import {
+  checkFileCapacity,
   checkInvalidFileType,
   checkUploadLimit,
   isValidFileType,
@@ -24,10 +25,13 @@ const useLocalFile = ({
   );
   const { showToast } = useToast();
 
-  const previewFile = localFiles.map((file) => ({
-    id: file.id,
-    previewUrl: file.previewUrl,
-  }));
+  const previewFiles = localFiles.map(
+    (file) =>
+      ({
+        id: file.id,
+        previewUrl: file.previewUrl,
+      }) as PreviewFile,
+  );
 
   const processFile = async (file: File) => {
     const isAndroidChrome =
@@ -106,7 +110,7 @@ const useLocalFile = ({
   const splitValidFilesByType = (files: File[], type: string) => {
     return files.reduce(
       (acc, file) => {
-        if (isValidFileType(file, type)) {
+        if (isValidFileType(file, type, CONSTRAINTS.ALLOWED_FILE_TYPES)) {
           acc.validFiles.push(file);
         } else {
           acc.invalidFiles.push(file);
@@ -125,13 +129,13 @@ const useLocalFile = ({
       );
 
       checkInvalidFileType(invalidFiles);
+      checkFileCapacity(validFiles);
 
       if (validFiles.length === 0) return;
 
+      await addPreviewUrlsFromFiles(validFiles);
       if (maxFileCount !== 1)
         checkUploadLimit(validFiles, maxFileCount, localFiles.length);
-
-      await addPreviewUrlsFromFiles(validFiles);
     } catch (error) {
       console.error('파일 업로드 중 오류 발생:', error);
       showToast({
@@ -140,7 +144,6 @@ const useLocalFile = ({
             ? error.message
             : '파일 업로드 중 오류가 발생했습니다.',
       });
-      setLocalFiles([]);
     }
   };
 
@@ -159,6 +162,7 @@ const useLocalFile = ({
   ) => {
     const files = Array.from(event.target.files || []);
     updateFiles(files);
+    event.target.value = '';
   };
 
   const handleFilesDrop = (event: React.DragEvent<HTMLLabelElement>) => {
@@ -172,7 +176,7 @@ const useLocalFile = ({
 
   return {
     localFiles,
-    previewFile,
+    previewFiles,
     deleteFile,
     handleFilesUploadClick,
     handleFilesDrop,

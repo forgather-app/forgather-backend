@@ -123,6 +123,14 @@ public class GuestBookService {
     }
 
     @Transactional
+    public void deleteAllCardsBySpace(Host host, Space space) {
+        validateSpaceHost(host, space);
+        for (GuestBookCard guestBookCard : guestBookCardRepository.findAllBySpace(space)) {
+            deleteCard(host, space.getCode(), guestBookCard.getId());
+        }
+    }
+
+    @Transactional
     public void deleteCard(Host host, String spaceCode, Long guestBookCardId) {
         Space space = spaceRepository.getByCodeOrThrow(spaceCode);
         validateSpaceHost(host, space);
@@ -133,7 +141,9 @@ public class GuestBookService {
 
     private void deleteGuestBookCardPhotos(GuestBookCard guestBookCard) {
         List<GuestBookCardPhoto> photos = guestBookCardPhotoRepository.findAllByGuestBookCard(guestBookCard);
-        deleteGuestBookCardPhotos(photos);
+        if (!photos.isEmpty()) {
+            deleteGuestBookCardPhotos(photos);
+        }
     }
 
     @Transactional

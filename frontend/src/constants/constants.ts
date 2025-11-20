@@ -6,24 +6,18 @@ export const Z_INDEX = {
 
 export const NICKNAME = {
   ADJECTIVES_1: [
-    '흐리고',
-    '깊고',
-    '멈추고',
-    '스치고',
-    '잊히고',
-    '젖고',
-    '기울고',
-    '잠기고',
-    '흔들리고',
-    '사라지고',
-    '묻히고',
-    '조용하고',
-    '깨지고',
-    '남기고',
-    '멀어지고',
-    '얼어붙고',
-    '비워지고',
-    '낡고',
+    '새하얗고',
+    '하얗고',
+    '희고',
+    '붉고',
+    '빨갛고',
+    '노랗고',
+    '금빛이고',
+    '푸르고',
+    '파랗고',
+    '은빛이고',
+    '회색이고',
+    '검고',
   ],
 
   ADJECTIVES_2: [
@@ -37,7 +31,6 @@ export const NICKNAME = {
     '은은한',
     '짙은',
     '빛바랜',
-    '쓸쓸한',
     '짧은',
     '느린',
     '잔잔한',
@@ -61,5 +54,17 @@ export const NICKNAME = {
     '꿈',
     '밤',
     '향기',
+    '잠',
   ],
+};
+
+export const EVENT_FORM_URL = 'https://forms.gle/WbpuZxrdshT4Lgtf8';
+export const EVENT_MODAL_HIDE_KEY = 'eventModalHideUntil';
+export const KAKAO_TEMPLATE_ID = {
+  DEV: 125656,
+  PROD: 125655,
+};
+export const TRY_IT_NOW_SPACE_CODE = {
+  DEV: '05993e02d3',
+  PROD: '1d4cc97597',
 };

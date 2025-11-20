@@ -7,7 +7,7 @@ export const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 32px;
+  gap: 16px;
 `;
 
 export const TopContainer = styled.div`
@@ -18,4 +18,9 @@ export const ContentContainer = styled.div`
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+`;
+
+export const ProgressBarContainer = styled.div`
+  position: relative;
+  top: -16px;
 `;

@@ -3,6 +3,7 @@ import * as S from './TextInput.styles';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
+  subLabel?: string;
   errorMessage?: string;
   maxCount?: number;
   validLength?: number;
@@ -11,6 +12,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 const TextInput = ({
   label,
+  subLabel,
   errorMessage,
   maxCount,
   validLength,
@@ -20,8 +22,10 @@ const TextInput = ({
   return (
     <C.Wrapper>
       <C.Label htmlFor={inputProps.id}>
-        {label} {isRequired && '*'}
+        {label}
+        <C.requiredDot>{isRequired && '*'}</C.requiredDot>
       </C.Label>
+      <S.SubLabel>{subLabel}</S.SubLabel>
       <S.InputField
         {...inputProps}
         id={inputProps.id}
@@ -29,7 +33,7 @@ const TextInput = ({
         $isError={!!errorMessage}
       />
       <C.InputFooterContainer>
-        <C.ErrorMessage>{errorMessage ? errorMessage : ' '}</C.ErrorMessage>
+        <C.ErrorMessage>{errorMessage ? errorMessage : ''}</C.ErrorMessage>
         <C.InputCount>
           {maxCount && `${validLength} / ${maxCount}`}
         </C.InputCount>

@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom';
 import { DOMAIN } from '../../../apis/config';
 import { authService } from '../../../apis/services/auth/auth.service';
 import {
@@ -11,7 +10,6 @@ import { setAuthTokens } from '../../../utils/authCookieManager';
 import { useToast } from '../../@common/useToast';
 
 const useKakaoAuth = () => {
-  const navigate = useNavigate();
   const { showToast } = useToast();
   const REQUEST_URI = `${DOMAIN}${ROUTES.AUTH.KAKAO}`;
 
@@ -55,16 +53,12 @@ const useKakaoAuth = () => {
     }
   };
 
-  const getAuth = async (code: string) => {
+  const getServerToken = async (code: string) => {
     try {
       const clientId = await requestKakaoClientId();
       const kakaoToken = await requestKakaoToken(clientId, code);
       const serverToken = await requestServerToken(kakaoToken);
       setAuthTokens(serverToken.accessToken, serverToken.refreshToken);
-      navigate(ROUTES.MAIN);
-      setTimeout(() => {
-        location.reload();
-      }, 0);
     } catch (error) {
       console.error(error);
       showToast({
@@ -74,7 +68,7 @@ const useKakaoAuth = () => {
     }
   };
 
-  return { handleKakaoLogin, getAuth };
+  return { handleKakaoLogin, getServerToken };
 };
 
 export default useKakaoAuth;

@@ -1,7 +1,8 @@
 import styled from '@emotion/styled';
 
 export const Wrapper = styled.div`
-  height: ${({ theme }) => `calc(100dvh - ${parseInt(theme.layout.padding.topBottom, 10) * 2}px - ${theme.layout.footerHeight} - ${theme.layout.headerHeight})`};
+  height: ${({ theme }) =>
+    `calc(100dvh - ${parseInt(theme.layout.padding.topBottom, 10) * 2}px - ${theme.layout.footerHeight} - ${theme.layout.headerHeight})`};
   display: flex;
   flex-direction: column;
   gap: 64px;
@@ -49,6 +50,12 @@ export const DividerLineContainer = styled.div`
 export const DividerLineText = styled.p`
   ${({ theme }) => theme.typography.bodyRegular}
   flex-grow: 1;
-  color: ${({ theme }) => theme.colors.gray03};
+  color: ${({ theme }) => theme.colors.gray05};
   text-align: center;
+`;
+
+export const TryItNowButton = styled.button`
+  color: ${({ theme }) => theme.colors.gray04};
+  ${({ theme }) => theme.typography.captionSmall}
+  text-decoration : underline;
 `;

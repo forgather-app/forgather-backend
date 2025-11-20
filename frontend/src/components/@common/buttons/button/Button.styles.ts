@@ -43,6 +43,11 @@ export const buttonStyles = {
   tertiary: (theme: Theme) => css`
     color: ${theme.colors.gray04};
     ${theme.typography.captionSmall};
+  `,
+
+  outline: (theme: Theme) => css`
+    color: ${theme.colors.gray04};
+    ${theme.typography.button};
     border-radius: 4px;
     border: solid 1px ${theme.colors.gray02};
   `,
@@ -50,6 +55,7 @@ export const buttonStyles = {
   danger: (theme: Theme) => css`
     background-color: ${theme.colors.error};
     color: ${theme.colors.white};
+    border-radius: 4px;
   `,
 
   error: (theme: Theme) => css`
@@ -104,6 +110,7 @@ export const buttonStyles = {
     margin: 0 auto;
     background-color: ${theme.colors.gray06};
     color: ${theme.colors.white};
+    padding: 20px 20px;
 
     &:active {
       background-color: ${theme.colors.gray06};
@@ -115,6 +122,29 @@ export const buttonStyles = {
       pointer-events: none;
       background-color: ${theme.colors.gray02};
       color: ${theme.colors.white};
+    }
+  `,
+
+  floating: (theme: Theme) => css`
+    position: fixed;
+    bottom: 20px;
+    width: fit-content;
+    padding: 14px 28px;
+    border-radius: 999px;
+    background-color: ${theme.colors.gray06};
+    color: ${theme.colors.white};
+    box-shadow: 0px 12px 20px rgba(0, 0, 0, 0.15);
+    z-index: ${theme.zIndex.fixedButton + 1};
+
+    &:active {
+      background-color: ${theme.colors.gray05};
+    }
+
+    &:disabled {
+      pointer-events: none;
+      background-color: ${theme.colors.gray02};
+      color: ${theme.colors.white};
+      box-shadow: none;
     }
   `,
 };
