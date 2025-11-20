@@ -170,7 +170,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
         @Test
         void getAll() {
             // given
-            ProductResponse registerResponse = registerProduct();
+            ProductResponse registerResponse = registerProductV3();
 
             // when
             ProductsResponse result = RestAssuredMockMvc.given()
@@ -226,7 +226,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
         @Test
         void get() {
             // given
-            ProductResponse registerResponse = registerProduct();
+            ProductResponse registerResponse = registerProductV3();
 
             // when
             ProductResponse result = RestAssuredMockMvc.given()
@@ -888,7 +888,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
         @Test
         void delete() {
             // given
-            ProductResponse registerResponse = registerProduct();
+            registerProduct();
             Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
 
             // when, then
@@ -997,7 +997,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
         @Test
         void throwExceptionWhenAnotherHostDelete() {
             // given
-            ProductResponse registerResponse = registerProduct();
+            ProductResponse registerResponse = registerProductV3();
             Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
 
             // when, then
