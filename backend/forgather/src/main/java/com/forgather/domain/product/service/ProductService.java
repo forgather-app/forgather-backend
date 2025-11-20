@@ -217,6 +217,15 @@ public class ProductService {
     }
 
     @Transactional
+    public void deleteV2(Host host, String spaceCode, Long productId) {
+        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        validateSpaceHost(host, space);
+        Product product = productRepository.getBySpaceAndIdOrThrow(space, productId);
+        deleteAllProductPhotos(product);
+        productRepository.delete(product);
+    }
+
+    @Transactional
     public void deleteIfExists(Host host, Space space) {
         validateSpaceHost(host, space);
         Optional<Product> product = productRepository.findBySpace(space);

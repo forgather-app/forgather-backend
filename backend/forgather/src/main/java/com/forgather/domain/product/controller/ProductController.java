@@ -93,7 +93,7 @@ public class ProductController {
      */
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "작품 수정",
-        description = "변경 사항이 없는 데이터는 json에 포함하지 않거나 null로 요청한다.  임베드 영상이 반영된 api는 version 2로 호출")
+        description = "변경 사항이 없는 데이터는 json에 포함하지 않거나 null로 요청한다.  복수 작품 등록이 반영된 api는 version 3으로 호출")
     @PatchMapping(headers = "X-API-Version=2")
     public ResponseEntity<ProductResponse> updateV2(
         @PathVariable(value = "spaceCode") String spaceCode,
@@ -118,6 +118,9 @@ public class ProductController {
         return ResponseEntity.ok().body(response);
     }
 
+    /**
+     * TODO 작품 복수 등록 마이그레이션 이후 제거
+     */
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "작품 삭제")
     @DeleteMapping
@@ -126,6 +129,18 @@ public class ProductController {
         @LoginHost(required = true) Host host
     ) {
         productService.delete(host, spaceCode);
+        return ResponseEntity.noContent().build();
+    }
+
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "작품 삭제", description = "복수 작품 등록이 반영된 api는 version 2로 호출")
+    @DeleteMapping(value = "/{productId}", headers = "X-API-Version=2")
+    public ResponseEntity<Void> deleteV2(
+        @PathVariable(value = "spaceCode") String spaceCode,
+        @PathVariable(value = "productId") Long productId,
+        @LoginHost(required = true) Host host
+    ) {
+        productService.deleteV2(host, spaceCode, productId);
         return ResponseEntity.noContent().build();
     }
 }

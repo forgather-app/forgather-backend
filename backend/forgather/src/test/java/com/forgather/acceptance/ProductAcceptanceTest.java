@@ -878,6 +878,9 @@ public class ProductAcceptanceTest extends AcceptanceTest {
         }
     }
 
+    /**
+     * TODO 작품 복수 등록 마이그레이션 이후 제거
+     */
     @DisplayName("작품 삭제")
     @Nested
     class deleteProduct {
@@ -936,6 +939,74 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .header("Authorization", "Bearer " + anotherAccessToken)
                 .when()
                 .delete("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(403)
+                .body("message", containsString("해당 스페이스에 대한 접근 권한이 없습니다."));
+        }
+    }
+
+    @DisplayName("작품 삭제")
+    @Nested
+    class deleteProductV2 {
+        @DisplayName("작품 삭제")
+        @Test
+        void delete() {
+            // given
+            ProductResponse registerResponse = registerProductV3();
+            Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
+
+            // when, then
+            RestAssuredMockMvc
+                .given()
+                .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "2")
+                .when()
+                .delete("/spaces/%s/products/%d".formatted(space.getCode(), registerResponse.id()))
+                .then()
+                .statusCode(204);
+
+            assertAll(
+                () -> assertThat(productRepository.findBySpaceAndId(space, registerResponse.id())).isEmpty(),
+                () -> {
+                    await()
+                        .atMost(ofSeconds(6))
+                        .untilAsserted(() -> verify(awsS3Cloud, atLeast(1)).deletePhotos(anyList()));
+                }
+            );
+        }
+
+        @DisplayName("방문자가 작품을 삭제하면 예외를 던진다")
+        @Test
+        void throwExceptionWhenGuestDelete() {
+            // given
+            ProductResponse registerResponse = registerProductV3();
+            Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
+
+            // when, then
+            RestAssuredMockMvc
+                .given()
+                .header("X-API-Version", "2")
+                .when()
+                .delete("/spaces/%s/products/%d".formatted(space.getCode(), registerResponse.id()))
+                .then()
+                .statusCode(401)
+                .body("message", containsString("로그인이 필요합니다."));
+        }
+
+        @DisplayName("다른 호스트가 작품을 삭제하면 예외를 던진다")
+        @Test
+        void throwExceptionWhenAnotherHostDelete() {
+            // given
+            ProductResponse registerResponse = registerProduct();
+            Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
+
+            // when, then
+            RestAssuredMockMvc
+                .given()
+                .header("Authorization", "Bearer " + anotherAccessToken)
+                .header("X-API-Version", "2")
+                .when()
+                .delete("/spaces/%s/products/%d".formatted(space.getCode(), registerResponse.id()))
                 .then()
                 .statusCode(403)
                 .body("message", containsString("해당 스페이스에 대한 접근 권한이 없습니다."));
