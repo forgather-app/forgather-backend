@@ -16,7 +16,7 @@ public record SimpleProductResponse(
             product.getTitle(),
             product.getCategory(),
             product.getVideoUrl(),
-            new ProductPhotoResponse(firstPhoto)
+            (firstPhoto != null) ? new ProductPhotoResponse(firstPhoto) : null
         );
     }
 }
