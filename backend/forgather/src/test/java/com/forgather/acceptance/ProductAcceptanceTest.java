@@ -445,7 +445,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
 
         @DisplayName("작품 복수 등록이 가능하다")
         @Test
-        void throwExceptionWhenProductAlreadyExists() {
+        void registerMultipleProducts() {
             // given
             registerProductV3();
             registerProductV3();
