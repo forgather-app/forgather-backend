@@ -224,13 +224,15 @@ public class ProductService {
         productRepository.delete(product);
     }
 
+    /**
+     * 스페이스 삭제
+     */
     @Transactional
     public void deleteIfExists(Host host, Space space) {
         validateSpaceHost(host, space);
-        List<Product> products = productRepository.findAllBySpace(space);
-        if (!products.isEmpty()) {
-            deleteAllProductPhotos(products.getFirst());
-            productRepository.delete(products.getFirst());
+        for (Product product : productRepository.findAllBySpace(space)) {
+            deleteAllProductPhotos(product);
+            productRepository.delete(product);
         }
     }
 
