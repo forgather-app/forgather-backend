@@ -88,6 +88,9 @@ public class ProductController {
         return ResponseEntity.status(CREATED).body(response);
     }
 
+    /**
+     * TODO 작품 복수 등록 마이그레이션 이후 제거
+     */
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "작품 수정",
         description = "변경 사항이 없는 데이터는 json에 포함하지 않거나 null로 요청한다.  임베드 영상이 반영된 api는 version 2로 호출")
@@ -98,6 +101,20 @@ public class ProductController {
         @LoginHost(required = true) Host host
     ) {
         var response = productService.update(host, spaceCode, request);
+        return ResponseEntity.ok().body(response);
+    }
+
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "작품 수정",
+        description = "변경 사항이 없는 데이터는 json에 포함하지 않거나 null로 요청한다.  복수 작품 등록이 반영된 api는 version 3으로 호출")
+    @PatchMapping(value = "/{productId}", headers = "X-API-Version=3")
+    public ResponseEntity<ProductResponse> updateV3(
+        @PathVariable(value = "spaceCode") String spaceCode,
+        @PathVariable(value = "productId") Long productId,
+        @RequestBody UpdateProductRequest request,
+        @LoginHost(required = true) Host host
+    ) {
+        var response = productService.updateV3(host, spaceCode, productId, request);
         return ResponseEntity.ok().body(response);
     }
 

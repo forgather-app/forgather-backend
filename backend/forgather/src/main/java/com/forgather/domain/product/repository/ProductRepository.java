@@ -34,7 +34,7 @@ public interface ProductRepository {
         if (products.isEmpty()) {
             throw new NotFoundException("해당 스페이스에 등록된 작품이 없습니다. spaceCode: " + space.getCode());
         }
-        return products.get(0);
+        return products.getFirst();
     }
 
     default Product getBySpaceAndIdOrThrow(Space space, Long id) {
