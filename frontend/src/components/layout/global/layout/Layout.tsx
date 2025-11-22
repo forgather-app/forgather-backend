@@ -16,7 +16,11 @@ import {
 import useButtonTracking from '../../../../hooks/@common/useButtonTracking';
 import useInAppRedirect from '../../../../hooks/@common/useInAppRedirect';
 import usePageTracking from '../../../../hooks/@common/usePageTracking';
-import type { AppRouteObject, IconAction } from '../../../../types/route.type';
+import type {
+  AppRouteObject,
+  IconAction,
+  LeftIcons,
+} from '../../../../types/route.type';
 import Footer from '../../../@common/footer/Footer';
 import Hamburger from '../../../@common/hamburger/Hamburger';
 import Header from '../../../@common/header/Header';
@@ -60,7 +64,7 @@ const Layout = () => {
   const isNoFooter = current?.handle?.noFooter;
   const isNoHamburger = current?.handle?.noHamburger;
 
-  const leftHeaderIcons: Record<string, IconAction> = {
+  const leftHeaderIcons: Record<LeftIcons, IconAction> = {
     logo: {
       icon: <LogoSvg />,
       onClick: () => {
@@ -93,7 +97,8 @@ const Layout = () => {
     },
   };
 
-  const leftIcon = leftHeaderIcons[current?.handle?.headerIcon?.leftIcon];
+  const leftIconIndex = current?.handle?.headerIcon?.leftIcon;
+  const leftIcon = leftIconIndex && leftHeaderIcons[leftIconIndex];
 
   //biome-ignore lint/correctness/useExhaustiveDependencies: 페이지 접속 시 처음 한 번만 실행
   useEffect(() => {
@@ -123,7 +128,7 @@ const Layout = () => {
           }}
         />
       )}
-      <S.Container $isDarkPage={isDarkPage}>
+      <S.Container $isDarkPage={!!isDarkPage}>
         <Outlet />
       </S.Container>
       {!isNoFooter && <Footer mode={isDarkPage ? 'dark' : 'light'} />}

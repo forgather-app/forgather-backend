@@ -1,9 +1,16 @@
-import type { RouteObject } from 'react-router-dom';
+import type { NonIndexRouteObject } from 'react-router-dom';
+
+export type LeftIcons = 'logo' | 'profile' | 'back';
 
 export type RouteHandle = {
-  header?: boolean;
   starField?: boolean;
   highlight?: boolean;
+  noHamburger?: boolean;
+  headerIcon?: {
+    leftIcon?: LeftIcons;
+  };
+  noHeader?: boolean;
+  noFooter?: boolean;
 };
 
 export interface IconAction {
@@ -16,6 +23,7 @@ export interface NavigateInfo {
   name: string;
 }
 
-export type AppRouteObject = RouteObject & {
+export interface AppRouteObject extends NonIndexRouteObject {
   handle?: RouteHandle;
-};
+  children?: AppRouteObject[];
+}
