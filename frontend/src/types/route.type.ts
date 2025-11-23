@@ -1,8 +1,4 @@
-import type {
-  IndexRouteObject,
-  IndexRouteProps,
-  NonIndexRouteObject,
-} from 'react-router-dom';
+import type { IndexRouteObject, NonIndexRouteObject } from 'react-router-dom';
 
 export type LeftIcons = 'logo' | 'profile' | 'back';
 
