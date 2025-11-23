@@ -1,4 +1,8 @@
-import type { NonIndexRouteObject } from 'react-router-dom';
+import type {
+  IndexRouteObject,
+  IndexRouteProps,
+  NonIndexRouteObject,
+} from 'react-router-dom';
 
 export type LeftIcons = 'logo' | 'profile' | 'back';
 
@@ -23,7 +27,12 @@ export interface NavigateInfo {
   name: string;
 }
 
-export interface AppRouteObject extends NonIndexRouteObject {
+export type AppRouteObject = AppIndexRouteObject | AppNonIndexRouteObject;
+
+export interface AppIndexRouteObject extends IndexRouteObject {
+  handle?: RouteHandle;
+}
+export interface AppNonIndexRouteObject extends NonIndexRouteObject {
   handle?: RouteHandle;
   children?: AppRouteObject[];
 }
