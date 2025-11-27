@@ -300,7 +300,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .body("message", containsString("작품은 3개까지만 등록 가능"));
         }
 
-        @DisplayName("작품 설명을 1000자까지 작성할 수 있다")
+        @DisplayName("작품 설명을 2000자까지 작성할 수 있다")
         @Test
         void doesNotThrowAnyExceptionWhenMaxDescriptionLength() {
             // given
@@ -308,7 +308,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 "title",
                 "category",
                 "authorName",
-                "1234567890".repeat(100),
+                "1234567890".repeat(200),
                 "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
                 false,
                 List.of()

@@ -177,11 +177,11 @@ class ProductTest {
             .hasMessageContaining("작품 설명은 공백만 입력할 수 없습니다.");
     }
 
-    @DisplayName("작품 설명의 길이가 1000자를 초과하면 예외를 던진다")
+    @DisplayName("작품 설명의 길이가 2000자를 초과하면 예외를 던진다")
     @Test
     void throwExceptionWhenExceedDescriptionLength() {
         // given
-        String description = "0123456789".repeat(100) + 1;
+        String description = "0123456789".repeat(200) + 1;
 
         // when, then
         assertThatThrownBy(() -> createProductWithDescription(description))
@@ -189,12 +189,12 @@ class ProductTest {
             .hasMessageContaining("작품 설명은 최대");
     }
 
-    @DisplayName("작품 설명은 이모지를 한 글자로 간주해 1000자까지 입력 가능하다")
+    @DisplayName("작품 설명은 이모지를 한 글자로 간주해 2000자까지 입력 가능하다")
     @ValueSource(strings = {"😀", "👦", "👨", "‍👩‍", "‍👦", "‍👩‍👧‍", "👨‍👩‍👧", "👨‍👩‍👧‍👦"})
     @ParameterizedTest
     void countEmojiAsOneCharAtDescription(String emoji) {
         // given
-        String description = emoji.repeat(999) + "c";
+        String description = emoji.repeat(1999) + "c";
 
         // when, then
         assertThatCode(() -> createProductWithDescription(description)).doesNotThrowAnyException();

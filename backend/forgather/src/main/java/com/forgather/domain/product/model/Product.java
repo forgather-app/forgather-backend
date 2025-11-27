@@ -42,7 +42,7 @@ public class Product extends BaseTimeEntity {
     @Column(name = "author_name", nullable = false)
     private String authorName;
 
-    @Column(name = "description", length = 1000, nullable = false)
+    @Column(name = "description", length = 2000, nullable = false)
     private String description;
 
     @Column(name = "video_url", nullable = false)
@@ -58,7 +58,7 @@ public class Product extends BaseTimeEntity {
      * @param title       작품명 (필수, 최대 50자)
      * @param category    카테고리 (선택, 최대 20자)
      * @param authorName  작가명 (선택, 최대 20자)
-     * @param description 작품 설명 (필수, 최대 1000자)
+     * @param description 작품 설명 (필수, 최대 2000자)
      * @param videoUrl 임베드 영상 링크 (선택, 최대 255자)
      * @param isVideoAfterPhoto 영상이 사진 뒤에 오는지 여부 (선택)
      *
@@ -180,8 +180,8 @@ public class Product extends BaseTimeEntity {
         if (description.isBlank()) {
             throw new BaseException("작품 설명은 공백만 입력할 수 없습니다.");
         }
-        if (TextLengthCounter.count(description) > 1000) {
-            throw new BaseException("작품 설명은 최대 1000자까지 입력 가능합니다.");
+        if (TextLengthCounter.count(description) > 2000) {
+            throw new BaseException("작품 설명은 최대 2000자까지 입력 가능합니다.");
         }
     }
 
