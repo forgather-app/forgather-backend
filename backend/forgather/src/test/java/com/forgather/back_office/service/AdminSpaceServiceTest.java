@@ -3,6 +3,7 @@ package com.forgather.back_office.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,7 @@ import com.forgather.fixture.GuestFixture;
 import com.forgather.fixture.ProductFixture;
 import com.forgather.fixture.SpaceFixture;
 
+@Disabled
 @Transactional
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)

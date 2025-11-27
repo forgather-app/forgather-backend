@@ -208,17 +208,22 @@ class ProductTest {
         String category = "category";
         String authorName = "authorName";
         String description = "description";
-        Product product = createProductWithTitleCategoryAuthorNameDescription(title, category, authorName, description);
+        String videoUrl = "https://youtu.be/WdppQtgN6TM?si=ZrY0t4IUeKbGSI7D";
+        boolean isVideoAfterPhoto = true;
+        Product product = createProductWithTitleCategoryAuthorNameDescription(title, category, authorName,
+            description, videoUrl, isVideoAfterPhoto);
 
         // when
-        product.update("foovar1", null, null, "foovar2");
+        product.update("foovar1", null, null, "foovar2", null, false);
 
         // then
         assertAll(
             () -> assertThat(product.getTitle()).isEqualTo("foovar1"),
             () -> assertThat(product.getCategory()).isEqualTo(category),
             () -> assertThat(product.getAuthorName()).isEqualTo(authorName),
-            () -> assertThat(product.getDescription()).isEqualTo("foovar2")
+            () -> assertThat(product.getDescription()).isEqualTo("foovar2"),
+            () -> assertThat(product.getVideoUrl()).isEqualTo(videoUrl),
+            () -> assertThat(product.isVideoAfterPhoto()).isFalse()
         );
     }
 
@@ -230,17 +235,23 @@ class ProductTest {
         String category = "category";
         String authorName = "authorName";
         String description = "description";
-        Product product = createProductWithTitleCategoryAuthorNameDescription(title, category, authorName, description);
+        String videoUrl = "https://youtu.be/WdppQtgN6TM?si=ZrY0t4IUeKbGSI7D";
+        boolean isVideoAfterPhoto = true;
+        Product product = createProductWithTitleCategoryAuthorNameDescription(title, category, authorName,
+            description, videoUrl, isVideoAfterPhoto);
 
         // when
-        product.update(null, "foovar1", "foovar2", null);
+        product.update(null, "foovar1", "foovar2", null,
+            "https://youtu.be/nw4Ij9yq-1A?si=4Q6nhk6QTPQL8pEc", null);
 
         // then
         assertAll(
             () -> assertThat(product.getTitle()).isEqualTo(title),
             () -> assertThat(product.getCategory()).isEqualTo("foovar1"),
             () -> assertThat(product.getAuthorName()).isEqualTo("foovar2"),
-            () -> assertThat(product.getDescription()).isEqualTo(description)
+            () -> assertThat(product.getDescription()).isEqualTo(description),
+            () -> assertThat(product.getVideoUrl()).isEqualTo("https://youtu.be/nw4Ij9yq-1A?si=4Q6nhk6QTPQL8pEc"),
+            () -> assertThat(product.isVideoAfterPhoto()).isEqualTo(isVideoAfterPhoto)
         );
     }
 
@@ -253,10 +264,13 @@ class ProductTest {
         String category = "category";
         String authorName = "authorName";
         String description = "description";
-        Product product = createProductWithTitleCategoryAuthorNameDescription(title, category, authorName, description);
+        String videoUrl = "https://youtu.be/WdppQtgN6TM?si=ZrY0t4IUeKbGSI7D";
+        boolean isVideoAfterPhoto = true;
+        Product product = createProductWithTitleCategoryAuthorNameDescription(title, category, authorName,
+            description, videoUrl, isVideoAfterPhoto);
 
         // when
-        product.update("foovar1", updateCategory, null, "foovar2");
+        product.update("foovar1", updateCategory, null, "foovar2", null, null);
 
         // then
         assertAll(
@@ -276,10 +290,13 @@ class ProductTest {
         String category = "category";
         String authorName = "authorName";
         String description = "description";
-        Product product = createProductWithTitleCategoryAuthorNameDescription(title, category, authorName, description);
+        String videoUrl = "https://youtu.be/WdppQtgN6TM?si=ZrY0t4IUeKbGSI7D";
+        boolean isVideoAfterPhoto = true;
+        Product product = createProductWithTitleCategoryAuthorNameDescription(title, category, authorName,
+            description,  videoUrl, isVideoAfterPhoto);
 
         // when
-        product.update("foovar1", null, updateAuthorName, "foovar2");
+        product.update("foovar1", null, updateAuthorName, "foovar2", null, null);
 
         // then
         assertAll(

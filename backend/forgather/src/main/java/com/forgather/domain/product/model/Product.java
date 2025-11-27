@@ -52,33 +52,6 @@ public class Product extends BaseTimeEntity {
     private boolean isVideoAfterPhoto;
 
     /**
-     * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
-     * 작품을 생성합니다.
-     *
-     * @param space       작품이 속한 스페이스 (필수)
-     * @param title       작품명 (필수, 최대 50자)
-     * @param category    카테고리 (필수, 최대 20자)
-     * @param authorName  작가명 (필수, 최대 20자)
-     * @param description 작품 설명 (필수, 최대 1000자)
-     * @throws BaseNullPointerException 필수 필드가 null인 경우
-     * @throws BaseException            필드 값이 유효하지 않은 경우
-     */
-    public Product(Space space, String title, String category, String authorName, String description) {
-        validateRequiredFields(space, title, category, authorName, description);
-        validateTitle(title);
-        validateCategory(category);
-        validateAuthorName(authorName);
-        validateDescription(description);
-        this.space = space;
-        this.title = title;
-        this.category = convertBlankToEmptyString(category);
-        this.authorName = convertBlankToEmptyString(authorName);
-        this.description = description;
-        this.videoUrl = "";
-        this.isVideoAfterPhoto = false;
-    }
-
-    /**
      * 임베드 영상 추가에 따른 생성자 오버라이드
      *
      * @param space       작품이 속한 스페이스 (필수)
@@ -107,33 +80,6 @@ public class Product extends BaseTimeEntity {
         this.description = description;
         this.videoUrl = convertBlankToEmptyString(videoUrl);
         this.isVideoAfterPhoto = isVideoAfterPhoto;
-    }
-
-    /**
-     * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
-     */
-    private void validateRequiredFields(
-        Space space,
-        String title,
-        String category,
-        String authorName,
-        String description
-    ) {
-        if (space == null) {
-            throw new BaseNullPointerException("스페이스는 null일 수 없습니다.");
-        }
-        if (title == null) {
-            throw new BaseNullPointerException("작품명은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
-        }
-        if (category == null) {
-            throw new BaseNullPointerException("작품 카테고리는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
-        }
-        if (authorName == null) {
-            throw new BaseNullPointerException("작가명은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
-        }
-        if (description == null) {
-            throw new BaseNullPointerException("작품 설명은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
-        }
     }
 
     private void validateRequiredFields(
@@ -165,37 +111,6 @@ public class Product extends BaseTimeEntity {
         }
         if (isVideoAfterPhoto == null) {
             throw new BaseNullPointerException("임베드 영상 위치는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    /**
-     * TODO 영상 임베드 버전으로 마이그레이션 이후 제거
-     *
-     * 작품 정보를 부분 업데이트합니다.
-     * null인 필드는 업데이트하지 않습니다.
-     *
-     * @param title       작품명 (선택)
-     * @param category    카테고리 (선택)
-     * @param authorName  작가명 (선택)
-     * @param description 작품 설명 (선택)
-     * @throws BaseException 필드 값이 유효하지 않은 경우
-     */
-    public void update(String title, String category, String authorName, String description) {
-        if (title != null) {
-            validateTitle(title);
-            this.title = title;
-        }
-        if (category != null) {
-            validateCategory(category);
-            this.category = convertBlankToEmptyString(category);
-        }
-        if (authorName != null) {
-            validateAuthorName(authorName);
-            this.authorName = convertBlankToEmptyString(authorName);
-        }
-        if (description != null) {
-            validateDescription(description);
-            this.description = description;
         }
     }
 
