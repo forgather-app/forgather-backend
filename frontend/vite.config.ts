@@ -1,6 +1,7 @@
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
+import { imagetools } from 'vite-imagetools';
 import svgr from 'vite-plugin-svgr';
 
 const isProduction = process.env.VITE_ENVIRONMENT === 'production';
@@ -10,6 +11,7 @@ export default defineConfig({
   plugins: [
     react(),
     svgr(),
+    imagetools(),
     isProduction
       ? sentryVitePlugin({
           org: process.env.VITE_SENTRY_ORG,
