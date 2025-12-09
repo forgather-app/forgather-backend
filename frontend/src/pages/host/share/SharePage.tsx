@@ -113,11 +113,7 @@ const SharePage = () => {
 
       <S.Wrapper>
         <S.TopContainer>
-          <S.Image
-            src={CompleteImage.src}
-            srcSet={CompleteImage.srcSet}
-            alt="링크 이미지"
-          />
+          <S.Image src={CompleteImage} alt="링크 이미지" />
           <S.TextContainer>
             <S.Title>스페이스 생성이 완료됐어요</S.Title>
           </S.TextContainer>
