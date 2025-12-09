@@ -13,7 +13,7 @@ public class SoftDeleteEntity extends BaseTimeEntity {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    public void softDelete() {
+    public void delete() {
         deletedAt = LocalDateTime.now();
     }
 }
