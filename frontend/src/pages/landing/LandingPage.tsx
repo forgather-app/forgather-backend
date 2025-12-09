@@ -174,7 +174,6 @@ const LandingPage = () => {
             <S.SmallTitle>당신을 위한 순간, 흩어지지 않게</S.SmallTitle>
             <S.TitleImage
               src={titleImage}
-              rel="preload"
               alt="포게더 로고 이미지"
               fetchPriority="high"
             />
