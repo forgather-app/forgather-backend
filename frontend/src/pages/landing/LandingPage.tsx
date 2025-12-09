@@ -143,8 +143,6 @@ const LandingPage = () => {
     navigate(ROUTES.AUTH.LOGIN);
   };
 
-  console.log('here', titleImage, titleImage.src, titleImage.srcset);
-
   return (
     <S.Wrapper>
       <MotionScrollIconContainer
@@ -174,7 +172,12 @@ const LandingPage = () => {
         >
           <MotionTitleContainer variants={fadeVariants}>
             <S.SmallTitle>당신을 위한 순간, 흩어지지 않게</S.SmallTitle>
-            <S.TitleImage src={titleImage} alt="포게더 로고 이미지" />
+            <S.TitleImage
+              src={titleImage}
+              rel="preload"
+              alt="포게더 로고 이미지"
+              fetchPriority="high"
+            />
           </MotionTitleContainer>
           <MotionTitleContainer variants={fadeVariants}>
             <S.SubTitle ref={countUpHeadingRef}>
