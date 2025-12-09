@@ -1,4 +1,4 @@
-import defaultImage from '../../../../@assets/images/default-forgather-image.png';
+import defaultImage from '../../../../@assets/images/default-forgather-image.png?w=600&format=webp&srcset';
 import { createImageErrorHandler } from '../../../../utils/createImageErrorHandler';
 
 import Modal from '../../../@common/modal/Modal';

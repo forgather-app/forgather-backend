@@ -1,4 +1,4 @@
-import defaultImage from '../../../@assets/images/default-forgather-image.png';
+import defaultImage from '../../../@assets/images/default-forgather-image.png?w=600&format=webp&srcset';
 import { buildThumbnailUrl } from '../../../utils/buildImageUrl';
 import { buildYoutubeThumbnail } from '../../../utils/buildYoutubeThumbnail';
 import { checkIsYoutube } from '../../../utils/checkIsYoutube';

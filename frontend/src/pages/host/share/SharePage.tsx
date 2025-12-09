@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { MdDownload, MdLink } from 'react-icons/md';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Kakao from '../../../@assets/icons/kakaotalk.svg?react';
-import CompleteImage from '../../../@assets/images/space-create.png';
+import CompleteImage from '../../../@assets/images/space-create.png?w=300&format=webp&srcset';
 import Button from '../../../components/@common/buttons/button/Button';
 import IconButton from '../../../components/@common/buttons/iconButton/IconButton';
 import QRCode from '../../../components/@common/qrCode/QRCode';
@@ -113,7 +113,11 @@ const SharePage = () => {
 
       <S.Wrapper>
         <S.TopContainer>
-          <S.Image src={CompleteImage} alt="링크 이미지" />
+          <S.Image
+            src={CompleteImage.src}
+            srcSet={CompleteImage.srcSet}
+            alt="링크 이미지"
+          />
           <S.TextContainer>
             <S.Title>스페이스 생성이 완료됐어요</S.Title>
           </S.TextContainer>
