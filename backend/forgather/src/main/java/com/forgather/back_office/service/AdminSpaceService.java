@@ -26,13 +26,13 @@ public class AdminSpaceService {
     @Transactional(readOnly = true)
     public AdminSpaceResponse getAllSpaces(Pageable pageable, AdminUser adminUser) {
         // TODO: 관리자 권한에 따른 호출 여부 로직 추가 가능성이 있음
-        Page<Space> spaces = spaceRepository.findAll(pageable);
+        Page<Space> spaces = spaceRepository.findAllByDeletedAtIsNull(pageable);
         return AdminSpaceResponse.from(spaces);
     }
 
     @Transactional(readOnly = true)
     public SpaceDetailResponse getSpaceDetail(String spaceCode, AdminUser adminUser) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         boolean hasProduct = !productRepository.findAllBySpace(space)
             .isEmpty();
         Long guestBookCardCount = guestBookCardRepository.countBySpace(space);

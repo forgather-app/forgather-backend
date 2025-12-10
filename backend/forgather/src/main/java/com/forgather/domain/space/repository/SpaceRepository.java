@@ -16,19 +16,19 @@ public interface SpaceRepository {
 
     Space save(Space space);
 
-    Optional<Space> findByCode(String spaceCode);
+    Optional<Space> findByCodeAndDeletedAtIsNull(String spaceCode);
 
-    List<Space> findAll();
+    List<Space> findAllByDeletedAtIsNull();
 
-    Page<Space> findAll(Pageable pageable);
+    Page<Space> findAllByDeletedAtIsNull(Pageable pageable);
 
     long count();
 
-    default Space getByCodeOrThrow(String spaceCode) {
+    default Space getByCodeAndDeletedAtIsNullOrThrow(String spaceCode) {
         if (spaceCode == null) {
             throw new BaseException("스페이스 코드는 null일 수 없습니다. code: " + spaceCode);
         }
-        return findByCode(spaceCode)
+        return findByCodeAndDeletedAtIsNull(spaceCode)
             .orElseThrow(() -> new NotFoundException("존재하지 않는 스페이스입니다. spaceCode: " + spaceCode));
     }
 }

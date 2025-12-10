@@ -64,10 +64,10 @@ public class SpaceService {
 
     @Transactional(readOnly = true)
     public SpaceResponse getSpaceInformation(String spaceCode) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         Long guestBookCardCount = guestBookCardRepository.countBySpace(space);
 
-        return spacePhotoRepository.findBySpace(space)
+        return spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)
             .map(spacePhoto -> SpaceResponse.from(space, SpacePhotoResponse.exists(spacePhoto.getPath()),
                 guestBookCardCount))
             .orElseGet(() -> SpaceResponse.from(space, SpacePhotoResponse.notExists(), guestBookCardCount));
@@ -75,7 +75,7 @@ public class SpaceService {
 
     @Transactional
     public SpaceResponse update(String spaceCode, UpdateSpaceRequest request, MultipartFile file, Host host) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(space, host);
 
         space.update(request.name(), request.description(), request.isPublic(), request.instagramUsername(),
@@ -88,7 +88,7 @@ public class SpaceService {
         }
         Long guestBookCardCount = guestBookCardRepository.countBySpace(space);
 
-        return spacePhotoRepository.findBySpace(space)
+        return spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)
             .map(spacePhoto -> SpaceResponse.from(space, SpacePhotoResponse.exists(spacePhoto.getPath()),
                 guestBookCardCount))
             .orElseGet(() -> SpaceResponse.from(space, SpacePhotoResponse.notExists(), guestBookCardCount));
@@ -114,7 +114,7 @@ public class SpaceService {
     }
 
     private void uploadNewPhoto(Space space, MultipartFile file, String spaceCode) {
-        spacePhotoRepository.findBySpace(space)
+        spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)
             .ifPresent(photo -> {
                 throw new BaseException("스페이스 사진이 이미 존재합니다. 기존 스페이스 사진을 삭제 해주세요.");
             });
@@ -124,7 +124,7 @@ public class SpaceService {
     }
 
     private void deleteExistingPhoto(Space space) {
-        SpacePhoto existingPhoto = spacePhotoRepository.findBySpace(space)
+        SpacePhoto existingPhoto = spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)
             .orElseThrow(() -> new BaseException("삭제할 스페이스 사진이 존재하지 않습니다."));
 
         deleteSpacePhoto(existingPhoto);
@@ -132,7 +132,7 @@ public class SpaceService {
 
     @Transactional
     public void delete(String spaceCode, Host host) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(space, host);
         deleteGuestBookAndProduct(host, space);
         deleteSpaceHostMap(host, space);
@@ -145,7 +145,7 @@ public class SpaceService {
         if (space == null) {
             throw new BaseNullPointerException("스페이스는 null일 수 없습니다.");
         }
-        if (spaceHostMapRepository.findBySpaceAndHost(space, host).isPresent()) {
+        if (spaceHostMapRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent()) {
             return;
         }
         throw new ForbiddenException("권한이 존재하지 않습니다.");
@@ -157,12 +157,12 @@ public class SpaceService {
     }
 
     private void deleteSpaceHostMap(Host host, Space space) {
-        SpaceHostMap spaceHostMap = spaceHostMapRepository.findBySpaceAndHost(space, host).orElseThrow();
+        SpaceHostMap spaceHostMap = spaceHostMapRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).orElseThrow();
         spaceHostMap.delete();
     }
 
     private void deleteSpacePhoto(Space space) {
-        spacePhotoRepository.findBySpace(space)
+        spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)
             .ifPresent(this::deleteSpacePhoto);
     }
 
@@ -172,13 +172,13 @@ public class SpaceService {
 
     @Transactional(readOnly = true)
     public HostSpaceResponse getSpacesInformation(Host host) {
-        List<SpaceHostMap> spaceHostMaps = spaceHostMapRepository.findAllByHost(host);
+        List<SpaceHostMap> spaceHostMaps = spaceHostMapRepository.findAllByHostAndDeletedAtIsNull(host);
 
         List<SpaceResponse> spaceResponses = spaceHostMaps.stream()
             .map(spaceHostMap -> {
                 Space space = spaceHostMap.getSpace();
                 Long guestBookCardCount = guestBookCardRepository.countBySpace(space);
-                return spacePhotoRepository.findBySpace(space)
+                return spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)
                     .map(photo -> SpaceResponse.from(space, SpacePhotoResponse.exists(photo.getPath()),
                         guestBookCardCount))
                     .orElseGet(() -> SpaceResponse.from(space, SpacePhotoResponse.notExists(), guestBookCardCount));
@@ -190,9 +190,9 @@ public class SpaceService {
 
     @Transactional(readOnly = true)
     public CheckSpaceHostResponse checkSpaceHost(String spaceCode, Host host) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateHostNull(host);
-        return new CheckSpaceHostResponse(spaceHostMapRepository.findBySpaceAndHost(space, host).isPresent());
+        return new CheckSpaceHostResponse(spaceHostMapRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent());
     }
 
     private void validateHostNull(Host host) {

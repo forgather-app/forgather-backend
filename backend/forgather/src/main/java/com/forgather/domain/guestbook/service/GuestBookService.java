@@ -54,7 +54,7 @@ public class GuestBookService {
 
     @Transactional
     public WriteGuestBookCardResponse writeCard(String spaceCode, WriteGuestBookCardRequest request) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         Guest guest = guestRepository.save(new Guest(request.nickname()));
         GuestBookCard guestBookCard = guestBookCardRepository.save(request.toEntity(space, guest));
 
@@ -85,7 +85,7 @@ public class GuestBookService {
 
     @Transactional(readOnly = true)
     public GuestBookResponse read(Host host, String spaceCode, Pageable pageable) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateCanRead(space, host);
         boolean isHost = host != null && isSpaceHost(space, host);
         Page<GuestBookCardListDto> guestBookCardDtos = guestBookCardRepository.findAllDtoBySpace(space, pageable);
@@ -102,7 +102,7 @@ public class GuestBookService {
 
     @Transactional
     public GuestBookCardResponse readCard(Host host, String spaceCode, Long guestBookCardId) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateCanRead(space, host);
 
         GuestBookCard guestBookCard = getGuestBookCard(guestBookCardId, space);
@@ -134,7 +134,7 @@ public class GuestBookService {
 
     @Transactional
     public void deleteCard(Host host, String spaceCode, Long guestBookCardId) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(host, space);
         GuestBookCard guestBookCard = getGuestBookCard(guestBookCardId, space);
         deleteGuestBookCardPhotos(guestBookCard);
@@ -155,7 +155,7 @@ public class GuestBookService {
         Long guestBookCardId,
         DeleteGuestBookCardPhotosRequest request
     ) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(host, space);
         GuestBookCardPhotos guestBookCardPhotos = getGuestBookCardPhotos(space, guestBookCardId);
         List<GuestBookCardPhoto> deletedPhotos = guestBookCardPhotos.deleteByIds(request.deletePhotoIds());
@@ -191,7 +191,7 @@ public class GuestBookService {
         if (space == null || host == null) {
             throw new BaseNullPointerException("스페이스와 호스트는 null일 수 없습니다.", INTERNAL_SERVER_ERROR);
         }
-        return spaceHostMapRepository.findBySpaceAndHost(space, host).isPresent();
+        return spaceHostMapRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent();
     }
 
     private void deleteGuestBookCardPhotos(List<GuestBookCardPhoto> photos) {

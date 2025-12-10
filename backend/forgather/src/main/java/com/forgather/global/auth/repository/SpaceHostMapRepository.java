@@ -11,9 +11,9 @@ public interface SpaceHostMapRepository {
 
     SpaceHostMap save(SpaceHostMap spaceHostMap);
 
-    List<SpaceHostMap> findAllByHost(Host host);
+    List<SpaceHostMap> findAllByHostAndDeletedAtIsNull(Host host);
 
     void deleteBySpace(Space space);
 
-    Optional<SpaceHostMap> findBySpaceAndHost(Space space, Host host);
+    Optional<SpaceHostMap> findBySpaceAndHostAndDeletedAtIsNull(Space space, Host host);
 }
