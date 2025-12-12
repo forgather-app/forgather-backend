@@ -22,9 +22,7 @@ public interface SpaceHostMapRepository {
         AND s.deletedAt IS NULL
         ORDER BY s.createdAt DESC
         """)
-    List<SpaceHostMap> findAllByHostWithSpaceOrderByCreatedAtDesc(@Param("host") Host host);
-
-    void deleteBySpace(Space space);
+    List<SpaceHostMap> findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(@Param("host") Host host);
 
     Optional<SpaceHostMap> findBySpaceAndHostAndDeletedAtIsNull(Space space, Host host);
 }

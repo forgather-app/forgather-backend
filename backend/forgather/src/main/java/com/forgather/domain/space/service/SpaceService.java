@@ -170,7 +170,7 @@ public class SpaceService {
 
     @Transactional(readOnly = true)
     public HostSpaceResponse getSpacesInformation(Host host) {
-        List<SpaceHostMap> spaceHostMaps = spaceHostMapRepository.findAllByHostWithSpaceOrderByCreatedAtDesc(host);
+        List<SpaceHostMap> spaceHostMaps = spaceHostMapRepository.findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host);
         if (spaceHostMaps.isEmpty()) {
             return new HostSpaceResponse(Collections.emptyList());
         }
