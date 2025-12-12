@@ -1,20 +1,22 @@
 package com.forgather.domain.space.service;
 
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
+import com.forgather.domain.guestbook.repository.dto.SpaceGuestBookCountDto;
 import com.forgather.domain.guestbook.service.GuestBookService;
 import com.forgather.domain.product.service.ProductService;
 import com.forgather.domain.space.dto.CheckSpaceHostResponse;
 import com.forgather.domain.space.dto.CreateSpaceRequest;
 import com.forgather.domain.space.dto.CreateSpaceResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
-import com.forgather.domain.space.dto.SpacePhotoResponse;
 import com.forgather.domain.space.dto.SpaceResponse;
 import com.forgather.domain.space.dto.UpdateSpaceRequest;
 import com.forgather.domain.space.model.Space;
@@ -41,17 +43,17 @@ public class SpaceService {
 
     private final ProductService productService;
     private final GuestBookService guestBookService;
+    private final UploadService uploadService;
     private final SpaceRepository spaceRepository;
     private final SpacePhotoRepository spacePhotoRepository;
     private final SpaceHostMapRepository spaceHostMapRepository;
     private final GuestBookCardRepository guestBookCardRepository;
     private final RandomCodeGenerator codeGenerator;
-    private final UploadService uploadService;
 
     @Transactional
     public CreateSpaceResponse create(CreateSpaceRequest request, MultipartFile file, Host host) {
-        String spaceCode = codeGenerator.generate(10);
         validateHostNull(host);
+        String spaceCode = codeGenerator.generate(10);
         Space space = spaceRepository.save(request.toEntity(spaceCode));
         spaceHostMapRepository.save(new SpaceHostMap(space, host));
         if (file == null || file.isEmpty()) {
@@ -65,12 +67,7 @@ public class SpaceService {
     @Transactional(readOnly = true)
     public SpaceResponse getSpaceInformation(String spaceCode) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
-        Long guestBookCardCount = guestBookCardRepository.countBySpace(space);
-
-        return spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)
-            .map(spacePhoto -> SpaceResponse.from(space, SpacePhotoResponse.exists(spacePhoto.getPath()),
-                guestBookCardCount))
-            .orElseGet(() -> SpaceResponse.from(space, SpacePhotoResponse.notExists(), guestBookCardCount));
+        return createSpaceResponse(space);
     }
 
     @Transactional
@@ -81,17 +78,12 @@ public class SpaceService {
         space.update(request.name(), request.description(), request.isPublic(), request.instagramUsername(),
             request.email());
 
-        if (request.isDeletePhoto() == null || !request.isDeletePhoto()) {
-            handlePhotoWithoutDeleteRequest(space, file, spaceCode);
-        } else {
+        if (request.isDeletingPhoto()) {
             handlePhotoWithDeleteRequest(space, file, spaceCode);
+        } else {
+            handlePhotoWithoutDeleteRequest(space, file, spaceCode);
         }
-        Long guestBookCardCount = guestBookCardRepository.countBySpace(space);
-
-        return spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)
-            .map(spacePhoto -> SpaceResponse.from(space, SpacePhotoResponse.exists(spacePhoto.getPath()),
-                guestBookCardCount))
-            .orElseGet(() -> SpaceResponse.from(space, SpacePhotoResponse.notExists(), guestBookCardCount));
+        return createSpaceResponse(space);
     }
 
     /**
@@ -128,6 +120,12 @@ public class SpaceService {
             .orElseThrow(() -> new BaseException("삭제할 스페이스 사진이 존재하지 않습니다."));
 
         deleteSpacePhoto(existingPhoto);
+    }
+
+    private SpaceResponse createSpaceResponse(Space space) {
+        Long guestBookCardCount = guestBookCardRepository.countBySpace(space);
+        SpacePhoto spacePhoto = spacePhotoRepository.getBySpaceAndDeletedAtIsNullOrEmpty(space);
+        return SpaceResponse.from(space, spacePhoto, guestBookCardCount);
     }
 
     @Transactional
@@ -172,20 +170,41 @@ public class SpaceService {
 
     @Transactional(readOnly = true)
     public HostSpaceResponse getSpacesInformation(Host host) {
-        List<SpaceHostMap> spaceHostMaps = spaceHostMapRepository.findAllByHostAndDeletedAtIsNull(host);
+        List<SpaceHostMap> spaceHostMaps = spaceHostMapRepository.findAllByHostWithSpaceOrderByCreatedAtDesc(host);
+        if (spaceHostMaps.isEmpty()) {
+            return new HostSpaceResponse(Collections.emptyList());
+        }
+        List<SpaceResponse> spaceResponses = createSpaceResponses(spaceHostMaps);
+        return new HostSpaceResponse(spaceResponses);
+    }
 
-        List<SpaceResponse> spaceResponses = spaceHostMaps.stream()
+    private List<SpaceResponse> createSpaceResponses(List<SpaceHostMap> spaceHostMaps) {
+        List<Long> spaceIds = spaceHostMaps.stream()
+            .map(spaceHostMap -> spaceHostMap.getSpace().getId())
+            .toList();
+
+        Map<Long, Long> guestBookCardCounts = guestBookCardRepository.countBySpaceIdIn(spaceIds)
+            .stream()
+            .collect(Collectors.toMap(
+                SpaceGuestBookCountDto::spaceId,
+                SpaceGuestBookCountDto::guestBookCount)
+            );
+
+        Map<Long, SpacePhoto> spacePhotos = spacePhotoRepository.findAllBySpaceIdIn(spaceIds)
+            .stream()
+            .collect(Collectors.toMap(
+                spacePhoto -> spacePhoto.getSpace().getId(),
+                spacePhoto -> spacePhoto)
+            );
+
+        return spaceHostMaps.stream()
             .map(spaceHostMap -> {
                 Space space = spaceHostMap.getSpace();
-                Long guestBookCardCount = guestBookCardRepository.countBySpace(space);
-                return spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)
-                    .map(photo -> SpaceResponse.from(space, SpacePhotoResponse.exists(photo.getPath()),
-                        guestBookCardCount))
-                    .orElseGet(() -> SpaceResponse.from(space, SpacePhotoResponse.notExists(), guestBookCardCount));
+                Long guestBookCardCount = guestBookCardCounts.getOrDefault(space.getId(), 0L);
+                SpacePhoto spacePhoto = spacePhotos.getOrDefault(space.getId(), SpacePhoto.empty(space));
+                return SpaceResponse.from(space, spacePhoto, guestBookCardCount);
             })
-            .sorted(Comparator.comparingLong(SpaceResponse::id).reversed())
             .toList();
-        return new HostSpaceResponse(spaceResponses);
     }
 
     @Transactional(readOnly = true)
