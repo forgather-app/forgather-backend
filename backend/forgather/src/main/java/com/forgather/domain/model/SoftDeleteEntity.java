@@ -14,6 +14,9 @@ public class SoftDeleteEntity extends BaseTimeEntity {
     private LocalDateTime deletedAt;
 
     public void delete() {
+        if (deletedAt != null) {
+            return;
+        }
         deletedAt = LocalDateTime.now();
     }
 }
