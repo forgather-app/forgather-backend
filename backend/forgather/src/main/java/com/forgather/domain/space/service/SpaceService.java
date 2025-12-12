@@ -155,7 +155,7 @@ public class SpaceService {
     }
 
     private void deleteSpaceHostMap(Host host, Space space) {
-        SpaceHostMap spaceHostMap = spaceHostMapRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).orElseThrow();
+        SpaceHostMap spaceHostMap = spaceHostMapRepository.getBySpaceAndHostAndDeletedAtIsNullOrThrow(space, host);
         spaceHostMap.delete();
     }
 
