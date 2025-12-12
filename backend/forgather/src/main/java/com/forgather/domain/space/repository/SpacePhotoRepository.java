@@ -12,7 +12,7 @@ public interface SpacePhotoRepository {
 
     Optional<SpacePhoto> findBySpaceAndDeletedAtIsNull(Space space);
 
-    List<SpacePhoto> findAllBySpaceIdIn(List<Long> spaceIds);
+    List<SpacePhoto> findAllBySpaceIdInAndDeletedAtIsNull(List<Long> spaceIds);
 
     void delete(SpacePhoto spacePhoto);
 
