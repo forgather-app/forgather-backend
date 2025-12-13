@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,7 +23,6 @@ import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.model.SpacePhoto;
 import com.forgather.domain.space.repository.SpacePhotoRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
-import com.forgather.domain.upload.event.DeletePhotoEvent;
 import com.forgather.domain.upload.service.UploadService;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHostMap;
@@ -51,7 +49,6 @@ public class SpaceService {
     private final SpaceHostMapRepository spaceHostMapRepository;
     private final GuestBookCardRepository guestBookCardRepository;
     private final RandomCodeGenerator codeGenerator;
-    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public CreateSpaceResponse create(CreateSpaceRequest request, MultipartFile file, Host host) {
@@ -69,13 +66,13 @@ public class SpaceService {
 
     @Transactional(readOnly = true)
     public SpaceResponse getSpaceInformation(String spaceCode) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         return createSpaceResponse(space);
     }
 
     @Transactional
     public SpaceResponse update(String spaceCode, UpdateSpaceRequest request, MultipartFile file, Host host) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(space, host);
 
         space.update(request.name(), request.description(), request.isPublic(), request.instagramUsername(),
@@ -109,7 +106,7 @@ public class SpaceService {
     }
 
     private void uploadNewPhoto(Space space, MultipartFile file, String spaceCode) {
-        spacePhotoRepository.findBySpace(space)
+        spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)
             .ifPresent(photo -> {
                 throw new BaseException("스페이스 사진이 이미 존재합니다. 기존 스페이스 사진을 삭제 해주세요.");
             });
@@ -119,7 +116,7 @@ public class SpaceService {
     }
 
     private void deleteExistingPhoto(Space space) {
-        SpacePhoto existingPhoto = spacePhotoRepository.findBySpace(space)
+        SpacePhoto existingPhoto = spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)
             .orElseThrow(() -> new BaseException("삭제할 스페이스 사진이 존재하지 않습니다."));
 
         deleteSpacePhoto(existingPhoto);
@@ -127,20 +124,29 @@ public class SpaceService {
 
     private SpaceResponse createSpaceResponse(Space space) {
         Long guestBookCardCount = guestBookCardRepository.countBySpace(space);
-        SpacePhoto spacePhoto = spacePhotoRepository.getBySpaceOrEmpty(space);
+        SpacePhoto spacePhoto = spacePhotoRepository.getBySpaceAndDeletedAtIsNullOrEmpty(space);
         return SpaceResponse.from(space, spacePhoto, guestBookCardCount);
     }
 
     @Transactional
     public void delete(String spaceCode, Host host) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(space, host);
-
         deleteGuestBookAndProduct(host, space);
-        spaceHostMapRepository.deleteBySpace(space);
-        spacePhotoRepository.findBySpace(space)
-            .ifPresent(this::deleteSpacePhoto);
-        spaceRepository.delete(space);
+        deleteSpaceHostMap(host, space);
+        deleteSpacePhoto(space);
+        space.delete();
+    }
+
+    private void validateSpaceHost(Space space, Host host) {
+        validateHostNull(host);
+        if (space == null) {
+            throw new BaseNullPointerException("스페이스는 null일 수 없습니다.");
+        }
+        if (spaceHostMapRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent()) {
+            return;
+        }
+        throw new ForbiddenException("권한이 존재하지 않습니다.");
     }
 
     private void deleteGuestBookAndProduct(Host host, Space space) {
@@ -148,14 +154,23 @@ public class SpaceService {
         productService.deleteIfExists(host, space);
     }
 
+    private void deleteSpaceHostMap(Host host, Space space) {
+        SpaceHostMap spaceHostMap = spaceHostMapRepository.getBySpaceAndHostAndDeletedAtIsNullOrThrow(space, host);
+        spaceHostMap.delete();
+    }
+
+    private void deleteSpacePhoto(Space space) {
+        spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)
+            .ifPresent(this::deleteSpacePhoto);
+    }
+
     private void deleteSpacePhoto(SpacePhoto spacePhoto) {
-        spacePhotoRepository.delete(spacePhoto);
-        eventPublisher.publishEvent(new DeletePhotoEvent(this, spacePhoto));
+        spacePhoto.delete();
     }
 
     @Transactional(readOnly = true)
     public HostSpaceResponse getSpacesInformation(Host host) {
-        List<SpaceHostMap> spaceHostMaps = spaceHostMapRepository.findAllByHostWithSpaceOrderByCreatedAtDesc(host);
+        List<SpaceHostMap> spaceHostMaps = spaceHostMapRepository.findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host);
         if (spaceHostMaps.isEmpty()) {
             return new HostSpaceResponse(Collections.emptyList());
         }
@@ -175,7 +190,7 @@ public class SpaceService {
                 SpaceGuestBookCountDto::guestBookCount)
             );
 
-        Map<Long, SpacePhoto> spacePhotos = spacePhotoRepository.findAllBySpaceIdIn(spaceIds)
+        Map<Long, SpacePhoto> spacePhotos = spacePhotoRepository.findAllBySpaceIdInAndDeletedAtIsNull(spaceIds)
             .stream()
             .collect(Collectors.toMap(
                 spacePhoto -> spacePhoto.getSpace().getId(),
@@ -194,20 +209,9 @@ public class SpaceService {
 
     @Transactional(readOnly = true)
     public CheckSpaceHostResponse checkSpaceHost(String spaceCode, Host host) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateHostNull(host);
-        return new CheckSpaceHostResponse(spaceHostMapRepository.findBySpaceAndHost(space, host).isPresent());
-    }
-
-    private void validateSpaceHost(Space space, Host host) {
-        validateHostNull(host);
-        if (space == null) {
-            throw new BaseNullPointerException("스페이스는 null일 수 없습니다.");
-        }
-        if (spaceHostMapRepository.findBySpaceAndHost(space, host).isPresent()) {
-            return;
-        }
-        throw new ForbiddenException("권한이 존재하지 않습니다.");
+        return new CheckSpaceHostResponse(spaceHostMapRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent());
     }
 
     private void validateHostNull(Host host) {

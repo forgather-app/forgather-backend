@@ -244,11 +244,8 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // then
         assertAll(
             () -> assertThat(response.statusCode()).isEqualTo(204),
-            () -> assertThat(spaceRepository.findByCode(space.getCode())).isEmpty(),
-            () -> assertThat(spacePhotoRepository.findBySpace(space)).isEmpty(),
-
-            () -> await().atMost(ofSeconds(6))
-                .untilAsserted(() -> verify(contentsStorage, atLeast(1)).deletePhotos(anyList()))
+            () -> assertThat(spaceRepository.findByCodeAndDeletedAtIsNull(space.getCode())).isEmpty(),
+            () -> assertThat(spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)).isEmpty()
         );
     }
 
@@ -278,8 +275,8 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // then
         assertAll(
             () -> assertThat(response.statusCode()).isEqualTo(204),
-            () -> assertThat(spaceRepository.findByCode(space.getCode())).isEmpty(),
-            () -> assertThat(spacePhotoRepository.findBySpace(space)).isEmpty(),
+            () -> assertThat(spaceRepository.findByCodeAndDeletedAtIsNull(space.getCode())).isEmpty(),
+            () -> assertThat(spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)).isEmpty(),
             () -> assertThat(productRepository.findAllBySpace(space)).isEmpty(),
             () -> assertThat(productPhotoRepository.findAllByProduct(product)).isEmpty(),
             () -> assertThat(guestBookCardRepository.findAllBySpace(space)).isEmpty(),
@@ -369,7 +366,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(result.isPublic()).isFalse(),
             () -> assertThat(result.instagramUsername()).isEqualTo("forgather_official_new"),
             () -> assertThat(result.email()).isEqualTo("forgather_new@forgather.me"),
-            () -> assertThat(spacePhotoRepository.getBySpaceOrEmpty(space).getOriginalName()).isEqualTo("new.jpg"),
+            () -> assertThat(spacePhotoRepository.getBySpaceAndDeletedAtIsNullOrEmpty(space).getOriginalName()).isEqualTo("new.jpg"),
             () -> assertThat(result.guestBookCardCount()).isZero(),
 
             () -> await().atMost(ofSeconds(6))

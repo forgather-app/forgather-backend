@@ -50,7 +50,7 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public ProductsResponse getAll(String spaceCode) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         List<Product> products = productRepository.findAllBySpace(space);
         List<SimpleProductResponse> productResponses = products.stream()
             .map(product -> new SimpleProductResponse(
@@ -62,7 +62,7 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public ProductResponse get(String spaceCode, Long productId) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         Product product = productRepository.getBySpaceAndIdOrThrow(space, productId);
         ProductPhotos productPhotos = new ProductPhotos(productPhotoRepository.findAllByProduct(product));
         return new ProductResponse(product, productPhotos.getAll());
@@ -70,7 +70,7 @@ public class ProductService {
 
     @Transactional
     public ProductResponse registerV3(Host host, String spaceCode, RegisterProductRequest request) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(host, space);
         validateExceedProductMaxCount(space);
         Product product = productRepository.save(request.toEntity(space));
@@ -99,7 +99,7 @@ public class ProductService {
     @Transactional
     public ProductResponse updateV3(Host host, String spaceCode, Long productId, UpdateProductRequest request) {
         // Product 정보 수정
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(host, space);
         Product product = productRepository.getBySpaceAndIdOrThrow(space, productId);
         product.update(request.title(), request.category(), request.authorName(), request.description(),
@@ -129,7 +129,7 @@ public class ProductService {
 
     @Transactional
     public void deleteV2(Host host, String spaceCode, Long productId) {
-        Space space = spaceRepository.getByCodeOrThrow(spaceCode);
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(host, space);
         Product product = productRepository.getBySpaceAndIdOrThrow(space, productId);
         deleteAllProductPhotos(product);
@@ -179,6 +179,6 @@ public class ProductService {
         if (space == null || host == null) {
             throw new BaseNullPointerException("스페이스와 호스트는 null일 수 없습니다.");
         }
-        return spaceHostMapRepository.findBySpaceAndHost(space, host).isPresent();
+        return spaceHostMapRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent();
     }
 }

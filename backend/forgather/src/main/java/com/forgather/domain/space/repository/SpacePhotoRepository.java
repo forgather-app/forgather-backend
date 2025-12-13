@@ -10,14 +10,12 @@ public interface SpacePhotoRepository {
 
     SpacePhoto save(SpacePhoto spacePhoto);
 
-    Optional<SpacePhoto> findBySpace(Space space);
+    Optional<SpacePhoto> findBySpaceAndDeletedAtIsNull(Space space);
 
-    List<SpacePhoto> findAllBySpaceIdIn(List<Long> spaceIds);
+    List<SpacePhoto> findAllBySpaceIdInAndDeletedAtIsNull(List<Long> spaceIds);
 
-    void delete(SpacePhoto spacePhoto);
-
-    default SpacePhoto getBySpaceOrEmpty(Space space) {
-        return findBySpace(space)
+    default SpacePhoto getBySpaceAndDeletedAtIsNullOrEmpty(Space space) {
+        return findBySpaceAndDeletedAtIsNull(space)
             .orElse(SpacePhoto.empty(space));
     }
 }

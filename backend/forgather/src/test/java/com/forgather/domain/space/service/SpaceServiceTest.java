@@ -54,6 +54,6 @@ class SpaceServiceTest {
             () -> spaceService.create(request, new MockMultipartFile("temp.png", new byte[] {}), host)
         );
 
-        assertThat(spaceRepository.findAll()).isEmpty();
+        assertThat(spaceRepository.findAllByDeletedAtIsNull()).isEmpty();
     }
 }
