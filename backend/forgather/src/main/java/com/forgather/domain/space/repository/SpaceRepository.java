@@ -12,8 +12,6 @@ import com.forgather.global.exception.NotFoundException;
 
 public interface SpaceRepository {
 
-    void delete(Space space);
-
     Space save(Space space);
 
     Optional<Space> findByCodeAndDeletedAtIsNull(String spaceCode);

@@ -14,8 +14,6 @@ public interface SpacePhotoRepository {
 
     List<SpacePhoto> findAllBySpaceIdInAndDeletedAtIsNull(List<Long> spaceIds);
 
-    void delete(SpacePhoto spacePhoto);
-
     default SpacePhoto getBySpaceAndDeletedAtIsNullOrEmpty(Space space) {
         return findBySpaceAndDeletedAtIsNull(space)
             .orElse(SpacePhoto.empty(space));
