@@ -190,7 +190,7 @@ public class SpaceService {
                 SpaceGuestBookCountDto::guestBookCount)
             );
 
-        Map<Long, SpacePhoto> spacePhotos = spacePhotoRepository.findAllBySpaceIdIn(spaceIds)
+        Map<Long, SpacePhoto> spacePhotos = spacePhotoRepository.findAllBySpaceIdInAndDeletedAtIsNull(spaceIds)
             .stream()
             .collect(Collectors.toMap(
                 spacePhoto -> spacePhoto.getSpace().getId(),
