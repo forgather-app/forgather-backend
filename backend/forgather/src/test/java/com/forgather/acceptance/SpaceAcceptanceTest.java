@@ -279,8 +279,8 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)).isEmpty(),
             () -> assertThat(productRepository.findAllBySpace(space)).isEmpty(),
             () -> assertThat(productPhotoRepository.findAllByProduct(product)).isEmpty(),
-            () -> assertThat(guestBookCardRepository.findAllBySpace(space)).isEmpty(),
-            () -> assertThat(guestBookCardPhotoRepository.findAllByGuestBookCard(guestBookCard)).isEmpty(),
+            () -> assertThat(guestBookCardRepository.findAllBySpaceAndDeletedAtIsNull(space)).isEmpty(),
+            () -> assertThat(guestBookCardPhotoRepository.findAllByGuestBookCardAndDeletedAtIsNull(guestBookCard)).isEmpty(),
 
             () -> await().atMost(ofSeconds(6))
                 .untilAsserted(() -> verify(contentsStorage, atLeast(1)).deletePhotos(anyList()))
