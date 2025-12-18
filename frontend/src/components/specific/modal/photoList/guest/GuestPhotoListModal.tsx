@@ -60,6 +60,7 @@ const GuestPhotoListModal = ({
       <Modal.Backdrop />
       <S.Wrapper>
         <ImageSwiper
+          key={`swiper-${initialPhotoIndex}`}
           initialIndex={initialPhotoIndex}
           imageInfo={imageInfo}
           updateCurrentIndex={handleSlideChange}
