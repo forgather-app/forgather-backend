@@ -12,16 +12,3 @@ export const Wrapper = styled.div`
   left: 50%;
   transform: translate(-50%, -50%);
 `;
-
-export const ImageWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  `;
-
-export const Image = styled.img`
-max-width: ${({ theme }) => `calc(${theme.layout.width} - 40px)`};
-  max-height: 70vh;
-  object-fit: contain;
-  border-radius: 8px;
-`;
