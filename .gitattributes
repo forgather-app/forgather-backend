@@ -1,1 +1,9 @@
-backend/forgather/src/main/resources/application*.yml filter=git-crypt diff=git-crypt
+# git-crypt 암호화 대상
+src/main/resources/application*.yml filter=git-crypt diff=git-crypt
+
+# 줄바꿈 설정
+/gradlew text eol=lf
+*.bat text eol=crlf
+
+# 바이너리
+*.jar binary
