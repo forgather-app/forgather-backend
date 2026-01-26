@@ -8,7 +8,10 @@ on:
       - v2/main
       - v2/develop
     paths:
-      - 'backend/**'
+      - 'src/**'
+      - 'build.gradle'
+      - 'settings.gradle'
+      - 'gradle/**'
   pull_request:
     branches:
       - main
@@ -16,11 +19,14 @@ on:
       - v2/main
       - v2/develop
     paths:
-      - 'backend/**'
+      - 'src/**'
+      - 'build.gradle'
+      - 'settings.gradle'
+      - 'gradle/**'
 
 defaults:
   run:
-    working-directory: backend/forgather
+    working-directory: .
 
 jobs:
   build:
