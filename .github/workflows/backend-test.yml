@@ -24,6 +24,11 @@ on:
       - 'settings.gradle'
       - 'gradle/**'
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 defaults:
   run:
     working-directory: .
@@ -48,7 +53,7 @@ jobs:
         run: ./gradlew build --no-daemon
 
       - name: Write test info to GitHub
-        uses: EnricoMi/publish-unit-test-result-action@v1
+        uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
           files: '**/build/test-results/test/TEST-*.xml'
