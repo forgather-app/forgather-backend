@@ -5,7 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', function () {
     // 이미 로그인된 경우 spaces 페이지로 리다이렉트
-    if (Auth.isAuthenticated() && !Auth.isAccessTokenExpired()) {
+    if (Auth.isAuthenticated()) {
         window.location.href = '/view/admin/spaces';
         return;
     }
@@ -109,12 +109,8 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             showLoading();
 
-            // 로그인 API 호출
-            const response = await API.login(username, password);
-
-            // 토큰 저장
-            Auth.setAccessToken(response.accessToken);
-            Auth.setRefreshToken(response.refreshToken);
+            // 로그인 API 호출 (세션 쿠키가 Set-Cookie 헤더로 자동 설정됨)
+            await API.login(username, password);
 
             // Spaces 페이지로 리다이렉트
             window.location.href = '/view/admin/spaces';
