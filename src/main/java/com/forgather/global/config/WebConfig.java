@@ -64,8 +64,7 @@ public class WebConfig implements WebMvcConfigurer {
                 "/view/admin/login",
                 "/view/admin/spaces",
                 "/view/admin/hosts",
-                "/admin/login",
-                "/admin/refresh"
+                "/admin/login"
             );
     }
 

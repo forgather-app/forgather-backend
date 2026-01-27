@@ -1,15 +1,18 @@
 package com.forgather.back_office.interceptor;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import com.forgather.global.auth.util.JwtTokenProvider;
-import com.forgather.global.exception.ForbiddenException;
+import com.forgather.back_office.auth.session.SessionManager;
+import com.forgather.back_office.model.AdminSession;
+import com.forgather.back_office.model.SessionId;
 import com.forgather.global.exception.UnauthorizedException;
 
-import io.jsonwebtoken.JwtException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -20,47 +23,43 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AdminAuthInterceptor implements HandlerInterceptor {
 
-    private static final String BEARER = "Bearer ";
-    private static final String AUTHORIZATION_HEADER_NAME = "Authorization";
-    private static final String ADMIN_ROLE = "ADMIN";
+    private static final String SESSION_COOKIE_NAME = "ADMIN_SESSION_ID";
+    public static final String ADMIN_USER_ID_ATTRIBUTE = "adminUserId";
 
-    private final JwtTokenProvider jwtTokenProvider;
+    private final SessionManager sessionManager;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        String jwtToken = request.getHeader(AUTHORIZATION_HEADER_NAME);
+        String sessionIdValue = extractSessionIdFromCookie(request);
 
-        if (jwtToken == null || jwtToken.isBlank()) {
-            log.info("어드민 페이지 접근 시도 - Authorization 헤더 없음: {}", request.getRequestURI());
+        if (sessionIdValue == null) {
+            log.info("어드민 페이지 접근 시도 - 세션 쿠키 없음: {}", request.getRequestURI());
             handleUnauthorized(request, response);
             return false;
         }
-
-        if (!jwtToken.startsWith(BEARER)) {
-            log.info("어드민 페이지 접근 시도 - 잘못된 토큰 형식: {}", request.getRequestURI());
-            handleUnauthorized(request, response);
-            return false;
-        }
-
-        jwtToken = jwtToken.substring(BEARER.length());
 
         try {
-            jwtTokenProvider.validateToken(jwtToken);
-            String role = jwtTokenProvider.getRole(jwtToken);
-            if (!ADMIN_ROLE.equals(role)) {
-                log.info("어드민 페이지 접근 시도 - 권한 없음 (role: {}): {}", role, request.getRequestURI());
-                handleForbidden(request, response);
-                return false;
-            }
-
-            Long adminUserId = jwtTokenProvider.getId(jwtToken);
-            log.info("어드민 페이지 접근 허용 - adminUserId: {}, URI: {}", adminUserId, request.getRequestURI());
+            SessionId sessionId = SessionId.from(sessionIdValue);
+            AdminSession session = sessionManager.getValidSession(sessionId, LocalDateTime.now());
+            request.setAttribute(ADMIN_USER_ID_ATTRIBUTE, session.getAdminUserId());
+            log.info("어드민 페이지 접근 허용 - adminUserId: {}, URI: {}", session.getAdminUserId(), request.getRequestURI());
             return true;
-        } catch (JwtException e) {
-            log.info("어드민 페이지 접근 시도 - 유효하지 않은 토큰: {}", request.getRequestURI(), e);
+        } catch (Exception e) {
+            log.info("어드민 페이지 접근 시도 - 유효하지 않은 세션: {}", request.getRequestURI(), e);
             handleUnauthorized(request, response);
             return false;
         }
+    }
+
+    private String extractSessionIdFromCookie(HttpServletRequest request) {
+        if (request.getCookies() == null) {
+            return null;
+        }
+        return Arrays.stream(request.getCookies())
+            .filter(cookie -> SESSION_COOKIE_NAME.equals(cookie.getName()))
+            .map(Cookie::getValue)
+            .findFirst()
+            .orElse(null);
     }
 
     private void handleUnauthorized(HttpServletRequest request, HttpServletResponse response) {
@@ -69,14 +68,6 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
             return;
         }
         throw new UnauthorizedException("인증이 필요합니다.");
-    }
-
-    private void handleForbidden(HttpServletRequest request, HttpServletResponse response) {
-        if (isViewRequest(request)) {
-            redirectToLogin(response);
-            return;
-        }
-        throw new ForbiddenException("접근 권한이 없습니다.");
     }
 
     private boolean isViewRequest(HttpServletRequest request) {

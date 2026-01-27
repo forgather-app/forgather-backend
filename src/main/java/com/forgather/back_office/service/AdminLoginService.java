@@ -4,12 +4,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.forgather.back_office.auth.session.SessionManager;
 import com.forgather.back_office.dto.AdminLoginRequest;
 import com.forgather.back_office.dto.AdminLoginResponse;
-import com.forgather.back_office.dto.AdminRefreshRequest;
+import com.forgather.back_office.model.AdminSession;
 import com.forgather.back_office.model.AdminUser;
 import com.forgather.back_office.repository.AdminUserRepository;
-import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.exception.BaseException;
 
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 public class AdminLoginService {
 
     private final AdminUserRepository adminUserRepository;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final SessionManager sessionManager;
 
     @Transactional(readOnly = true)
     public AdminLoginResponse login(AdminLoginRequest request) {
@@ -30,20 +30,7 @@ public class AdminLoginService {
             throw new BaseException("아이디나 패스워드가 일치하지 않습니다.", HttpStatus.BAD_REQUEST);
         }
 
-        String accessToken = jwtTokenProvider.generateAdminAccessToken(adminUser.getId());
-        String refreshToken = jwtTokenProvider.generateAdminRefreshToken(adminUser.getId());
-
-        return AdminLoginResponse.of(accessToken, refreshToken);
-    }
-
-    @Transactional(readOnly = true)
-    public AdminLoginResponse refresh(AdminRefreshRequest request) {
-        jwtTokenProvider.validateToken(request.refreshToken());
-
-        Long adminUserId = jwtTokenProvider.getId(request.refreshToken());
-        AdminUser adminUser = adminUserRepository.getByIdOrThrow(adminUserId);
-        String newAccessToken = jwtTokenProvider.generateAdminAccessToken(adminUser.getId());
-
-        return AdminLoginResponse.of(newAccessToken, request.refreshToken());
+        AdminSession session = sessionManager.createSession(adminUser.getId(), adminUser.getUsername());
+        return AdminLoginResponse.of(session.getSessionId().getValue());
     }
 }

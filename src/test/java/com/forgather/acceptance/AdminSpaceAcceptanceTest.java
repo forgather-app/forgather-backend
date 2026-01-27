@@ -11,8 +11,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.forgather.back_office.auth.session.SessionManager;
 import com.forgather.back_office.dto.AdminSpaceResponse;
 import com.forgather.back_office.dto.SpaceDetailResponse;
+import com.forgather.back_office.model.AdminSession;
 import com.forgather.back_office.model.AdminUser;
 import com.forgather.back_office.repository.AdminUserRepository;
 import com.forgather.domain.guestbook.model.Guest;
@@ -31,13 +33,14 @@ import com.forgather.fixture.SpaceFixture;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHostMap;
 import com.forgather.global.auth.repository.SpaceHostMapRepository;
-import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.util.RandomCodeGenerator;
 
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 
 @AutoConfigureMockMvc
 class AdminSpaceAcceptanceTest extends AcceptanceTest {
+
+    private static final String SESSION_COOKIE_NAME = "ADMIN_SESSION_ID";
 
     @Autowired
     private MockMvc mockMvc;
@@ -64,13 +67,13 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
     private ProductRepository productRepository;
 
     @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    private SessionManager sessionManager;
 
     @Autowired
     private RandomCodeGenerator randomCodeGenerator;
 
     private AdminUser adminUser;
-    private String accessToken;
+    private String sessionId;
     private Host host;
 
     @BeforeEach
@@ -78,7 +81,8 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
         host = hostRepository.save(HostFixture.createHost());
 
         adminUser = adminUserRepository.save(AdminUserFixture.createAdminUser("어드민", "패스워드"));
-        accessToken = jwtTokenProvider.generateAdminAccessToken(adminUser.getId());
+        AdminSession session = sessionManager.createSession(adminUser.getId(), adminUser.getUsername());
+        sessionId = session.getSessionId().getValue();
 
         RestAssuredMockMvc.mockMvc(mockMvc);
     }
@@ -91,7 +95,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         AdminSpaceResponse result = RestAssuredMockMvc.given()
-            .headers("Authorization", "Bearer " + accessToken)
+            .cookie(SESSION_COOKIE_NAME, sessionId)
             .when()
             .get("/admin/spaces")
             .then()
@@ -110,23 +114,21 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
         );
     }
 
-    @DisplayName("어드민 유저가 아니면 모든 스페이스를 조회할 수 없다.")
+    @DisplayName("세션이 없으면 모든 스페이스를 조회할 수 없다.")
     @Test
-    void getAllSpacesWithNonAdminUser() {
+    void getAllSpacesWithoutSession() {
         // given
-        String hostAccessToken = jwtTokenProvider.generateAccessToken(host.getId());
         createSpaces(16);
 
         // when
         var result = RestAssuredMockMvc.given()
-            .headers("Authorization", "Bearer " + hostAccessToken)
             .when()
             .get("/admin/spaces")
             .then()
             .extract();
 
         // then
-        assertThat(result.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
+        assertThat(result.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
     }
 
     @DisplayName("스페이스를 상세 조회한다.")
@@ -143,7 +145,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         SpaceDetailResponse result = RestAssuredMockMvc.given()
-            .headers("Authorization", "Bearer " + accessToken)
+            .cookie(SESSION_COOKIE_NAME, sessionId)
             .when()
             .get("/admin/spaces/{spaceCode}", space.getCode())
             .then()
@@ -173,7 +175,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         SpaceDetailResponse result = RestAssuredMockMvc.given()
-            .headers("Authorization", "Bearer " + accessToken)
+            .cookie(SESSION_COOKIE_NAME, sessionId)
             .when()
             .get("/admin/spaces/{spaceCode}", space.getCode())
             .then()
@@ -199,7 +201,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         SpaceDetailResponse result = RestAssuredMockMvc.given()
-            .headers("Authorization", "Bearer " + accessToken)
+            .cookie(SESSION_COOKIE_NAME, sessionId)
             .when()
             .get("/admin/spaces/{spaceCode}", space.getCode())
             .then()
@@ -216,24 +218,22 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
         );
     }
 
-    @DisplayName("어드민 유저가 아니면 모든 스페이스를 조회할 수 없다.")
+    @DisplayName("세션이 없으면 스페이스를 상세 조회할 수 없다.")
     @Test
-    void getSpaceDetailWithNonAdminUser() {
+    void getSpaceDetailWithoutSession() {
         // given
-        String hostAccessToken = jwtTokenProvider.generateAccessToken(host.getId());
         Space space = spaceRepository.save(SpaceFixture.createSpaceWithCode("1234567890"));
         spaceHostMapRepository.save(new SpaceHostMap(space, host));
 
         // when
         var result = RestAssuredMockMvc.given()
-            .headers("Authorization", "Bearer " + hostAccessToken)
             .when()
             .get("/admin/spaces/{spaceCode}", space.getCode())
             .then()
             .extract();
 
         // then
-        assertThat(result.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
+        assertThat(result.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
     }
 
     @DisplayName("작품 소개가 등록된 모든 스페이스를 조회한다.")
@@ -245,7 +245,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         AdminSpaceResponse result = RestAssuredMockMvc.given()
-            .headers("Authorization", "Bearer " + accessToken)
+            .cookie(SESSION_COOKIE_NAME, sessionId)
             .queryParam("hasProduct", true)
             .when()
             .get("/admin/spaces/search")
@@ -274,7 +274,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         AdminSpaceResponse result = RestAssuredMockMvc.given()
-            .headers("Authorization", "Bearer " + accessToken)
+            .cookie(SESSION_COOKIE_NAME, sessionId)
             .queryParam("hasProduct", false)
             .when()
             .get("/admin/spaces/search")
@@ -294,15 +294,11 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
         );
     }
 
-    @DisplayName("어드민 유저가 아니면 필터링된 스페이스 목록을 조회할 수 없다.")
+    @DisplayName("세션이 없으면 필터링된 스페이스 목록을 조회할 수 없다.")
     @Test
-    void getSpacesByFilterWithNonAdminUser() {
-        // given
-        String hostAccessToken = jwtTokenProvider.generateAccessToken(host.getId());
-
+    void getSpacesByFilterWithoutSession() {
         // when
         var result = RestAssuredMockMvc.given()
-            .headers("Authorization", "Bearer " + hostAccessToken)
             .queryParam("hasProduct", true)
             .when()
             .get("/admin/spaces/search")
@@ -310,7 +306,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
             .extract();
 
         // then
-        assertThat(result.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
+        assertThat(result.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
     }
 
     private void createSpaces(int count) {

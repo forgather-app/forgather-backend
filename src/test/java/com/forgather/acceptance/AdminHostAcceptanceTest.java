@@ -11,19 +11,21 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.forgather.back_office.auth.session.SessionManager;
 import com.forgather.back_office.dto.AdminHostResponse;
+import com.forgather.back_office.model.AdminSession;
 import com.forgather.back_office.model.AdminUser;
 import com.forgather.back_office.repository.AdminUserRepository;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.fixture.AdminUserFixture;
 import com.forgather.fixture.HostFixture;
-import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.util.JwtTokenProvider;
 
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 
 @AutoConfigureMockMvc
 class AdminHostAcceptanceTest extends AcceptanceTest {
+
+    private static final String SESSION_COOKIE_NAME = "ADMIN_SESSION_ID";
 
     @Autowired
     private MockMvc mockMvc;
@@ -35,15 +37,16 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
     private HostRepository hostRepository;
 
     @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    private SessionManager sessionManager;
 
     private AdminUser adminUser;
-    private String accessToken;
+    private String sessionId;
 
     @BeforeEach
     void setUp() {
         adminUser = adminUserRepository.save(AdminUserFixture.createAdminUser("어드민", "패스워드"));
-        accessToken = jwtTokenProvider.generateAdminAccessToken(adminUser.getId());
+        AdminSession session = sessionManager.createSession(adminUser.getId(), adminUser.getUsername());
+        sessionId = session.getSessionId().getValue();
 
         RestAssuredMockMvc.mockMvc(mockMvc);
     }
@@ -56,7 +59,7 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
 
         // when
         AdminHostResponse result = RestAssuredMockMvc.given()
-            .headers("Authorization", "Bearer " + accessToken)
+            .cookie(SESSION_COOKIE_NAME, sessionId)
             .when()
             .get("/admin/hosts")
             .then()
@@ -75,23 +78,18 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
         );
     }
 
-    @DisplayName("어드민 유저가 아니면 모든 호스트 정보를 조회할 수 없다.")
+    @DisplayName("세션이 없으면 모든 호스트 정보를 조회할 수 없다.")
     @Test
-    void getAllHostsWithNonAdminUser() {
-        // given
-        Host host = hostRepository.save(HostFixture.createHost());
-        String hostAccessToken = jwtTokenProvider.generateAccessToken(host.getId());
-
+    void getAllHostsWithoutSession() {
         // when
         var result = RestAssuredMockMvc.given()
-            .headers("Authorization", "Bearer " + hostAccessToken)
             .when()
             .get("/admin/hosts")
             .then()
             .extract();
 
         // then
-        assertThat(result.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
+        assertThat(result.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
     }
 
     private void createHost(int count) {

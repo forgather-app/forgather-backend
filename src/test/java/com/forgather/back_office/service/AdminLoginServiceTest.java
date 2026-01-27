@@ -2,7 +2,6 @@ package com.forgather.back_office.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertAll;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,10 +10,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.forgather.container.TestOnContainer;
 import com.forgather.back_office.dto.AdminLoginRequest;
 import com.forgather.back_office.dto.AdminLoginResponse;
 import com.forgather.back_office.repository.AdminUserRepository;
+import com.forgather.container.TestOnContainer;
 import com.forgather.fixture.AdminUserFixture;
 import com.forgather.global.exception.BaseException;
 
@@ -29,7 +28,7 @@ class AdminLoginServiceTest extends TestOnContainer {
     @Autowired
     private AdminUserRepository adminUserRepository;
 
-    @DisplayName("존재하는 어드민 유저가 로그인하면 성공한다.")
+    @DisplayName("존재하는 어드민 유저가 로그인하면 세션 ID를 반환한다.")
     @Test
     void adminLoginSuccess() {
         // given
@@ -40,10 +39,7 @@ class AdminLoginServiceTest extends TestOnContainer {
         AdminLoginResponse result = adminLoginService.login(request);
 
         // then
-        assertAll(
-            () -> assertThat(result.accessToken()).isNotBlank(),
-            () -> assertThat(result.refreshToken()).isNotBlank()
-        );
+        assertThat(result.sessionId()).isNotBlank();
     }
 
     @DisplayName("존재하지 않는 어드민 유저가 로그인하면 실패한다.")

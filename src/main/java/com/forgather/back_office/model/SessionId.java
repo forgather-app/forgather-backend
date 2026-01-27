@@ -20,6 +20,10 @@ public class SessionId {
         return new SessionId(randomCodeGenerator.generate(SESSION_ID_LENGTH));
     }
 
+    public static SessionId from(String value) {
+        return new SessionId(value);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof SessionId sessionId))
