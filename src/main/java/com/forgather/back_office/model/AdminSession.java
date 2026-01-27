@@ -1,6 +1,7 @@
 package com.forgather.back_office.model;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import com.forgather.global.util.RandomCodeGenerator;
 
@@ -33,7 +34,15 @@ public class AdminSession {
         );
     }
 
-    public String getSessionIdValue() {
-        return sessionId.getValue();
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof AdminSession that))
+            return false;
+        return Objects.equals(getSessionId(), that.getSessionId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getSessionId());
     }
 }

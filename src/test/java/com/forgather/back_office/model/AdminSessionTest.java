@@ -24,25 +24,12 @@ class AdminSessionTest {
 
         // then
         assertAll(
-            () -> assertThat(session.getSessionIdValue()).isNotBlank(),
+            () -> assertThat(session.getSessionId()).isNotNull(),
             () -> assertThat(session.getAdminUserId()).isEqualTo(adminUserId),
             () -> assertThat(session.getUsername()).isEqualTo(username),
             () -> assertThat(session.getCreatedAt()).isNotNull(),
             () -> assertThat(session.getLastAccessedAt()).isEqualTo(session.getCreatedAt()),
             () -> assertThat(session.getMaxInactiveIntervalSeconds()).isEqualTo(30 * 60)
         );
-    }
-
-    @DisplayName("세션 ID 값을 문자열로 반환한다.")
-    @Test
-    void getSessionIdValue() {
-        // given
-        AdminSession session = AdminSession.create(1L, "admin", randomCodeGenerator);
-
-        // when
-        String sessionIdValue = session.getSessionIdValue();
-
-        // then
-        assertThat(sessionIdValue).isEqualTo(session.getSessionId().getValue());
     }
 }

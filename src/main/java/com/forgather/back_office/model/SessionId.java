@@ -1,5 +1,7 @@
 package com.forgather.back_office.model;
 
+import java.util.Objects;
+
 import com.forgather.global.util.RandomCodeGenerator;
 
 import lombok.AccessLevel;
@@ -16,5 +18,17 @@ public class SessionId {
 
     public static SessionId generate(RandomCodeGenerator randomCodeGenerator) {
         return new SessionId(randomCodeGenerator.generate(SESSION_ID_LENGTH));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof SessionId sessionId))
+            return false;
+        return Objects.equals(getValue(), sessionId.getValue());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getValue());
     }
 }
