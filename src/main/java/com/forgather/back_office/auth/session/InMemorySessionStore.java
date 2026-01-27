@@ -1,5 +1,6 @@
 package com.forgather.back_office.auth.session;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,6 +26,13 @@ public class InMemorySessionStore implements SessionStore {
             throw new NotFoundException("어드민 세션이 존재하지 않습니다.");
         }
         return sessions.get(sessionId);
+    }
+
+    @Override
+    public List<AdminSession> getAllSessions() {
+        return sessions.values()
+            .stream()
+            .toList();
     }
 
     @Override
