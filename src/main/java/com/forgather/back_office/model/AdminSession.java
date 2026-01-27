@@ -36,7 +36,7 @@ public class AdminSession {
 
     public boolean isExpired(LocalDateTime standardDateTime) {
         LocalDateTime expirationTime = lastAccessedAt.plusSeconds(maxInactiveIntervalSeconds);
-        return expirationTime.isBefore(standardDateTime);
+        return expirationTime.isBefore(standardDateTime) || expirationTime.isEqual(standardDateTime);
     }
 
     public AdminSession refresh() {
