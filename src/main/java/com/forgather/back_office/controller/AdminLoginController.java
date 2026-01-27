@@ -9,10 +9,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.forgather.back_office.model.SessionId;
 import com.forgather.back_office.auth.session.SessionManager;
 import com.forgather.back_office.dto.AdminLoginRequest;
-import com.forgather.back_office.dto.AdminLoginResponse;
+import com.forgather.back_office.model.SessionId;
 import com.forgather.back_office.service.AdminLoginService;
 
 import lombok.RequiredArgsConstructor;
@@ -28,7 +27,7 @@ public class AdminLoginController {
     private final SessionManager sessionManager;
 
     @PostMapping("/login")
-    public ResponseEntity<AdminLoginResponse> login(@RequestBody AdminLoginRequest request) {
+    public ResponseEntity<Void> login(@RequestBody AdminLoginRequest request) {
         var response = adminLoginService.login(request);
 
         ResponseCookie cookie = ResponseCookie.from(SESSION_COOKIE_NAME, response.sessionId())
@@ -41,7 +40,7 @@ public class AdminLoginController {
 
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, cookie.toString())
-            .body(response);
+            .build();
     }
 
     @PostMapping("/logout")

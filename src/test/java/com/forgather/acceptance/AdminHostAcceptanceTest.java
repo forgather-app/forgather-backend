@@ -21,6 +21,8 @@ import com.forgather.fixture.AdminUserFixture;
 import com.forgather.fixture.HostFixture;
 
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
+import io.restassured.module.mockmvc.specification.MockMvcRequestSpecification;
+import jakarta.servlet.http.Cookie;
 
 @AutoConfigureMockMvc
 class AdminHostAcceptanceTest extends AcceptanceTest {
@@ -51,6 +53,14 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
         RestAssuredMockMvc.mockMvc(mockMvc);
     }
 
+    private MockMvcRequestSpecification givenWithSession() {
+        return RestAssuredMockMvc.given()
+            .postProcessors(request -> {
+                request.setCookies(new Cookie(SESSION_COOKIE_NAME, sessionId));
+                return request;
+            });
+    }
+
     @DisplayName("모든 호스트 정보를 조회한다.")
     @Test
     void getAllHosts() {
@@ -58,8 +68,7 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
         createHost(16);
 
         // when
-        AdminHostResponse result = RestAssuredMockMvc.given()
-            .cookie(SESSION_COOKIE_NAME, sessionId)
+        AdminHostResponse result = givenWithSession()
             .when()
             .get("/admin/hosts")
             .then()

@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.forgather.back_office.dto.AdminLoginRequest;
-import com.forgather.back_office.dto.AdminLoginResponse;
 import com.forgather.back_office.model.AdminUser;
 import com.forgather.back_office.repository.AdminUserRepository;
 
@@ -51,11 +50,9 @@ class AdminLoginAcceptanceTest extends AcceptanceTest {
             .extract()
             .response();
 
-        AdminLoginResponse result = response.as(AdminLoginResponse.class);
         String setCookieHeader = response.getHeader("Set-Cookie");
 
         // then
-        assertThat(result.sessionId()).isNotBlank();
         assertThat(setCookieHeader).contains(SESSION_COOKIE_NAME);
     }
 }

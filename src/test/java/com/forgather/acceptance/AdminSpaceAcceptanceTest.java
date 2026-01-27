@@ -36,6 +36,8 @@ import com.forgather.global.auth.repository.SpaceHostMapRepository;
 import com.forgather.global.util.RandomCodeGenerator;
 
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
+import io.restassured.module.mockmvc.specification.MockMvcRequestSpecification;
+import jakarta.servlet.http.Cookie;
 
 @AutoConfigureMockMvc
 class AdminSpaceAcceptanceTest extends AcceptanceTest {
@@ -87,6 +89,14 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
         RestAssuredMockMvc.mockMvc(mockMvc);
     }
 
+    private MockMvcRequestSpecification givenWithSession() {
+        return RestAssuredMockMvc.given()
+            .postProcessors(request -> {
+                request.setCookies(new Cookie(SESSION_COOKIE_NAME, sessionId));
+                return request;
+            });
+    }
+
     @DisplayName("모든 스페이스를 조회한다.")
     @Test
     void getAllSpaces() {
@@ -94,8 +104,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
         createSpaces(16);
 
         // when
-        AdminSpaceResponse result = RestAssuredMockMvc.given()
-            .cookie(SESSION_COOKIE_NAME, sessionId)
+        AdminSpaceResponse result = givenWithSession()
             .when()
             .get("/admin/spaces")
             .then()
@@ -144,8 +153,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
         guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpaceAndGuest(space, guest2));
 
         // when
-        SpaceDetailResponse result = RestAssuredMockMvc.given()
-            .cookie(SESSION_COOKIE_NAME, sessionId)
+        SpaceDetailResponse result = givenWithSession()
             .when()
             .get("/admin/spaces/{spaceCode}", space.getCode())
             .then()
@@ -174,8 +182,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
         guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpaceAndGuest(space, guest2));
 
         // when
-        SpaceDetailResponse result = RestAssuredMockMvc.given()
-            .cookie(SESSION_COOKIE_NAME, sessionId)
+        SpaceDetailResponse result = givenWithSession()
             .when()
             .get("/admin/spaces/{spaceCode}", space.getCode())
             .then()
@@ -200,8 +207,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
         spaceHostMapRepository.save(new SpaceHostMap(space, host));
 
         // when
-        SpaceDetailResponse result = RestAssuredMockMvc.given()
-            .cookie(SESSION_COOKIE_NAME, sessionId)
+        SpaceDetailResponse result = givenWithSession()
             .when()
             .get("/admin/spaces/{spaceCode}", space.getCode())
             .then()
@@ -244,8 +250,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
         createSpaces(4);
 
         // when
-        AdminSpaceResponse result = RestAssuredMockMvc.given()
-            .cookie(SESSION_COOKIE_NAME, sessionId)
+        AdminSpaceResponse result = givenWithSession()
             .queryParam("hasProduct", true)
             .when()
             .get("/admin/spaces/search")
@@ -273,8 +278,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
         createSpacesWithProduct(4);
 
         // when
-        AdminSpaceResponse result = RestAssuredMockMvc.given()
-            .cookie(SESSION_COOKIE_NAME, sessionId)
+        AdminSpaceResponse result = givenWithSession()
             .queryParam("hasProduct", false)
             .when()
             .get("/admin/spaces/search")
