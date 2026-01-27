@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public class SessionId {
 
-    private static final int SESSION_ID_LENGTH = 10;
+    private static final int SESSION_ID_LENGTH = 36;
 
     private final String value;
 
