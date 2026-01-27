@@ -34,6 +34,22 @@ public class AdminSession {
         );
     }
 
+    public boolean isExpired(LocalDateTime standardDateTime) {
+        LocalDateTime expirationTime = lastAccessedAt.plusSeconds(maxInactiveIntervalSeconds);
+        return expirationTime.isBefore(standardDateTime);
+    }
+
+    public AdminSession refresh() {
+        return new AdminSession(
+            this.sessionId,
+            this.adminUserId,
+            this.username,
+            this.createdAt,
+            LocalDateTime.now(),
+            this.maxInactiveIntervalSeconds
+        );
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof AdminSession that))
