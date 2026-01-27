@@ -62,9 +62,8 @@ public class WebConfig implements WebMvcConfigurer {
             .addPathPatterns("/view/admin/**", "/admin/**")
             .excludePathPatterns(
                 "/view/admin/login",
-                "/view/admin/spaces",
-                "/view/admin/hosts",
-                "/admin/login"
+                "/admin/login",
+                "/admin/logout"
             );
     }
 
