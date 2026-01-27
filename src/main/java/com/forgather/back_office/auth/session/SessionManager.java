@@ -33,4 +33,8 @@ public class SessionManager {
         sessionStore.save(refreshedSession);
         return refreshedSession;
     }
+
+    public void invalidateSession(SessionId sessionId) {
+        sessionStore.delete(sessionId);
+    }
 }
