@@ -4,11 +4,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', function () {
-    // 이미 로그인된 경우 spaces 페이지로 리다이렉트
-    if (Auth.isAuthenticated()) {
-        window.location.href = '/view/admin/spaces';
-        return;
-    }
+    // 이미 로그인된 사용자의 처리는 서버 인터셉터에서 담당 (선택적 개선사항)
 
     // DOM 요소 참조
     const loginForm = document.getElementById('loginForm');
