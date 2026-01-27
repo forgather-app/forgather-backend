@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.forgather.back_office.model.AdminSession;
 import com.forgather.back_office.model.SessionId;
+import com.forgather.global.exception.UnauthorizedException;
 import com.forgather.global.util.RandomCodeGenerator;
 
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ public class SessionManager {
         AdminSession session = sessionStore.getBySessionId(sessionId);
         if (session.isExpired(standardDateTime)) {
             sessionStore.delete(sessionId);
-            throw new IllegalStateException("세션이 만료되었습니다.");
+            throw new UnauthorizedException("세션이 만료되었습니다.");
         }
         AdminSession refreshedSession = session.refresh();
         sessionStore.save(refreshedSession);
