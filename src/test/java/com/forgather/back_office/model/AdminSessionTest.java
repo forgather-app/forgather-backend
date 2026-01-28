@@ -40,9 +40,9 @@ class AdminSessionTest {
     void isNotExpiredWhenCreated() {
         // given
         AdminSession session = AdminSession.create(1L, "admin", randomCodeGenerator);
-        LocalDateTime sessionCreateTime = LocalDateTime.now().plusMinutes(29);
+        LocalDateTime standardDateTime = LocalDateTime.now().plusMinutes(29);
         // when & then
-        assertThat(session.isExpired(sessionCreateTime)).isFalse();
+        assertThat(session.isExpired(standardDateTime)).isFalse();
     }
 
     @DisplayName("마지막 접근 시간이 만료 시간을 초과하면 세션이 만료된다.")
