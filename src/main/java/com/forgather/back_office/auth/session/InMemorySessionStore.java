@@ -22,10 +22,11 @@ public class InMemorySessionStore implements SessionStore {
 
     @Override
     public AdminSession getBySessionId(SessionId sessionId) {
-        if (!sessions.containsKey(sessionId)) {
+        AdminSession session = sessions.get(sessionId);
+        if (session == null) {
             throw new NotFoundException("어드민 세션이 존재하지 않습니다.");
         }
-        return sessions.get(sessionId);
+        return session;
     }
 
     @Override
