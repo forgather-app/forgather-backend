@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.forgather.back_office.model.AdminSession;
 import com.forgather.back_office.model.SessionId;
+import com.forgather.global.exception.NotFoundException;
 import com.forgather.global.exception.UnauthorizedException;
 import com.forgather.global.util.RandomCodeGenerator;
 
@@ -29,7 +30,7 @@ public class SessionManager {
     }
 
     public AdminSession getValidSession(SessionId sessionId, LocalDateTime standardDateTime) {
-        AdminSession session = sessionStore.getBySessionId(sessionId);
+        AdminSession session = findSessionOrThrowUnauthorized(sessionId);
         if (session.isExpired(standardDateTime)) {
             sessionStore.delete(sessionId);
             throw new UnauthorizedException("세션이 만료되었습니다.");
@@ -37,6 +38,14 @@ public class SessionManager {
         AdminSession refreshedSession = session.refresh();
         sessionStore.save(refreshedSession);
         return refreshedSession;
+    }
+
+    private AdminSession findSessionOrThrowUnauthorized(SessionId sessionId) {
+        try {
+            return sessionStore.getBySessionId(sessionId);
+        } catch (NotFoundException e) {
+            throw new UnauthorizedException("세션이 존재하지 않습니다.");
+        }
     }
 
     public void invalidateSession(SessionId sessionId) {
