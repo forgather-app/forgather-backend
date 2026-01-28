@@ -14,6 +14,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.back_office.interceptor.AdminAuthInterceptor;
+import com.forgather.back_office.interceptor.LoginPageRedirectInterceptor;
 import com.forgather.back_office.resolver.LoginAdminUserArgumentResolver;
 import com.forgather.global.auth.resolver.LoginHostArgumentResolver;
 import com.forgather.global.converter.MultipartJsonConverter;
@@ -28,6 +29,7 @@ public class WebConfig implements WebMvcConfigurer {
     private final CorsProperties corsProperties;
     private final LoggingInterceptor loggingInterceptor;
     private final AdminAuthInterceptor adminAuthInterceptor;
+    private final LoginPageRedirectInterceptor loginPageRedirectInterceptor;
     private final LoginHostArgumentResolver loginHostArgumentResolver;
     private final LoginAdminUserArgumentResolver loginAdminUserArgumentResolver;
     private final ObjectMapper objectMapper;
@@ -57,8 +59,12 @@ public class WebConfig implements WebMvcConfigurer {
             .order(1)
             .excludePathPatterns("/swagger-ui/**", "/v3/api-docs/**");
 
-        registry.addInterceptor(adminAuthInterceptor)
+        registry.addInterceptor(loginPageRedirectInterceptor)
             .order(2)
+            .addPathPatterns("/view/admin/login");
+
+        registry.addInterceptor(adminAuthInterceptor)
+            .order(3)
             .addPathPatterns("/view/admin/**", "/admin/**")
             .excludePathPatterns(
                 "/view/admin/login",

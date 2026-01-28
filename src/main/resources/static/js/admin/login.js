@@ -4,7 +4,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', function () {
-    // 이미 로그인된 사용자의 처리는 서버 인터셉터에서 담당 (선택적 개선사항)
+    // 이미 로그인된 사용자는 서버(LoginPageRedirectInterceptor)에서 /view/admin/spaces로 리다이렉트
 
     // DOM 요소 참조
     const loginForm = document.getElementById('loginForm');
