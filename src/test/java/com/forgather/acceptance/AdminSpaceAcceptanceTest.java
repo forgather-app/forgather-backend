@@ -82,7 +82,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
     void setUp() {
         host = hostRepository.save(HostFixture.createHost());
 
-        adminUser = adminUserRepository.save(AdminUserFixture.createAdminUser("어드민", "패스워드"));
+        adminUser = adminUserRepository.save(AdminUserFixture.createAdminUser("어드민"));
         AdminSession session = sessionManager.createSession(adminUser.getId(), adminUser.getUsername());
         sessionId = session.getSessionId().getValue();
 

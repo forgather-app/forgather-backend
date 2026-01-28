@@ -1,5 +1,6 @@
 package com.forgather.acceptance;
 
+import static com.forgather.fixture.AdminUserFixture.RAW_PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -11,8 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.forgather.back_office.dto.AdminLoginRequest;
-import com.forgather.back_office.model.AdminUser;
 import com.forgather.back_office.repository.AdminUserRepository;
+import com.forgather.fixture.AdminUserFixture;
 
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import io.restassured.module.mockmvc.response.MockMvcResponse;
@@ -37,8 +38,8 @@ class AdminLoginAcceptanceTest extends AcceptanceTest {
     @Test
     void loginBackOffice() {
         // given
-        adminUserRepository.save(new AdminUser("admin", "admin"));
-        AdminLoginRequest request = new AdminLoginRequest("admin", "admin");
+        adminUserRepository.save(AdminUserFixture.createAdminUser("admin"));
+        AdminLoginRequest request = new AdminLoginRequest("admin", RAW_PASSWORD);
 
         // when
         MockMvcResponse response = RestAssuredMockMvc.given()

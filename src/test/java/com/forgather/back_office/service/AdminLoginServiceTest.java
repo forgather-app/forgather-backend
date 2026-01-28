@@ -1,5 +1,6 @@
 package com.forgather.back_office.service;
 
+import static com.forgather.fixture.AdminUserFixture.RAW_PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -32,8 +33,8 @@ class AdminLoginServiceTest extends TestOnContainer {
     @Test
     void adminLoginSuccess() {
         // given
-        adminUserRepository.save(AdminUserFixture.createAdminUser("어드민", "패스워드"));
-        AdminLoginRequest request = new AdminLoginRequest("어드민", "패스워드");
+        adminUserRepository.save(AdminUserFixture.createAdminUser("어드민"));
+        AdminLoginRequest request = new AdminLoginRequest("어드민", RAW_PASSWORD);
 
         // when
         AdminLoginResponse result = adminLoginService.login(request);
@@ -57,7 +58,7 @@ class AdminLoginServiceTest extends TestOnContainer {
     @Test
     void adminLoginFailWithWrongPW() {
         // given
-        adminUserRepository.save(AdminUserFixture.createAdminUser("어드민", "패스워드"));
+        adminUserRepository.save(AdminUserFixture.createAdminUser("어드민"));
         AdminLoginRequest request = new AdminLoginRequest("어드민", "틀린패스워드");
 
         // when & then

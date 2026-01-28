@@ -1,6 +1,7 @@
 package com.forgather.back_office.service;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,13 +21,14 @@ public class AdminLoginService {
 
     private final AdminUserRepository adminUserRepository;
     private final SessionManager sessionManager;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public AdminLoginResponse login(AdminLoginRequest request) {
         AdminUser adminUser = adminUserRepository.findByUsername(request.username())
             .orElseThrow(() -> new BaseException("아이디나 패스워드가 일치하지 않습니다.", HttpStatus.BAD_REQUEST));
 
-        if (!adminUser.checkPassword(request.password())) {
+        if (!adminUser.checkPassword(request.password(), passwordEncoder)) {
             throw new BaseException("아이디나 패스워드가 일치하지 않습니다.", HttpStatus.BAD_REQUEST);
         }
 
