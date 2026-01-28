@@ -1,13 +1,13 @@
 package com.forgather.back_office.interceptor;
 
+import static com.forgather.back_office.auth.session.SessionConstants.SESSION_COOKIE_NAME;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
-
-import static com.forgather.back_office.auth.session.SessionConstants.SESSION_COOKIE_NAME;
 
 import com.forgather.back_office.auth.session.SessionManager;
 import com.forgather.back_office.model.AdminSession;
@@ -30,7 +30,11 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
     private final SessionManager sessionManager;
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+    public boolean preHandle(
+        HttpServletRequest request,
+        HttpServletResponse response,
+        Object handler
+    ) {
         String sessionIdValue = extractSessionIdFromCookie(request);
 
         if (sessionIdValue == null) {
