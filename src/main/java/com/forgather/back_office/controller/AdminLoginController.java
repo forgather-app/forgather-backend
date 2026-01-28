@@ -1,5 +1,8 @@
 package com.forgather.back_office.controller;
 
+import static com.forgather.back_office.auth.session.SessionConstants.SESSION_COOKIE_NAME;
+import static com.forgather.back_office.auth.session.SessionConstants.SESSION_DURATION_SECONDS;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +24,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AdminLoginController {
 
-    private static final String SESSION_COOKIE_NAME = "ADMIN_SESSION_ID";
-
     private final AdminLoginService adminLoginService;
     private final SessionManager sessionManager;
 
@@ -30,16 +31,8 @@ public class AdminLoginController {
     public ResponseEntity<Void> login(@RequestBody AdminLoginRequest request) {
         var response = adminLoginService.login(request);
 
-        ResponseCookie cookie = ResponseCookie.from(SESSION_COOKIE_NAME, response.sessionId())
-            .httpOnly(true)
-            .secure(true)
-            .path("/")
-            .maxAge(30 * 60)
-            .sameSite("Strict")
-            .build();
-
         return ResponseEntity.ok()
-            .header(HttpHeaders.SET_COOKIE, cookie.toString())
+            .header(HttpHeaders.SET_COOKIE, createSessionCookie(response.sessionId(), SESSION_DURATION_SECONDS))
             .build();
     }
 
@@ -51,16 +44,19 @@ public class AdminLoginController {
             sessionManager.invalidateSession(SessionId.from(sessionId));
         }
 
-        ResponseCookie cookie = ResponseCookie.from(SESSION_COOKIE_NAME, "")
+        return ResponseEntity.ok()
+            .header(HttpHeaders.SET_COOKIE, createSessionCookie("", 0))
+            .build();
+    }
+
+    private String createSessionCookie(String value, int maxAge) {
+        return ResponseCookie.from(SESSION_COOKIE_NAME, value)
             .httpOnly(true)
             .secure(true)
             .path("/")
-            .maxAge(0)
+            .maxAge(maxAge)
             .sameSite("Strict")
-            .build();
-
-        return ResponseEntity.ok()
-            .header(HttpHeaders.SET_COOKIE, cookie.toString())
-            .build();
+            .build()
+            .toString();
     }
 }
