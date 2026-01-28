@@ -7,6 +7,8 @@ import java.util.Arrays;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import static com.forgather.back_office.auth.session.SessionConstants.SESSION_COOKIE_NAME;
+
 import com.forgather.back_office.auth.session.SessionManager;
 import com.forgather.back_office.model.AdminSession;
 import com.forgather.back_office.model.SessionId;
@@ -23,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AdminAuthInterceptor implements HandlerInterceptor {
 
-    private static final String SESSION_COOKIE_NAME = "ADMIN_SESSION_ID";
     public static final String ADMIN_USER_ID_ATTRIBUTE = "adminUserId";
 
     private final SessionManager sessionManager;
