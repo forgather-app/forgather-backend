@@ -80,8 +80,8 @@ const API = {
                 throw new Error(message);
             }
 
-            // 204 No Content
-            if (response.status === 204) {
+            // 204 No Content 또는 빈 응답
+            if (response.status === 204 || response.headers.get('Content-Length') === '0') {
                 return null;
             }
 
