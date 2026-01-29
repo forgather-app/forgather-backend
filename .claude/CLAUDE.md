@@ -36,6 +36,7 @@ src/main/java/com/forgather/
 - 테스트: `./gradlew test`
 - 단일 테스트: `./gradlew test --tests "TestClassName"`
 - 로컬 실행: `./gradlew bootRun`
+- 코드 포맷팅: `./gradlew spotlessApply`
 - Swagger UI: http://localhost:8080/swagger-ui/index.html
 
 ## 로컬 개발 환경
@@ -60,9 +61,10 @@ src/main/java/com/forgather/
 - 테스트에서 실제 외부 API 호출 금지 (Fake 구현 사용)
 
 ## 코딩 규칙
-@../coderabbit_rules.md 참조
+coderabbit_rules.md 참조 (프로젝트 루트)
 
 ## 상세 문서
-- @docs/architecture.md - 아키텍처 상세
-- @docs/domains.md - 도메인 모델 설명
-- @docs/testing.md - 테스트 전략
+- docs/architecture.md - 아키텍처 상세
+- docs/domains.md - 도메인 모델 설명
+- docs/testing.md - 테스트 전략
+- admin-ui-guide.md - 어드민 UI 컨벤션

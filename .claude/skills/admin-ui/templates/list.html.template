@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ENTITY_PLURAL}} Management - Forgather Admin</title>
+
+    <!-- Common CSS -->
+    <link rel="stylesheet" th:href="@{/css/admin/common.css}">
+    <!-- {{ENTITY_PLURAL}} CSS -->
+    <link rel="stylesheet" th:href="@{/css/admin/{{ENTITY_LOWER}}.css}">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="header-left">
+                <h1 class="logo">
+                    <a th:href="@{/view/admin/spaces}">Forgather Admin</a>
+                </h1>
+            </div>
+            <nav class="header-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a th:href="@{/view/admin/spaces}" class="nav-link">Spaces</a>
+                    </li>
+                    <li class="nav-item">
+                        <a th:href="@{/view/admin/hosts}" class="nav-link">Hosts</a>
+                    </li>
+                    <!-- Add active class to current page -->
+                    <li class="nav-item">
+                        <a th:href="@{/view/admin/{{ENTITY_LOWER}}}" class="nav-link active">{{ENTITY_PLURAL}}</a>
+                    </li>
+                    <li class="nav-item">
+                        <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h2>{{ENTITY_KOREAN}} 관리 페이지</h2>
+                <p>전체 {{ENTITY_KOREAN}} 조회 및 관리 페이지</p>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <!-- Filter Section (optional) -->
+                <div class="filter-section">
+                    <!-- Add filters here if needed -->
+                    <!--
+                    <div class="filter-group">
+                        <label class="filter-label">필터:</label>
+                        <label class="filter-radio-label">
+                            <input type="radio" name="filterName" value="all" checked>
+                            <span>전체</span>
+                        </label>
+                    </div>
+                    <button type="button" class="btn-filter" id="applyFilterBtn">검색</button>
+                    -->
+                </div>
+
+                <div class="page-size-selector">
+                    <label for="pageSize">Items per page:</label>
+                    <select id="pageSize" class="form-select">
+                        <option value="15" selected>15</option>
+                        <option value="30">30</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Loading...</p>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+            <!-- Data Table -->
+            <div class="table-container">
+                <table class="data-table" id="{{ENTITY_LOWER}}Table">
+                    <thead>
+                        <tr>
+                            {{TABLE_HEADERS}}
+                        </tr>
+                    </thead>
+                    <tbody id="{{ENTITY_LOWER}}TableBody">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination" style="display: none;"></div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <p>&copy; 2025 Forgather. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Detail Modal (optional) -->
+    {{DETAIL_MODAL}}
+
+    <!-- Scripts -->
+    <script th:src="@{/js/admin/auth.js}"></script>
+    <script th:src="@{/js/admin/api.js}"></script>
+    <script th:src="@{/js/admin/pagination.js}"></script>
+    <script th:src="@{/js/admin/{{ENTITY_LOWER}}.js}"></script>
+</body>
+</html>

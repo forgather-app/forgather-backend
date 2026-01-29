@@ -151,13 +151,15 @@ project/
 ```markdown
 ## 상세 문서
 필요시 아래 문서를 참조하세요:
-- @agent_docs/building.md - 빌드 및 배포 가이드
-- @agent_docs/testing.md - 테스트 전략 및 실행 방법
-- @agent_docs/code_conventions.md - 코딩 컨벤션
-- @agent_docs/database_schema.md - DB 스키마 설명
+- agent_docs/building.md - 빌드 및 배포 가이드
+- agent_docs/testing.md - 테스트 전략 및 실행 방법
+- agent_docs/code_conventions.md - 코딩 컨벤션
+- agent_docs/database_schema.md - DB 스키마 설명
 
 작업 전 관련 문서를 먼저 읽고 진행하세요.
 ```
+
+**참고**: 파일 참조는 자동 로드가 아닙니다. Claude가 필요할 때 해당 경로의 파일을 직접 읽도록 안내하는 포인터 역할만 합니다.
 
 **포인터 vs 복사**:
 ```
@@ -473,5 +475,75 @@ src/main/java/com/forgather/
 
 ---
 
+## 8️⃣ Skills (슬래시 명령어 확장)
+
+### Commands vs Skills
+
+| 항목 | Commands (레거시) | Skills (권장) |
+|-----|------------------|---------------|
+| 위치 | `.claude/commands/name.md` | `.claude/skills/name/SKILL.md` |
+| 추가 파일 | 불가 | 가능 (templates, scripts, examples) |
+| 호출 제어 | 불가 | `disable-model-invocation`, `user-invocable` |
+| 서브에이전트 | 불가 | `context: fork` |
+| 동작 | 동일 (둘 다 `/name` 으로 호출) | 동일 |
+
+**같은 이름이면 skill이 command보다 우선합니다.**
+
+### Skills 구조
+
+```
+.claude/skills/my-skill/
+├── SKILL.md           # 메인 지침 (필수)
+├── templates/         # Claude가 채울 템플릿
+├── examples/          # 예시 출력물
+└── scripts/           # Claude가 실행할 스크립트
+```
+
+### SKILL.md Frontmatter
+
+```yaml
+---
+name: my-skill                    # 스킬명 (생략 시 디렉토리명)
+description: "스킬 설명"           # Claude가 자동 호출 판단에 사용 (권장)
+argument-hint: "[filename]"       # 자동완성 시 힌트
+allowed-tools: Read, Grep, Glob   # 스킬 활성화 시 허용 도구
+disable-model-invocation: true    # true면 사용자만 호출 가능
+user-invocable: false             # false면 Claude만 호출 가능
+context: fork                     # 서브에이전트에서 실행
+agent: Explore                    # context: fork일 때 에이전트 타입
+---
+
+스킬 지침 내용...
+```
+
+### 변수 치환
+
+| 변수 | 설명 |
+|-----|------|
+| `$ARGUMENTS` | 호출 시 전달된 모든 인자 |
+| `$ARGUMENTS[N]` 또는 `$N` | N번째 인자 (0-based) |
+| `${CLAUDE_SESSION_ID}` | 현재 세션 ID |
+
+### 동적 컨텍스트
+
+`` !`command` `` 문법으로 쉘 명령어 실행 결과를 주입:
+
+```yaml
+## PR 컨텍스트
+- PR diff: !`gh pr diff`
+- 변경 파일: !`gh pr diff --name-only`
+```
+
+### 호출 제어
+
+| 설정 | 사용자 호출 | Claude 호출 |
+|-----|-----------|------------|
+| (기본값) | O | O |
+| `disable-model-invocation: true` | O | X |
+| `user-invocable: false` | X | O |
+
+---
+
 *작성일: 2026-01-28*
+*업데이트: 2026-01-29 (Skills 섹션 추가)*
 *참고: 이 문서는 Claude Code에게 CLAUDE.md 생성을 요청할 때 참고 자료로 제공하기 위해 작성됨*
