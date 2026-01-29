@@ -34,6 +34,21 @@ Claude Code의 기능을 확장하는 커스텀 명령어입니다. `/skill-name
 /analyze-admin js           # JavaScript 패턴만
 ```
 
+### `/test-writer`
+테스트 코드 생성 (JUnit5 + Spring Boot)
+
+```
+/test-writer unit Space           # 단위 테스트 (엔티티)
+/test-writer service SpaceService # 서비스 통합 테스트
+/test-writer acceptance Space     # 인수 테스트 (API)
+```
+
+| 타입 | 대상 | 상속 클래스 |
+|-----|------|------------|
+| `unit` | 엔티티, 값 객체 | 없음 (순수 JUnit5) |
+| `service` | Service 클래스 | `TestOnContainer` |
+| `acceptance` | Controller (API) | `AcceptanceTest` |
+
 ## 참고
 
 - [Skills 공식 문서](https://code.claude.com/docs/en/skills)

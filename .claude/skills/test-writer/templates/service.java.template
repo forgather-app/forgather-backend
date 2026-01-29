@@ -1,0 +1,38 @@
+package com.forgather.domain.${package}.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertAll;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.forgather.container.TestOnContainer;
+
+@ActiveProfiles("test")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Transactional
+class ${ServiceName}Test extends TestOnContainer {
+
+    private final ${ServiceName} ${serviceName};
+    // private final ${RepositoryName} ${repositoryName};
+
+    @Autowired
+    public ${ServiceName}Test(${ServiceName} ${serviceName}) {
+        this.${serviceName} = ${serviceName};
+    }
+
+    @DisplayName("${테스트_설명}")
+    @Test
+    void ${메서드명}() {
+        // given
+
+        // when
+
+        // then
+    }
+}

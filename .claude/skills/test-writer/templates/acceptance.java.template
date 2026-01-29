@@ -1,0 +1,92 @@
+package com.forgather.acceptance;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
+
+import java.io.IOException;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.http.HttpStatus;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.upload.domain.ContentsStorage;
+import com.forgather.fixture.HostFixture;
+import com.forgather.global.auth.model.Host;
+import com.forgather.global.auth.util.JwtTokenProvider;
+
+import io.restassured.module.mockmvc.RestAssuredMockMvc;
+
+@DisplayName("인수 테스트: ${Domain}")
+@AutoConfigureMockMvc
+class ${Domain}AcceptanceTest extends AcceptanceTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private HostRepository hostRepository;
+
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private ContentsStorage contentsStorage;
+
+    private Host host;
+    private String token;
+
+    @BeforeEach
+    void setUp() throws IOException {
+        RestAssuredMockMvc.mockMvc(mockMvc);
+
+        host = HostFixture.createHost();
+        hostRepository.save(host);
+        token = jwtTokenProvider.generateAccessToken(host.getId());
+    }
+
+    @DisplayName("${테스트_설명}")
+    @Test
+    void ${메서드명}() {
+        // given
+
+        // when
+        ${ResponseType} result = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .when()
+            .get("/${endpoint}")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(${ResponseType}.class);
+
+        // then
+        assertThat(result).isNotNull();
+    }
+
+    @DisplayName("로그인 없이 ${기능명}할 수 없다.")
+    @Test
+    void ${메서드명}WithoutLogin() {
+        // given
+
+        // when
+        var response = RestAssuredMockMvc.given()
+            .when()
+            .get("/${endpoint}")
+            .then()
+            .extract();
+
+        // then
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+    }
+}
