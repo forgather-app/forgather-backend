@@ -30,7 +30,7 @@ public class SessionManager {
     }
 
     public AdminSession getValidSession(SessionId sessionId, LocalDateTime standardDateTime) {
-        AdminSession session = findSessionOrThrowUnauthorized(sessionId);
+        AdminSession session = getSessionOrThrowUnauthorized(sessionId);
         if (session.isExpired(standardDateTime)) {
             sessionStore.delete(sessionId);
             throw new UnauthorizedException("세션이 만료되었습니다.");
@@ -40,7 +40,7 @@ public class SessionManager {
         return refreshedSession;
     }
 
-    private AdminSession findSessionOrThrowUnauthorized(SessionId sessionId) {
+    private AdminSession getSessionOrThrowUnauthorized(SessionId sessionId) {
         try {
             return sessionStore.getBySessionId(sessionId);
         } catch (NotFoundException e) {
