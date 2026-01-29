@@ -1,11 +1,10 @@
 package com.forgather.back_office.dto;
 
 public record AdminLoginResponse(
-    String accessToken,
-    String refreshToken
+    String sessionId
 ) {
 
-    public static AdminLoginResponse of(String accessToken, String refreshToken) {
-        return new AdminLoginResponse(accessToken, refreshToken);
+    public static AdminLoginResponse of(String sessionId) {
+        return new AdminLoginResponse(sessionId);
     }
 }

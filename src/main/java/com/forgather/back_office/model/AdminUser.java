@@ -1,5 +1,7 @@
 package com.forgather.back_office.model;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import com.forgather.domain.model.BaseTimeEntity;
 import com.forgather.global.exception.BaseNullPointerException;
 
@@ -42,7 +44,7 @@ public class AdminUser extends BaseTimeEntity {
         }
     }
 
-    public boolean checkPassword(String password) {
-        return this.password.equals(password);
+    public boolean checkPassword(String rawPassword, PasswordEncoder passwordEncoder) {
+        return passwordEncoder.matches(rawPassword, this.password);
     }
 }
