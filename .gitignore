@@ -37,3 +37,4 @@ out/
 
 ### Claude Code ###
 .claude/settings.local.json
+.claude/.hook-state/
