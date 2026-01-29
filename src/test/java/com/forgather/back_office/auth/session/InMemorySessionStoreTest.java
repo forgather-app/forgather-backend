@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -75,5 +77,19 @@ class InMemorySessionStoreTest {
         // then
         assertThatThrownBy(() -> sessionStore.getBySessionId(sessionId))
             .isInstanceOf(NotFoundException.class);
+    }
+
+    @DisplayName("기준 시간을 두고 만료된 세션을 삭제한다.")
+    @Test
+    void deleteExpiredSessions() {
+        // given
+        AdminSession adminSession1 = AdminSession.create(1L, "username1", randomCodeGenerator);
+        AdminSession adminSession2 = AdminSession.create(2L, "username2", randomCodeGenerator);
+        sessionStore.save(adminSession1);
+        sessionStore.save(adminSession2);
+        LocalDateTime expiredDateTime = adminSession2.getCreatedAt().plusMinutes(31);
+
+        // when & then
+        assertThat(sessionStore.deleteExpiredSessions(expiredDateTime)).isEqualTo(2);
     }
 }

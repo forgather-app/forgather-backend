@@ -1,7 +1,6 @@
 package com.forgather.back_office.auth.session;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -54,16 +53,7 @@ public class SessionManager {
 
     @Scheduled(cron = "0 0 3 * * *")
     public void deleteExpiredSessions() {
-        List<AdminSession> sessions = sessionStore.getAllSessions();
-        LocalDateTime now = LocalDateTime.now();
-
-        int deletedCount = 0;
-        for (AdminSession session : sessions) {
-            if (session.isExpired(now)) {
-                sessionStore.delete(session.getSessionId());
-                deletedCount++;
-            }
-        }
+        int deletedCount = sessionStore.deleteExpiredSessions(LocalDateTime.now());
         log.info("만료된 세션 정리 완료: {}개 삭제", deletedCount);
     }
 }

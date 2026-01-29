@@ -1,6 +1,6 @@
 package com.forgather.back_office.auth.session;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 import com.forgather.back_office.model.AdminSession;
 import com.forgather.back_office.model.SessionId;
@@ -11,7 +11,7 @@ public interface SessionStore {
 
     AdminSession getBySessionId(SessionId sessionId);
 
-    List<AdminSession> getAllSessions();
-
     void delete(SessionId sessionId);
+
+    int deleteExpiredSessions(LocalDateTime standardDateTime);
 }

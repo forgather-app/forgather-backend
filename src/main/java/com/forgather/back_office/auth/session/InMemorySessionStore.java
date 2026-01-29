@@ -1,5 +1,6 @@
 package com.forgather.back_office.auth.session;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,14 +31,19 @@ public class InMemorySessionStore implements SessionStore {
     }
 
     @Override
-    public List<AdminSession> getAllSessions() {
-        return sessions.values()
-            .stream()
-            .toList();
+    public void delete(SessionId sessionId) {
+        sessions.remove(sessionId);
     }
 
     @Override
-    public void delete(SessionId sessionId) {
-        sessions.remove(sessionId);
+    public int deleteExpiredSessions(LocalDateTime standardDateTime) {
+        List<SessionId> expiredSessionIds = sessions.entrySet()
+            .stream()
+            .filter(entry -> entry.getValue().isExpired(standardDateTime))
+            .map(Map.Entry::getKey)
+            .toList();
+
+        expiredSessionIds.forEach(sessions::remove);
+        return expiredSessionIds.size();
     }
 }
