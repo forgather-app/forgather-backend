@@ -1,7 +1,7 @@
 package com.forgather.acceptance;
 
+import static com.forgather.fixture.AdminUserFixture.RAW_PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,15 +12,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.forgather.back_office.dto.AdminLoginRequest;
-import com.forgather.back_office.dto.AdminLoginResponse;
-import com.forgather.back_office.model.AdminUser;
 import com.forgather.back_office.repository.AdminUserRepository;
-import com.forgather.global.auth.util.JwtTokenProvider;
+import com.forgather.fixture.AdminUserFixture;
 
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
+import io.restassured.module.mockmvc.response.MockMvcResponse;
 
 @AutoConfigureMockMvc
 class AdminLoginAcceptanceTest extends AcceptanceTest {
+
+    private static final String SESSION_COOKIE_NAME = "ADMIN_SESSION_ID";
 
     @Autowired
     private MockMvc mockMvc;
@@ -28,38 +29,31 @@ class AdminLoginAcceptanceTest extends AcceptanceTest {
     @Autowired
     private AdminUserRepository adminUserRepository;
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
     @BeforeEach
     void setUp() {
         RestAssuredMockMvc.mockMvc(mockMvc);
     }
 
-    @DisplayName("백오피스 어드민 로그인을 한다.")
+    @DisplayName("백오피스 어드민 로그인을 하면 세션 ID가 반환되고 쿠키가 설정된다.")
     @Test
     void loginBackOffice() {
         // given
-        adminUserRepository.save(new AdminUser("admin", "admin"));
-        AdminLoginRequest request = new AdminLoginRequest("admin", "admin");
+        adminUserRepository.save(AdminUserFixture.createAdminUser("admin"));
+        AdminLoginRequest request = new AdminLoginRequest("admin", RAW_PASSWORD);
 
         // when
-        AdminLoginResponse result = RestAssuredMockMvc.given()
+        MockMvcResponse response = RestAssuredMockMvc.given()
             .body(request)
             .when()
             .post("/admin/login")
             .then()
             .statusCode(HttpStatus.OK.value())
             .extract()
-            .body()
-            .as(AdminLoginResponse.class);
+            .response();
+
+        String setCookieHeader = response.getHeader("Set-Cookie");
 
         // then
-        assertAll(
-            () -> assertThat(result.accessToken()).isNotBlank(),
-            () -> assertThat(result.refreshToken()).isNotBlank(),
-            () -> assertThat(jwtTokenProvider.validateToken(result.accessToken())).isTrue(),
-            () -> assertThat(jwtTokenProvider.validateToken(result.refreshToken())).isTrue()
-        );
+        assertThat(setCookieHeader).contains(SESSION_COOKIE_NAME);
     }
 }

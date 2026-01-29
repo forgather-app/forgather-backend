@@ -27,10 +27,7 @@ const filterState = {
 };
 
 document.addEventListener('DOMContentLoaded', function () {
-    // 인증 확인
-    if (!Auth.requireAuth()) {
-        return;
-    }
+    // 인증 확인은 서버 인터셉터가 처리 (미인증 시 로그인 페이지로 리다이렉트)
 
     // DOM 요소 참조
     const spacesTableBody = document.getElementById('spacesTableBody');
