@@ -1,3 +1,12 @@
+---
+name: admin-ui
+description: 어드민 UI 코드 생성. Thymeleaf 템플릿, CSS, JS 작성.
+allowed-tools: Read, Grep, Glob, Write, Edit
+user-invocable: true
+context: fork
+agent: general-purpose
+---
+
 # Admin UI 생성 스킬
 
 이 스킬은 어드민 UI 코드 생성 시 참조하는 전문 지식입니다.
@@ -17,6 +26,22 @@
 | crud | 위 세 가지 모두 생성 |
 
 ## 생성 프로세스
+
+### 0단계: 기존 어드민 패턴 분석
+
+**반드시 먼저 수행** - 기존 코드베이스의 패턴 파악:
+
+1. `templates/admin/` - Thymeleaf 템플릿 구조 분석
+2. `static/css/admin/common.css` - CSS 변수 목록 파악
+3. `static/js/admin/` - 전역 JS 객체 메서드 확인 (API, Auth, PaginationUtil)
+4. 기존 페이지 하나 선택해서 전체 흐름 파악
+
+**분석 결과 정리 (내부용):**
+- CSS 변수: `--primary-color`, `--shadow-sm` 등
+- JS 메서드: `API.get()`, `API.post()`, `Auth.logout()`, `PaginationUtil.render()`
+- Fragment 패턴: `layout/admin-layout.html`
+
+### 1~5단계: 실제 코드 생성
 
 1. `.claude/guides/admin-ui-guide.md` 컨벤션 참조
 2. `templates/admin/` 기존 템플릿 구조 파악
