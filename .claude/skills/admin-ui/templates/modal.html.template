@@ -1,0 +1,36 @@
+<!--
+    {{ENTITY_KOREAN}} 상세 정보 모달
+    - 기본적으로 숨김 상태 (display: none)
+    - JavaScript에서 클릭 시 표시
+    - ESC 키 또는 오버레이 클릭 시 닫힘
+-->
+<div id="{{ENTITY_LOWER}}DetailModal" class="modal-overlay" style="display: none;" role="dialog" aria-labelledby="modalTitle" aria-modal="true">
+    <div class="modal-container">
+        <!-- 모달 헤더 -->
+        <div class="modal-header">
+            <h3 id="modalTitle" class="modal-title">{{ENTITY_KOREAN}} Details</h3>
+            <button id="closeModalBtn" class="modal-close-btn" aria-label="Close modal">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+
+        <!-- 모달 내용 -->
+        <div class="modal-body">
+            <div id="modalLoading" class="modal-loading" style="display: none;">
+                <div class="spinner-small"></div>
+                <p>Loading details...</p>
+            </div>
+
+            <div id="modalError" class="modal-error" style="display: none;"></div>
+
+            <div id="modalContent" class="modal-content" style="display: none;">
+                {{MODAL_FIELDS}}
+            </div>
+        </div>
+
+        <!-- 모달 푸터 -->
+        <div class="modal-footer">
+            {{MODAL_ACTIONS}}
+        </div>
+    </div>
+</div>

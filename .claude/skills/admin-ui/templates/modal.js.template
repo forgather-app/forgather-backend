@@ -1,0 +1,101 @@
+    // ==========================================================================
+    // Modal Logic - {{ENTITY_KOREAN}} Detail
+    // ==========================================================================
+
+    const modal = document.getElementById('{{ENTITY_LOWER}}DetailModal');
+    const modalLoading = document.getElementById('modalLoading');
+    const modalError = document.getElementById('modalError');
+    const modalContent = document.getElementById('modalContent');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+
+    {{MODAL_ELEMENT_REFS}}
+
+    let currentOpenItemId = null;
+
+    function openModal() {
+        modal.style.display = 'flex';
+        requestAnimationFrame(() => {
+            modal.classList.add('show');
+        });
+        document.body.classList.add('modal-open');
+    }
+
+    function closeModal() {
+        modal.classList.remove('show');
+        document.body.classList.remove('modal-open');
+        currentOpenItemId = null;
+
+        setTimeout(() => {
+            modal.style.display = 'none';
+            resetModalContent();
+        }, 300);
+    }
+
+    function resetModalContent() {
+        modalLoading.style.display = 'none';
+        modalError.style.display = 'none';
+        modalContent.style.display = 'none';
+    }
+
+    function showModalLoading() {
+        resetModalContent();
+        modalLoading.style.display = 'flex';
+    }
+
+    function showModalError(message) {
+        resetModalContent();
+        modalError.textContent = message;
+        modalError.style.display = 'block';
+    }
+
+    function showModalContent(data) {
+        resetModalContent();
+
+        {{MODAL_DATA_BINDING}}
+
+        modalContent.style.display = 'flex';
+    }
+
+    async function loadDetail(itemId) {
+        currentOpenItemId = itemId;
+        openModal();
+        showModalLoading();
+
+        try {
+            const data = await API.get{{ENTITY}}Detail(itemId);
+            showModalContent(data);
+        } catch (error) {
+            console.error('Failed to load detail:', error);
+            showModalError(error.message || 'Failed to load details. Please try again.');
+        }
+    }
+
+    // 테이블 행 클릭 이벤트 핸들러 (이벤트 위임)
+    tableBody.addEventListener('click', function (event) {
+        const target = event.target;
+
+        if (target.tagName !== 'TD' || !target.hasAttribute('data-item-id')) {
+            return;
+        }
+
+        const itemId = target.getAttribute('data-item-id');
+        if (itemId) {
+            loadDetail(itemId);
+        }
+    });
+
+    closeModalBtn.addEventListener('click', function () {
+        closeModal();
+    });
+
+    modal.addEventListener('click', function (event) {
+        if (event.target === modal) {
+            closeModal();
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && modal.classList.contains('show')) {
+            closeModal();
+        }
+    });
