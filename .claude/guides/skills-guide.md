@@ -25,15 +25,6 @@ Claude Code의 기능을 확장하는 커스텀 명령어입니다. `/skill-name
 /admin-ui crud Product       # 위 세 가지 모두
 ```
 
-### `/analyze-admin`
-어드민 UI 패턴 분석
-
-```
-/analyze-admin              # 전체 분석
-/analyze-admin css          # CSS 패턴만
-/analyze-admin js           # JavaScript 패턴만
-```
-
 ### `/test-writer`
 테스트 코드 생성 (JUnit5 + Spring Boot)
 
@@ -51,5 +42,5 @@ Claude Code의 기능을 확장하는 커스텀 명령어입니다. `/skill-name
 
 ## 참고
 
-- [Skills 공식 문서](https://code.claude.com/docs/en/skills)
-- Skill 작성법: `.claude/docs/CLAUDE.md_작성_가이드.md`
+- [Skills 공식 문서](https://docs.anthropic.com/en/docs/claude-code/skills)
+- Agents 활용법: `.claude/guides/agents-guide.md`
