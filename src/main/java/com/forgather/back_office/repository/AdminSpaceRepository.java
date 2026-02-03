@@ -46,11 +46,10 @@ public interface AdminSpaceRepository {
     @Query("""
         SELECT s
         FROM Space s
-        WHERE s.name LIKE CONCAT('%', :name, '%')
-                AND s.deletedAt IS NULL
-        ORDER BY s.createdAt DESC
+        WHERE s.deletedAt IS NULL
+          AND s.name LIKE CONCAT('%', :name, '%')
         """)
-    Page<Space> findByNameContainingAndDeletedAtIsNullOrderByCreatedAtDesc(
+    Page<Space> findByNameContainingAndDeletedAtIsNull(
         @Param("name") String name,
         Pageable pageable
     );
