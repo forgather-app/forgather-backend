@@ -313,6 +313,271 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
         assertThat(result.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
     }
 
+    @DisplayName("스페이스 이름으로 검색한다. (완전 일치)")
+    @Test
+    void searchSpacesByNameExactMatch() {
+        // given
+        createSpaceWithName("나의 졸업전시");
+        createSpaceWithName("친구의 졸업전시");
+        createSpaceWithName("우리의 작품전시");
+
+        // when
+        AdminSpaceResponse result = givenWithSession()
+            .queryParam("name", "나의 졸업전시")
+            .when()
+            .get("/admin/spaces/search/by-name")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(AdminSpaceResponse.class);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(1),
+            () -> assertThat(result.spaces().getFirst().name()).isEqualTo("나의 졸업전시"),
+            () -> assertThat(result.totalCount()).isEqualTo(1)
+        );
+    }
+
+    @DisplayName("스페이스 이름으로 검색한다. (앞부분 일치)")
+    @Test
+    void searchSpacesByNamePrefixMatch() {
+        // given
+        createSpaceWithName("졸업전시 2024");
+        createSpaceWithName("졸업전시 2025");
+        createSpaceWithName("작품전시 2024");
+
+        // when
+        AdminSpaceResponse result = givenWithSession()
+            .queryParam("name", "졸업전시")
+            .when()
+            .get("/admin/spaces/search/by-name")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(AdminSpaceResponse.class);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(2),
+            () -> assertThat(result.spaces()).allMatch(space -> space.name()
+                .contains("졸업전시")),
+            () -> assertThat(result.totalCount()).isEqualTo(2)
+        );
+    }
+
+    @DisplayName("스페이스 이름으로 검색한다. (뒷부분 일치)")
+    @Test
+    void searchSpacesByNameSuffixMatch() {
+        // given
+        createSpaceWithName("나의 졸업전시");
+        createSpaceWithName("친구의 졸업전시");
+        createSpaceWithName("나의 작품전시");
+
+        // when
+        AdminSpaceResponse result = givenWithSession()
+            .queryParam("name", "졸업전시")
+            .when()
+            .get("/admin/spaces/search/by-name")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(AdminSpaceResponse.class);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(2),
+            () -> assertThat(result.spaces()).allMatch(space -> space.name()
+                .contains("졸업전시")),
+            () -> assertThat(result.totalCount()).isEqualTo(2)
+        );
+    }
+
+    @DisplayName("스페이스 이름으로 검색한다. (중간 부분 일치)")
+    @Test
+    void searchSpacesByNameMiddleMatch() {
+        // given
+        createSpaceWithName("2024 졸업전시 작품");
+        createSpaceWithName("2025 졸업전시 모음");
+        createSpaceWithName("2024 작품전시 모음");
+
+        // when
+        AdminSpaceResponse result = givenWithSession()
+            .queryParam("name", "졸업전시")
+            .when()
+            .get("/admin/spaces/search/by-name")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(AdminSpaceResponse.class);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(2),
+            () -> assertThat(result.spaces()).allMatch(space -> space.name().contains("졸업전시")),
+            () -> assertThat(result.totalCount()).isEqualTo(2)
+        );
+    }
+
+    @DisplayName("스페이스 이름 검색 결과가 없으면 빈 목록을 반환한다.")
+    @Test
+    void searchSpacesByNameNoResult() {
+        // given
+        createSpaceWithName("나의 졸업전시");
+        createSpaceWithName("친구의 졸업전시");
+
+        // when
+        AdminSpaceResponse result = givenWithSession()
+            .queryParam("name", "존재하지않는이름")
+            .when()
+            .get("/admin/spaces/search/by-name")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(AdminSpaceResponse.class);
+
+        // then
+        assertThat(result.spaces()).isEmpty();
+    }
+
+    @DisplayName("스페이스 이름 검색 시 검색어가 없으면 모든 스페이스를 반환한다.")
+    @Test
+    void searchSpacesByNameWithEmptyKeyword() {
+        // given
+        createSpaceWithName("나의 졸업전시");
+        createSpaceWithName("친구의 졸업전시");
+        createSpaceWithName("우리의 작품전시");
+
+        // when
+        AdminSpaceResponse result = givenWithSession()
+            .queryParam("name", "")
+            .when()
+            .get("/admin/spaces/search/by-name")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(AdminSpaceResponse.class);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(3),
+            () -> assertThat(result.totalCount()).isEqualTo(3)
+        );
+    }
+
+    @DisplayName("스페이스 이름 검색 시 검색어 파라미터가 없으면 모든 스페이스를 반환한다.")
+    @Test
+    void searchSpacesByNameWithoutParameter() {
+        // given
+        createSpaceWithName("나의 졸업전시");
+        createSpaceWithName("친구의 졸업전시");
+
+        // when
+        AdminSpaceResponse result = givenWithSession()
+            .when()
+            .get("/admin/spaces/search/by-name")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(AdminSpaceResponse.class);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(2),
+            () -> assertThat(result.totalCount()).isEqualTo(2)
+        );
+    }
+
+    @DisplayName("이모지가 포함된 스페이스 이름으로 검색한다.")
+    @Test
+    void searchSpacesByNameWithEmoji() {
+        // given
+        createSpaceWithName("나의 졸업전시 🎨");
+        createSpaceWithName("친구의 졸업전시 🖼️");
+        createSpaceWithName("우리의 작품전시");
+
+        // when
+        AdminSpaceResponse result = givenWithSession()
+            .queryParam("name", "🎨")
+            .when()
+            .get("/admin/spaces/search/by-name")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(AdminSpaceResponse.class);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(1),
+            () -> assertThat(result.spaces().getFirst().name()).contains("🎨"),
+            () -> assertThat(result.totalCount()).isEqualTo(1)
+        );
+    }
+
+    @DisplayName("특수문자가 포함된 스페이스 이름으로 검색한다.")
+    @Test
+    void searchSpacesByNameWithSpecialCharacters() {
+        // given
+        createSpaceWithName("나의 전시 [2024]");
+        createSpaceWithName("친구의 전시 (2024)");
+        createSpaceWithName("우리의 전시");
+
+        // when
+        AdminSpaceResponse result = givenWithSession()
+            .queryParam("name", "[2024]")
+            .when()
+            .get("/admin/spaces/search/by-name")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(AdminSpaceResponse.class);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(1),
+            () -> assertThat(result.spaces().getFirst().name()).contains("[2024]"),
+            () -> assertThat(result.totalCount()).isEqualTo(1)
+        );
+    }
+
+    @DisplayName("스페이스 이름 검색 결과는 페이지네이션이 적용된다.")
+    @Test
+    void searchSpacesByNameWithPagination() {
+        // given
+        for (int i = 0; i < 20; i++) {
+            createSpaceWithName("졸업전시 " + i);
+        }
+
+        // when
+        AdminSpaceResponse result = givenWithSession()
+            .queryParam("name", "졸업전시")
+            .when()
+            .get("/admin/spaces/search/by-name")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(AdminSpaceResponse.class);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(15),
+            () -> assertThat(result.currentPage()).isEqualTo(1),
+            () -> assertThat(result.pageSize()).isEqualTo(15),
+            () -> assertThat(result.totalCount()).isEqualTo(20),
+            () -> assertThat(result.totalPages()).isEqualTo(2)
+        );
+    }
+
     private void createSpaces(int count) {
         for (int i = 0; i < count; i++) {
             String spaceCode = randomCodeGenerator.generate(10);
@@ -328,5 +593,12 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
             spaceHostMapRepository.save(new SpaceHostMap(space, host));
             productRepository.save(ProductFixture.createProductWithSpace(space));
         }
+    }
+
+    private Space createSpaceWithName(String name) {
+        String spaceCode = randomCodeGenerator.generate(10);
+        Space space = spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName(spaceCode, name));
+        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        return space;
     }
 }
