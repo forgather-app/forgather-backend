@@ -44,6 +44,14 @@ public interface AdminSpaceRepository {
         Pageable pageable
     );
 
+    @Query("""
+        SELECT s
+        FROM Space s
+        WHERE s.name LIKE CONCAT('%', :name, '%')
+        ORDER BY s.createdAt DESC
+        """)
+    Page<Space> findByNameContainingOrderByCreatedAtDesc(String name, Pageable pageable);
+
     default Space getByCodeAndDeletedAtIsNullOrThrow(String spaceCode) {
         if (spaceCode == null) {
             throw new BaseNullPointerException("스페이스 코드는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);

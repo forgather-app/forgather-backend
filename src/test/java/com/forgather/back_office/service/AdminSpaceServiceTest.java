@@ -130,4 +130,57 @@ class AdminSpaceServiceTest extends TestOnContainer {
             () -> assertThat(result.spaces().get(0).code()).isEqualTo(space2.getCode())
         );
     }
+
+    @DisplayName("이름이 정확히 일치하면 이름 검색으로 조회된다.")
+    @Test
+    void searchSpacesByName() {
+        // given
+        String name = "name";
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", name));
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // when
+        AdminSpaceResponse result = adminSpaceService.searchSpacesByName(name, pageable);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(1),
+            () -> assertThat(result.spaces().get(0).name()).isEqualTo(name)
+        );
+    }
+
+    @DisplayName("이름이 포함되면 이름 검색으로 조회된다.")
+    @Test
+    void searchSpacesByNameContaining() {
+        // given
+        String name = "name";
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", "name1"));
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("2222222222", "1name"));
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // when
+        AdminSpaceResponse result = adminSpaceService.searchSpacesByName(name, pageable);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(2),
+            () -> assertThat(result.spaces()).extracting("name")
+                .containsExactlyInAnyOrder("name1", "1name")
+        );
+    }
+
+    @DisplayName("이름이 포함되어 있지 않다면 이름 검색으로 조회되지 않는다.")
+    @Test
+    void searchSpacesByNameNonContaining() {
+        // given
+        String name = "name";
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", "nam"));
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // when
+        AdminSpaceResponse result = adminSpaceService.searchSpacesByName(name, pageable);
+
+        // then
+        assertThat(result.spaces()).isEmpty();
+    }
 }

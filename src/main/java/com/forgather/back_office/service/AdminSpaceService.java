@@ -48,4 +48,9 @@ public class AdminSpaceService {
         );
         return AdminSpaceResponse.from(filteredSpaces);
     }
+
+    public AdminSpaceResponse searchSpacesByName(String name, Pageable pageable) {
+        Page<Space> spaces = adminSpaceRepository.findByNameContainingOrderByCreatedAtDesc(name, pageable);
+        return AdminSpaceResponse.from(spaces);
+    }
 }
