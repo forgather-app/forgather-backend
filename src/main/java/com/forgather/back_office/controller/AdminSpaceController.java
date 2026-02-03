@@ -61,7 +61,8 @@ public class AdminSpaceController {
     public ResponseEntity<AdminSpaceResponse> getSpacesByName(
         @PageableDefault(size = 15, sort = "createdAt", direction = Sort.Direction.DESC)
         Pageable pageable,
-        @RequestParam(required = false, defaultValue = "") String name
+        @RequestParam(required = false, defaultValue = "") String name,
+        @Admin AdminUser adminUser
     ) {
         var response = adminSpaceService.searchSpacesByName(name, pageable);
         return ResponseEntity.ok(response);
