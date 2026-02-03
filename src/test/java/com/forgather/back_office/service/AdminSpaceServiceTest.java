@@ -203,4 +203,58 @@ class AdminSpaceServiceTest extends TestOnContainer {
         // then
         assertThat(result.spaces()).isEmpty();
     }
+
+    @DisplayName("검색어에 % 와일드카드 문자가 포함되면 리터럴로 처리된다.")
+    @Test
+    void searchSpacesByNameWithPercentWildcard() {
+        // given
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", "졸업 전시%"));
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("2222222222", "졸업 전시"));
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // when
+        AdminSpaceResponse result = adminSpaceService.searchSpacesByName("%", pageable);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(1),
+            () -> assertThat(result.spaces().get(0).name()).isEqualTo("졸업 전시%")
+        );
+    }
+
+    @DisplayName("검색어에 _ 와일드카드 문자가 포함되면 리터럴로 처리된다.")
+    @Test
+    void searchSpacesByNameWithUnderscoreWildcard() {
+        // given
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", "졸업_전시"));
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("2222222222", "졸업전시"));
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // when
+        AdminSpaceResponse result = adminSpaceService.searchSpacesByName("_", pageable);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(1),
+            () -> assertThat(result.spaces().get(0).name()).isEqualTo("졸업_전시")
+        );
+    }
+
+    @DisplayName("검색어에 백슬래시가 포함되면 리터럴로 처리된다.")
+    @Test
+    void searchSpacesByNameWithBackslash() {
+        // given
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", "졸업\\전시"));
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("2222222222", "졸업 전시"));
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // when
+        AdminSpaceResponse result = adminSpaceService.searchSpacesByName("\\", pageable);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(1),
+            () -> assertThat(result.spaces().get(0).name()).isEqualTo("졸업\\전시")
+        );
+    }
 }

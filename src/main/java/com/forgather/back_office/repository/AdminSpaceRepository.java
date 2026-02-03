@@ -47,7 +47,7 @@ public interface AdminSpaceRepository {
         SELECT s
         FROM Space s
         WHERE s.deletedAt IS NULL
-          AND s.name LIKE CONCAT('%', :name, '%')
+          AND s.name LIKE CONCAT('%', :name, '%') ESCAPE '\\'
         """)
     Page<Space> findByNameContainingAndDeletedAtIsNull(
         @Param("name") String name,

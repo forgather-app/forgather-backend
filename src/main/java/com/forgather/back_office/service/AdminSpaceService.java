@@ -50,8 +50,15 @@ public class AdminSpaceService {
     }
 
     public AdminSpaceResponse searchSpacesByName(String name, Pageable pageable) {
-        String trimmedName = name.strip();
-        Page<Space> spaces = adminSpaceRepository.findByNameContainingAndDeletedAtIsNull(trimmedName, pageable);
+        String escapedName = escapeLikeWildcards(name.strip());
+        Page<Space> spaces = adminSpaceRepository.findByNameContainingAndDeletedAtIsNull(escapedName, pageable);
         return AdminSpaceResponse.from(spaces);
+    }
+
+    private String escapeLikeWildcards(String input) {
+        return input
+            .replace("\\", "\\\\")
+            .replace("%", "\\%")
+            .replace("_", "\\_");
     }
 }
