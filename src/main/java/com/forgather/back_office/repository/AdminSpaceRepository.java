@@ -6,7 +6,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
 import org.springframework.http.HttpStatus;
 
 import com.forgather.domain.space.model.Space;
@@ -27,7 +26,7 @@ public interface AdminSpaceRepository {
      * 작품 존재 여부로 필터링된 활성 스페이스 목록을 조회한다.
      *
      * @param hasProduct true면 작품이 있는 스페이스, false면 작품이 없는 스페이스
-     * @param pageable 페이징 정보
+     * @param pageable   페이징 정보
      * @return 필터링된 스페이스 페이지
      */
     @Query("""
@@ -48,9 +47,13 @@ public interface AdminSpaceRepository {
         SELECT s
         FROM Space s
         WHERE s.name LIKE CONCAT('%', :name, '%')
+                AND s.deletedAt IS NULL
         ORDER BY s.createdAt DESC
         """)
-    Page<Space> findByNameContainingOrderByCreatedAtDesc(String name, Pageable pageable);
+    Page<Space> findByNameContainingAndDeletedAtIsNullOrderByCreatedAtDesc(
+        @Param("name") String name,
+        Pageable pageable
+    );
 
     default Space getByCodeAndDeletedAtIsNullOrThrow(String spaceCode) {
         if (spaceCode == null) {

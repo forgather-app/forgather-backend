@@ -51,7 +51,9 @@ public class AdminSpaceService {
 
     public AdminSpaceResponse searchSpacesByName(String name, Pageable pageable) {
         String trimmedName = name.strip();
-        Page<Space> spaces = adminSpaceRepository.findByNameContainingOrderByCreatedAtDesc(trimmedName, pageable);
+        Page<Space> spaces = adminSpaceRepository.findByNameContainingAndDeletedAtIsNullOrderByCreatedAtDesc(
+            trimmedName, pageable
+        );
         return AdminSpaceResponse.from(spaces);
     }
 }
