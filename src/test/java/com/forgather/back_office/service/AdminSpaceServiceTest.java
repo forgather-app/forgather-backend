@@ -169,6 +169,26 @@ class AdminSpaceServiceTest extends TestOnContainer {
         );
     }
 
+    @DisplayName("이름에 공백 문자가 들어올 경우 전체 검색으로 조회된다.")
+    @Test
+    void searchSpacesByNameWhitespaces() {
+        // given
+        String name = "   ";
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", "name1"));
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("2222222222", "name2"));
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // when
+        AdminSpaceResponse result = adminSpaceService.searchSpacesByName(name, pageable);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(2),
+            () -> assertThat(result.spaces()).extracting("name")
+                .containsExactlyInAnyOrder("name1", "name2")
+        );
+    }
+
     @DisplayName("이름이 포함되어 있지 않다면 이름 검색으로 조회되지 않는다.")
     @Test
     void searchSpacesByNameNonContaining() {
