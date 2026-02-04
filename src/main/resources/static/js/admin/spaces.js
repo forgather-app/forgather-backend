@@ -121,15 +121,15 @@ document.addEventListener('DOMContentLoaded', function () {
      * 날짜/시간 포맷팅 함수
      *
      * @param {string} dateTimeString - ISO 8601 형식의 날짜/시간 문자열 (예: "2025-01-15T10:30:45")
-     * @returns {string} 포맷된 날짜/시간 문자열 (예: "2025-01-15 10:30:45")
+     * @returns {string} 포맷된 날짜/시간 문자열 (예: "2025.01.15 10:30")
      *
      * 동작:
-     * - LocalDateTime을 yyyy-MM-dd HH:mm:ss 형식으로 변환
+     * - LocalDateTime을 yyyy.MM.dd HH:mm 형식으로 변환
      * - 입력값이 없거나 유효하지 않으면 "-" 반환 (fallback)
      * - 서버 타임존 그대로 표시 (별도 변환 없음)
      *
      * 사용 예시:
-     * formatDateTime("2025-01-15T10:30:45") → "2025-01-15 10:30:45"
+     * formatDateTime("2025-01-15T10:30:45") → "2025.01.15 10:30"
      * formatDateTime(null) → "-"
      */
     function formatDateTime(dateTimeString) {
@@ -146,15 +146,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 return '-';
             }
 
-            // yyyy-MM-dd HH:mm:ss 형식으로 변환
+            // yyyy.MM.dd HH:mm 형식으로 변환
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
             const hours = String(date.getHours()).padStart(2, '0');
             const minutes = String(date.getMinutes()).padStart(2, '0');
-            const seconds = String(date.getSeconds()).padStart(2, '0');
 
-            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            return `${year}.${month}.${day} ${hours}:${minutes}`;
         } catch (error) {
             console.error('Date formatting error:', error);
             return '-';
@@ -184,11 +183,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!spaces || spaces.length === 0) {
             spacesTableBody.innerHTML = `
                 <tr>
-                    <td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
-                        <div class="empty-state">
-                            <div class="empty-state-icon">📭</div>
-                            <h3>No Spaces Found</h3>
-                            <p>There are no spaces to display.</p>
+                    <td colspan="6" class="text-center py-12">
+                        <div class="flex flex-col items-center justify-center text-text-secondary">
+                            <svg class="w-16 h-16 mb-4 text-text-muted opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                            </svg>
+                            <h3 class="text-lg font-semibold text-text-primary mb-2">No Spaces Found</h3>
+                            <p class="text-sm">There are no spaces to display.</p>
                         </div>
                     </td>
                 </tr>

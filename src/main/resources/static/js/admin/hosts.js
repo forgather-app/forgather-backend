@@ -159,18 +159,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // ======================================================================
 
     /**
-     * ISO 8601 날짜 문자열을 YYYY-MM-DD HH:mm 형식으로 변환
+     * ISO 8601 날짜 문자열을 YYYY.MM.DD HH:mm 형식으로 변환
      * @param {string} dateString - ISO 8601 형식의 날짜 문자열 (예: "2025-11-14T10:30:00")
-     * @returns {string} 포맷팅된 날짜 문자열 (예: "2025-11-14 10:30")
+     * @returns {string} 포맷팅된 날짜 문자열 (예: "2025.11.14 10:30")
      *
      * 동작 과정:
      * 1. Date 객체로 파싱
      * 2. 각 필드를 2자리로 패딩 (padStart 사용)
-     * 3. YYYY-MM-DD HH:mm 형식으로 조합
+     * 3. YYYY.MM.DD HH:mm 형식으로 조합
      *
      * 주의사항:
      * - 타임존 변환은 하지 않음 (서버와 클라이언트가 동일한 타임존 가정)
-     * - 잘못된 날짜 문자열이 들어오면 "Invalid Date" 반환
+     * - 잘못된 날짜 문자열이 들어오면 "-" 반환
      */
     function formatDateTime(dateString) {
         if (!dateString) {
@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const hours = String(date.getHours()).padStart(2, '0');
             const minutes = String(date.getMinutes()).padStart(2, '0');
 
-            return `${year}-${month}-${day} ${hours}:${minutes}`;
+            return `${year}.${month}.${day} ${hours}:${minutes}`;
         } catch (error) {
             console.error('Date formatting error:', error);
             return '-';
