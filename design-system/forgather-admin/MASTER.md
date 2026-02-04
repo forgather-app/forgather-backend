@@ -16,15 +16,29 @@
 
 ### Color Palette
 
-| Role | Hex | CSS Variable |
-|------|-----|--------------|
-| Primary | `#0891B2` | `--color-primary` |
-| Secondary | `#22D3EE` | `--color-secondary` |
-| CTA/Accent | `#22C55E` | `--color-cta` |
-| Background | `#ECFEFF` | `--color-background` |
-| Text | `#164E63` | `--color-text` |
+| Role | Hex | CSS Variable | Tailwind |
+|------|-----|--------------|----------|
+| Primary | `#171717` | `--color-primary` | neutral-900 |
+| Primary Hover | `#262626` | `--color-primary-hover` | neutral-800 |
+| Primary Light | `#404040` | `--color-primary-light` | neutral-700 |
+| Secondary | `#525252` | `--color-secondary` | neutral-600 |
+| CTA/Accent | `#22C55E` | `--color-cta` | green-500 |
+| Background | `#FAFAFA` | `--color-background` | neutral-50 |
+| Surface | `#FFFFFF` | `--color-surface` | white |
+| Text Primary | `#171717` | `--color-text` | neutral-900 |
+| Text Secondary | `#525252` | `--color-text-secondary` | neutral-600 |
+| Text Muted | `#A3A3A3` | `--color-text-muted` | neutral-400 |
+| Border | `#E5E5E5` | `--color-border` | neutral-200 |
 
-**Color Notes:** Fresh cyan + clean green
+**Semantic Colors (Preserved)**
+| Role | Hex | Usage |
+|------|-----|-------|
+| Success | `#22C55E` | Public badge, success states |
+| Danger | `#EF4444` | Private badge, errors, delete |
+| Warning | `#F59E0B` | Warning states |
+| Info | `#3B82F6` | Information (Blue) |
+
+**Color Notes:** Monochrome (White & Black) theme for improved visibility and contrast (WCAG 4.5:1+)
 
 ### Typography
 
@@ -68,7 +82,7 @@
 ```css
 /* Primary Button */
 .btn-primary {
-  background: #22C55E;
+  background: #171717;
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
@@ -78,20 +92,41 @@
 }
 
 .btn-primary:hover {
-  opacity: 0.9;
+  background: #262626;
   transform: translateY(-1px);
 }
 
 /* Secondary Button */
 .btn-secondary {
   background: transparent;
-  color: #0891B2;
-  border: 2px solid #0891B2;
+  color: #171717;
+  border: 2px solid #171717;
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
   transition: all 200ms ease;
   cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: #171717;
+  color: white;
+}
+
+/* CTA Button (Accent) */
+.btn-cta {
+  background: #22C55E;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 200ms ease;
+  cursor: pointer;
+}
+
+.btn-cta:hover {
+  background: #16A34A;
+  transform: translateY(-1px);
 }
 ```
 
@@ -99,7 +134,8 @@
 
 ```css
 .card {
-  background: #ECFEFF;
+  background: #FFFFFF;
+  border: 1px solid #E5E5E5;
   border-radius: 12px;
   padding: 24px;
   box-shadow: var(--shadow-md);
@@ -109,6 +145,7 @@
 
 .card:hover {
   box-shadow: var(--shadow-lg);
+  border-color: #171717;
   transform: translateY(-2px);
 }
 ```
@@ -118,16 +155,16 @@
 ```css
 .input {
   padding: 12px 16px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid #E5E5E5;
   border-radius: 8px;
   font-size: 16px;
   transition: border-color 200ms ease;
 }
 
 .input:focus {
-  border-color: #0891B2;
+  border-color: #171717;
   outline: none;
-  box-shadow: 0 0 0 3px #0891B220;
+  box-shadow: 0 0 0 3px rgba(23, 23, 23, 0.1);
 }
 ```
 

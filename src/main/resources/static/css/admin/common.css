@@ -12,22 +12,23 @@
    ========================================================================== */
 
 :root {
-    /* Design System: Forgather Admin */
-    --primary-color: #0891B2;
-    --primary-hover: #0E7490;
-    --secondary-color: #22D3EE;
+    /* Design System: Forgather Admin (Monochrome Theme) */
+    --primary-color: #171717;
+    --primary-hover: #262626;
+    --primary-light: #404040;
+    --secondary-color: #525252;
     --success-color: #22C55E;
     --danger-color: #EF4444;
     --warning-color: #F59E0B;
-    --info-color: #0891B2;
+    --info-color: #3B82F6;
 
-    /* Neutral Colors */
-    --bg-color: #ECFEFF;
+    /* Neutral Colors (Monochrome) */
+    --bg-color: #FAFAFA;
     --surface-color: #FFFFFF;
-    --border-color: #E2E8F0;
-    --text-primary: #164E63;
-    --text-secondary: #475569;
-    --text-muted: #94A3B8;
+    --border-color: #E5E5E5;
+    --text-primary: #171717;
+    --text-secondary: #525252;
+    --text-muted: #A3A3A3;
 
     /* Spacing */
     --spacing-xs: 0.25rem;
