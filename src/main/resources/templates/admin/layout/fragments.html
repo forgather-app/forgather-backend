@@ -6,22 +6,29 @@
 <body>
 
 <!-- Header Fragment -->
-<header th:fragment="header" class="header">
-    <div class="header-container">
-        <div class="header-left">
-            <h1 class="logo">
-                <a th:href="@{/view/admin/spaces}">Forgather Admin</a>
+<header th:fragment="header" class="bg-surface border-b border-border-color shadow-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-lg py-md flex justify-between items-center">
+        <div class="flex items-center">
+            <h1 class="text-xl font-semibold">
+                <a th:href="@{/view/admin/spaces}" class="text-text-primary hover:text-primary transition-colors duration-200 cursor-pointer">
+                    Forgather Admin
+                </a>
             </h1>
         </div>
-        <nav class="header-nav">
-            <ul class="nav-list">
-                <li class="nav-item">
-                    <a th:href="@{/view/admin/spaces}" class="nav-link" th:classappend="${currentPage == 'spaces'} ? 'active' : ''">
+        <nav>
+            <ul class="flex items-center gap-lg">
+                <li>
+                    <a th:href="@{/view/admin/spaces}"
+                       class="text-text-secondary hover:text-primary font-medium transition-colors duration-200 cursor-pointer px-sm py-xs rounded"
+                       th:classappend="${currentPage == 'spaces'} ? 'text-primary bg-primary/10' : ''">
                         Spaces
                     </a>
                 </li>
-                <li class="nav-item">
-                    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                <li>
+                    <button id="logoutBtn"
+                            class="px-md py-sm text-sm font-medium text-text-secondary border border-border-color rounded bg-transparent hover:bg-gray-50 hover:text-text-primary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                        Logout
+                    </button>
                 </li>
             </ul>
         </nav>
@@ -29,9 +36,9 @@
 </header>
 
 <!-- Footer Fragment -->
-<footer th:fragment="footer" class="footer">
-    <div class="footer-container">
-        <p>&copy; 2025 Forgather. All rights reserved.</p>
+<footer th:fragment="footer" class="bg-surface border-t border-border-color mt-auto">
+    <div class="max-w-7xl mx-auto px-lg py-lg text-center">
+        <p class="text-text-muted text-sm">&copy; 2025 Forgather. All rights reserved.</p>
     </div>
 </footer>
 
@@ -54,12 +61,15 @@
 </div>
 
 <!-- Loading Spinner Fragment -->
-<div th:fragment="loading" id="loadingSpinner" class="loading-spinner" style="display: none;">
-    <div class="spinner"></div>
-    <p>Loading...</p>
+<div th:fragment="loading" id="loadingSpinner"
+     class="loading-spinner fixed inset-0 bg-black/50 flex flex-col justify-center items-center z-[9999]"
+     style="display: none;">
+    <div class="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+    <p class="text-white mt-md font-medium">Loading...</p>
 </div>
 
 <!-- Toast Notification Fragment -->
+<!-- Note: .toast, .show, .success, .error, .warning 클래스는 JS에서 동적 제어하므로 common.css에서 유지 -->
 <div th:fragment="toast" id="toast" class="toast"></div>
 
 </body>
