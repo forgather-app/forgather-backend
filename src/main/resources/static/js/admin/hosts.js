@@ -41,6 +41,19 @@ let totalPages = 1;
  */
 let totalCount = 0;
 
+/**
+ * 정렬 상태를 관리하는 객체
+ *
+ * field: 정렬 기준 필드 (id, name, createdAt)
+ * direction: 정렬 방향 (asc, desc)
+ *
+ * 기본값: 생성시간 내림차순 (최신순)
+ */
+const sortState = {
+    field: 'createdAt',
+    direction: 'desc'
+};
+
 // ==========================================================================
 // 페이지 초기화
 // ==========================================================================
@@ -292,6 +305,8 @@ document.addEventListener('DOMContentLoaded', function() {
      *    - 전역 상태 업데이트 (currentPage, totalPages, totalCount 등)
      *    - 테이블 렌더링
      *    - 페이지네이션 업데이트
+     *    - 총 개수 정보 업데이트
+     *    - 정렬 아이콘 업데이트
      * 5. 실패 시:
      *    - 에러 메시지 표시
      *    - 콘솔에 에러 로그 출력
@@ -308,7 +323,8 @@ document.addEventListener('DOMContentLoaded', function() {
         showLoading();
 
         try {
-            const response = await API.getHosts(currentPage, currentPageSize);
+            const sortParam = `${sortState.field},${sortState.direction}`;
+            const response = await API.getHosts(currentPage, currentPageSize, sortParam);
 
             // API 응답 데이터로 전역 상태 업데이트
             currentPage = response.currentPage;
@@ -322,12 +338,72 @@ document.addEventListener('DOMContentLoaded', function() {
             // 페이지네이션 업데이트
             updatePagination();
 
+            // 총 개수 정보 업데이트
+            updateTotalCountInfo();
+
+            // 정렬 아이콘 업데이트
+            updateSortIcons();
+
         } catch (error) {
             console.error('Failed to load hosts:', error);
             showError(error.message || 'Failed to load hosts. Please try again.');
         } finally {
             hideLoading();
         }
+    }
+
+    /**
+     * 총 개수 정보 업데이트
+     */
+    function updateTotalCountInfo() {
+        const totalCountInfo = document.getElementById('totalCountInfo');
+        if (totalCountInfo) {
+            totalCountInfo.textContent = `Total: ${totalCount.toLocaleString()}개`;
+        }
+    }
+
+    /**
+     * 정렬 아이콘 업데이트
+     * - 현재 정렬 필드에 맞는 아이콘(▲/▼) 표시
+     * - 비활성 필드는 빈 아이콘
+     */
+    function updateSortIcons() {
+        const sortableHeaders = document.querySelectorAll('th[data-sort]');
+        sortableHeaders.forEach(header => {
+            const field = header.getAttribute('data-sort');
+            const iconSpan = header.querySelector('.sort-icon');
+            if (iconSpan) {
+                if (field === sortState.field) {
+                    iconSpan.textContent = sortState.direction === 'asc' ? '▲' : '▼';
+                    iconSpan.classList.remove('text-text-muted');
+                    iconSpan.classList.add('text-primary');
+                } else {
+                    iconSpan.textContent = '';
+                    iconSpan.classList.remove('text-primary');
+                    iconSpan.classList.add('text-text-muted');
+                }
+            }
+        });
+    }
+
+    /**
+     * 정렬 토글
+     * - 같은 필드 클릭 시 방향 토글 (asc ↔ desc)
+     * - 다른 필드 클릭 시 해당 필드로 변경, 기본 방향은 asc
+     *
+     * @param {string} field - 정렬 기준 필드
+     */
+    function toggleSort(field) {
+        if (sortState.field === field) {
+            // 같은 필드: 방향 토글
+            sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            // 다른 필드: 새 필드로 변경, 기본 오름차순
+            sortState.field = field;
+            sortState.direction = 'asc';
+        }
+        currentPage = 1; // 정렬 변경 시 첫 페이지로
+        loadHosts();
     }
 
     /**
@@ -408,6 +484,25 @@ document.addEventListener('DOMContentLoaded', function() {
     // 이벤트 리스너 등록
     pageSizeSelect.addEventListener('change', handlePageSizeChange);
     logoutBtn.addEventListener('click', handleLogout);
+
+    /**
+     * 테이블 헤더 정렬 클릭 이벤트 리스너 (이벤트 위임)
+     */
+    const hostsTable = document.getElementById('hostsTable');
+    if (hostsTable) {
+        const thead = hostsTable.querySelector('thead');
+        if (thead) {
+            thead.addEventListener('click', function(event) {
+                const th = event.target.closest('th[data-sort]');
+                if (th) {
+                    const field = th.getAttribute('data-sort');
+                    if (field) {
+                        toggleSort(field);
+                    }
+                }
+            });
+        }
+    }
 
     /**
      * 키보드 네비게이션

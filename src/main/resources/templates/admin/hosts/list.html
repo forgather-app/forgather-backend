@@ -91,11 +91,14 @@
             </div>
 
             <!--
-                Controls: 페이지 크기 선택
+                Controls: 페이지 크기 선택 및 총 개수 표시
                 - 사용자가 한 페이지에 표시될 아이템 개수를 선택할 수 있습니다.
                 - JavaScript에서 변경 이벤트를 감지하여 데이터를 다시 로드합니다.
             -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md mb-lg p-lg bg-surface rounded-lg shadow-sm">
+                <div id="totalCountInfo" class="text-sm text-text-secondary">
+                    <!-- JavaScript에서 동적으로 업데이트 -->
+                </div>
                 <div class="flex items-center gap-sm w-full sm:w-auto">
                     <label for="pageSize" class="text-sm font-medium text-text-secondary whitespace-nowrap">
                         Items per page:
@@ -142,11 +145,29 @@
                 <div class="overflow-x-auto">
                     <table class="w-full" id="hostsTable">
                         <thead>
-                            <tr class="bg-bg-color border-b border-border-color">
-                                <th class="px-lg py-md text-left text-sm font-semibold text-text-primary w-[10%]">ID</th>
-                                <th class="px-lg py-md text-left text-sm font-semibold text-text-primary w-[40%]">호스트명</th>
-                                <th class="px-lg py-md text-center text-sm font-semibold text-text-primary w-[20%]">스페이스 개수</th>
-                                <th class="px-lg py-md text-left text-sm font-semibold text-text-primary w-[30%]">생성일</th>
+                            <tr class="bg-bg-color border-b-2 border-primary/20">
+                                <th class="px-lg py-md text-left text-sm font-semibold text-text-secondary uppercase tracking-wider w-[10%] cursor-pointer hover:bg-primary/5 hover:text-primary transition-colors duration-150 select-none"
+                                    data-sort="id">
+                                    <div class="flex items-center gap-xs">
+                                        <span>ID</span>
+                                        <span class="sort-icon text-text-muted"></span>
+                                    </div>
+                                </th>
+                                <th class="px-lg py-md text-left text-sm font-semibold text-text-secondary uppercase tracking-wider w-[40%] cursor-pointer hover:bg-primary/5 hover:text-primary transition-colors duration-150 select-none"
+                                    data-sort="name">
+                                    <div class="flex items-center gap-xs">
+                                        <span>호스트명</span>
+                                        <span class="sort-icon text-text-muted"></span>
+                                    </div>
+                                </th>
+                                <th class="px-lg py-md text-center text-sm font-semibold text-text-secondary uppercase tracking-wider w-[20%]">스페이스 개수</th>
+                                <th class="px-lg py-md text-left text-sm font-semibold text-text-secondary uppercase tracking-wider w-[30%] cursor-pointer hover:bg-primary/5 hover:text-primary transition-colors duration-150 select-none"
+                                    data-sort="createdAt">
+                                    <div class="flex items-center gap-xs">
+                                        <span>생성일</span>
+                                        <span class="sort-icon text-text-muted"></span>
+                                    </div>
+                                </th>
                             </tr>
                         </thead>
                         <tbody id="hostsTableBody" class="divide-y divide-border-color">

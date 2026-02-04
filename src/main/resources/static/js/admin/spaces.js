@@ -10,6 +10,19 @@ let totalPages = 1;
 let totalCount = 0;
 
 /**
+ * 정렬 상태를 관리하는 객체
+ *
+ * field: 정렬 기준 필드 (id, name, createdAt, updatedAt)
+ * direction: 정렬 방향 (asc, desc)
+ *
+ * 기본값: 생성시간 내림차순 (최신순)
+ */
+const sortState = {
+    field: 'createdAt',
+    direction: 'desc'
+};
+
+/**
  * 현재 선택된 필터 상태를 관리하는 객체
  *
  * 필터 조건 확장 가이드:
@@ -249,21 +262,19 @@ document.addEventListener('DOMContentLoaded', function () {
      *
      * 호출 시점:
      * - 페이지 최초 로드 (DOMContentLoaded)
-     * - 필터 검색 버튼 클릭 (applyFilter)
-     * - 이름 검색 버튼 클릭 (searchByName)
+     * - 통합 검색 버튼 클릭 (handleSearch)
      * - 페이지 크기 변경 (handlePageSizeChange)
      * - 페이지네이션 버튼 클릭 (goToPage)
+     * - 정렬 헤더 클릭 (toggleSort)
      *
      * API 엔드포인트 분기 규칙 (우선순위):
      * 1. 이름 검색 활성화 → /admin/spaces/search/by-name
      * 2. 필터 조건 있음 → /admin/spaces/search
      * 3. 전체 조회 → /admin/spaces
      *
-     * 동작 흐름:
-     * 1. 검색/필터 조건 확인
-     * 2. 조건에 따라 적절한 API 호출
-     * 3. 응답 데이터로 테이블 렌더링
-     * 4. 페이지네이션 UI 업데이트
+     * 정렬 파라미터:
+     * - Spring Data Pageable의 sort 파라미터 사용
+     * - 형식: ?sort=field,direction (예: ?sort=createdAt,desc)
      */
     async function loadSpaces() {
         hideError();
@@ -271,17 +282,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
             let response;
+            const sortParam = `${sortState.field},${sortState.direction}`;
 
             // API 호출 분기: 이름 검색 > 필터 > 전체
             if (hasActiveNameSearch()) {
                 // 이름 검색 API 호출 (/admin/spaces/search/by-name)
-                response = await API.searchSpacesByName(searchState.searchName, currentPage, currentPageSize);
+                response = await API.searchSpacesByName(searchState.searchName, currentPage, currentPageSize, sortParam);
             } else if (hasActiveFilters()) {
                 // 필터링 API 호출 (/admin/spaces/search)
-                response = await API.getSpacesByFilters(currentPage, currentPageSize, filterState);
+                response = await API.getSpacesByFilters(currentPage, currentPageSize, filterState, sortParam);
             } else {
                 // 전체 조회 API 호출 (/admin/spaces)
-                response = await API.getSpaces(currentPage, currentPageSize);
+                response = await API.getSpaces(currentPage, currentPageSize, sortParam);
             }
 
             // 상태 업데이트
@@ -296,12 +308,72 @@ document.addEventListener('DOMContentLoaded', function () {
             // 페이지네이션 업데이트
             updatePagination();
 
+            // 총 개수 정보 업데이트
+            updateTotalCountInfo();
+
+            // 정렬 아이콘 업데이트
+            updateSortIcons();
+
         } catch (error) {
             console.error('Failed to load spaces:', error);
             showError(error.message || 'Failed to load spaces. Please try again.');
         } finally {
             hideLoading();
         }
+    }
+
+    /**
+     * 총 개수 정보 업데이트
+     */
+    function updateTotalCountInfo() {
+        const totalCountInfo = document.getElementById('totalCountInfo');
+        if (totalCountInfo) {
+            totalCountInfo.textContent = `Total: ${totalCount.toLocaleString()}개`;
+        }
+    }
+
+    /**
+     * 정렬 아이콘 업데이트
+     * - 현재 정렬 필드에 맞는 아이콘(▲/▼) 표시
+     * - 비활성 필드는 빈 아이콘
+     */
+    function updateSortIcons() {
+        const sortableHeaders = document.querySelectorAll('th[data-sort]');
+        sortableHeaders.forEach(header => {
+            const field = header.getAttribute('data-sort');
+            const iconSpan = header.querySelector('.sort-icon');
+            if (iconSpan) {
+                if (field === sortState.field) {
+                    iconSpan.textContent = sortState.direction === 'asc' ? '▲' : '▼';
+                    iconSpan.classList.remove('text-text-muted');
+                    iconSpan.classList.add('text-primary');
+                } else {
+                    iconSpan.textContent = '';
+                    iconSpan.classList.remove('text-primary');
+                    iconSpan.classList.add('text-text-muted');
+                }
+            }
+        });
+    }
+
+    /**
+     * 정렬 토글
+     * - 같은 필드 클릭 시 방향 토글 (asc ↔ desc)
+     * - 다른 필드 클릭 시 해당 필드로 변경, 기본 방향은 asc
+     *
+     * @param {string} field - 정렬 기준 필드
+     */
+    function toggleSort(field) {
+        if (sortState.field === field) {
+            // 같은 필드: 방향 토글
+            sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            // 다른 필드: 새 필드로 변경, 기본 오름차순
+            sortState.field = field;
+            sortState.direction = 'asc';
+        }
+        currentPage = 1; // 정렬 변경 시 첫 페이지로
+        loadSpaces();
     }
 
     /**
@@ -505,7 +577,7 @@ document.addEventListener('DOMContentLoaded', function () {
      * - 검색 없음: 초기화 버튼 숨김
      */
     function updateNameSearchUI() {
-        const resetBtn = document.getElementById('nameSearchResetBtn');
+        const resetBtn = document.getElementById('resetSearchBtn');
         if (resetBtn) {
             resetBtn.style.display = hasActiveNameSearch() ? 'inline-flex' : 'none';
         }
@@ -516,8 +588,8 @@ document.addEventListener('DOMContentLoaded', function () {
     logoutBtn.addEventListener('click', handleLogout);
 
     /**
-     * 필터 검색 버튼 클릭 이벤트 리스너
-     * - [검색] 버튼 클릭 시 필터 적용 함수 호출
+     * 필터 적용 버튼 클릭 이벤트 리스너
+     * - 이름 검색 초기화 후 필터 적용
      */
     const applyFilterBtn = document.getElementById('applyFilterBtn');
     if (applyFilterBtn) {
@@ -535,9 +607,9 @@ document.addEventListener('DOMContentLoaded', function () {
     /**
      * 이름 검색 초기화 버튼 클릭 이벤트 리스너
      */
-    const nameSearchResetBtn = document.getElementById('nameSearchResetBtn');
-    if (nameSearchResetBtn) {
-        nameSearchResetBtn.addEventListener('click', resetNameSearch);
+    const resetSearchBtn = document.getElementById('resetSearchBtn');
+    if (resetSearchBtn) {
+        resetSearchBtn.addEventListener('click', resetNameSearch);
     }
 
     /**
@@ -552,6 +624,25 @@ document.addEventListener('DOMContentLoaded', function () {
                 searchByName();
             }
         });
+    }
+
+    /**
+     * 테이블 헤더 정렬 클릭 이벤트 리스너 (이벤트 위임)
+     */
+    const spacesTable = document.getElementById('spacesTable');
+    if (spacesTable) {
+        const thead = spacesTable.querySelector('thead');
+        if (thead) {
+            thead.addEventListener('click', function(event) {
+                const th = event.target.closest('th[data-sort]');
+                if (th) {
+                    const field = th.getAttribute('data-sort');
+                    if (field) {
+                        toggleSort(field);
+                    }
+                }
+            });
+        }
     }
 
     /**

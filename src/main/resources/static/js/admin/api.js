@@ -174,10 +174,11 @@ const API = {
      * Space 목록 조회 API (전체 - 필터 없음)
      * @param {number} page - 페이지 번호 (1부터 시작)
      * @param {number} size - 페이지 크기
+     * @param {string} sort - 정렬 파라미터 (예: 'createdAt,desc')
      * @returns {Promise<object>} Space 목록 응답
      */
-    async getSpaces(page = 1, size = 15) {
-        return this.get('/spaces', {page, size});
+    async getSpaces(page = 1, size = 15, sort = 'createdAt,desc') {
+        return this.get('/spaces', {page, size, sort});
     },
 
     /**
@@ -187,6 +188,7 @@ const API = {
      * @param {number} size - 페이지 크기
      * @param {object} filters - 필터 조건 객체
      * @param {boolean|null} filters.hasProduct - 작품 소개 등록 여부 (true: 등록함, false: 미등록, null: 전체)
+     * @param {string} sort - 정렬 파라미터 (예: 'createdAt,desc')
      * @returns {Promise<object>} Space 목록 응답
      *
      * 엔드포인트: GET /admin/spaces/search
@@ -194,6 +196,7 @@ const API = {
      * 쿼리 파라미터:
      * - page: 페이지 번호 (필수)
      * - size: 페이지 크기 (필수)
+     * - sort: 정렬 (예: 'createdAt,desc')
      * - hasProduct: 작품 소개 등록 여부 (선택)
      *
      * 응답 구조:
@@ -217,8 +220,8 @@ const API = {
      * - 필터 조건이 없으면 getSpaces() 함수를 사용하는 것이 더 적합
      * - 향후 다른 필터 추가 시 filters 객체에 프로퍼티 추가
      */
-    async getSpacesByFilters(page = 1, size = 15, filters = {}) {
-        const params = {page, size};
+    async getSpacesByFilters(page = 1, size = 15, filters = {}, sort = 'createdAt,desc') {
+        const params = {page, size, sort};
 
         // hasProduct 필터가 명시적으로 true 또는 false인 경우에만 파라미터에 추가
         if (filters.hasProduct !== null && filters.hasProduct !== undefined) {
@@ -265,6 +268,7 @@ const API = {
      * @param {string} name - 검색할 스페이스 이름 (부분 일치)
      * @param {number} page - 페이지 번호 (1부터 시작)
      * @param {number} size - 페이지 크기 (기본값: 15)
+     * @param {string} sort - 정렬 파라미터 (예: 'createdAt,desc')
      * @returns {Promise<object>} Space 목록 응답
      *
      * 엔드포인트: GET /admin/spaces/search/by-name
@@ -275,8 +279,8 @@ const API = {
      * console.log(response.spaces); // 이름에 '졸업'이 포함된 스페이스 목록
      * ```
      */
-    async searchSpacesByName(name, page = 1, size = 15) {
-        return this.get('/spaces/search/by-name', { name, page, size });
+    async searchSpacesByName(name, page = 1, size = 15, sort = 'createdAt,desc') {
+        return this.get('/spaces/search/by-name', { name, page, size, sort });
     },
 
     /**
@@ -284,6 +288,7 @@ const API = {
      *
      * @param {number} page - 페이지 번호 (1부터 시작)
      * @param {number} size - 페이지 크기 (기본값: 15)
+     * @param {string} sort - 정렬 파라미터 (예: 'createdAt,desc')
      * @returns {Promise<object>} Host 목록 응답
      * @returns {Array} response.hosts - Host 목록 배열
      * @returns {number} response.currentPage - 현재 페이지 번호 (1부터 시작)
@@ -314,8 +319,8 @@ const API = {
      * - Authorization 헤더가 자동으로 포함되므로 로그인 상태여야 함
      * - 페이지 번호는 1부터 시작 (서버에서 0-based를 1-based로 변환하여 반환)
      */
-    async getHosts(page = 1, size = 15) {
-        return this.get('/hosts', {page, size});
+    async getHosts(page = 1, size = 15, sort = 'createdAt,desc') {
+        return this.get('/hosts', {page, size, sort});
     }
 };
 
