@@ -6,7 +6,7 @@
 <body>
 
 <!-- Header Fragment -->
-<header th:fragment="header" class="bg-surface border-b border-border-color shadow-sm sticky top-0 z-50">
+<header th:fragment="header(currentPage)" class="bg-surface border-b border-border-color shadow-sm sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-lg py-md flex justify-between items-center">
         <div class="flex items-center">
             <h1 class="text-xl font-semibold">
@@ -22,6 +22,13 @@
                        class="text-text-secondary hover:text-primary font-medium transition-colors duration-200 cursor-pointer px-sm py-xs rounded"
                        th:classappend="${currentPage == 'spaces'} ? 'text-primary bg-primary/10' : ''">
                         Spaces
+                    </a>
+                </li>
+                <li>
+                    <a th:href="@{/view/admin/hosts}"
+                       class="text-text-secondary hover:text-primary font-medium transition-colors duration-200 cursor-pointer px-sm py-xs rounded"
+                       th:classappend="${currentPage == 'hosts'} ? 'text-primary bg-primary/10' : ''">
+                        Hosts
                     </a>
                 </li>
                 <li>

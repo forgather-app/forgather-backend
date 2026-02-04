@@ -81,7 +81,7 @@
 </head>
 <body>
     <!-- Header -->
-    <header th:replace="~{admin/layout/fragments :: header}"></header>
+    <header th:replace="~{admin/layout/fragments :: header(currentPage=${currentPage})}"></header>
 
     <!-- Main Content -->
     <main class="main-content">
