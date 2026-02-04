@@ -47,6 +47,26 @@
             <!-- Controls -->
             <div class="controls">
                 <!--
+                    이름 검색 영역
+                    - 스페이스 이름으로 검색하는 독립 검색 기능
+                    - 기존 필터와 상호 배타적: 이름 검색 시 필터 초기화, 필터 사용 시 검색어 초기화
+                    - Enter 키 또는 검색 버튼 클릭으로 검색 실행
+                -->
+                <div class="name-search-section">
+                    <label class="filter-label" for="nameSearchInput">스페이스 이름:</label>
+                    <div class="search-input-wrapper">
+                        <input type="text"
+                               id="nameSearchInput"
+                               class="search-input"
+                               placeholder="스페이스 이름 입력"
+                               autocomplete="off">
+                        <button type="button" class="btn-search" id="nameSearchBtn">검색</button>
+                        <!-- 검색 중일 때만 표시되는 초기화 버튼 -->
+                        <button type="button" class="btn-reset" id="nameSearchResetBtn" style="display: none;">초기화</button>
+                    </div>
+                </div>
+
+                <!--
                     필터 영역
                     - 작품 소개 등록 여부에 따른 필터링 기능
                     - radio 버튼으로 단일 선택 제공

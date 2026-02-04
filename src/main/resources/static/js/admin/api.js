@@ -260,6 +260,26 @@ const API = {
     },
 
     /**
+     * Space 이름 검색 API
+     *
+     * @param {string} name - 검색할 스페이스 이름 (부분 일치)
+     * @param {number} page - 페이지 번호 (1부터 시작)
+     * @param {number} size - 페이지 크기 (기본값: 15)
+     * @returns {Promise<object>} Space 목록 응답
+     *
+     * 엔드포인트: GET /admin/spaces/search/by-name
+     *
+     * 사용 예시:
+     * ```javascript
+     * const response = await API.searchSpacesByName('졸업', 1, 15);
+     * console.log(response.spaces); // 이름에 '졸업'이 포함된 스페이스 목록
+     * ```
+     */
+    async searchSpacesByName(name, page = 1, size = 15) {
+        return this.get('/spaces/search/by-name', { name, page, size });
+    },
+
+    /**
      * Host 목록 조회 API
      *
      * @param {number} page - 페이지 번호 (1부터 시작)

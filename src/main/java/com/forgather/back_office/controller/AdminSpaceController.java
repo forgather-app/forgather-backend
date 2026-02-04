@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.forgather.back_office.annotation.Admin;
@@ -53,6 +54,17 @@ public class AdminSpaceController {
         @Admin AdminUser adminUser
     ) {
         var response = adminSpaceService.getSpaceDetail(spaceCode);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/search/by-name")
+    public ResponseEntity<AdminSpaceResponse> getSpacesByName(
+        @PageableDefault(size = 15, sort = "createdAt", direction = Sort.Direction.DESC)
+        Pageable pageable,
+        @RequestParam(required = false, defaultValue = "") String name,
+        @Admin AdminUser adminUser
+    ) {
+        var response = adminSpaceService.searchSpacesByName(name, pageable);
         return ResponseEntity.ok(response);
     }
 }
