@@ -426,11 +426,17 @@ document.addEventListener('DOMContentLoaded', function () {
         const nameInput = document.getElementById('nameSearchInput');
         const searchName = nameInput.value.trim();
 
+        // 빈 검색어일 경우 전체 조회로 전환
+        if (!searchName) {
+            resetNameSearch();
+            return;
+        }
+
         // 필터와 이름 검색은 상호 배타적 - 필터 초기화
         clearFilterState();
 
         // 검색 상태 업데이트
-        searchState.searchName = searchName || null;
+        searchState.searchName = searchName;
 
         // UI 업데이트
         updateNameSearchUI();
