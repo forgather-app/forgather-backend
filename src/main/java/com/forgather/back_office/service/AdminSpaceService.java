@@ -53,7 +53,11 @@ public class AdminSpaceService {
         if (name == null) {
             return AdminSpaceResponse.from(adminSpaceRepository.findAllByDeletedAtIsNull(pageable));
         }
-        String escapedName = escapeLikeWildcards(name.strip());
+        String strippedName = name.strip();
+        if (strippedName.isEmpty()) {
+            return AdminSpaceResponse.from(adminSpaceRepository.findAllByDeletedAtIsNull(pageable));
+        }
+        String escapedName = escapeLikeWildcards(strippedName);
         Page<Space> spaces = adminSpaceRepository.findByNameContainingAndDeletedAtIsNull(escapedName, pageable);
         return AdminSpaceResponse.from(spaces);
     }
