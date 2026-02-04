@@ -50,6 +50,9 @@ public class AdminSpaceService {
     }
 
     public AdminSpaceResponse searchSpacesByName(String name, Pageable pageable) {
+        if (name == null) {
+            return AdminSpaceResponse.from(adminSpaceRepository.findAllByDeletedAtIsNull(pageable));
+        }
         String escapedName = escapeLikeWildcards(name.strip());
         Page<Space> spaces = adminSpaceRepository.findByNameContainingAndDeletedAtIsNull(escapedName, pageable);
         return AdminSpaceResponse.from(spaces);
