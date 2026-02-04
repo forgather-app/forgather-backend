@@ -4,6 +4,7 @@ description: JPA 코드 분석 및 N+1 문제 감지. 쿼리 최적화 방안 �
 allowed-tools: Read, Grep, Glob
 user-invocable: true
 context: fork
+model: opus
 agent: Explore
 ---
 

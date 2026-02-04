@@ -55,6 +55,126 @@
 }
 
 /* ==========================================================================
+   Name Search Section
+   - 스페이스 이름으로 검색하는 독립 영역
+   - 기존 필터와 시각적으로 분리
+   ========================================================================== */
+
+/**
+ * 이름 검색 섹션 컨테이너
+ * - controls 영역 상단에 별도 영역으로 배치
+ * - 필터 섹션과 구분선으로 분리
+ */
+.name-search-section {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: var(--spacing-md);
+    width: 100%;
+}
+
+/**
+ * 검색 입력 영역 래퍼
+ * - input과 버튼들을 가로로 배치
+ */
+.search-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex: 1;
+    max-width: 500px;
+}
+
+/**
+ * 검색 입력 필드
+ * - 기존 form-select와 유사한 스타일 적용
+ */
+.search-input {
+    flex: 1;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--surface-color);
+    color: var(--text-primary);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.search-input::placeholder {
+    color: var(--text-muted);
+}
+
+/**
+ * 검색 버튼
+ * - 기존 btn-filter와 동일한 스타일
+ */
+.btn-search {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.5;
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    background-color: var(--primary-color);
+    color: white;
+    white-space: nowrap;
+}
+
+.btn-search:hover {
+    background-color: var(--primary-hover);
+}
+
+.btn-search:active {
+    transform: scale(0.98);
+}
+
+/**
+ * 초기화 버튼
+ * - 검색 중일 때만 표시
+ * - secondary 스타일 (회색 계열)
+ */
+.btn-reset {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.5;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.2s;
+    background-color: var(--surface-color);
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.btn-reset:hover {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+}
+
+.btn-reset:active {
+    transform: scale(0.98);
+}
+
+/* ==========================================================================
    Filter Section
    - 스페이스 필터링 UI 영역
    - 향후 필터 조건 추가 시 이 영역에 filter-group을 추가하면 됨
@@ -531,6 +651,23 @@ body.modal-open {
         flex-direction: column;
         align-items: stretch;
         gap: var(--spacing-md);
+    }
+
+    /**
+     * 모바일에서 이름 검색 섹션 세로 배치
+     */
+    .name-search-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-sm);
+    }
+
+    .search-input-wrapper {
+        max-width: none;
+    }
+
+    .search-input {
+        flex: 1;
     }
 
     /**

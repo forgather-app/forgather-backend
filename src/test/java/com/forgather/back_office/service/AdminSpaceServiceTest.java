@@ -130,4 +130,131 @@ class AdminSpaceServiceTest extends TestOnContainer {
             () -> assertThat(result.spaces().get(0).code()).isEqualTo(space2.getCode())
         );
     }
+
+    @DisplayName("이름이 정확히 일치하면 이름 검색으로 조회된다.")
+    @Test
+    void searchSpacesByName() {
+        // given
+        String name = "name";
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", name));
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // when
+        AdminSpaceResponse result = adminSpaceService.searchSpacesByName(name, pageable);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(1),
+            () -> assertThat(result.spaces().get(0).name()).isEqualTo(name)
+        );
+    }
+
+    @DisplayName("이름이 포함되면 이름 검색으로 조회된다.")
+    @Test
+    void searchSpacesByNameContaining() {
+        // given
+        String name = "name";
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", "name1"));
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("2222222222", "1name"));
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // when
+        AdminSpaceResponse result = adminSpaceService.searchSpacesByName(name, pageable);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(2),
+            () -> assertThat(result.spaces()).extracting("name")
+                .containsExactlyInAnyOrder("name1", "1name")
+        );
+    }
+
+    @DisplayName("이름에 공백 문자가 들어올 경우 전체 검색으로 조회된다.")
+    @Test
+    void searchSpacesByNameWhitespaces() {
+        // given
+        String name = "   ";
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", "name1"));
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("2222222222", "name2"));
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // when
+        AdminSpaceResponse result = adminSpaceService.searchSpacesByName(name, pageable);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(2),
+            () -> assertThat(result.spaces()).extracting("name")
+                .containsExactlyInAnyOrder("name1", "name2")
+        );
+    }
+
+    @DisplayName("이름이 포함되어 있지 않다면 이름 검색으로 조회되지 않는다.")
+    @Test
+    void searchSpacesByNameNonContaining() {
+        // given
+        String name = "name";
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", "nam"));
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // when
+        AdminSpaceResponse result = adminSpaceService.searchSpacesByName(name, pageable);
+
+        // then
+        assertThat(result.spaces()).isEmpty();
+    }
+
+    @DisplayName("검색어에 % 와일드카드 문자가 포함되면 리터럴로 처리된다.")
+    @Test
+    void searchSpacesByNameWithPercentWildcard() {
+        // given
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", "졸업 전시%"));
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("2222222222", "졸업 전시"));
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // when
+        AdminSpaceResponse result = adminSpaceService.searchSpacesByName("%", pageable);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(1),
+            () -> assertThat(result.spaces().get(0).name()).isEqualTo("졸업 전시%")
+        );
+    }
+
+    @DisplayName("검색어에 _ 와일드카드 문자가 포함되면 리터럴로 처리된다.")
+    @Test
+    void searchSpacesByNameWithUnderscoreWildcard() {
+        // given
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", "졸업_전시"));
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("2222222222", "졸업전시"));
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // when
+        AdminSpaceResponse result = adminSpaceService.searchSpacesByName("_", pageable);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(1),
+            () -> assertThat(result.spaces().get(0).name()).isEqualTo("졸업_전시")
+        );
+    }
+
+    @DisplayName("검색어에 백슬래시가 포함되면 리터럴로 처리된다.")
+    @Test
+    void searchSpacesByNameWithBackslash() {
+        // given
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", "졸업\\전시"));
+        spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("2222222222", "졸업 전시"));
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // when
+        AdminSpaceResponse result = adminSpaceService.searchSpacesByName("\\", pageable);
+
+        // then
+        assertAll(
+            () -> assertThat(result.spaces()).hasSize(1),
+            () -> assertThat(result.spaces().get(0).name()).isEqualTo("졸업\\전시")
+        );
+    }
 }

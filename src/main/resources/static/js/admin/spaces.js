@@ -26,6 +26,22 @@ const filterState = {
     hasProduct: null
 };
 
+/**
+ * 이름 검색 상태를 관리하는 객체
+ *
+ * 동작 규칙:
+ * - 이름 검색과 필터는 상호 배타적
+ * - 이름 검색 활성화 시 필터 초기화
+ * - 필터 사용 시 이름 검색 초기화
+ *
+ * searchName 값:
+ * - null 또는 '': 검색 비활성화
+ * - 문자열: 해당 이름으로 검색 활성화
+ */
+const searchState = {
+    searchName: null
+};
+
 document.addEventListener('DOMContentLoaded', function () {
     // 인증 확인은 서버 인터셉터가 처리 (미인증 시 로그인 페이지로 리다이렉트)
 
@@ -234,15 +250,17 @@ document.addEventListener('DOMContentLoaded', function () {
      * 호출 시점:
      * - 페이지 최초 로드 (DOMContentLoaded)
      * - 필터 검색 버튼 클릭 (applyFilter)
+     * - 이름 검색 버튼 클릭 (searchByName)
      * - 페이지 크기 변경 (handlePageSizeChange)
      * - 페이지네이션 버튼 클릭 (goToPage)
      *
-     * API 엔드포인트 분기 규칙:
-     * - 필터 조건이 하나라도 있으면 → /admin/spaces/search
-     * - 필터 조건이 없으면 (전체) → /admin/spaces
+     * API 엔드포인트 분기 규칙 (우선순위):
+     * 1. 이름 검색 활성화 → /admin/spaces/search/by-name
+     * 2. 필터 조건 있음 → /admin/spaces/search
+     * 3. 전체 조회 → /admin/spaces
      *
      * 동작 흐름:
-     * 1. 필터 조건 유무 확인 (hasActiveFilters)
+     * 1. 검색/필터 조건 확인
      * 2. 조건에 따라 적절한 API 호출
      * 3. 응답 데이터로 테이블 렌더링
      * 4. 페이지네이션 UI 업데이트
@@ -254,8 +272,11 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             let response;
 
-            // 필터 조건이 있는지 확인
-            if (hasActiveFilters()) {
+            // API 호출 분기: 이름 검색 > 필터 > 전체
+            if (hasActiveNameSearch()) {
+                // 이름 검색 API 호출 (/admin/spaces/search/by-name)
+                response = await API.searchSpacesByName(searchState.searchName, currentPage, currentPageSize);
+            } else if (hasActiveFilters()) {
                 // 필터링 API 호출 (/admin/spaces/search)
                 response = await API.getSpacesByFilters(currentPage, currentPageSize, filterState);
             } else {
@@ -281,6 +302,15 @@ document.addEventListener('DOMContentLoaded', function () {
         } finally {
             hideLoading();
         }
+    }
+
+    /**
+     * 이름 검색 활성화 여부 확인
+     *
+     * @returns {boolean} 이름 검색이 활성화되어 있으면 true
+     */
+    function hasActiveNameSearch() {
+        return searchState.searchName !== null && searchState.searchName.trim() !== '';
     }
 
     /**
@@ -342,11 +372,12 @@ document.addEventListener('DOMContentLoaded', function () {
      * - 사용자가 필터를 선택하고 [검색] 버튼을 클릭했을 때
      *
      * 동작 흐름:
-     * 1. HTML에서 선택된 radio 버튼의 value를 읽어온다
-     * 2. value를 적절한 타입으로 변환 ('all' → null, 'true' → true, 'false' → false)
-     * 3. filterState 객체에 저장
-     * 4. 페이지를 1페이지로 초기화 (필터 변경 시 항상 첫 페이지부터 시작)
-     * 5. loadSpaces() 호출하여 목록 갱신
+     * 1. 이름 검색 상태 초기화 (필터와 이름 검색은 상호 배타적)
+     * 2. HTML에서 선택된 radio 버튼의 value를 읽어온다
+     * 3. value를 적절한 타입으로 변환 ('all' → null, 'true' → true, 'false' → false)
+     * 4. filterState 객체에 저장
+     * 5. 페이지를 1페이지로 초기화 (필터 변경 시 항상 첫 페이지부터 시작)
+     * 6. loadSpaces() 호출하여 목록 갱신
      *
      * 확장 포인트:
      * - 새로운 필터를 추가할 때 이 함수에서 해당 필터 값을 읽어서 filterState에 추가
@@ -357,6 +388,9 @@ document.addEventListener('DOMContentLoaded', function () {
      *   ```
      */
     function applyFilter() {
+        // 필터와 이름 검색은 상호 배타적 - 이름 검색 초기화
+        clearNameSearchState();
+
         // Optional Chaining (?.)으로 안전하게 접근 후, Nullish Coalescing (??)으로 기본값 설정
         const hasProductValue = document.querySelector('input[name="hasProduct"]:checked')?.value ?? 'all';
 
@@ -375,6 +409,108 @@ document.addEventListener('DOMContentLoaded', function () {
         loadSpaces();
     }
 
+    /**
+     * 이름 검색 실행
+     *
+     * 호출 시점:
+     * - 검색 버튼 클릭 또는 Enter 키 입력
+     *
+     * 동작 흐름:
+     * 1. 검색어 읽기
+     * 2. 필터 상태 초기화 (이름 검색과 필터는 상호 배타적)
+     * 3. 검색 상태 업데이트
+     * 4. UI 업데이트 (초기화 버튼 표시)
+     * 5. 목록 갱신
+     */
+    function searchByName() {
+        const nameInput = document.getElementById('nameSearchInput');
+        const searchName = nameInput.value.trim();
+
+        // 빈 검색어일 경우 전체 조회로 전환
+        if (!searchName) {
+            resetNameSearch();
+            return;
+        }
+
+        // 필터와 이름 검색은 상호 배타적 - 필터 초기화
+        clearFilterState();
+
+        // 검색 상태 업데이트
+        searchState.searchName = searchName;
+
+        // UI 업데이트
+        updateNameSearchUI();
+
+        // 페이지 초기화 및 목록 갱신
+        currentPage = 1;
+        loadSpaces();
+    }
+
+    /**
+     * 이름 검색 초기화
+     *
+     * 호출 시점:
+     * - 초기화 버튼 클릭
+     *
+     * 동작:
+     * - 검색어 입력 필드 비우기
+     * - 검색 상태 초기화
+     * - 전체 목록 조회
+     */
+    function resetNameSearch() {
+        const nameInput = document.getElementById('nameSearchInput');
+        nameInput.value = '';
+
+        searchState.searchName = null;
+
+        // UI 업데이트
+        updateNameSearchUI();
+
+        // 페이지 초기화 및 목록 갱신
+        currentPage = 1;
+        loadSpaces();
+    }
+
+    /**
+     * 이름 검색 상태만 초기화 (UI 갱신 포함)
+     * - 필터 적용 시 호출됨
+     */
+    function clearNameSearchState() {
+        const nameInput = document.getElementById('nameSearchInput');
+        if (nameInput) {
+            nameInput.value = '';
+        }
+        searchState.searchName = null;
+        updateNameSearchUI();
+    }
+
+    /**
+     * 필터 상태만 초기화 (UI 갱신 포함)
+     * - 이름 검색 시 호출됨
+     */
+    function clearFilterState() {
+        // 필터 상태 초기화
+        filterState.hasProduct = null;
+
+        // 라디오 버튼 UI 초기화 ('전체' 선택)
+        const allRadio = document.querySelector('input[name="hasProduct"][value="all"]');
+        if (allRadio) {
+            allRadio.checked = true;
+        }
+    }
+
+    /**
+     * 이름 검색 UI 업데이트
+     * - 검색 중: 초기화 버튼 표시
+     * - 검색 없음: 초기화 버튼 숨김
+     */
+    function updateNameSearchUI() {
+        const resetBtn = document.getElementById('nameSearchResetBtn');
+        if (resetBtn) {
+            resetBtn.style.display = hasActiveNameSearch() ? 'inline-flex' : 'none';
+        }
+    }
+
     // 이벤트 리스너 등록
     pageSizeSelect.addEventListener('change', handlePageSizeChange);
     logoutBtn.addEventListener('click', handleLogout);
@@ -386,6 +522,36 @@ document.addEventListener('DOMContentLoaded', function () {
     const applyFilterBtn = document.getElementById('applyFilterBtn');
     if (applyFilterBtn) {
         applyFilterBtn.addEventListener('click', applyFilter);
+    }
+
+    /**
+     * 이름 검색 버튼 클릭 이벤트 리스너
+     */
+    const nameSearchBtn = document.getElementById('nameSearchBtn');
+    if (nameSearchBtn) {
+        nameSearchBtn.addEventListener('click', searchByName);
+    }
+
+    /**
+     * 이름 검색 초기화 버튼 클릭 이벤트 리스너
+     */
+    const nameSearchResetBtn = document.getElementById('nameSearchResetBtn');
+    if (nameSearchResetBtn) {
+        nameSearchResetBtn.addEventListener('click', resetNameSearch);
+    }
+
+    /**
+     * 이름 검색 입력 필드 Enter 키 이벤트 리스너
+     * - Enter 키 입력 시 검색 실행
+     */
+    const nameSearchInput = document.getElementById('nameSearchInput');
+    if (nameSearchInput) {
+        nameSearchInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                searchByName();
+            }
+        });
     }
 
     /**
