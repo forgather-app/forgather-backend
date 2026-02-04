@@ -2,7 +2,7 @@
 name: analyze-admin
 description: Admin UI 패턴 분석. 새 어드민 페이지 생성 전, 기존 패턴 파악이 필요할 때 자동 호출.
 tools: Read, Grep, Glob
-model: haiku
+model: opus
 ---
 
 # Admin UI 패턴 분석 Agent
