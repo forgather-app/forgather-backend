@@ -1,9 +1,9 @@
 /* ==========================================================================
    Spaces Page Styles
-   ==========================================================================
+   Tailwind CSS 마이그레이션 완료 (Phase 6)
 
-   Note: 스페이스 페이지는 Tailwind CSS로 마이그레이션되었습니다.
-   아래 스타일은 JavaScript에서 동적으로 생성하는 요소에만 적용됩니다.
+   이 파일은 JavaScript에서 동적으로 생성하는 요소의 스타일만 포함합니다.
+   순수 스타일링 클래스는 Tailwind CSS로 대체되었습니다.
 
    Migration date: 2026-02-04
    Related file: templates/admin/spaces/list.html
@@ -12,6 +12,7 @@
 /* ==========================================================================
    Badge Styles (JS 동적 생성 - spaces.js renderSpaces())
    - Public/Private 표시용 배지
+   - space.isPublic ? '<span class="badge badge-success">Public</span>' : ...
    ========================================================================== */
 
 .badge {
@@ -43,7 +44,7 @@
 .empty-state {
     text-align: center;
     padding: 3rem;
-    color: #475569;
+    color: var(--text-secondary, #475569);
 }
 
 .empty-state-icon {
@@ -55,7 +56,7 @@
 .empty-state h3 {
     font-size: 1.25rem;
     font-weight: 600;
-    color: #164E63;
+    color: var(--text-primary, #164E63);
     margin-bottom: 0.5rem;
 }
 
@@ -65,37 +66,35 @@
 
 /* ==========================================================================
    Table Row Styles (JS 동적 생성 - spaces.js renderSpaces())
-   - 테이블 행 스타일
+   - 테이블 행 및 셀 스타일
    ========================================================================== */
 
-/* 테이블 행 기본 스타일 */
 #spacesTableBody tr {
-    transition: background-color 0.2s ease;
+    transition: background-color 0.15s ease;
 }
 
 #spacesTableBody tr:hover {
-    background-color: #f8fafc;
+    background-color: var(--bg-color, #ECFEFF);
 }
 
-/* 테이블 셀 기본 스타일 */
 #spacesTableBody td {
     padding: 1rem 1.5rem;
     font-size: 0.875rem;
-    color: #164E63;
+    color: var(--text-primary, #164E63);
     vertical-align: middle;
 }
 
 /* 스페이스 코드 컬럼 (클릭 가능) */
 #spacesTableBody td:nth-child(2) {
-    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    font-family: var(--font-mono, 'SF Mono', Monaco, monospace);
     font-size: 0.8125rem;
-    color: #0891B2;
+    color: var(--primary-color, #0891B2);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 }
 
 #spacesTableBody td:nth-child(2):hover {
-    color: #0E7490;
+    color: var(--primary-hover, #0E7490);
     text-decoration: underline;
 }
 
@@ -107,7 +106,7 @@
 /* 시간 컬럼 (monospace) */
 #spacesTableBody td:nth-child(5),
 #spacesTableBody td:nth-child(6) {
-    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    font-family: var(--font-mono, 'SF Mono', Monaco, monospace);
     font-size: 0.8125rem;
-    color: #475569;
+    color: var(--text-secondary, #475569);
 }
