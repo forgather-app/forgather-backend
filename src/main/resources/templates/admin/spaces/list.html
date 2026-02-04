@@ -78,18 +78,20 @@
         .modal-overlay {
             opacity: 0;
             visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
+            backdrop-filter: blur(0px);
+            transition: opacity 0.3s ease, visibility 0.3s ease, backdrop-filter 0.3s ease;
         }
         .modal-overlay.show {
             opacity: 1;
             visibility: visible;
+            backdrop-filter: blur(4px);
         }
         .modal-container {
-            transform: translateY(20px);
-            transition: transform 0.3s ease;
+            transform: translateY(20px) scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .modal-overlay.show .modal-container {
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
         }
         /* Body scroll lock */
         body.modal-open {

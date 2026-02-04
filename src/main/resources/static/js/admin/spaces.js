@@ -195,13 +195,13 @@ document.addEventListener('DOMContentLoaded', function () {
              * - HTML 속성으로 저장하므로 XSS 방지를 위해 escapeHtml 적용
              */
             return `
-                <tr>
-                    <td>${space.id}</td>
-                    <td data-space-code="${escapeHtml(space.code)}">${escapeHtml(space.code)}</td>
-                    <td>${escapeHtml(space.name)}</td>
-                    <td style="text-align: center;">${publicBadge}</td>
-                    <td>${formatDateTime(space.createdAt)}</td>
-                    <td>${formatDateTime(space.updatedAt)}</td>
+                <tr class="hover:bg-bg-color transition-colors duration-150">
+                    <td class="px-lg py-md text-sm text-text-primary">${space.id}</td>
+                    <td class="px-lg py-md text-sm font-mono text-primary cursor-pointer hover:text-primary-hover hover:underline transition-colors duration-150" data-space-code="${escapeHtml(space.code)}">${escapeHtml(space.code)}</td>
+                    <td class="px-lg py-md text-sm text-text-primary">${escapeHtml(space.name)}</td>
+                    <td class="px-lg py-md text-sm text-center">${publicBadge}</td>
+                    <td class="px-lg py-md text-sm text-text-secondary font-mono">${formatDateTime(space.createdAt)}</td>
+                    <td class="px-lg py-md text-sm text-text-secondary font-mono">${formatDateTime(space.updatedAt)}</td>
                 </tr>
             `;
         }).join('');

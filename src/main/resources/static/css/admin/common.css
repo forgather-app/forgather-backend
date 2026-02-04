@@ -150,6 +150,11 @@
     background-color: var(--bg-color);
     border-color: var(--primary-color);
     color: var(--primary-color);
+    transform: scale(1.05);
+}
+
+.pagination-btn:active:not(:disabled) {
+    transform: scale(0.98);
 }
 
 /* JS에서 동적으로 추가: button.classList.add('active') */

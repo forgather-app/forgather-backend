@@ -65,48 +65,8 @@
 }
 
 /* ==========================================================================
-   Table Row Styles (JS 동적 생성 - spaces.js renderSpaces())
-   - 테이블 행 및 셀 스타일
+   Table Row Styles
+   - Phase 7에서 JS 인라인 Tailwind 클래스로 완전히 대체됨
+   - spaces.js renderSpacesTable() 함수에서 tr, td에 Tailwind 클래스 직접 적용
+   - 스타일 관리는 JS 템플릿 리터럴에서 수행
    ========================================================================== */
-
-#spacesTableBody tr {
-    transition: background-color 0.15s ease;
-}
-
-#spacesTableBody tr:hover {
-    background-color: var(--bg-color, #ECFEFF);
-}
-
-#spacesTableBody td {
-    padding: 1rem 1.5rem;
-    font-size: 0.875rem;
-    color: var(--text-primary, #164E63);
-    vertical-align: middle;
-}
-
-/* 스페이스 코드 컬럼 (클릭 가능) */
-#spacesTableBody td:nth-child(2) {
-    font-family: var(--font-mono, 'SF Mono', Monaco, monospace);
-    font-size: 0.8125rem;
-    color: var(--primary-color, #0891B2);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-#spacesTableBody td:nth-child(2):hover {
-    color: var(--primary-hover, #0E7490);
-    text-decoration: underline;
-}
-
-/* 공개 여부 컬럼 (중앙 정렬) */
-#spacesTableBody td:nth-child(4) {
-    text-align: center;
-}
-
-/* 시간 컬럼 (monospace) */
-#spacesTableBody td:nth-child(5),
-#spacesTableBody td:nth-child(6) {
-    font-family: var(--font-mono, 'SF Mono', Monaco, monospace);
-    font-size: 0.8125rem;
-    color: var(--text-secondary, #475569);
-}
