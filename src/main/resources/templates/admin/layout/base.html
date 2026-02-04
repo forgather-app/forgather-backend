@@ -5,7 +5,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${title} ?: 'Forgather Admin'">Forgather Admin</title>
 
-    <!-- Common CSS -->
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Design System: Forgather Admin
+                        primary: {
+                            DEFAULT: '#0891B2',
+                            hover: '#0E7490',
+                            light: '#22D3EE',
+                        },
+                        secondary: {
+                            DEFAULT: '#22D3EE',
+                            hover: '#06B6D4',
+                        },
+                        cta: {
+                            DEFAULT: '#22C55E',
+                            hover: '#16A34A',
+                        },
+                        success: '#22C55E',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        info: '#0891B2',
+                        // Surface & Background
+                        surface: '#FFFFFF',
+                        'bg-color': '#ECFEFF',
+                        'border-color': '#E2E8F0',
+                        // Text
+                        'text-primary': '#164E63',
+                        'text-secondary': '#475569',
+                        'text-muted': '#94A3B8',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        mono: ['SF Mono', 'Monaco', 'Cascadia Code', 'monospace'],
+                    },
+                    boxShadow: {
+                        'sm': '0 1px 2px rgba(0,0,0,0.05)',
+                        'md': '0 4px 6px rgba(0,0,0,0.1)',
+                        'lg': '0 10px 15px rgba(0,0,0,0.1)',
+                        'xl': '0 20px 25px rgba(0,0,0,0.15)',
+                    },
+                    spacing: {
+                        'xs': '0.25rem',
+                        'sm': '0.5rem',
+                        'md': '1rem',
+                        'lg': '1.5rem',
+                        'xl': '2rem',
+                        '2xl': '3rem',
+                        '3xl': '4rem',
+                    },
+                    borderRadius: {
+                        'DEFAULT': '8px',
+                        'lg': '12px',
+                        'xl': '16px',
+                    },
+                },
+            },
+        }
+    </script>
+
+    <!-- Common CSS (점진적 전환을 위해 유지) -->
     <link rel="stylesheet" th:href="@{/css/admin/common.css}">
 
     <!-- Page specific CSS -->
