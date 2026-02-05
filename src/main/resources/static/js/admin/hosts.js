@@ -226,8 +226,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             <svg class="w-16 h-16 mb-4 text-text-muted opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                             </svg>
-                            <h3 class="text-lg font-semibold text-text-primary mb-2">No Hosts Found</h3>
-                            <p class="text-sm">There are no hosts to display.</p>
+                            <h3 class="text-lg font-semibold text-text-primary mb-2">호스트를 찾을 수 없습니다</h3>
+                            <p class="text-sm">표시할 호스트가 없습니다.</p>
                         </div>
                     </td>
                 </tr>
@@ -346,7 +346,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         } catch (error) {
             console.error('Failed to load hosts:', error);
-            showError(error.message || 'Failed to load hosts. Please try again.');
+            showError(error.message || '호스트 목록을 불러오는데 실패했습니다. 다시 시도해주세요.');
         } finally {
             hideLoading();
         }
@@ -476,7 +476,7 @@ document.addEventListener('DOMContentLoaded', function() {
      * - 확인 시 Auth.logout() 호출 (토큰 삭제 + 로그인 페이지 이동)
      */
     function handleLogout() {
-        if (confirm('Are you sure you want to logout?')) {
+        if (confirm('로그아웃 하시겠습니까?')) {
             Auth.logout();
         }
     }

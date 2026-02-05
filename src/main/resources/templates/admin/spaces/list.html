@@ -131,7 +131,7 @@
                     <li>
                         <button id="logoutBtn"
                                 class="px-md py-2.5 min-h-[44px] text-sm font-medium text-text-secondary border border-border-color rounded bg-transparent hover:bg-gray-50 hover:text-text-primary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
-                            Logout
+                            로그아웃
                         </button>
                     </li>
                 </ul>
@@ -181,7 +181,7 @@
                     </button>
                 </div>
                 <div class="flex items-center gap-sm">
-                    <label for="pageSize" class="text-sm font-medium text-text-secondary whitespace-nowrap">Items per page:</label>
+                    <label for="pageSize" class="text-sm font-medium text-text-secondary whitespace-nowrap">페이지당 항목:</label>
                     <select id="pageSize"
                             class="px-md py-2.5 min-h-[44px] text-sm border border-border-color rounded-lg bg-surface text-text-primary
                                    focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
@@ -234,7 +234,7 @@
                  class="flex flex-col items-center justify-center py-2xl text-text-secondary"
                  style="display: none;">
                 <div class="w-10 h-10 border-4 border-border-color border-t-primary rounded-full animate-spin"></div>
-                <p class="mt-md text-sm">Loading...</p>
+                <p class="mt-md text-sm">로딩 중...</p>
             </div>
 
             <!-- Error Message -->
@@ -317,7 +317,7 @@
         <div class="modal-container bg-surface rounded-xl shadow-xl max-w-[600px] w-[90%] max-h-[85vh] flex flex-col">
             <!-- 모달 헤더 -->
             <div class="flex justify-between items-center p-lg border-b border-border-color">
-                <h3 id="modalTitle" class="text-xl font-bold text-text-primary m-0">Space Details</h3>
+                <h3 id="modalTitle" class="text-xl font-bold text-text-primary m-0">스페이스 상세</h3>
                 <button id="closeModalBtn"
                         class="w-11 h-11 flex items-center justify-center text-2xl text-text-secondary bg-transparent border-none rounded-lg cursor-pointer
                                hover:bg-bg-color hover:text-text-primary transition-all duration-200"
@@ -331,7 +331,7 @@
                 <!-- 로딩 상태 표시 -->
                 <div id="modalLoading" class="flex flex-col items-center justify-center py-2xl text-text-secondary" style="display: none;">
                     <div class="w-10 h-10 border-3 border-border-color border-t-primary rounded-full animate-spin"></div>
-                    <p class="mt-md text-sm">Loading space details...</p>
+                    <p class="mt-md text-sm">스페이스 정보 로딩 중...</p>
                 </div>
 
                 <!-- 에러 상태 표시 -->

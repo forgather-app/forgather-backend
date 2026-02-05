@@ -188,8 +188,8 @@ document.addEventListener('DOMContentLoaded', function () {
                             <svg class="w-16 h-16 mb-4 text-text-muted opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                             </svg>
-                            <h3 class="text-lg font-semibold text-text-primary mb-2">No Spaces Found</h3>
-                            <p class="text-sm">There are no spaces to display.</p>
+                            <h3 class="text-lg font-semibold text-text-primary mb-2">스페이스를 찾을 수 없습니다</h3>
+                            <p class="text-sm">표시할 스페이스가 없습니다.</p>
                         </div>
                     </td>
                 </tr>
@@ -198,10 +198,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         const rows = spaces.map(space => {
-            // Public/Private 상태를 Badge로 표시
+            // 공개/비공개 상태를 Badge로 표시
             const publicBadge = space.isPublic
-                ? '<span class="badge badge-success">Public</span>'
-                : '<span class="badge badge-danger">Private</span>';
+                ? '<span class="badge badge-success">공개</span>'
+                : '<span class="badge badge-danger">비공개</span>';
 
             /**
              * data-space-code 속성 추가
@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (error) {
             console.error('Failed to load spaces:', error);
-            showError(error.message || 'Failed to load spaces. Please try again.');
+            showError(error.message || '스페이스 목록을 불러오는데 실패했습니다. 다시 시도해주세요.');
         } finally {
             hideLoading();
         }
@@ -443,7 +443,7 @@ document.addEventListener('DOMContentLoaded', function () {
      * 로그아웃 핸들러
      */
     function handleLogout() {
-        if (confirm('Are you sure you want to logout?')) {
+        if (confirm('로그아웃 하시겠습니까?')) {
             Auth.logout();
         }
     }
@@ -785,10 +785,10 @@ document.addEventListener('DOMContentLoaded', function () {
         modalSpaceCode.textContent = data.space.code;
         modalSpaceName.textContent = data.space.name;
 
-        // Public 상태를 Badge로 표시
+        // 공개/비공개 상태를 Badge로 표시
         const publicBadge = data.space.isPublic
-            ? '<span class="badge badge-success">Public</span>'
-            : '<span class="badge badge-danger">Private</span>';
+            ? '<span class="badge badge-success">공개</span>'
+            : '<span class="badge badge-danger">비공개</span>';
         modalSpacePublic.innerHTML = publicBadge;
 
         /**
@@ -833,7 +833,7 @@ document.addEventListener('DOMContentLoaded', function () {
             showModalContent(data);
         } catch (error) {
             console.error('Failed to load space detail:', error);
-            showModalError(error.message || 'Failed to load space details. Please try again.');
+            showModalError(error.message || '스페이스 정보를 불러오는데 실패했습니다. 다시 시도해주세요.');
         }
     }
 

@@ -99,12 +99,12 @@ const PaginationUtil = {
         lastBtn.setAttribute('aria-label', '마지막 페이지로 이동');
         buttonsContainer.appendChild(lastBtn);
 
-        // 페이지 정보 표시 (Page 1 of 10 (Total: 150 items))
+        // 페이지 정보 표시 (N페이지 중 M페이지 (전체: X개))
         const infoContainer = document.createElement('div');
         infoContainer.className = 'pagination-info';
         infoContainer.innerHTML = `
-            Page <strong>${currentPage}</strong> of <strong>${totalPages}</strong>
-            (Total: <strong>${totalCount.toLocaleString()}</strong> items)
+            <strong>${totalPages}</strong>페이지 중 <strong>${currentPage}</strong>페이지
+            (전체: <strong>${totalCount.toLocaleString()}</strong>개)
         `;
 
         // DOM에 추가
