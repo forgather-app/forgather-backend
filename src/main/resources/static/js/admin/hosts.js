@@ -115,14 +115,42 @@ document.addEventListener('DOMContentLoaded', function() {
     // ======================================================================
 
     /**
+     * 스켈레톤 로딩 UI 렌더링
+     * - 실제 데이터 행과 유사한 형태로 표시
+     * - CLS(Cumulative Layout Shift) 최소화
+     *
+     * @param {number} rowCount - 표시할 스켈레톤 행 개수 (기본값: 5)
+     */
+    function renderSkeletonLoading(rowCount = 5) {
+        const skeletonRows = Array(rowCount).fill(null).map(() => `
+            <tr class="animate-pulse">
+                <td class="px-6 py-4">
+                    <div class="h-4 bg-neutral-200 rounded w-8"></div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="h-4 bg-neutral-200 rounded w-32"></div>
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <div class="h-4 bg-neutral-200 rounded w-8 mx-auto"></div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="h-4 bg-neutral-200 rounded w-28"></div>
+                </td>
+            </tr>
+        `).join('');
+
+        hostsTableBody.innerHTML = skeletonRows;
+    }
+
+    /**
      * 로딩 상태 표시
-     * - 로딩 스피너를 표시합니다.
-     * - 테이블과 페이지네이션을 숨깁니다.
+     * - 스피너 대신 스켈레톤 UI로 데이터 구조 예측 가능
+     * - CLS(Cumulative Layout Shift) 최소화
      * - API 호출 시작 시 호출됩니다.
      */
     function showLoading() {
-        loadingSpinner.style.display = 'flex';
-        hostsTableBody.innerHTML = '';
+        loadingSpinner.style.display = 'none';
+        renderSkeletonLoading(currentPageSize > 15 ? 10 : 5);
         paginationContainer.style.display = 'none';
     }
 
