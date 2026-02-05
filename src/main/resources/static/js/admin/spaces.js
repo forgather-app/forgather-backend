@@ -720,8 +720,24 @@ document.addEventListener('DOMContentLoaded', function () {
      * - 우측 화살표: 다음 페이지
      *
      * 접근성 향상을 위한 기능
+     *
+     * 주의: input, textarea, select, contentEditable 요소에 포커스가 있을 때는
+     * 화살표 키가 해당 요소 내에서 커서 이동에 사용되므로 페이지 이동을 무시한다.
      */
     document.addEventListener('keydown', function (event) {
+        // input, textarea, select, contentEditable 요소에 포커스가 있으면 무시
+        const activeElement = document.activeElement;
+        const isInputFocused = activeElement && (
+            activeElement.tagName === 'INPUT' ||
+            activeElement.tagName === 'TEXTAREA' ||
+            activeElement.tagName === 'SELECT' ||
+            activeElement.isContentEditable
+        );
+
+        if (isInputFocused) {
+            return;
+        }
+
         // 좌측 화살표: 이전 페이지
         if (event.key === 'ArrowLeft' && currentPage > 1) {
             event.preventDefault();
