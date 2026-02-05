@@ -206,15 +206,33 @@ document.addEventListener('DOMContentLoaded', function () {
      */
     function renderSpacesTable(spaces) {
         if (!spaces || spaces.length === 0) {
+            // 필터 또는 검색이 활성화되어 있으면 초기화 버튼 표시
+            const hasFiltersOrSearch = hasActiveFilters() || hasActiveNameSearch();
+            const resetButtonHtml = hasFiltersOrSearch ? `
+                <button type="button"
+                        id="resetEmptyStateBtn"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px]
+                               text-sm font-medium text-white bg-primary rounded-lg
+                               hover:bg-primary-hover active:scale-[0.98]
+                               transition-all duration-200 cursor-pointer
+                               focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    필터 초기화
+                </button>
+            ` : '';
+
             spacesTableBody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="text-center py-12">
+                    <td colspan="6" class="text-center py-16">
                         <div class="flex flex-col items-center justify-center text-text-secondary">
-                            <svg class="w-16 h-16 mb-4 text-text-muted opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-20 h-20 mb-6 text-text-muted opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                             </svg>
-                            <h3 class="text-lg font-semibold text-text-primary mb-2">스페이스를 찾을 수 없습니다</h3>
-                            <p class="text-sm">표시할 스페이스가 없습니다.</p>
+                            <h3 class="text-xl font-semibold text-text-primary mb-2">스페이스를 찾을 수 없습니다</h3>
+                            <p class="text-sm mb-6">${hasFiltersOrSearch ? '검색 조건에 맞는 스페이스가 없습니다.' : '표시할 스페이스가 없습니다.'}</p>
+                            ${resetButtonHtml}
                         </div>
                     </td>
                 </tr>
@@ -944,14 +962,28 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /**
-     * Code 컬럼 클릭 이벤트 핸들러 (이벤트 위임 패턴)
+     * 테이블 바디 클릭 이벤트 핸들러 (이벤트 위임 패턴)
      *
      * 이벤트 위임 패턴을 사용하는 이유:
      * - 테이블 행이 동적으로 생성되므로 각 행에 개별 이벤트 리스너를 달면 메모리 낭비
-     * - tbody에 한 번만 이벤트 리스너를 등록하고, 클릭된 요소가 Code 컬럼인지 확인
+     * - tbody에 한 번만 이벤트 리스너를 등록하고, 클릭된 요소를 확인
      * - 페이징으로 DOM이 재생성되어도 이벤트 리스너를 다시 등록할 필요 없음
+     *
+     * 처리하는 이벤트:
+     * 1. Code 컬럼 클릭 → 모달 열기
+     * 2. Empty State 초기화 버튼 클릭 → 필터/검색 초기화
      */
     spacesTableBody.addEventListener('click', function (event) {
+        // Empty State 초기화 버튼 클릭 처리
+        if (event.target.closest('#resetEmptyStateBtn')) {
+            clearFilterState();
+            clearNameSearchState();
+            currentPage = 1;
+            loadSpaces();
+            return;
+        }
+
+        // Code 컬럼 클릭 처리
         handleSpaceCodeInteraction(event);
     });
 
