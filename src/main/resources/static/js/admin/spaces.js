@@ -843,7 +843,7 @@ document.addEventListener('DOMContentLoaded', function () {
         modalGuestBookCount.textContent = data.guestBookCount.toLocaleString();
 
         // 콘텐츠와 버튼 표시
-        modalContent.style.display = 'flex';
+        modalContent.style.display = 'block';
         visitSpaceBtn.style.display = 'block';
     }
 
@@ -992,11 +992,21 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     /**
-     * 모달 닫기 버튼 클릭 핸들러
+     * 모달 닫기 버튼 클릭 핸들러 (헤더 X 버튼)
      */
     closeModalBtn.addEventListener('click', function () {
         closeModal();
     });
+
+    /**
+     * 모달 닫기 버튼 클릭 핸들러 (푸터 닫기 버튼)
+     */
+    const closeModalFooterBtn = document.getElementById('closeModalFooterBtn');
+    if (closeModalFooterBtn) {
+        closeModalFooterBtn.addEventListener('click', function () {
+            closeModal();
+        });
+    }
 
     /**
      * 모달 오버레이 클릭 시 닫기
