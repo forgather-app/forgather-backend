@@ -70,3 +70,25 @@
    - spaces.js renderSpacesTable() 함수에서 tr, td에 Tailwind 클래스 직접 적용
    - 스타일 관리는 JS 템플릿 리터럴에서 수행
    ========================================================================== */
+
+/* ==========================================================================
+   Clickable Cell - 키보드 포커스 스타일 (접근성)
+   - 스페이스 코드 컬럼의 클릭 가능 요소에 적용
+   - 키보드 탭 이동 시 명확한 포커스 표시
+   ========================================================================== */
+
+.clickable-cell span[role="button"]:focus {
+    outline: 2px solid var(--primary-color, #171717);
+    outline-offset: 2px;
+}
+
+/* 마우스 클릭 시 포커스 링 숨김 (키보드 사용자만 표시) */
+.clickable-cell span[role="button"]:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* 키보드 포커스 시 명확한 시각적 피드백 */
+.clickable-cell span[role="button"]:focus-visible {
+    outline: 2px solid var(--primary-color, #171717);
+    outline-offset: 2px;
+}

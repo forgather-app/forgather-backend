@@ -207,17 +207,27 @@ document.addEventListener('DOMContentLoaded', function () {
              * data-space-code 속성 추가
              * - 클릭 시 이벤트 위임 패턴으로 spaceCode를 읽어옴
              * - HTML 속성으로 저장하므로 XSS 방지를 위해 escapeHtml 적용
+             * - role="button", tabindex="0"으로 키보드 접근성 확보
+             * - aria-label로 스크린 리더 지원
              */
             return `
                 <tr class="hover:bg-bg-color transition-colors duration-150">
                     <td class="px-lg py-md text-sm text-text-primary">${space.id}</td>
-                    <td class="px-lg py-md text-sm" data-space-code="${escapeHtml(space.code)}">
-                        <span class="inline-flex items-center gap-1 font-mono text-primary cursor-pointer
-                                     underline decoration-dashed decoration-1 underline-offset-2
-                                     hover:decoration-solid hover:bg-neutral-100 hover:px-1.5 hover:py-0.5 hover:-mx-1.5 hover:rounded
-                                     transition-all duration-150">
-                            ${escapeHtml(space.code)}
-                            <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <td class="px-lg py-md text-sm clickable-cell" data-space-code="${escapeHtml(space.code)}">
+                        <span class="inline-flex items-center gap-2 font-mono text-primary cursor-pointer
+                                     px-2 py-1 -mx-2 rounded-md
+                                     bg-neutral-50 border border-neutral-200
+                                     hover:bg-neutral-100 hover:border-neutral-300
+                                     active:bg-neutral-200 active:scale-[0.98]
+                                     transition-all duration-150
+                                     focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
+                              role="button"
+                              tabindex="0"
+                              aria-label="${escapeHtml(space.code)} 스페이스 상세 보기">
+                            <span class="underline decoration-dashed decoration-1 underline-offset-2">
+                                ${escapeHtml(space.code)}
+                            </span>
+                            <svg class="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                             </svg>
                         </span>
@@ -882,24 +892,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /**
-     * Code 컬럼 클릭 이벤트 핸들러 (이벤트 위임 패턴)
+     * Code 컬럼 클릭/키보드 이벤트 공통 핸들러
      *
-     * 이벤트 위임 패턴을 사용하는 이유:
-     * - 테이블 행이 동적으로 생성되므로 각 행에 개별 이벤트 리스너를 달면 메모리 낭비
-     * - tbody에 한 번만 이벤트 리스너를 등록하고, 클릭된 요소가 Code 컬럼인지 확인
-     * - 페이징으로 DOM이 재생성되어도 이벤트 리스너를 다시 등록할 필요 없음
+     * @param {Event} event - 클릭 또는 키보드 이벤트
      *
      * 동작 과정:
-     * 1. tbody의 어딘가를 클릭하면 이 핸들러가 실행됨
-     * 2. closest()로 data-space-code 속성을 가진 td를 찾음 (span, svg 등 클릭해도 동작)
-     * 3. Code 컬럼이면 data-space-code 속성에서 spaceCode를 읽어옴
-     * 4. loadSpaceDetail 함수를 호출하여 모달 표시
+     * 1. closest()로 data-space-code 속성을 가진 td를 찾음
+     * 2. Code 컬럼이면 data-space-code 속성에서 spaceCode를 읽어옴
+     * 3. loadSpaceDetail 함수를 호출하여 모달 표시
      */
-    spacesTableBody.addEventListener('click', function (event) {
-        // closest()로 data-space-code 속성을 가진 td를 찾음
-        // span, svg 등 하위 요소를 클릭해도 부모 td를 찾아냄
+    function handleSpaceCodeInteraction(event) {
         const td = event.target.closest('td[data-space-code]');
-
         if (!td) {
             return;
         }
@@ -907,6 +910,36 @@ document.addEventListener('DOMContentLoaded', function () {
         const spaceCode = td.getAttribute('data-space-code');
         if (spaceCode) {
             loadSpaceDetail(spaceCode);
+        }
+    }
+
+    /**
+     * Code 컬럼 클릭 이벤트 핸들러 (이벤트 위임 패턴)
+     *
+     * 이벤트 위임 패턴을 사용하는 이유:
+     * - 테이블 행이 동적으로 생성되므로 각 행에 개별 이벤트 리스너를 달면 메모리 낭비
+     * - tbody에 한 번만 이벤트 리스너를 등록하고, 클릭된 요소가 Code 컬럼인지 확인
+     * - 페이징으로 DOM이 재생성되어도 이벤트 리스너를 다시 등록할 필요 없음
+     */
+    spacesTableBody.addEventListener('click', function (event) {
+        handleSpaceCodeInteraction(event);
+    });
+
+    /**
+     * Code 컬럼 키보드 이벤트 핸들러 (접근성)
+     *
+     * 키보드 접근성 향상:
+     * - Enter 또는 Space 키로 클릭과 동일한 동작 실행
+     * - role="button"과 tabindex="0"이 설정된 요소에서 동작
+     * - 스크린 리더 사용자도 키보드로 모달을 열 수 있음
+     */
+    spacesTableBody.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            const td = event.target.closest('td[data-space-code]');
+            if (td) {
+                event.preventDefault(); // Space 키의 스크롤 방지
+                handleSpaceCodeInteraction(event);
+            }
         }
     });
 
