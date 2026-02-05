@@ -130,7 +130,7 @@
                     </li>
                     <li>
                         <button id="logoutBtn"
-                                class="px-md py-sm text-sm font-medium text-text-secondary border border-border-color rounded bg-transparent hover:bg-gray-50 hover:text-text-primary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                                class="px-md py-2.5 min-h-[44px] text-sm font-medium text-text-secondary border border-border-color rounded bg-transparent hover:bg-gray-50 hover:text-text-primary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
                             Logout
                         </button>
                     </li>
@@ -174,7 +174,7 @@
                         </label>
                     </div>
                     <button type="button" id="applyFilterBtn"
-                            class="px-lg py-2 text-sm font-medium text-white bg-primary rounded-lg whitespace-nowrap
+                            class="px-lg py-2.5 min-h-[44px] text-sm font-medium text-white bg-primary rounded-lg whitespace-nowrap
                                    hover:bg-primary-hover active:scale-[0.98]
                                    transition-all duration-200 cursor-pointer">
                         필터 적용
@@ -183,7 +183,7 @@
                 <div class="flex items-center gap-sm">
                     <label for="pageSize" class="text-sm font-medium text-text-secondary whitespace-nowrap">Items per page:</label>
                     <select id="pageSize"
-                            class="px-md py-2 text-sm border border-border-color rounded-lg bg-surface text-text-primary
+                            class="px-md py-2.5 min-h-[44px] text-sm border border-border-color rounded-lg bg-surface text-text-primary
                                    focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
                                    transition-all duration-200 cursor-pointer min-w-[80px]">
                         <option value="15" selected>15</option>
@@ -206,21 +206,21 @@
                     <div class="relative">
                         <input type="text"
                                id="nameSearchInput"
-                               class="w-64 pl-md pr-10 py-2 text-sm border border-border-color rounded-lg bg-surface text-text-primary placeholder-text-muted
+                               class="w-64 pl-md pr-12 py-2.5 min-h-[44px] text-sm border border-border-color rounded-lg bg-surface text-text-primary placeholder-text-muted
                                       focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
                                       transition-all duration-200"
                                placeholder="스페이스 이름 검색..."
                                autocomplete="off">
                         <button type="button" id="nameSearchBtn"
-                                class="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 text-text-muted hover:text-primary rounded transition-colors duration-150 cursor-pointer"
+                                class="absolute right-0 top-1/2 -translate-y-1/2 p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-text-muted hover:text-primary rounded transition-colors duration-150 cursor-pointer"
                                 aria-label="검색">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                             </svg>
                         </button>
                     </div>
                     <button type="button" id="resetSearchBtn"
-                            class="px-md py-2 text-sm font-medium text-text-secondary bg-surface border border-border-color rounded-lg whitespace-nowrap
+                            class="px-md py-2.5 min-h-[44px] text-sm font-medium text-text-secondary bg-surface border border-border-color rounded-lg whitespace-nowrap
                                    hover:bg-bg-color hover:text-text-primary active:scale-[0.98]
                                    transition-all duration-200 cursor-pointer"
                             style="display: none;">
@@ -319,7 +319,7 @@
             <div class="flex justify-between items-center p-lg border-b border-border-color">
                 <h3 id="modalTitle" class="text-xl font-bold text-text-primary m-0">Space Details</h3>
                 <button id="closeModalBtn"
-                        class="w-8 h-8 flex items-center justify-center text-2xl text-text-secondary bg-transparent border-none rounded-lg cursor-pointer
+                        class="w-11 h-11 flex items-center justify-center text-2xl text-text-secondary bg-transparent border-none rounded-lg cursor-pointer
                                hover:bg-bg-color hover:text-text-primary transition-all duration-200"
                         aria-label="Close modal">
                     <span aria-hidden="true">&times;</span>
@@ -377,7 +377,7 @@
             <!-- 모달 푸터 (게스트 페이지 이동 버튼) -->
             <div class="p-lg border-t border-border-color flex justify-end">
                 <button id="visitSpaceBtn"
-                        class="min-w-[150px] px-lg py-md text-sm font-semibold text-white bg-cta rounded-lg
+                        class="min-w-[150px] min-h-[44px] px-lg py-3 text-sm font-semibold text-white bg-cta rounded-lg
                                hover:bg-cta-hover active:scale-[0.98]
                                transition-all duration-200 cursor-pointer
                                focus:outline-none focus:ring-2 focus:ring-cta focus:ring-offset-2"

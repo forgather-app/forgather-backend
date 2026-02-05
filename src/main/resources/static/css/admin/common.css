@@ -131,9 +131,9 @@
 }
 
 .pagination-btn {
-    min-width: 2.25rem;
-    height: 2.25rem;
-    padding: 0 0.5rem;
+    min-width: 2.75rem;   /* 44px - WCAG 2.1 minimum touch target */
+    height: 2.75rem;      /* 44px - WCAG 2.1 minimum touch target */
+    padding: 0 0.75rem;
     background-color: var(--surface-color);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
@@ -209,8 +209,8 @@ body.modal-open {
     }
 
     .pagination-btn {
-        min-width: 2.5rem;
-        height: 2.5rem;
+        min-width: 2.75rem;  /* 44px - WCAG 2.1 유지 */
+        height: 2.75rem;     /* 44px - WCAG 2.1 유지 */
     }
 }
 
