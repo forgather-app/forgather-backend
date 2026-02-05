@@ -66,6 +66,31 @@ document.addEventListener('DOMContentLoaded', function () {
     const paginationContainer = document.getElementById('pagination');
     const logoutBtn = document.getElementById('logoutBtn');
 
+    // 테이블 스크롤 래퍼 참조
+    const tableScrollWrapper = document.getElementById('tableScrollWrapper');
+
+    /**
+     * 테이블 스크롤 상태 업데이트
+     * - 스크롤이 가능하면 'has-scroll' 클래스 추가
+     * - 끝까지 스크롤하면 'scrolled-end' 클래스 추가
+     */
+    function updateTableScrollState() {
+        if (!tableScrollWrapper) return;
+
+        const { scrollWidth, clientWidth, scrollLeft } = tableScrollWrapper;
+        const hasScroll = scrollWidth > clientWidth;
+        const scrolledEnd = scrollLeft + clientWidth >= scrollWidth - 5; // 5px 여유
+
+        tableScrollWrapper.classList.toggle('has-scroll', hasScroll && !scrolledEnd);
+        tableScrollWrapper.classList.toggle('scrolled-end', scrolledEnd);
+    }
+
+    // 스크롤 및 리사이즈 이벤트 리스너 등록
+    if (tableScrollWrapper) {
+        tableScrollWrapper.addEventListener('scroll', updateTableScrollState);
+        window.addEventListener('resize', updateTableScrollState);
+    }
+
     /**
      * 로딩 상태 표시
      */
@@ -241,6 +266,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }).join('');
 
         spacesTableBody.innerHTML = rows;
+
+        // 테이블 렌더링 후 스크롤 상태 업데이트
+        requestAnimationFrame(updateTableScrollState);
     }
 
     /**

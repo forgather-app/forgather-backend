@@ -75,6 +75,36 @@
 
     <!-- Common CSS (JS 연동 클래스 유지) -->
     <link rel="stylesheet" th:href="@{/css/admin/common.css}">
+
+    <style>
+        /* 테이블 스크롤 인디케이터 */
+        .table-scroll-wrapper {
+            position: relative;
+        }
+        .table-scroll-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 40px;
+            background: linear-gradient(to left, rgba(255,255,255,0.9), transparent);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .table-scroll-wrapper.has-scroll::after {
+            opacity: 1;
+        }
+        .table-scroll-wrapper.scrolled-end::after {
+            opacity: 0;
+        }
+        @media (max-width: 768px) {
+            .table-scroll-wrapper::after {
+                width: 30px;
+            }
+        }
+    </style>
 </head>
 <body class="bg-bg-color min-h-screen flex flex-col font-sans">
     <!-- Header (Fragment 사용) -->
@@ -145,7 +175,7 @@
                 - tbody: 테이블 데이터 (JavaScript로 동적 생성)
             -->
             <div class="bg-surface rounded-lg shadow-md overflow-hidden">
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto table-scroll-wrapper" id="tableScrollWrapper">
                     <table class="w-full" id="hostsTable">
                         <thead>
                             <tr class="bg-neutral-100 border-b-2 border-neutral-300">

@@ -97,6 +97,34 @@
         body.modal-open {
             overflow: hidden;
         }
+
+        /* 테이블 스크롤 인디케이터 */
+        .table-scroll-wrapper {
+            position: relative;
+        }
+        .table-scroll-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 40px;
+            background: linear-gradient(to left, rgba(255,255,255,0.9), transparent);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .table-scroll-wrapper.has-scroll::after {
+            opacity: 1;
+        }
+        .table-scroll-wrapper.scrolled-end::after {
+            opacity: 0;
+        }
+        @media (max-width: 768px) {
+            .table-scroll-wrapper::after {
+                width: 30px;
+            }
+        }
         /* Spinner animation */
         @keyframes spin {
             to { transform: rotate(360deg); }
@@ -245,7 +273,7 @@
 
             <!-- Spaces Table -->
             <div class="bg-surface rounded-xl shadow-sm overflow-hidden mb-lg">
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto table-scroll-wrapper" id="tableScrollWrapper">
                     <table id="spacesTable" class="w-full">
                         <thead>
                             <tr class="bg-neutral-100 border-b-2 border-neutral-300">
