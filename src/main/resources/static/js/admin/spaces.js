@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             </svg>
                         </span>
                     </td>
-                    <td class="px-lg py-md text-sm text-text-primary">${escapeHtml(space.name)}</td>
+                    <td class="px-lg py-md text-sm text-text-primary truncate" title="${escapeHtml(space.name)}">${escapeHtml(space.name)}</td>
                     <td class="px-lg py-md text-sm text-center">${publicBadge}</td>
                     <td class="px-lg py-md text-sm text-text-secondary font-mono">${formatDateTime(space.createdAt)}</td>
                     <td class="px-lg py-md text-sm text-text-secondary font-mono">${formatDateTime(space.updatedAt)}</td>
