@@ -41,6 +41,19 @@ let totalPages = 1;
  */
 let totalCount = 0;
 
+/**
+ * 정렬 상태를 관리하는 객체
+ *
+ * field: 정렬 기준 필드 (id, name, createdAt)
+ * direction: 정렬 방향 (asc, desc)
+ *
+ * 기본값: 생성시간 내림차순 (최신순)
+ */
+const sortState = {
+    field: 'createdAt',
+    direction: 'desc'
+};
+
 // ==========================================================================
 // 페이지 초기화
 // ==========================================================================
@@ -72,19 +85,72 @@ document.addEventListener('DOMContentLoaded', function() {
     const paginationContainer = document.getElementById('pagination');
     const logoutBtn = document.getElementById('logoutBtn');
 
+    // 테이블 스크롤 래퍼 참조
+    const tableScrollWrapper = document.getElementById('tableScrollWrapper');
+
+    /**
+     * 테이블 스크롤 상태 업데이트
+     * - 스크롤이 가능하면 'has-scroll' 클래스 추가
+     * - 끝까지 스크롤하면 'scrolled-end' 클래스 추가
+     */
+    function updateTableScrollState() {
+        if (!tableScrollWrapper) return;
+
+        const { scrollWidth, clientWidth, scrollLeft } = tableScrollWrapper;
+        const hasScroll = scrollWidth > clientWidth;
+        const scrolledEnd = scrollLeft + clientWidth >= scrollWidth - 5; // 5px 여유
+
+        tableScrollWrapper.classList.toggle('has-scroll', hasScroll && !scrolledEnd);
+        tableScrollWrapper.classList.toggle('scrolled-end', scrolledEnd);
+    }
+
+    // 스크롤 및 리사이즈 이벤트 리스너 등록
+    if (tableScrollWrapper) {
+        tableScrollWrapper.addEventListener('scroll', updateTableScrollState);
+        window.addEventListener('resize', updateTableScrollState);
+    }
+
     // ======================================================================
     // UI 상태 관리 함수
     // ======================================================================
 
     /**
+     * 스켈레톤 로딩 UI 렌더링
+     * - 실제 데이터 행과 유사한 형태로 표시
+     * - CLS(Cumulative Layout Shift) 최소화
+     *
+     * @param {number} rowCount - 표시할 스켈레톤 행 개수 (기본값: 5)
+     */
+    function renderSkeletonLoading(rowCount = 5) {
+        const skeletonRows = Array(rowCount).fill(null).map(() => `
+            <tr class="animate-pulse">
+                <td class="px-6 py-4">
+                    <div class="h-4 bg-neutral-200 rounded w-8"></div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="h-4 bg-neutral-200 rounded w-32"></div>
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <div class="h-4 bg-neutral-200 rounded w-8 mx-auto"></div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="h-4 bg-neutral-200 rounded w-28"></div>
+                </td>
+            </tr>
+        `).join('');
+
+        hostsTableBody.innerHTML = skeletonRows;
+    }
+
+    /**
      * 로딩 상태 표시
-     * - 로딩 스피너를 표시합니다.
-     * - 테이블과 페이지네이션을 숨깁니다.
+     * - 스피너 대신 스켈레톤 UI로 데이터 구조 예측 가능
+     * - CLS(Cumulative Layout Shift) 최소화
      * - API 호출 시작 시 호출됩니다.
      */
     function showLoading() {
-        loadingSpinner.style.display = 'flex';
-        hostsTableBody.innerHTML = '';
+        loadingSpinner.style.display = 'none';
+        renderSkeletonLoading(currentPageSize > 15 ? 10 : 5);
         paginationContainer.style.display = 'none';
     }
 
@@ -146,18 +212,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // ======================================================================
 
     /**
-     * ISO 8601 날짜 문자열을 YYYY-MM-DD HH:mm 형식으로 변환
+     * ISO 8601 날짜 문자열을 YYYY.MM.DD HH:mm 형식으로 변환
      * @param {string} dateString - ISO 8601 형식의 날짜 문자열 (예: "2025-11-14T10:30:00")
-     * @returns {string} 포맷팅된 날짜 문자열 (예: "2025-11-14 10:30")
+     * @returns {string} 포맷팅된 날짜 문자열 (예: "2025.11.14 10:30")
      *
      * 동작 과정:
      * 1. Date 객체로 파싱
      * 2. 각 필드를 2자리로 패딩 (padStart 사용)
-     * 3. YYYY-MM-DD HH:mm 형식으로 조합
+     * 3. YYYY.MM.DD HH:mm 형식으로 조합
      *
      * 주의사항:
      * - 타임존 변환은 하지 않음 (서버와 클라이언트가 동일한 타임존 가정)
-     * - 잘못된 날짜 문자열이 들어오면 "Invalid Date" 반환
+     * - 잘못된 날짜 문자열이 들어오면 "-" 반환
      */
     function formatDateTime(dateString) {
         if (!dateString) {
@@ -178,7 +244,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const hours = String(date.getHours()).padStart(2, '0');
             const minutes = String(date.getMinutes()).padStart(2, '0');
 
-            return `${year}-${month}-${day} ${hours}:${minutes}`;
+            return `${year}.${month}.${day} ${hours}:${minutes}`;
         } catch (error) {
             console.error('Date formatting error:', error);
             return '-';
@@ -208,11 +274,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!hosts || hosts.length === 0) {
             hostsTableBody.innerHTML = `
                 <tr>
-                    <td colspan="4" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
-                        <div class="empty-state">
-                            <div class="empty-state-icon">👤</div>
-                            <h3>No Hosts Found</h3>
-                            <p>There are no hosts to display.</p>
+                    <td colspan="4" class="text-center py-12">
+                        <div class="flex flex-col items-center justify-center text-text-secondary">
+                            <svg class="w-16 h-16 mb-4 text-text-muted opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <h3 class="text-lg font-semibold text-text-primary mb-2">호스트를 찾을 수 없습니다</h3>
+                            <p class="text-sm">표시할 호스트가 없습니다.</p>
                         </div>
                     </td>
                 </tr>
@@ -241,16 +309,19 @@ document.addEventListener('DOMContentLoaded', function() {
              * - 날짜 포맷팅: formatDateTime 함수 사용
              */
             return `
-                <tr>
-                    <td>${host.id}</td>
-                    <td>${escapeHtml(host.name)}</td>
-                    <td style="text-align: center;">${spaceCount}</td>
-                    <td>${formatDateTime(host.createdAt)}</td>
+                <tr class="hover:bg-bg-color transition-colors duration-150">
+                    <td class="px-6 py-4 text-sm text-text-primary">${host.id}</td>
+                    <td class="px-6 py-4 text-sm text-text-primary font-medium truncate max-w-0" title="${escapeHtml(host.name)}">${escapeHtml(host.name)}</td>
+                    <td class="px-6 py-4 text-sm text-text-primary text-center">${spaceCount}</td>
+                    <td class="px-6 py-4 text-sm text-text-secondary">${formatDateTime(host.createdAt)}</td>
                 </tr>
             `;
         }).join('');
 
         hostsTableBody.innerHTML = rows;
+
+        // 테이블 렌더링 후 스크롤 상태 업데이트
+        requestAnimationFrame(updateTableScrollState);
     }
 
     // ======================================================================
@@ -290,6 +361,8 @@ document.addEventListener('DOMContentLoaded', function() {
      *    - 전역 상태 업데이트 (currentPage, totalPages, totalCount 등)
      *    - 테이블 렌더링
      *    - 페이지네이션 업데이트
+     *    - 총 개수 정보 업데이트
+     *    - 정렬 아이콘 업데이트
      * 5. 실패 시:
      *    - 에러 메시지 표시
      *    - 콘솔에 에러 로그 출력
@@ -306,7 +379,8 @@ document.addEventListener('DOMContentLoaded', function() {
         showLoading();
 
         try {
-            const response = await API.getHosts(currentPage, currentPageSize);
+            const sortParam = `${sortState.field},${sortState.direction}`;
+            const response = await API.getHosts(currentPage, currentPageSize, sortParam);
 
             // API 응답 데이터로 전역 상태 업데이트
             currentPage = response.currentPage;
@@ -320,12 +394,74 @@ document.addEventListener('DOMContentLoaded', function() {
             // 페이지네이션 업데이트
             updatePagination();
 
+            // 총 개수 정보 업데이트
+            updateTotalCountInfo();
+
+            // 정렬 아이콘 업데이트
+            updateSortIcons();
+
         } catch (error) {
             console.error('Failed to load hosts:', error);
-            showError(error.message || 'Failed to load hosts. Please try again.');
+            showError(error.message || '호스트 목록을 불러오는데 실패했습니다. 다시 시도해주세요.');
         } finally {
             hideLoading();
         }
+    }
+
+    /**
+     * 총 개수 정보 업데이트
+     */
+    function updateTotalCountInfo() {
+        const totalCountInfo = document.getElementById('totalCountInfo');
+        if (totalCountInfo) {
+            totalCountInfo.textContent = `Total: ${totalCount.toLocaleString()}개`;
+        }
+    }
+
+    /**
+     * 정렬 아이콘 업데이트
+     * - 현재 정렬 필드에 맞는 아이콘(▲/▼) 표시
+     * - 비활성 필드는 hover 시 ⇅ 아이콘 표시 (정렬 가능 힌트)
+     */
+    function updateSortIcons() {
+        const sortableHeaders = document.querySelectorAll('th[data-sort]');
+        sortableHeaders.forEach(header => {
+            const field = header.getAttribute('data-sort');
+            const iconSpan = header.querySelector('.sort-icon');
+            if (iconSpan) {
+                if (field === sortState.field) {
+                    // 활성 정렬 컬럼: 방향 아이콘 항상 표시
+                    iconSpan.textContent = sortState.direction === 'asc' ? '▲' : '▼';
+                    iconSpan.classList.remove('text-text-muted', 'opacity-0', 'group-hover:opacity-100');
+                    iconSpan.classList.add('text-primary');
+                } else {
+                    // 비활성 컬럼: hover 시에만 정렬 가능 힌트 표시
+                    iconSpan.textContent = '⇅';
+                    iconSpan.classList.remove('text-primary');
+                    iconSpan.classList.add('text-text-muted', 'opacity-0', 'group-hover:opacity-100');
+                }
+            }
+        });
+    }
+
+    /**
+     * 정렬 토글
+     * - 같은 필드 클릭 시 방향 토글 (asc ↔ desc)
+     * - 다른 필드 클릭 시 해당 필드로 변경, 기본 방향은 asc
+     *
+     * @param {string} field - 정렬 기준 필드
+     */
+    function toggleSort(field) {
+        if (sortState.field === field) {
+            // 같은 필드: 방향 토글
+            sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            // 다른 필드: 새 필드로 변경, 기본 오름차순
+            sortState.field = field;
+            sortState.direction = 'asc';
+        }
+        currentPage = 1; // 정렬 변경 시 첫 페이지로
+        loadHosts();
     }
 
     /**
@@ -398,7 +534,7 @@ document.addEventListener('DOMContentLoaded', function() {
      * - 확인 시 Auth.logout() 호출 (토큰 삭제 + 로그인 페이지 이동)
      */
     function handleLogout() {
-        if (confirm('Are you sure you want to logout?')) {
+        if (confirm('로그아웃 하시겠습니까?')) {
             Auth.logout();
         }
     }
@@ -408,6 +544,25 @@ document.addEventListener('DOMContentLoaded', function() {
     logoutBtn.addEventListener('click', handleLogout);
 
     /**
+     * 테이블 헤더 정렬 클릭 이벤트 리스너 (이벤트 위임)
+     */
+    const hostsTable = document.getElementById('hostsTable');
+    if (hostsTable) {
+        const thead = hostsTable.querySelector('thead');
+        if (thead) {
+            thead.addEventListener('click', function(event) {
+                const th = event.target.closest('th[data-sort]');
+                if (th) {
+                    const field = th.getAttribute('data-sort');
+                    if (field) {
+                        toggleSort(field);
+                    }
+                }
+            });
+        }
+    }
+
+    /**
      * 키보드 네비게이션
      * - 좌측 화살표: 이전 페이지
      * - 우측 화살표: 다음 페이지
@@ -415,8 +570,24 @@ document.addEventListener('DOMContentLoaded', function() {
      * 접근성 향상:
      * - 마우스 없이도 키보드로 페이지 이동 가능
      * - preventDefault()로 브라우저 기본 동작(스크롤 등) 방지
+     *
+     * 주의: input, textarea, select, contentEditable 요소에 포커스가 있을 때는
+     * 화살표 키가 해당 요소 내에서 커서 이동에 사용되므로 페이지 이동을 무시한다.
      */
     document.addEventListener('keydown', function(event) {
+        // input, textarea, select, contentEditable 요소에 포커스가 있으면 무시
+        const activeElement = document.activeElement;
+        const isInputFocused = activeElement && (
+            activeElement.tagName === 'INPUT' ||
+            activeElement.tagName === 'TEXTAREA' ||
+            activeElement.tagName === 'SELECT' ||
+            activeElement.isContentEditable
+        );
+
+        if (isInputFocused) {
+            return;
+        }
+
         // 좌측 화살표: 이전 페이지
         if (event.key === 'ArrowLeft' && currentPage > 1) {
             event.preventDefault();

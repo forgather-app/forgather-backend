@@ -1,339 +1,20 @@
 /* ==========================================================================
    Spaces Page Styles
+   Tailwind CSS 마이그레이션 완료 (Phase 6)
+
+   이 파일은 JavaScript에서 동적으로 생성하는 요소의 스타일만 포함합니다.
+   순수 스타일링 클래스는 Tailwind CSS로 대체되었습니다.
+
+   Migration date: 2026-02-04
+   Related file: templates/admin/spaces/list.html
    ========================================================================== */
-
-.page-header {
-    margin-bottom: var(--spacing-xl);
-    padding-bottom: var(--spacing-lg);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.page-header h2 {
-    font-size: 1.875rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: var(--spacing-xs);
-}
-
-.page-header p {
-    color: var(--text-secondary);
-    font-size: 1rem;
-}
 
 /* ==========================================================================
-   Controls
+   Badge Styles (JS 동적 생성 - spaces.js renderSpaces())
+   - Public/Private 표시용 배지
+   - space.isPublic ? '<span class="badge badge-success">Public</span>' : ...
    ========================================================================== */
 
-.controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-lg);
-    padding: var(--spacing-lg);
-    background-color: var(--surface-color);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
-    gap: var(--spacing-lg);
-}
-
-.page-size-selector {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-}
-
-.page-size-selector label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-secondary);
-    white-space: nowrap;
-}
-
-.page-size-selector .form-select {
-    width: auto;
-    min-width: 80px;
-}
-
-/* ==========================================================================
-   Name Search Section
-   - 스페이스 이름으로 검색하는 독립 영역
-   - 기존 필터와 시각적으로 분리
-   ========================================================================== */
-
-/**
- * 이름 검색 섹션 컨테이너
- * - controls 영역 상단에 별도 영역으로 배치
- * - 필터 섹션과 구분선으로 분리
- */
-.name-search-section {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-    padding-bottom: var(--spacing-md);
-    border-bottom: 1px solid var(--border-color);
-    margin-bottom: var(--spacing-md);
-    width: 100%;
-}
-
-/**
- * 검색 입력 영역 래퍼
- * - input과 버튼들을 가로로 배치
- */
-.search-input-wrapper {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    flex: 1;
-    max-width: 500px;
-}
-
-/**
- * 검색 입력 필드
- * - 기존 form-select와 유사한 스타일 적용
- */
-.search-input {
-    flex: 1;
-    padding: 0.625rem 1rem;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    background-color: var(--surface-color);
-    color: var(--text-primary);
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.search-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-}
-
-.search-input::placeholder {
-    color: var(--text-muted);
-}
-
-/**
- * 검색 버튼
- * - 기존 btn-filter와 동일한 스타일
- */
-.btn-search {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.625rem 1.25rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    line-height: 1.5;
-    border-radius: var(--radius-md);
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-    background-color: var(--primary-color);
-    color: white;
-    white-space: nowrap;
-}
-
-.btn-search:hover {
-    background-color: var(--primary-hover);
-}
-
-.btn-search:active {
-    transform: scale(0.98);
-}
-
-/**
- * 초기화 버튼
- * - 검색 중일 때만 표시
- * - secondary 스타일 (회색 계열)
- */
-.btn-reset {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.625rem 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    line-height: 1.5;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-    cursor: pointer;
-    transition: all 0.2s;
-    background-color: var(--surface-color);
-    color: var(--text-secondary);
-    white-space: nowrap;
-}
-
-.btn-reset:hover {
-    background-color: var(--bg-color);
-    color: var(--text-primary);
-    border-color: var(--text-secondary);
-}
-
-.btn-reset:active {
-    transform: scale(0.98);
-}
-
-/* ==========================================================================
-   Filter Section
-   - 스페이스 필터링 UI 영역
-   - 향후 필터 조건 추가 시 이 영역에 filter-group을 추가하면 됨
-   ========================================================================== */
-
-/**
- * 필터 섹션 컨테이너
- * - controls 영역의 왼쪽에 배치
- * - 여러 필터 그룹과 검색 버튼을 포함
- */
-.filter-section {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-lg);
-    flex: 1;
-}
-
-/**
- * 개별 필터 그룹 (라벨 + 입력 요소)
- * - 하나의 필터 조건을 담는 컨테이너
- * - 예: 작품 소개 등록 여부 필터
- * - 향후 확장: 공개 여부 필터, 날짜 필터 등을 추가할 때 이 클래스 재사용
- */
-.filter-group {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-    flex-wrap: wrap;
-}
-
-/**
- * 필터 라벨
- * - 필터 조건의 제목을 표시
- * - 진하게 표시하여 입력 요소와 구분
- */
-.filter-label {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    white-space: nowrap;
-}
-
-/**
- * Radio 버튼 라벨
- * - radio input과 텍스트를 감싸는 라벨
- * - cursor: pointer로 클릭 가능함을 표시
- * - hover 시 배경색 변경으로 인터랙티브함 강조
- */
-.filter-radio-label {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    cursor: pointer;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: var(--radius-md);
-    transition: background-color 0.2s;
-    font-size: 0.875rem;
-    color: var(--text-primary);
-    font-weight: 400;
-}
-
-.filter-radio-label:hover {
-    background-color: var(--bg-color);
-}
-
-/**
- * Radio 버튼 스타일
- * - 브라우저 기본 스타일 사용 (간결함 유지)
- * - cursor: pointer로 클릭 가능함 명시
- */
-.filter-radio-label input[type="radio"] {
-    cursor: pointer;
-    width: 16px;
-    height: 16px;
-    margin: 0;
-}
-
-/**
- * 검색 버튼
- * - 필터 선택 후 이 버튼을 클릭해야 필터가 적용됨
- * - 기존 프로젝트의 primary 버튼 스타일 재사용
- */
-.btn-filter {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.625rem 1.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    line-height: 1.5;
-    border-radius: var(--radius-md);
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-    background-color: var(--primary-color);
-    color: white;
-    white-space: nowrap;
-}
-
-.btn-filter:hover {
-    background-color: var(--primary-hover);
-}
-
-.btn-filter:active {
-    transform: scale(0.98);
-}
-
-/* ==========================================================================
-   Spaces Table Specific
-   스페이스 목록 테이블의 컬럼별 스타일 정의
-   총 6개 컬럼: ID, 코드, 이름, 공개여부, 생성시간, 수정시간
-   ========================================================================== */
-
-/* ID 컬럼 */
-.data-table th:nth-child(1),
-.data-table td:nth-child(1) {
-    width: 7%;
-}
-
-/* 스페이스 코드 컬럼 */
-.data-table th:nth-child(2),
-.data-table td:nth-child(2) {
-    width: 15%;
-    font-family: var(--font-mono);
-    font-size: 0.8125rem;
-}
-
-/* 스페이스 이름 컬럼 */
-.data-table th:nth-child(3),
-.data-table td:nth-child(3) {
-    width: 25%;
-}
-
-/* 공개 여부 컬럼 */
-.data-table th:nth-child(4),
-.data-table td:nth-child(4) {
-    width: 10%;
-    text-align: center;
-}
-
-/* 생성 시간 컬럼 */
-.data-table th:nth-child(5),
-.data-table td:nth-child(5) {
-    width: 18%;
-    font-family: var(--font-mono);
-    font-size: 0.8125rem;
-    color: var(--text-secondary);
-}
-
-/* 수정 시간 컬럼 */
-.data-table th:nth-child(6),
-.data-table td:nth-child(6) {
-    width: 18%;
-    font-family: var(--font-mono);
-    font-size: 0.8125rem;
-    color: var(--text-secondary);
-}
-
-/* Public/Private Badge */
 .badge {
     display: inline-flex;
     align-items: center;
@@ -356,26 +37,27 @@
 }
 
 /* ==========================================================================
-   Empty State
+   Empty State (JS 동적 생성 - spaces.js renderSpaces())
+   - 데이터가 없을 때 표시되는 빈 상태 UI
    ========================================================================== */
 
 .empty-state {
     text-align: center;
-    padding: var(--spacing-2xl);
-    color: var(--text-secondary);
+    padding: 3rem;
+    color: var(--text-secondary, #475569);
 }
 
 .empty-state-icon {
     font-size: 3rem;
-    margin-bottom: var(--spacing-md);
+    margin-bottom: 1rem;
     opacity: 0.5;
 }
 
 .empty-state h3 {
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary, #164E63);
+    margin-bottom: 0.5rem;
 }
 
 .empty-state p {
@@ -383,375 +65,30 @@
 }
 
 /* ==========================================================================
-   Clickable Code Column
+   Table Row Styles
+   - Phase 7에서 JS 인라인 Tailwind 클래스로 완전히 대체됨
+   - spaces.js renderSpacesTable() 함수에서 tr, td에 Tailwind 클래스 직접 적용
+   - 스타일 관리는 JS 템플릿 리터럴에서 수행
    ========================================================================== */
-
-/**
- * Code 컬럼을 클릭 가능하도록 스타일 추가
- * - cursor: pointer로 클릭 가능함을 시각적으로 표시
- * - hover 시 색상 변경과 밑줄로 인터랙티브함을 강조
- */
-.data-table td:nth-child(2) {
-    cursor: pointer;
-    color: var(--primary-color);
-    transition: all 0.2s;
-}
-
-.data-table td:nth-child(2):hover {
-    color: var(--primary-hover);
-    text-decoration: underline;
-}
 
 /* ==========================================================================
-   Modal Overlay & Container
+   Clickable Cell - 키보드 포커스 스타일 (접근성)
+   - 스페이스 코드 컬럼의 클릭 가능 요소에 적용
+   - 키보드 탭 이동 시 명확한 포커스 표시
    ========================================================================== */
 
-/**
- * 모달 오버레이
- * - position: fixed로 화면 전체를 덮음
- * - z-index: 10000으로 다른 요소들 위에 표시 (toast는 10000이므로 동일 레벨)
- * - 반투명 검은색 배경으로 뒤의 내용을 흐리게 표시
- * - flexbox로 모달을 중앙에 배치
- */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-    /*
-        페이드 인/아웃 애니메이션 적용
-        opacity와 visibility를 함께 사용해 부드러운 전환 효과
-    */
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+.clickable-cell span[role="button"]:focus {
+    outline: 2px solid var(--primary-color, #171717);
+    outline-offset: 2px;
 }
 
-/**
- * 모달이 표시될 때 적용되는 클래스
- * JavaScript에서 이 클래스를 추가/제거하여 모달을 열고 닫음
- */
-.modal-overlay.show {
-    opacity: 1;
-    visibility: visible;
+/* 마우스 클릭 시 포커스 링 숨김 (키보드 사용자만 표시) */
+.clickable-cell span[role="button"]:focus:not(:focus-visible) {
+    outline: none;
 }
 
-/**
- * 모달 컨테이너 (실제 내용이 들어가는 영역)
- * - 최대 너비 600px로 제한
- * - transform으로 열릴 때 아래에서 위로 살짝 올라오는 애니메이션
- */
-.modal-container {
-    background-color: var(--surface-color);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    max-width: 600px;
-    width: 90%;
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
-    /* 모달이 열릴 때 아래에서 위로 살짝 올라오는 효과 */
-    transform: translateY(20px);
-    transition: transform 0.3s ease;
-}
-
-.modal-overlay.show .modal-container {
-    transform: translateY(0);
-}
-
-/* ==========================================================================
-   Modal Header
-   ========================================================================== */
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-lg);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.modal-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-/**
- * 모달 닫기 버튼 (X 아이콘)
- * - 테두리와 배경 없이 깔끔한 디자인
- * - hover 시 배경색 변경으로 피드백 제공
- */
-.modal-close-btn {
-    background: none;
-    border: none;
-    font-size: 1.75rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    width: 2rem;
-    height: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--radius-md);
-    transition: all 0.2s;
-}
-
-.modal-close-btn:hover {
-    background-color: var(--bg-color);
-    color: var(--text-primary);
-}
-
-/* ==========================================================================
-   Modal Body
-   ========================================================================== */
-
-/**
- * 모달 본문
- * - 스크롤 가능하도록 overflow-y: auto 설정
- * - max-height로 내용이 많을 때 스크롤 표시
- */
-.modal-body {
-    padding: var(--spacing-lg);
-    overflow-y: auto;
-    flex: 1;
-}
-
-/* 모달 내 로딩 상태 */
-.modal-loading {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: var(--spacing-2xl);
-    color: var(--text-secondary);
-}
-
-/**
- * 작은 스피너 (모달 내부용)
- * - 전체 화면 스피너보다 작은 크기 (40px)
- * - 기존 스피너 애니메이션 재사용
- */
-.spinner-small {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--border-color);
-    border-top-color: var(--primary-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-.modal-loading p {
-    margin-top: var(--spacing-md);
-    font-size: 0.875rem;
-}
-
-/* 모달 내 에러 메시지 */
-.modal-error {
-    padding: var(--spacing-md);
-    background-color: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: var(--radius-md);
-    color: var(--danger-color);
-    font-size: 0.875rem;
-    text-align: center;
-}
-
-/* 모달 실제 콘텐츠 */
-.modal-content {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-lg);
-}
-
-/**
- * 정보 그룹 (라벨 + 값 쌍)
- * - 각 필드를 구분하는 기본 단위
- */
-.modal-info-group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-}
-
-.modal-info-label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.modal-info-value {
-    font-size: 1rem;
-    color: var(--text-primary);
-    padding: var(--spacing-sm) var(--spacing-md);
-    background-color: var(--bg-color);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-}
-
-/**
- * Code 값에 monospace 폰트 적용
- * - 코드 가독성 향상
- */
-.modal-code {
-    font-family: var(--font-mono);
-    font-size: 0.875rem;
-}
-
-/* ==========================================================================
-   Modal Footer
-   ========================================================================== */
-
-.modal-footer {
-    padding: var(--spacing-lg);
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    justify-content: flex-end;
-}
-
-.modal-footer .btn {
-    min-width: 150px;
-}
-
-/* ==========================================================================
-   Body Scroll Lock (모달 열렸을 때 body 스크롤 방지)
-   ========================================================================== */
-
-/**
- * JavaScript에서 모달이 열릴 때 body에 이 클래스 추가
- * - 배경 페이지의 스크롤을 방지하여 모달에만 집중하도록 함
- */
-body.modal-open {
-    overflow: hidden;
-}
-
-/* ==========================================================================
-   Responsive Adjustments
-   ========================================================================== */
-
-@media (max-width: 768px) {
-    .page-header h2 {
-        font-size: 1.5rem;
-    }
-
-    /**
-     * 모바일에서 controls 영역 세로 배치
-     * - 필터 섹션이 위, 페이지 크기 선택이 아래
-     */
-    .controls {
-        flex-direction: column;
-        align-items: stretch;
-        gap: var(--spacing-md);
-    }
-
-    /**
-     * 모바일에서 이름 검색 섹션 세로 배치
-     */
-    .name-search-section {
-        flex-direction: column;
-        align-items: stretch;
-        gap: var(--spacing-sm);
-    }
-
-    .search-input-wrapper {
-        max-width: none;
-    }
-
-    .search-input {
-        flex: 1;
-    }
-
-    /**
-     * 모바일에서 필터 섹션 세로 배치
-     * - 필터 그룹과 검색 버튼을 세로로 배치하여 가독성 향상
-     */
-    .filter-section {
-        flex-direction: column;
-        align-items: stretch;
-        gap: var(--spacing-md);
-    }
-
-    /**
-     * 모바일에서 필터 그룹도 세로 배치
-     * - 라벨과 radio 버튼들을 세로로 배치
-     */
-    .filter-group {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--spacing-sm);
-    }
-
-    /**
-     * 모바일에서 검색 버튼 전체 너비
-     * - 터치하기 쉽도록 버튼 크기 확대
-     */
-    .btn-filter {
-        width: 100%;
-        padding: 0.75rem 1.5rem;
-    }
-
-    .page-size-selector {
-        width: 100%;
-    }
-
-    .page-size-selector .form-select {
-        flex: 1;
-    }
-
-    /* Make table scrollable on mobile */
-    /* 모바일에서는 고정 너비를 해제하여 자동 조정 */
-    .data-table th:nth-child(1),
-    .data-table td:nth-child(1),
-    .data-table th:nth-child(2),
-    .data-table td:nth-child(2),
-    .data-table th:nth-child(3),
-    .data-table td:nth-child(3),
-    .data-table th:nth-child(4),
-    .data-table td:nth-child(4),
-    .data-table th:nth-child(5),
-    .data-table td:nth-child(5),
-    .data-table th:nth-child(6),
-    .data-table td:nth-child(6) {
-        width: auto;
-    }
-
-    .data-table th,
-    .data-table td {
-        padding: var(--spacing-sm) var(--spacing-md);
-        font-size: 0.8125rem;
-    }
-
-    /**
-     * 모바일에서 모달을 전체 화면으로 표시
-     * - 작은 화면에서 더 나은 UX 제공
-     * - max-height를 95vh로 늘려 더 많은 공간 활용
-     */
-    .modal-container {
-        width: 95%;
-        max-height: 95vh;
-        border-radius: var(--radius-md);
-    }
-
-    .modal-header,
-    .modal-body,
-    .modal-footer {
-        padding: var(--spacing-md);
-    }
-
-    .modal-title {
-        font-size: 1.125rem;
-    }
-
-    .modal-footer .btn {
-        width: 100%;
-    }
+/* 키보드 포커스 시 명확한 시각적 피드백 */
+.clickable-cell span[role="button"]:focus-visible {
+    outline: 2px solid var(--primary-color, #171717);
+    outline-offset: 2px;
 }

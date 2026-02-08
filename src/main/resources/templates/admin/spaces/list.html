@@ -5,30 +5,162 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spaces Management - Forgather Admin</title>
 
-    <!-- Common CSS -->
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Design System: Forgather Admin (Monochrome Theme)
+                        primary: {
+                            DEFAULT: '#171717',
+                            hover: '#262626',
+                            light: '#404040',
+                        },
+                        secondary: {
+                            DEFAULT: '#525252',
+                            hover: '#404040',
+                        },
+                        cta: {
+                            DEFAULT: '#22C55E',
+                            hover: '#16A34A',
+                        },
+                        success: '#22C55E',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        info: '#3B82F6',
+                        // Surface & Background (Monochrome)
+                        surface: '#FFFFFF',
+                        'bg-color': '#FAFAFA',
+                        'border-color': '#E5E5E5',
+                        // Text (Monochrome)
+                        'text-primary': '#171717',
+                        'text-secondary': '#525252',
+                        'text-muted': '#A3A3A3',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        mono: ['SF Mono', 'Monaco', 'Cascadia Code', 'monospace'],
+                    },
+                    boxShadow: {
+                        'sm': '0 1px 2px rgba(0,0,0,0.05)',
+                        'md': '0 4px 6px rgba(0,0,0,0.1)',
+                        'lg': '0 10px 15px rgba(0,0,0,0.1)',
+                        'xl': '0 20px 25px rgba(0,0,0,0.15)',
+                    },
+                    spacing: {
+                        'xs': '0.25rem',
+                        'sm': '0.5rem',
+                        'md': '1rem',
+                        'lg': '1.5rem',
+                        'xl': '2rem',
+                        '2xl': '3rem',
+                        '3xl': '4rem',
+                    },
+                },
+            },
+        }
+    </script>
+
+    <!-- Common CSS (Toast 등 JS 연동 클래스용) -->
     <link rel="stylesheet" th:href="@{/css/admin/common.css}">
-    <!-- Spaces CSS -->
+    <!-- Spaces CSS (JS 동적 생성 요소용: badge, empty-state, table rows) -->
     <link rel="stylesheet" th:href="@{/css/admin/spaces.css}">
+
+    <style>
+        /* JS 연동 클래스: Modal */
+        .modal-overlay {
+            opacity: 0;
+            visibility: hidden;
+            backdrop-filter: blur(0px);
+            transition: opacity 0.3s ease, visibility 0.3s ease, backdrop-filter 0.3s ease;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+            backdrop-filter: blur(4px);
+        }
+        .modal-container {
+            transform: translateY(20px) scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-overlay.show .modal-container {
+            transform: translateY(0) scale(1);
+        }
+        /* Body scroll lock */
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        /* 테이블 스크롤 인디케이터 */
+        .table-scroll-wrapper {
+            position: relative;
+        }
+        .table-scroll-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 40px;
+            background: linear-gradient(to left, rgba(255,255,255,0.9), transparent);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .table-scroll-wrapper.has-scroll::after {
+            opacity: 1;
+        }
+        .table-scroll-wrapper.scrolled-end::after {
+            opacity: 0;
+        }
+        @media (max-width: 768px) {
+            .table-scroll-wrapper::after {
+                width: 30px;
+            }
+        }
+        /* Spinner animation */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
-<body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-container">
-            <div class="header-left">
-                <h1 class="logo">
-                    <a th:href="@{/view/admin/spaces}">Forgather Admin</a>
+<body class="min-h-screen flex flex-col bg-bg-color font-sans">
+    <!-- Header (Fragment 참조) -->
+    <header class="bg-surface border-b border-border-color shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-lg py-md flex justify-between items-center">
+            <div class="flex items-center">
+                <h1 class="text-xl font-semibold">
+                    <a th:href="@{/view/admin/spaces}" class="text-text-primary hover:text-primary transition-colors duration-200 cursor-pointer">
+                        Forgather Admin
+                    </a>
                 </h1>
             </div>
-            <nav class="header-nav">
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a th:href="@{/view/admin/spaces}" class="nav-link active">Spaces</a>
+            <nav>
+                <ul class="flex items-center gap-lg">
+                    <li>
+                        <a th:href="@{/view/admin/spaces}"
+                           class="text-primary bg-neutral-100 font-medium transition-colors duration-200 cursor-pointer px-sm py-xs rounded">
+                            Spaces
+                        </a>
                     </li>
-                    <li class="nav-item">
-                        <a th:href="@{/view/admin/hosts}" class="nav-link">Hosts</a>
+                    <li>
+                        <a th:href="@{/view/admin/hosts}"
+                           class="text-text-secondary hover:text-primary font-medium transition-colors duration-200 cursor-pointer px-sm py-xs rounded">
+                            Hosts
+                        </a>
                     </li>
-                    <li class="nav-item">
-                        <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+                    <li>
+                        <button id="logoutBtn"
+                                class="px-md py-2.5 min-h-[44px] text-sm font-medium text-text-secondary border border-border-color rounded bg-transparent hover:bg-gray-50 hover:text-text-primary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                            로그아웃
+                        </button>
                     </li>
                 </ul>
             </nav>
@@ -36,76 +168,52 @@
     </header>
 
     <!-- Main Content -->
-    <main class="main-content">
-        <div class="container">
+    <main class="flex-1 py-xl">
+        <div class="max-w-7xl mx-auto px-lg">
             <!-- Page Header -->
-            <div class="page-header">
-                <h2>스페이스 관리 페이지</h2>
-                <p>전체 스페이스 조회 및 관리 페이지</p>
+            <div class="mb-xl pb-lg border-b border-border-color">
+                <h2 class="text-3xl font-bold text-text-primary mb-xs">스페이스 관리 페이지</h2>
+                <p class="text-text-secondary text-base">전체 스페이스 조회 및 관리 페이지</p>
             </div>
 
-            <!-- Controls -->
-            <div class="controls">
-                <!--
-                    이름 검색 영역
-                    - 스페이스 이름으로 검색하는 독립 검색 기능
-                    - 기존 필터와 상호 배타적: 이름 검색 시 필터 초기화, 필터 사용 시 검색어 초기화
-                    - Enter 키 또는 검색 버튼 클릭으로 검색 실행
-                -->
-                <div class="name-search-section">
-                    <label class="filter-label" for="nameSearchInput">스페이스 이름:</label>
-                    <div class="search-input-wrapper">
-                        <input type="text"
-                               id="nameSearchInput"
-                               class="search-input"
-                               placeholder="스페이스 이름 입력"
-                               autocomplete="off">
-                        <button type="button" class="btn-search" id="nameSearchBtn">검색</button>
-                        <!-- 검색 중일 때만 표시되는 초기화 버튼 -->
-                        <button type="button" class="btn-reset" id="nameSearchResetBtn" style="display: none;">초기화</button>
-                    </div>
-                </div>
-
-                <!--
-                    필터 영역
-                    - 작품 소개 등록 여부에 따른 필터링 기능
-                    - radio 버튼으로 단일 선택 제공
-                    - 향후 다른 필터 조건 추가 시 filter-group을 복사하여 확장
-                -->
-                <div class="filter-section">
-                    <!--
-                        작품 소개 등록 여부 필터 그룹
-                        - name 속성을 동일하게 하여 radio 그룹화
-                        - value: 'all' (전체), 'true' (등록함), 'false' (미등록)
-                        - 기본값은 'all' (checked 속성)
-                    -->
-                    <div class="filter-group">
-                        <label class="filter-label">작품 소개 등록 여부:</label>
-                        <label class="filter-radio-label">
-                            <input type="radio" name="hasProduct" value="all" checked>
+            <!--
+                필터 영역 (작품 소개 등록 여부)
+                - 필터 API (/admin/spaces/search)와 연동
+                - 이름 검색과 독립적으로 동작
+            -->
+            <div class="flex flex-wrap items-center justify-between gap-md mb-lg p-lg bg-surface rounded-xl shadow-sm">
+                <div class="flex flex-wrap items-center gap-md">
+                    <label class="text-sm font-semibold text-text-primary whitespace-nowrap">작품 소개 등록 여부:</label>
+                    <div class="flex items-center gap-xs flex-wrap">
+                        <label class="inline-flex items-center gap-xs cursor-pointer px-md py-2 rounded-lg border border-transparent hover:bg-bg-color transition-colors duration-200 text-sm text-text-primary">
+                            <input type="radio" name="hasProduct" value="all" checked
+                                   class="w-4 h-4 cursor-pointer accent-primary">
                             <span>전체</span>
                         </label>
-                        <label class="filter-radio-label">
-                            <input type="radio" name="hasProduct" value="true">
+                        <label class="inline-flex items-center gap-xs cursor-pointer px-md py-2 rounded-lg border border-transparent hover:bg-bg-color transition-colors duration-200 text-sm text-text-primary">
+                            <input type="radio" name="hasProduct" value="true"
+                                   class="w-4 h-4 cursor-pointer accent-primary">
                             <span>등록함</span>
                         </label>
-                        <label class="filter-radio-label">
-                            <input type="radio" name="hasProduct" value="false">
+                        <label class="inline-flex items-center gap-xs cursor-pointer px-md py-2 rounded-lg border border-transparent hover:bg-bg-color transition-colors duration-200 text-sm text-text-primary">
+                            <input type="radio" name="hasProduct" value="false"
+                                   class="w-4 h-4 cursor-pointer accent-primary">
                             <span>등록하지 않음</span>
                         </label>
                     </div>
-
-                    <!--
-                        검색 버튼
-                        - 필터 선택 후 이 버튼을 클릭해야 필터가 적용됨
-                        - JavaScript의 applyFilter() 함수 호출
-                    -->
-                    <button type="button" class="btn-filter" id="applyFilterBtn">검색</button>
+                    <button type="button" id="applyFilterBtn"
+                            class="px-lg py-2.5 min-h-[44px] text-sm font-medium text-white bg-primary rounded-lg whitespace-nowrap
+                                   hover:bg-primary-hover active:scale-[0.98]
+                                   transition-all duration-200 cursor-pointer">
+                        필터 적용
+                    </button>
                 </div>
-
-                <div class="page-size-selector">
-                    <label for="pageSize">Items per page:</label>
-                    <select id="pageSize" class="form-select">
+                <div class="flex items-center gap-sm">
+                    <label for="pageSize" class="text-sm font-medium text-text-secondary whitespace-nowrap">페이지당 항목:</label>
+                    <select id="pageSize"
+                            class="px-md py-2.5 min-h-[44px] text-sm border border-border-color rounded-lg bg-surface text-text-primary
+                                   focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
+                                   transition-all duration-200 cursor-pointer min-w-[80px]">
                         <option value="15" selected>15</option>
                         <option value="30">30</option>
                         <option value="50">50</option>
@@ -113,43 +221,110 @@
                 </div>
             </div>
 
+            <!--
+                테이블 상단 컨트롤: 총 개수 + 이름 검색
+                - 이름 검색 API (/admin/spaces/search/by-name)와 연동
+                - 필터와 독립적으로 동작 (이름 검색 시 필터 초기화됨)
+            -->
+            <div class="flex flex-wrap items-center justify-between gap-md mb-md">
+                <div id="totalCountInfo" class="text-sm text-text-secondary font-medium">
+                    <!-- JavaScript에서 동적으로 업데이트 -->
+                </div>
+                <div class="flex items-center gap-sm">
+                    <div class="relative">
+                        <input type="text"
+                               id="nameSearchInput"
+                               class="w-64 pl-md pr-12 py-2.5 min-h-[44px] text-sm border border-border-color rounded-lg bg-surface text-text-primary placeholder-text-muted
+                                      focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
+                                      transition-all duration-200"
+                               placeholder="스페이스 이름 검색..."
+                               autocomplete="off">
+                        <button type="button" id="nameSearchBtn"
+                                class="absolute right-0 top-1/2 -translate-y-1/2 p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-text-muted hover:text-primary rounded transition-colors duration-150 cursor-pointer"
+                                aria-label="검색">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <button type="button" id="resetSearchBtn"
+                            class="px-md py-2.5 min-h-[44px] text-sm font-medium text-text-secondary bg-surface border border-border-color rounded-lg whitespace-nowrap
+                                   hover:bg-bg-color hover:text-text-primary active:scale-[0.98]
+                                   transition-all duration-200 cursor-pointer"
+                            style="display: none;">
+                        초기화
+                    </button>
+                </div>
+            </div>
+
             <!-- Loading Spinner -->
-            <div id="loadingSpinner" class="loading-spinner" style="display: none;">
-                <div class="spinner"></div>
-                <p>Loading...</p>
+            <div id="loadingSpinner"
+                 class="flex flex-col items-center justify-center py-2xl text-text-secondary"
+                 style="display: none;">
+                <div class="w-10 h-10 border-4 border-border-color border-t-primary rounded-full animate-spin"></div>
+                <p class="mt-md text-sm">로딩 중...</p>
             </div>
 
             <!-- Error Message -->
-            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            <div id="errorMessage"
+                 class="p-md bg-red-50 border border-red-200 rounded-lg text-danger text-sm text-center mb-lg"
+                 style="display: none;">
+            </div>
 
             <!-- Spaces Table -->
-            <div class="table-container">
-                <table class="data-table" id="spacesTable">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>스페이스 코드</th>
-                            <th>스페이스 이름</th>
-                            <th>스페이스 공개 여부</th>
-                            <th>생성 시간</th>
-                            <th>수정 시간</th>
-                        </tr>
-                    </thead>
-                    <tbody id="spacesTableBody">
-                        <!-- Data will be populated by JavaScript -->
-                    </tbody>
-                </table>
+            <div class="bg-surface rounded-xl shadow-sm overflow-hidden mb-lg">
+                <div class="overflow-x-auto table-scroll-wrapper" id="tableScrollWrapper">
+                    <table id="spacesTable" class="w-full table-fixed">
+                        <thead>
+                            <tr class="bg-neutral-100 border-b-2 border-neutral-300">
+                                <th class="px-lg py-md text-left text-xs font-bold text-text-primary uppercase tracking-wider w-[60px] cursor-pointer hover:bg-neutral-200 transition-colors duration-150 select-none group"
+                                    data-sort="id">
+                                    <div class="flex items-center gap-xs">
+                                        <span>ID</span>
+                                        <span class="sort-icon text-text-muted transition-opacity duration-150"></span>
+                                    </div>
+                                </th>
+                                <th class="px-lg py-md text-left text-xs font-bold text-text-primary uppercase tracking-wider w-[140px]">스페이스 코드</th>
+                                <th class="px-lg py-md text-left text-xs font-bold text-text-primary uppercase tracking-wider min-w-[200px] cursor-pointer hover:bg-neutral-200 transition-colors duration-150 select-none group"
+                                    data-sort="name">
+                                    <div class="flex items-center gap-xs">
+                                        <span>스페이스 이름</span>
+                                        <span class="sort-icon text-text-muted transition-opacity duration-150"></span>
+                                    </div>
+                                </th>
+                                <th class="px-lg py-md text-center text-xs font-bold text-text-primary uppercase tracking-wider w-[100px]">공개 여부</th>
+                                <th class="px-lg py-md text-left text-xs font-bold text-text-primary uppercase tracking-wider w-[160px] cursor-pointer hover:bg-neutral-200 transition-colors duration-150 select-none group"
+                                    data-sort="createdAt">
+                                    <div class="flex items-center gap-xs">
+                                        <span>생성 시간</span>
+                                        <span class="sort-icon text-text-muted transition-opacity duration-150"></span>
+                                    </div>
+                                </th>
+                                <th class="px-lg py-md text-left text-xs font-bold text-text-primary uppercase tracking-wider w-[160px] cursor-pointer hover:bg-neutral-200 transition-colors duration-150 select-none group"
+                                    data-sort="updatedAt">
+                                    <div class="flex items-center gap-xs">
+                                        <span>수정 시간</span>
+                                        <span class="sort-icon text-text-muted transition-opacity duration-150"></span>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="spacesTableBody" class="divide-y divide-border-color">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Pagination: JavaScript에서 숫자 버튼들을 동적으로 생성 -->
-            <div class="pagination" id="pagination" style="display: none;"></div>
+            <div id="pagination" class="flex justify-center items-center gap-sm py-lg" style="display: none;"></div>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-container">
-            <p>&copy; 2025 Forgather. All rights reserved.</p>
+    <footer class="bg-surface border-t border-border-color mt-auto">
+        <div class="max-w-7xl mx-auto px-lg py-lg text-center">
+            <p class="text-text-muted text-sm">&copy; 2025 Forgather. All rights reserved.</p>
         </div>
     </footer>
 
@@ -163,64 +338,77 @@
         - ESC 키 또는 오버레이 클릭 시 닫힘
         - 모달이 열렸을 때 body의 스크롤 방지
     -->
-    <div id="spaceDetailModal" class="modal-overlay" style="display: none;" role="dialog" aria-labelledby="modalTitle" aria-modal="true">
-        <div class="modal-container">
+    <div id="spaceDetailModal"
+         class="modal-overlay fixed inset-0 bg-black/60 flex justify-center items-center z-[10000]"
+         style="display: none;"
+         role="dialog" aria-labelledby="modalTitle" aria-modal="true">
+        <div class="modal-container bg-surface rounded-xl shadow-xl max-w-[600px] w-[90%] max-h-[85vh] flex flex-col">
             <!-- 모달 헤더 -->
-            <div class="modal-header">
-                <h3 id="modalTitle" class="modal-title">Space Details</h3>
-                <button id="closeModalBtn" class="modal-close-btn" aria-label="Close modal">
+            <div class="flex justify-between items-center p-lg border-b border-border-color">
+                <h3 id="modalTitle" class="text-xl font-bold text-text-primary m-0">스페이스 상세</h3>
+                <button id="closeModalBtn"
+                        class="w-11 h-11 flex items-center justify-center text-2xl text-text-secondary bg-transparent border-none rounded-lg cursor-pointer
+                               hover:bg-bg-color hover:text-text-primary transition-all duration-200"
+                        aria-label="Close modal">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
 
             <!-- 모달 내용 -->
-            <div class="modal-body">
+            <div class="p-lg overflow-y-auto flex-1">
                 <!-- 로딩 상태 표시 -->
-                <div id="modalLoading" class="modal-loading" style="display: none;">
-                    <div class="spinner-small"></div>
-                    <p>Loading space details...</p>
+                <div id="modalLoading" class="flex flex-col items-center justify-center py-2xl text-text-secondary" style="display: none;">
+                    <div class="w-10 h-10 border-3 border-border-color border-t-primary rounded-full animate-spin"></div>
+                    <p class="mt-md text-sm">스페이스 정보 로딩 중...</p>
                 </div>
 
                 <!-- 에러 상태 표시 -->
-                <div id="modalError" class="modal-error" style="display: none;"></div>
+                <div id="modalError"
+                     class="p-md bg-red-50 border border-red-200 rounded-lg text-danger text-sm text-center"
+                     style="display: none;">
+                </div>
 
                 <!-- 스페이스 상세 정보 (데이터가 로드되면 JavaScript로 채워짐) -->
-                <div id="modalContent" class="modal-content" style="display: none;">
-                    <div class="modal-info-group">
-                        <label class="modal-info-label">스페이스 ID</label>
-                        <div id="modalSpaceId" class="modal-info-value"></div>
-                    </div>
+                <div id="modalContent" style="display: none;">
+                    <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-4">
+                        <dt class="text-xs font-semibold text-text-secondary uppercase tracking-wider py-1">스페이스 ID</dt>
+                        <dd id="modalSpaceId" class="text-sm text-text-primary py-2 px-3 bg-neutral-50 rounded-md"></dd>
 
-                    <div class="modal-info-group">
-                        <label class="modal-info-label">스페이스 코드</label>
-                        <div id="modalSpaceCode" class="modal-info-value modal-code"></div>
-                    </div>
+                        <dt class="text-xs font-semibold text-text-secondary uppercase tracking-wider py-1">스페이스 코드</dt>
+                        <dd id="modalSpaceCode" class="text-sm text-text-primary font-mono py-2 px-3 bg-neutral-50 rounded-md"></dd>
 
-                    <div class="modal-info-group">
-                        <label class="modal-info-label">스페이스 이름</label>
-                        <div id="modalSpaceName" class="modal-info-value"></div>
-                    </div>
+                        <dt class="text-xs font-semibold text-text-secondary uppercase tracking-wider py-1">스페이스 이름</dt>
+                        <dd id="modalSpaceName" class="text-sm text-text-primary font-medium py-2 px-3 bg-neutral-50 rounded-md"></dd>
 
-                    <div class="modal-info-group">
-                        <label class="modal-info-label">스페이스 공개 여부</label>
-                        <div id="modalSpacePublic" class="modal-info-value"></div>
-                    </div>
+                        <dt class="text-xs font-semibold text-text-secondary uppercase tracking-wider py-1">스페이스 공개 여부</dt>
+                        <dd id="modalSpacePublic" class="text-sm py-2 px-3 bg-neutral-50 rounded-md"></dd>
 
-                    <div class="modal-info-group">
-                        <label class="modal-info-label">등록한 작품 소개</label>
-                        <div id="modalHasProduct" class="modal-info-value"></div>
-                    </div>
+                        <dt class="text-xs font-semibold text-text-secondary uppercase tracking-wider py-1">등록한 작품 소개</dt>
+                        <dd id="modalHasProduct" class="text-sm py-2 px-3 bg-neutral-50 rounded-md"></dd>
 
-                    <div class="modal-info-group">
-                        <label class="modal-info-label">방명록 개수</label>
-                        <div id="modalGuestBookCount" class="modal-info-value"></div>
-                    </div>
+                        <dt class="text-xs font-semibold text-text-secondary uppercase tracking-wider py-1">방명록 개수</dt>
+                        <dd id="modalGuestBookCount" class="text-sm text-text-primary py-2 px-3 bg-neutral-50 rounded-md"></dd>
+                    </dl>
                 </div>
             </div>
 
-            <!-- 모달 푸터 (게스트 페이지 이동 버튼) -->
-            <div class="modal-footer">
-                <button id="visitSpaceBtn" class="btn btn-primary" style="display: none;" aria-label="게스트 페이지로 이동">
+            <!-- 모달 푸터 (닫기 + 게스트 페이지 이동 버튼) -->
+            <div class="p-lg border-t border-border-color flex justify-end gap-3">
+                <button id="closeModalFooterBtn"
+                        class="min-h-[44px] px-lg py-2.5 text-sm font-medium text-text-secondary
+                               bg-surface border border-border-color rounded-lg
+                               hover:bg-bg-color hover:text-text-primary
+                               active:scale-[0.98] transition-all duration-200 cursor-pointer
+                               focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                    닫기
+                </button>
+                <button id="visitSpaceBtn"
+                        class="min-w-[150px] min-h-[44px] px-lg py-3 text-sm font-semibold text-white bg-cta rounded-lg
+                               hover:bg-cta-hover active:scale-[0.98]
+                               transition-all duration-200 cursor-pointer
+                               focus:outline-none focus:ring-2 focus:ring-cta focus:ring-offset-2"
+                        style="display: none;"
+                        aria-label="게스트 페이지로 이동">
                     게스트 페이지로 이동
                 </button>
             </div>

@@ -3,60 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hosts Management - Forgather Admin</title>
+    <title>호스트 관리 - Forgather Admin</title>
 
-    <!-- Common CSS -->
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Design System: Forgather Admin (Monochrome Theme)
+                        primary: {
+                            DEFAULT: '#171717',
+                            hover: '#262626',
+                            light: '#404040',
+                        },
+                        secondary: {
+                            DEFAULT: '#525252',
+                            hover: '#404040',
+                        },
+                        cta: {
+                            DEFAULT: '#22C55E',
+                            hover: '#16A34A',
+                        },
+                        success: '#22C55E',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        info: '#3B82F6',
+                        // Surface & Background (Monochrome)
+                        surface: '#FFFFFF',
+                        'bg-color': '#FAFAFA',
+                        'border-color': '#E5E5E5',
+                        // Text (Monochrome)
+                        'text-primary': '#171717',
+                        'text-secondary': '#525252',
+                        'text-muted': '#A3A3A3',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        mono: ['SF Mono', 'Monaco', 'Cascadia Code', 'monospace'],
+                    },
+                    boxShadow: {
+                        'sm': '0 1px 2px rgba(0,0,0,0.05)',
+                        'md': '0 4px 6px rgba(0,0,0,0.1)',
+                        'lg': '0 10px 15px rgba(0,0,0,0.1)',
+                        'xl': '0 20px 25px rgba(0,0,0,0.15)',
+                    },
+                    spacing: {
+                        'xs': '0.25rem',
+                        'sm': '0.5rem',
+                        'md': '1rem',
+                        'lg': '1.5rem',
+                        'xl': '2rem',
+                        '2xl': '3rem',
+                        '3xl': '4rem',
+                    },
+                    borderRadius: {
+                        'DEFAULT': '8px',
+                        'lg': '12px',
+                        'xl': '16px',
+                    },
+                },
+            },
+        }
+    </script>
+
+    <!-- Common CSS (JS 연동 클래스 유지) -->
     <link rel="stylesheet" th:href="@{/css/admin/common.css}">
-    <!-- Hosts CSS -->
-    <link rel="stylesheet" th:href="@{/css/admin/hosts.css}">
+
+    <style>
+        /* 테이블 스크롤 인디케이터 */
+        .table-scroll-wrapper {
+            position: relative;
+        }
+        .table-scroll-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 40px;
+            background: linear-gradient(to left, rgba(255,255,255,0.9), transparent);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .table-scroll-wrapper.has-scroll::after {
+            opacity: 1;
+        }
+        .table-scroll-wrapper.scrolled-end::after {
+            opacity: 0;
+        }
+        @media (max-width: 768px) {
+            .table-scroll-wrapper::after {
+                width: 30px;
+            }
+        }
+    </style>
 </head>
-<body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-container">
-            <div class="header-left">
-                <h1 class="logo">
-                    <a th:href="@{/view/admin/spaces}">Forgather Admin</a>
-                </h1>
-            </div>
-            <nav class="header-nav">
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a th:href="@{/view/admin/spaces}" class="nav-link">Spaces</a>
-                    </li>
-                    <li class="nav-item">
-                        <a th:href="@{/view/admin/hosts}" class="nav-link active">Hosts</a>
-                    </li>
-                    <li class="nav-item">
-                        <button id="logoutBtn" class="btn btn-secondary">Logout</button>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+<body class="bg-bg-color min-h-screen flex flex-col font-sans">
+    <!-- Header (Fragment 사용) -->
+    <header th:replace="~{admin/layout/fragments :: header(currentPage='hosts')}"></header>
 
     <!-- Main Content -->
-    <main class="main-content">
-        <div class="container">
+    <main class="flex-1 py-xl px-md">
+        <div class="max-w-7xl mx-auto">
             <!--
                 Page Header
                 - 페이지 제목과 설명을 표시합니다.
                 - 사용자에게 현재 페이지가 무엇인지 명확히 알립니다.
             -->
-            <div class="page-header">
-                <h2>호스트 관리 페이지</h2>
-                <p>전체 호스트 조회 및 관리 페이지</p>
+            <div class="mb-xl pb-lg border-b border-border-color">
+                <h2 class="text-3xl font-bold text-text-primary mb-xs">호스트 관리 페이지</h2>
+                <p class="text-text-secondary">전체 호스트 조회 및 관리 페이지</p>
             </div>
 
             <!--
-                Controls: 페이지 크기 선택
+                Controls: 페이지 크기 선택 및 총 개수 표시
                 - 사용자가 한 페이지에 표시될 아이템 개수를 선택할 수 있습니다.
                 - JavaScript에서 변경 이벤트를 감지하여 데이터를 다시 로드합니다.
             -->
-            <div class="controls">
-                <div class="page-size-selector">
-                    <label for="pageSize">Items per page:</label>
-                    <select id="pageSize" class="form-select">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md mb-lg p-lg bg-surface rounded-lg shadow-sm">
+                <div id="totalCountInfo" class="text-sm text-text-secondary">
+                    <!-- JavaScript에서 동적으로 업데이트 -->
+                </div>
+                <div class="flex items-center gap-sm w-full sm:w-auto">
+                    <label for="pageSize" class="text-sm font-medium text-text-secondary whitespace-nowrap">
+                        페이지당 항목:
+                    </label>
+                    <select id="pageSize"
+                            class="w-full sm:w-auto min-w-[80px] px-md py-2.5 min-h-[44px] text-sm border border-border-color rounded bg-surface text-text-primary cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
                         <option value="15" selected>15</option>
                         <option value="30">30</option>
                         <option value="50">50</option>
@@ -70,9 +151,11 @@
                 - 사용자에게 데이터 로딩 중임을 시각적으로 알립니다.
                 - 기본적으로 숨김 상태(display: none)이며, JavaScript에서 제어합니다.
             -->
-            <div id="loadingSpinner" class="loading-spinner" style="display: none;">
-                <div class="spinner"></div>
-                <p>Loading...</p>
+            <div id="loadingSpinner"
+                 class="fixed inset-0 bg-black/50 flex flex-col justify-center items-center z-[9999]"
+                 style="display: none;">
+                <div class="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <p class="text-white mt-md font-medium">로딩 중...</p>
             </div>
 
             <!--
@@ -81,7 +164,9 @@
                 - 사용자 친화적인 에러 메시지를 제공합니다.
                 - 기본적으로 숨김 상태이며, JavaScript에서 제어합니다.
             -->
-            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            <div id="errorMessage"
+                 class="hidden p-lg mb-lg bg-danger/10 border border-danger/30 rounded-lg text-danger text-center font-medium"
+                 style="display: none;"></div>
 
             <!--
                 Hosts Table
@@ -89,23 +174,43 @@
                 - thead: 테이블 헤더 (ID, 호스트명, 스페이스 개수, 생성일)
                 - tbody: 테이블 데이터 (JavaScript로 동적 생성)
             -->
-            <div class="table-container">
-                <table class="data-table" id="hostsTable">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>호스트명</th>
-                            <th>스페이스 개수</th>
-                            <th>생성일</th>
-                        </tr>
-                    </thead>
-                    <tbody id="hostsTableBody">
-                        <!--
-                            데이터는 JavaScript로 동적 렌더링됩니다.
-                            hosts.js의 renderHostsTable() 함수 참조
-                        -->
-                    </tbody>
-                </table>
+            <div class="bg-surface rounded-lg shadow-md overflow-hidden">
+                <div class="overflow-x-auto table-scroll-wrapper" id="tableScrollWrapper">
+                    <table class="w-full table-fixed" id="hostsTable">
+                        <thead>
+                            <tr class="bg-neutral-100 border-b-2 border-neutral-300">
+                                <th class="px-lg py-md text-left text-xs font-bold text-text-primary uppercase tracking-wider w-[10%] cursor-pointer hover:bg-neutral-200 transition-colors duration-150 select-none group"
+                                    data-sort="id">
+                                    <div class="flex items-center gap-xs">
+                                        <span>ID</span>
+                                        <span class="sort-icon text-text-muted transition-opacity duration-150"></span>
+                                    </div>
+                                </th>
+                                <th class="px-lg py-md text-left text-xs font-bold text-text-primary uppercase tracking-wider w-[40%] cursor-pointer hover:bg-neutral-200 transition-colors duration-150 select-none group"
+                                    data-sort="name">
+                                    <div class="flex items-center gap-xs">
+                                        <span>호스트명</span>
+                                        <span class="sort-icon text-text-muted transition-opacity duration-150"></span>
+                                    </div>
+                                </th>
+                                <th class="px-lg py-md text-center text-xs font-bold text-text-primary uppercase tracking-wider w-[20%]">스페이스 개수</th>
+                                <th class="px-lg py-md text-left text-xs font-bold text-text-primary uppercase tracking-wider w-[30%] cursor-pointer hover:bg-neutral-200 transition-colors duration-150 select-none group"
+                                    data-sort="createdAt">
+                                    <div class="flex items-center gap-xs">
+                                        <span>생성일</span>
+                                        <span class="sort-icon text-text-muted transition-opacity duration-150"></span>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="hostsTableBody" class="divide-y divide-border-color">
+                            <!--
+                                데이터는 JavaScript로 동적 렌더링됩니다.
+                                hosts.js의 renderHostsTable() 함수 참조
+                            -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!--
@@ -114,16 +219,12 @@
                 - JavaScript의 PaginationUtil을 사용하여 동적으로 렌더링됩니다.
                 - 기본적으로 숨김 상태이며, 데이터 로드 후 표시됩니다.
             -->
-            <div class="pagination" id="pagination" style="display: none;"></div>
+            <div class="pagination mt-lg" id="pagination" style="display: none;"></div>
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-container">
-            <p>&copy; 2025 Forgather. All rights reserved.</p>
-        </div>
-    </footer>
+    <!-- Footer (Fragment 사용) -->
+    <footer th:replace="~{admin/layout/fragments :: footer}"></footer>
 
     <!--
         Toast Notification

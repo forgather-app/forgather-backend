@@ -10,6 +10,19 @@ let totalPages = 1;
 let totalCount = 0;
 
 /**
+ * 정렬 상태를 관리하는 객체
+ *
+ * field: 정렬 기준 필드 (id, name, createdAt, updatedAt)
+ * direction: 정렬 방향 (asc, desc)
+ *
+ * 기본값: 생성시간 내림차순 (최신순)
+ */
+const sortState = {
+    field: 'createdAt',
+    direction: 'desc'
+};
+
+/**
  * 현재 선택된 필터 상태를 관리하는 객체
  *
  * 필터 조건 확장 가이드:
@@ -53,12 +66,73 @@ document.addEventListener('DOMContentLoaded', function () {
     const paginationContainer = document.getElementById('pagination');
     const logoutBtn = document.getElementById('logoutBtn');
 
+    // 테이블 스크롤 래퍼 참조
+    const tableScrollWrapper = document.getElementById('tableScrollWrapper');
+
+    /**
+     * 테이블 스크롤 상태 업데이트
+     * - 스크롤이 가능하면 'has-scroll' 클래스 추가
+     * - 끝까지 스크롤하면 'scrolled-end' 클래스 추가
+     */
+    function updateTableScrollState() {
+        if (!tableScrollWrapper) return;
+
+        const { scrollWidth, clientWidth, scrollLeft } = tableScrollWrapper;
+        const hasScroll = scrollWidth > clientWidth;
+        const scrolledEnd = scrollLeft + clientWidth >= scrollWidth - 5; // 5px 여유
+
+        tableScrollWrapper.classList.toggle('has-scroll', hasScroll && !scrolledEnd);
+        tableScrollWrapper.classList.toggle('scrolled-end', scrolledEnd);
+    }
+
+    // 스크롤 및 리사이즈 이벤트 리스너 등록
+    if (tableScrollWrapper) {
+        tableScrollWrapper.addEventListener('scroll', updateTableScrollState);
+        window.addEventListener('resize', updateTableScrollState);
+    }
+
+    /**
+     * 스켈레톤 로딩 UI 렌더링
+     * - 실제 데이터 행과 유사한 형태로 표시
+     * - CLS(Cumulative Layout Shift) 최소화
+     *
+     * @param {number} rowCount - 표시할 스켈레톤 행 개수 (기본값: 5)
+     */
+    function renderSkeletonLoading(rowCount = 5) {
+        const skeletonRows = Array(rowCount).fill(null).map(() => `
+            <tr class="animate-pulse">
+                <td class="px-lg py-md">
+                    <div class="h-4 bg-neutral-200 rounded w-8"></div>
+                </td>
+                <td class="px-lg py-md">
+                    <div class="h-4 bg-neutral-200 rounded w-24"></div>
+                </td>
+                <td class="px-lg py-md">
+                    <div class="h-4 bg-neutral-200 rounded w-40"></div>
+                </td>
+                <td class="px-lg py-md text-center">
+                    <div class="h-5 bg-neutral-200 rounded-full w-16 mx-auto"></div>
+                </td>
+                <td class="px-lg py-md">
+                    <div class="h-4 bg-neutral-200 rounded w-32"></div>
+                </td>
+                <td class="px-lg py-md">
+                    <div class="h-4 bg-neutral-200 rounded w-32"></div>
+                </td>
+            </tr>
+        `).join('');
+
+        spacesTableBody.innerHTML = skeletonRows;
+    }
+
     /**
      * 로딩 상태 표시
+     * - 스피너 대신 스켈레톤 UI로 데이터 구조 예측 가능
+     * - CLS(Cumulative Layout Shift) 최소화
      */
     function showLoading() {
-        loadingSpinner.style.display = 'flex';
-        spacesTableBody.innerHTML = '';
+        loadingSpinner.style.display = 'none';
+        renderSkeletonLoading(currentPageSize > 15 ? 10 : 5);
         paginationContainer.style.display = 'none';
     }
 
@@ -108,15 +182,15 @@ document.addEventListener('DOMContentLoaded', function () {
      * 날짜/시간 포맷팅 함수
      *
      * @param {string} dateTimeString - ISO 8601 형식의 날짜/시간 문자열 (예: "2025-01-15T10:30:45")
-     * @returns {string} 포맷된 날짜/시간 문자열 (예: "2025-01-15 10:30:45")
+     * @returns {string} 포맷된 날짜/시간 문자열 (예: "2025.01.15 10:30")
      *
      * 동작:
-     * - LocalDateTime을 yyyy-MM-dd HH:mm:ss 형식으로 변환
+     * - LocalDateTime을 yyyy.MM.dd HH:mm 형식으로 변환
      * - 입력값이 없거나 유효하지 않으면 "-" 반환 (fallback)
      * - 서버 타임존 그대로 표시 (별도 변환 없음)
      *
      * 사용 예시:
-     * formatDateTime("2025-01-15T10:30:45") → "2025-01-15 10:30:45"
+     * formatDateTime("2025-01-15T10:30:45") → "2025.01.15 10:30"
      * formatDateTime(null) → "-"
      */
     function formatDateTime(dateTimeString) {
@@ -133,15 +207,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 return '-';
             }
 
-            // yyyy-MM-dd HH:mm:ss 형식으로 변환
+            // yyyy.MM.dd HH:mm 형식으로 변환
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
             const hours = String(date.getHours()).padStart(2, '0');
             const minutes = String(date.getMinutes()).padStart(2, '0');
-            const seconds = String(date.getSeconds()).padStart(2, '0');
 
-            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            return `${year}.${month}.${day} ${hours}:${minutes}`;
         } catch (error) {
             console.error('Date formatting error:', error);
             return '-';
@@ -169,13 +242,33 @@ document.addEventListener('DOMContentLoaded', function () {
      */
     function renderSpacesTable(spaces) {
         if (!spaces || spaces.length === 0) {
+            // 필터 또는 검색이 활성화되어 있으면 초기화 버튼 표시
+            const hasFiltersOrSearch = hasActiveFilters() || hasActiveNameSearch();
+            const resetButtonHtml = hasFiltersOrSearch ? `
+                <button type="button"
+                        id="resetEmptyStateBtn"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px]
+                               text-sm font-medium text-white bg-primary rounded-lg
+                               hover:bg-primary-hover active:scale-[0.98]
+                               transition-all duration-200 cursor-pointer
+                               focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    필터 초기화
+                </button>
+            ` : '';
+
             spacesTableBody.innerHTML = `
                 <tr>
-                    <td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
-                        <div class="empty-state">
-                            <div class="empty-state-icon">📭</div>
-                            <h3>No Spaces Found</h3>
-                            <p>There are no spaces to display.</p>
+                    <td colspan="6" class="text-center py-16">
+                        <div class="flex flex-col items-center justify-center text-text-secondary">
+                            <svg class="w-20 h-20 mb-6 text-text-muted opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                            </svg>
+                            <h3 class="text-xl font-semibold text-text-primary mb-2">스페이스를 찾을 수 없습니다</h3>
+                            <p class="text-sm mb-6">${hasFiltersOrSearch ? '검색 조건에 맞는 스페이스가 없습니다.' : '표시할 스페이스가 없습니다.'}</p>
+                            ${resetButtonHtml}
                         </div>
                     </td>
                 </tr>
@@ -184,29 +277,52 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         const rows = spaces.map(space => {
-            // Public/Private 상태를 Badge로 표시
+            // 공개/비공개 상태를 Badge로 표시
             const publicBadge = space.isPublic
-                ? '<span class="badge badge-success">Public</span>'
-                : '<span class="badge badge-danger">Private</span>';
+                ? '<span class="badge badge-success">공개</span>'
+                : '<span class="badge badge-danger">비공개</span>';
 
             /**
              * data-space-code 속성 추가
              * - 클릭 시 이벤트 위임 패턴으로 spaceCode를 읽어옴
              * - HTML 속성으로 저장하므로 XSS 방지를 위해 escapeHtml 적용
+             * - role="button", tabindex="0"으로 키보드 접근성 확보
+             * - aria-label로 스크린 리더 지원
              */
             return `
-                <tr>
-                    <td>${space.id}</td>
-                    <td data-space-code="${escapeHtml(space.code)}">${escapeHtml(space.code)}</td>
-                    <td>${escapeHtml(space.name)}</td>
-                    <td style="text-align: center;">${publicBadge}</td>
-                    <td>${formatDateTime(space.createdAt)}</td>
-                    <td>${formatDateTime(space.updatedAt)}</td>
+                <tr class="hover:bg-bg-color transition-colors duration-150">
+                    <td class="px-lg py-md text-sm text-text-primary">${space.id}</td>
+                    <td class="px-lg py-md text-sm clickable-cell" data-space-code="${escapeHtml(space.code)}">
+                        <span class="inline-flex items-center gap-2 font-mono text-primary cursor-pointer
+                                     px-2 py-1 -mx-2 rounded-md
+                                     bg-neutral-50 border border-neutral-200
+                                     hover:bg-neutral-100 hover:border-neutral-300
+                                     active:bg-neutral-200 active:scale-[0.98]
+                                     transition-all duration-150
+                                     focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
+                              role="button"
+                              tabindex="0"
+                              aria-label="${escapeHtml(space.code)} 스페이스 상세 보기">
+                            <span class="underline decoration-dashed decoration-1 underline-offset-2">
+                                ${escapeHtml(space.code)}
+                            </span>
+                            <svg class="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </span>
+                    </td>
+                    <td class="px-lg py-md text-sm text-text-primary truncate" title="${escapeHtml(space.name)}">${escapeHtml(space.name)}</td>
+                    <td class="px-lg py-md text-sm text-center">${publicBadge}</td>
+                    <td class="px-lg py-md text-sm text-text-secondary font-mono">${formatDateTime(space.createdAt)}</td>
+                    <td class="px-lg py-md text-sm text-text-secondary font-mono">${formatDateTime(space.updatedAt)}</td>
                 </tr>
             `;
         }).join('');
 
         spacesTableBody.innerHTML = rows;
+
+        // 테이블 렌더링 후 스크롤 상태 업데이트
+        requestAnimationFrame(updateTableScrollState);
     }
 
     /**
@@ -249,21 +365,19 @@ document.addEventListener('DOMContentLoaded', function () {
      *
      * 호출 시점:
      * - 페이지 최초 로드 (DOMContentLoaded)
-     * - 필터 검색 버튼 클릭 (applyFilter)
-     * - 이름 검색 버튼 클릭 (searchByName)
+     * - 통합 검색 버튼 클릭 (handleSearch)
      * - 페이지 크기 변경 (handlePageSizeChange)
      * - 페이지네이션 버튼 클릭 (goToPage)
+     * - 정렬 헤더 클릭 (toggleSort)
      *
      * API 엔드포인트 분기 규칙 (우선순위):
      * 1. 이름 검색 활성화 → /admin/spaces/search/by-name
      * 2. 필터 조건 있음 → /admin/spaces/search
      * 3. 전체 조회 → /admin/spaces
      *
-     * 동작 흐름:
-     * 1. 검색/필터 조건 확인
-     * 2. 조건에 따라 적절한 API 호출
-     * 3. 응답 데이터로 테이블 렌더링
-     * 4. 페이지네이션 UI 업데이트
+     * 정렬 파라미터:
+     * - Spring Data Pageable의 sort 파라미터 사용
+     * - 형식: ?sort=field,direction (예: ?sort=createdAt,desc)
      */
     async function loadSpaces() {
         hideError();
@@ -271,17 +385,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
             let response;
+            const sortParam = `${sortState.field},${sortState.direction}`;
 
             // API 호출 분기: 이름 검색 > 필터 > 전체
             if (hasActiveNameSearch()) {
                 // 이름 검색 API 호출 (/admin/spaces/search/by-name)
-                response = await API.searchSpacesByName(searchState.searchName, currentPage, currentPageSize);
+                response = await API.searchSpacesByName(searchState.searchName, currentPage, currentPageSize, sortParam);
             } else if (hasActiveFilters()) {
                 // 필터링 API 호출 (/admin/spaces/search)
-                response = await API.getSpacesByFilters(currentPage, currentPageSize, filterState);
+                response = await API.getSpacesByFilters(currentPage, currentPageSize, filterState, sortParam);
             } else {
                 // 전체 조회 API 호출 (/admin/spaces)
-                response = await API.getSpaces(currentPage, currentPageSize);
+                response = await API.getSpaces(currentPage, currentPageSize, sortParam);
             }
 
             // 상태 업데이트
@@ -296,12 +411,74 @@ document.addEventListener('DOMContentLoaded', function () {
             // 페이지네이션 업데이트
             updatePagination();
 
+            // 총 개수 정보 업데이트
+            updateTotalCountInfo();
+
+            // 정렬 아이콘 업데이트
+            updateSortIcons();
+
         } catch (error) {
             console.error('Failed to load spaces:', error);
-            showError(error.message || 'Failed to load spaces. Please try again.');
+            showError(error.message || '스페이스 목록을 불러오는데 실패했습니다. 다시 시도해주세요.');
         } finally {
             hideLoading();
         }
+    }
+
+    /**
+     * 총 개수 정보 업데이트
+     */
+    function updateTotalCountInfo() {
+        const totalCountInfo = document.getElementById('totalCountInfo');
+        if (totalCountInfo) {
+            totalCountInfo.textContent = `Total: ${totalCount.toLocaleString()}개`;
+        }
+    }
+
+    /**
+     * 정렬 아이콘 업데이트
+     * - 현재 정렬 필드에 맞는 아이콘(▲/▼) 표시
+     * - 비활성 필드는 hover 시 ⇅ 아이콘 표시 (정렬 가능 힌트)
+     */
+    function updateSortIcons() {
+        const sortableHeaders = document.querySelectorAll('th[data-sort]');
+        sortableHeaders.forEach(header => {
+            const field = header.getAttribute('data-sort');
+            const iconSpan = header.querySelector('.sort-icon');
+            if (iconSpan) {
+                if (field === sortState.field) {
+                    // 활성 정렬 컬럼: 방향 아이콘 항상 표시
+                    iconSpan.textContent = sortState.direction === 'asc' ? '▲' : '▼';
+                    iconSpan.classList.remove('text-text-muted', 'opacity-0', 'group-hover:opacity-100');
+                    iconSpan.classList.add('text-primary');
+                } else {
+                    // 비활성 컬럼: hover 시에만 정렬 가능 힌트 표시
+                    iconSpan.textContent = '⇅';
+                    iconSpan.classList.remove('text-primary');
+                    iconSpan.classList.add('text-text-muted', 'opacity-0', 'group-hover:opacity-100');
+                }
+            }
+        });
+    }
+
+    /**
+     * 정렬 토글
+     * - 같은 필드 클릭 시 방향 토글 (asc ↔ desc)
+     * - 다른 필드 클릭 시 해당 필드로 변경, 기본 방향은 asc
+     *
+     * @param {string} field - 정렬 기준 필드
+     */
+    function toggleSort(field) {
+        if (sortState.field === field) {
+            // 같은 필드: 방향 토글
+            sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            // 다른 필드: 새 필드로 변경, 기본 오름차순
+            sortState.field = field;
+            sortState.direction = 'asc';
+        }
+        currentPage = 1; // 정렬 변경 시 첫 페이지로
+        loadSpaces();
     }
 
     /**
@@ -360,7 +537,7 @@ document.addEventListener('DOMContentLoaded', function () {
      * 로그아웃 핸들러
      */
     function handleLogout() {
-        if (confirm('Are you sure you want to logout?')) {
+        if (confirm('로그아웃 하시겠습니까?')) {
             Auth.logout();
         }
     }
@@ -505,7 +682,7 @@ document.addEventListener('DOMContentLoaded', function () {
      * - 검색 없음: 초기화 버튼 숨김
      */
     function updateNameSearchUI() {
-        const resetBtn = document.getElementById('nameSearchResetBtn');
+        const resetBtn = document.getElementById('resetSearchBtn');
         if (resetBtn) {
             resetBtn.style.display = hasActiveNameSearch() ? 'inline-flex' : 'none';
         }
@@ -516,8 +693,8 @@ document.addEventListener('DOMContentLoaded', function () {
     logoutBtn.addEventListener('click', handleLogout);
 
     /**
-     * 필터 검색 버튼 클릭 이벤트 리스너
-     * - [검색] 버튼 클릭 시 필터 적용 함수 호출
+     * 필터 적용 버튼 클릭 이벤트 리스너
+     * - 이름 검색 초기화 후 필터 적용
      */
     const applyFilterBtn = document.getElementById('applyFilterBtn');
     if (applyFilterBtn) {
@@ -535,9 +712,9 @@ document.addEventListener('DOMContentLoaded', function () {
     /**
      * 이름 검색 초기화 버튼 클릭 이벤트 리스너
      */
-    const nameSearchResetBtn = document.getElementById('nameSearchResetBtn');
-    if (nameSearchResetBtn) {
-        nameSearchResetBtn.addEventListener('click', resetNameSearch);
+    const resetSearchBtn = document.getElementById('resetSearchBtn');
+    if (resetSearchBtn) {
+        resetSearchBtn.addEventListener('click', resetNameSearch);
     }
 
     /**
@@ -555,13 +732,48 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /**
+     * 테이블 헤더 정렬 클릭 이벤트 리스너 (이벤트 위임)
+     */
+    const spacesTable = document.getElementById('spacesTable');
+    if (spacesTable) {
+        const thead = spacesTable.querySelector('thead');
+        if (thead) {
+            thead.addEventListener('click', function(event) {
+                const th = event.target.closest('th[data-sort]');
+                if (th) {
+                    const field = th.getAttribute('data-sort');
+                    if (field) {
+                        toggleSort(field);
+                    }
+                }
+            });
+        }
+    }
+
+    /**
      * 키보드 네비게이션
      * - 좌측 화살표: 이전 페이지
      * - 우측 화살표: 다음 페이지
      *
      * 접근성 향상을 위한 기능
+     *
+     * 주의: input, textarea, select, contentEditable 요소에 포커스가 있을 때는
+     * 화살표 키가 해당 요소 내에서 커서 이동에 사용되므로 페이지 이동을 무시한다.
      */
     document.addEventListener('keydown', function (event) {
+        // input, textarea, select, contentEditable 요소에 포커스가 있으면 무시
+        const activeElement = document.activeElement;
+        const isInputFocused = activeElement && (
+            activeElement.tagName === 'INPUT' ||
+            activeElement.tagName === 'TEXTAREA' ||
+            activeElement.tagName === 'SELECT' ||
+            activeElement.isContentEditable
+        );
+
+        if (isInputFocused) {
+            return;
+        }
+
         // 좌측 화살표: 이전 페이지
         if (event.key === 'ArrowLeft' && currentPage > 1) {
             event.preventDefault();
@@ -683,10 +895,10 @@ document.addEventListener('DOMContentLoaded', function () {
         modalSpaceCode.textContent = data.space.code;
         modalSpaceName.textContent = data.space.name;
 
-        // Public 상태를 Badge로 표시
+        // 공개/비공개 상태를 Badge로 표시
         const publicBadge = data.space.isPublic
-            ? '<span class="badge badge-success">Public</span>'
-            : '<span class="badge badge-danger">Private</span>';
+            ? '<span class="badge badge-success">공개</span>'
+            : '<span class="badge badge-danger">비공개</span>';
         modalSpacePublic.innerHTML = publicBadge;
 
         /**
@@ -703,7 +915,7 @@ document.addEventListener('DOMContentLoaded', function () {
         modalGuestBookCount.textContent = data.guestBookCount.toLocaleString();
 
         // 콘텐츠와 버튼 표시
-        modalContent.style.display = 'flex';
+        modalContent.style.display = 'block';
         visitSpaceBtn.style.display = 'block';
     }
 
@@ -731,7 +943,7 @@ document.addEventListener('DOMContentLoaded', function () {
             showModalContent(data);
         } catch (error) {
             console.error('Failed to load space detail:', error);
-            showModalError(error.message || 'Failed to load space details. Please try again.');
+            showModalError(error.message || '스페이스 정보를 불러오는데 실패했습니다. 다시 시도해주세요.');
         }
     }
 
@@ -780,31 +992,68 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /**
-     * Code 컬럼 클릭 이벤트 핸들러 (이벤트 위임 패턴)
+     * Code 컬럼 클릭/키보드 이벤트 공통 핸들러
      *
-     * 이벤트 위임 패턴을 사용하는 이유:
-     * - 테이블 행이 동적으로 생성되므로 각 행에 개별 이벤트 리스너를 달면 메모리 낭비
-     * - tbody에 한 번만 이벤트 리스너를 등록하고, 클릭된 요소가 Code 컬럼인지 확인
-     * - 페이징으로 DOM이 재생성되어도 이벤트 리스너를 다시 등록할 필요 없음
+     * @param {Event} event - 클릭 또는 키보드 이벤트
      *
      * 동작 과정:
-     * 1. tbody의 어딘가를 클릭하면 이 핸들러가 실행됨
-     * 2. 클릭된 요소(event.target)가 Code 컬럼(td:nth-child(2))인지 확인
-     * 3. Code 컬럼이면 data-space-code 속성에서 spaceCode를 읽어옴
-     * 4. loadSpaceDetail 함수를 호출하여 모달 표시
+     * 1. closest()로 data-space-code 속성을 가진 td를 찾음
+     * 2. Code 컬럼이면 data-space-code 속성에서 spaceCode를 읽어옴
+     * 3. loadSpaceDetail 함수를 호출하여 모달 표시
      */
-    spacesTableBody.addEventListener('click', function (event) {
-        // 클릭된 요소가 td인지, 그리고 두 번째 컬럼(Code)인지 확인
-        const target = event.target;
-
-        // td가 아니거나 data-space-code 속성이 없으면 무시
-        if (target.tagName !== 'TD' || !target.hasAttribute('data-space-code')) {
+    function handleSpaceCodeInteraction(event) {
+        const td = event.target.closest('td[data-space-code]');
+        if (!td) {
             return;
         }
 
-        const spaceCode = target.getAttribute('data-space-code');
+        const spaceCode = td.getAttribute('data-space-code');
         if (spaceCode) {
             loadSpaceDetail(spaceCode);
+        }
+    }
+
+    /**
+     * 테이블 바디 클릭 이벤트 핸들러 (이벤트 위임 패턴)
+     *
+     * 이벤트 위임 패턴을 사용하는 이유:
+     * - 테이블 행이 동적으로 생성되므로 각 행에 개별 이벤트 리스너를 달면 메모리 낭비
+     * - tbody에 한 번만 이벤트 리스너를 등록하고, 클릭된 요소를 확인
+     * - 페이징으로 DOM이 재생성되어도 이벤트 리스너를 다시 등록할 필요 없음
+     *
+     * 처리하는 이벤트:
+     * 1. Code 컬럼 클릭 → 모달 열기
+     * 2. Empty State 초기화 버튼 클릭 → 필터/검색 초기화
+     */
+    spacesTableBody.addEventListener('click', function (event) {
+        // Empty State 초기화 버튼 클릭 처리
+        if (event.target.closest('#resetEmptyStateBtn')) {
+            clearFilterState();
+            clearNameSearchState();
+            currentPage = 1;
+            loadSpaces();
+            return;
+        }
+
+        // Code 컬럼 클릭 처리
+        handleSpaceCodeInteraction(event);
+    });
+
+    /**
+     * Code 컬럼 키보드 이벤트 핸들러 (접근성)
+     *
+     * 키보드 접근성 향상:
+     * - Enter 또는 Space 키로 클릭과 동일한 동작 실행
+     * - role="button"과 tabindex="0"이 설정된 요소에서 동작
+     * - 스크린 리더 사용자도 키보드로 모달을 열 수 있음
+     */
+    spacesTableBody.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            const td = event.target.closest('td[data-space-code]');
+            if (td) {
+                event.preventDefault(); // Space 키의 스크롤 방지
+                handleSpaceCodeInteraction(event);
+            }
         }
     });
 
@@ -829,11 +1078,21 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     /**
-     * 모달 닫기 버튼 클릭 핸들러
+     * 모달 닫기 버튼 클릭 핸들러 (헤더 X 버튼)
      */
     closeModalBtn.addEventListener('click', function () {
         closeModal();
     });
+
+    /**
+     * 모달 닫기 버튼 클릭 핸들러 (푸터 닫기 버튼)
+     */
+    const closeModalFooterBtn = document.getElementById('closeModalFooterBtn');
+    if (closeModalFooterBtn) {
+        closeModalFooterBtn.addEventListener('click', function () {
+            closeModal();
+        });
+    }
 
     /**
      * 모달 오버레이 클릭 시 닫기
