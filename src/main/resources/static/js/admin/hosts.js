@@ -311,7 +311,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return `
                 <tr class="hover:bg-bg-color transition-colors duration-150">
                     <td class="px-6 py-4 text-sm text-text-primary">${host.id}</td>
-                    <td class="px-6 py-4 text-sm text-text-primary font-medium">${escapeHtml(host.name)}</td>
+                    <td class="px-6 py-4 text-sm text-text-primary font-medium truncate max-w-0" title="${escapeHtml(host.name)}">${escapeHtml(host.name)}</td>
                     <td class="px-6 py-4 text-sm text-text-primary text-center">${spaceCount}</td>
                     <td class="px-6 py-4 text-sm text-text-secondary">${formatDateTime(host.createdAt)}</td>
                 </tr>
