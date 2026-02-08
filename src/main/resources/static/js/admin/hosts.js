@@ -421,7 +421,7 @@ document.addEventListener('DOMContentLoaded', function() {
     /**
      * 정렬 아이콘 업데이트
      * - 현재 정렬 필드에 맞는 아이콘(▲/▼) 표시
-     * - 비활성 필드는 빈 아이콘
+     * - 비활성 필드는 hover 시 ⇅ 아이콘 표시 (정렬 가능 힌트)
      */
     function updateSortIcons() {
         const sortableHeaders = document.querySelectorAll('th[data-sort]');
@@ -430,13 +430,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const iconSpan = header.querySelector('.sort-icon');
             if (iconSpan) {
                 if (field === sortState.field) {
+                    // 활성 정렬 컬럼: 방향 아이콘 항상 표시
                     iconSpan.textContent = sortState.direction === 'asc' ? '▲' : '▼';
-                    iconSpan.classList.remove('text-text-muted');
+                    iconSpan.classList.remove('text-text-muted', 'opacity-0', 'group-hover:opacity-100');
                     iconSpan.classList.add('text-primary');
                 } else {
-                    iconSpan.textContent = '';
+                    // 비활성 컬럼: hover 시에만 정렬 가능 힌트 표시
+                    iconSpan.textContent = '⇅';
                     iconSpan.classList.remove('text-primary');
-                    iconSpan.classList.add('text-text-muted');
+                    iconSpan.classList.add('text-text-muted', 'opacity-0', 'group-hover:opacity-100');
                 }
             }
         });
@@ -568,8 +570,24 @@ document.addEventListener('DOMContentLoaded', function() {
      * 접근성 향상:
      * - 마우스 없이도 키보드로 페이지 이동 가능
      * - preventDefault()로 브라우저 기본 동작(스크롤 등) 방지
+     *
+     * 주의: input, textarea, select, contentEditable 요소에 포커스가 있을 때는
+     * 화살표 키가 해당 요소 내에서 커서 이동에 사용되므로 페이지 이동을 무시한다.
      */
     document.addEventListener('keydown', function(event) {
+        // input, textarea, select, contentEditable 요소에 포커스가 있으면 무시
+        const activeElement = document.activeElement;
+        const isInputFocused = activeElement && (
+            activeElement.tagName === 'INPUT' ||
+            activeElement.tagName === 'TEXTAREA' ||
+            activeElement.tagName === 'SELECT' ||
+            activeElement.isContentEditable
+        );
+
+        if (isInputFocused) {
+            return;
+        }
+
         // 좌측 화살표: 이전 페이지
         if (event.key === 'ArrowLeft' && currentPage > 1) {
             event.preventDefault();
