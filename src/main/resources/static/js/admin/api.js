@@ -301,7 +301,7 @@ const API = {
      * - id: Host ID (숫자)
      * - name: Host 이름 (문자열)
      * - createdAt: 생성 일시 (ISO 8601 문자열)
-     * - spaceIds: 소유한 Space ID 배열 (숫자 배열)
+     * - spaceCount: 소유한 Space 개수 (숫자)
      *
      * 사용 예시:
      * ```javascript
@@ -321,6 +321,29 @@ const API = {
      */
     async getHosts(page = 1, size = 15, sort = 'createdAt,desc') {
         return this.get('/hosts', {page, size, sort});
+    },
+
+    /**
+     * 특정 Host의 스페이스 목록 조회 API
+     *
+     * @param {number} hostId - 조회할 호스트 ID
+     * @returns {Promise<object>} 호스트 스페이스 목록 응답 (HostSpacesResponse)
+     * @returns {number} response.hostId - 호스트 ID
+     * @returns {string} response.hostName - 호스트 이름
+     * @returns {Array} response.spaces - 스페이스 목록 배열
+     *
+     * Space 객체 구조:
+     * - id: Space ID (숫자)
+     * - code: Space 코드 (문자열)
+     * - name: Space 이름 (문자열)
+     * - isPublic: 공개 여부 (boolean)
+     * - createdAt: 생성 일시 (ISO 8601 문자열)
+     * - updatedAt: 수정 일시 (ISO 8601 문자열)
+     *
+     * 엔드포인트: GET /admin/hosts/{hostId}/spaces
+     */
+    async getHostSpaces(hostId) {
+        return this.get(`/hosts/${hostId}/spaces`, {});
     }
 };
 
