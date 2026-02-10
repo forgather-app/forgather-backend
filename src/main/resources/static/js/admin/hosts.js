@@ -623,6 +623,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const hostSpacesLoading = document.getElementById('hostSpacesLoading');
     const hostSpacesError = document.getElementById('hostSpacesError');
     const hostSpacesContent = document.getElementById('hostSpacesContent');
+    const hostSpacesScrollArea = document.getElementById('hostSpacesScrollArea');
+    const hostSpacesScrollFade = document.getElementById('hostSpacesScrollFade');
+    const hostSpacesCountInfo = document.getElementById('hostSpacesCountInfo');
     const closeHostSpacesModalBtn = document.getElementById('closeHostSpacesModalBtn');
     const closeHostSpacesFooterBtn = document.getElementById('closeHostSpacesFooterBtn');
 
@@ -662,6 +665,8 @@ document.addEventListener('DOMContentLoaded', function() {
         hostSpacesError.style.display = 'none';
         hostSpacesContent.style.display = 'none';
         hostSpacesContent.innerHTML = '';
+        hostSpacesScrollFade.style.display = 'none';
+        hostSpacesCountInfo.textContent = '';
     }
 
     /**
@@ -683,13 +688,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
+     * 스크롤 페이드 인디케이터 업데이트
+     * - 스크롤 가능할 때 하단 페이드 표시
+     * - 스크롤이 끝에 도달하면 페이드 숨김
+     */
+    function updateScrollFade() {
+        if (!hostSpacesScrollArea || !hostSpacesScrollFade) return;
+
+        const { scrollTop, scrollHeight, clientHeight } = hostSpacesScrollArea;
+        const isScrollable = scrollHeight > clientHeight + 4;
+        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 4;
+
+        hostSpacesScrollFade.style.display = (isScrollable && !isAtBottom) ? 'block' : 'none';
+    }
+
+    hostSpacesScrollArea.addEventListener('scroll', updateScrollFade);
+
+    /**
      * 스페이스 목록 렌더링
      * @param {Array} spaces - SimpleSpaceResponse 배열
      *
-     * 각 아이템 구조:
-     * - 스페이스명 + 공개/비공개 뱃지
-     * - 스페이스 코드
-     * - 생성일
+     * 각 아이템: 카드 형태, 라벨 표기 (이름, 코드, 생성일, 공개 여부)
      */
     function renderHostSpaces(spaces) {
         resetHostSpacesModal();
@@ -704,23 +723,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             `;
             hostSpacesContent.style.display = 'block';
+            hostSpacesCountInfo.textContent = '';
             return;
         }
 
-        const items = spaces.map(space => {
+        const items = spaces.map((space, index) => {
             const publicBadge = space.isPublic
-                ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success/10 text-success">공개</span>'
-                : '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-danger/10 text-danger">비공개</span>';
+                ? '<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-success/10 text-success">공개</span>'
+                : '<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-danger/10 text-danger">비공개</span>';
 
             return `
-                <div class="py-md">
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-sm font-medium text-text-primary">${escapeHtml(space.name)}</span>
+                <div class="p-md rounded-lg border border-border-color bg-bg-color hover:border-neutral-300 transition-colors duration-150 ${index > 0 ? 'mt-sm' : ''}">
+                    <div class="flex items-start justify-between gap-md mb-2">
+                        <div class="flex items-center gap-sm min-w-0">
+                            <span class="text-xs font-medium text-text-muted whitespace-nowrap">이름</span>
+                            <span class="text-sm font-semibold text-text-primary truncate">${escapeHtml(space.name)}</span>
+                        </div>
                         ${publicBadge}
                     </div>
-                    <div class="flex items-center gap-lg text-xs text-text-secondary">
-                        <span class="font-mono">${escapeHtml(space.code)}</span>
-                        <span>${formatDateTime(space.createdAt)}</span>
+                    <div class="grid grid-cols-2 gap-x-lg gap-y-1">
+                        <div class="flex items-center gap-sm">
+                            <span class="text-xs font-medium text-text-muted whitespace-nowrap">코드</span>
+                            <span class="text-xs font-mono text-text-secondary truncate">${escapeHtml(space.code)}</span>
+                        </div>
+                        <div class="flex items-center gap-sm">
+                            <span class="text-xs font-medium text-text-muted whitespace-nowrap">생성일</span>
+                            <span class="text-xs text-text-secondary">${formatDateTime(space.createdAt)}</span>
+                        </div>
                     </div>
                 </div>
             `;
@@ -728,6 +757,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         hostSpacesContent.innerHTML = items;
         hostSpacesContent.style.display = 'block';
+        hostSpacesCountInfo.textContent = `총 ${spaces.length}개 스페이스`;
+
+        // 렌더링 후 스크롤 인디케이터 업데이트
+        requestAnimationFrame(() => updateScrollFade());
     }
 
     /**

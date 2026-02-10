@@ -261,7 +261,7 @@
          class="modal-overlay fixed inset-0 bg-black/60 flex justify-center items-center z-[10000]"
          style="display: none;"
          role="dialog" aria-labelledby="hostSpacesModalTitle" aria-modal="true">
-        <div class="modal-container bg-surface rounded-xl shadow-xl max-w-[600px] w-[90%] max-h-[85vh] flex flex-col">
+        <div class="modal-container bg-surface rounded-xl shadow-xl max-w-[960px] w-[90%] max-h-[85vh] flex flex-col">
             <!-- 모달 헤더 -->
             <div class="flex justify-between items-center p-lg border-b border-border-color">
                 <h3 id="hostSpacesModalTitle" class="text-xl font-bold text-text-primary m-0">스페이스 목록</h3>
@@ -273,8 +273,8 @@
                 </button>
             </div>
 
-            <!-- 모달 내용 -->
-            <div class="p-lg overflow-y-auto flex-1">
+            <!-- 모달 내용 (스크롤 영역 - flex 직접 자식) -->
+            <div id="hostSpacesScrollArea" class="flex-1 min-h-0 p-lg overflow-y-auto relative">
                 <!-- 로딩 상태 -->
                 <div id="hostSpacesLoading" class="flex flex-col items-center justify-center py-2xl text-text-secondary" style="display: none;">
                     <div class="w-10 h-10 border-3 border-border-color border-t-primary rounded-full animate-spin"></div>
@@ -288,12 +288,19 @@
                 </div>
 
                 <!-- 스페이스 목록 (JavaScript로 동적 렌더링) -->
-                <div id="hostSpacesContent" class="divide-y divide-border-color" style="display: none;">
+                <div id="hostSpacesContent" style="display: none;">
                 </div>
             </div>
 
+            <!-- 스크롤 하단 페이드 인디케이터 (스크롤 영역 바로 아래, 푸터 위에 겹침) -->
+            <div id="hostSpacesScrollFade"
+                 class="h-12 -mt-12 pointer-events-none relative z-10 transition-opacity duration-200"
+                 style="background: linear-gradient(to top, rgba(255,255,255,0.95), transparent); display: none;">
+            </div>
+
             <!-- 모달 푸터 -->
-            <div class="p-lg border-t border-border-color flex justify-end">
+            <div class="p-lg border-t border-border-color flex items-center justify-between">
+                <span id="hostSpacesCountInfo" class="text-xs text-text-muted"></span>
                 <button id="closeHostSpacesFooterBtn"
                         class="min-h-[44px] px-lg py-2.5 text-sm font-medium text-text-secondary
                                bg-surface border border-border-color rounded-lg
