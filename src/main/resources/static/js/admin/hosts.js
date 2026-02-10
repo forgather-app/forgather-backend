@@ -308,11 +308,22 @@ document.addEventListener('DOMContentLoaded', function() {
              * - XSS 방지: escapeHtml 함수로 사용자 입력값 이스케이프
              * - 날짜 포맷팅: formatDateTime 함수 사용
              */
+            /**
+             * 스페이스 개수 셀 스타일 분기
+             * - 0개: 회색 비활성 텍스트, 클릭 불가
+             * - 1개 이상: primary 색상, 클릭 가능 (모달 열기)
+             */
+            const spaceCountCell = spaceCount > 0
+                ? `<td class="px-6 py-4 text-sm text-primary font-semibold text-center cursor-pointer hover:underline transition-colors duration-150"
+                       data-host-id="${host.id}" data-host-name="${escapeHtml(host.name)}"
+                       role="button" tabindex="0">${spaceCount}</td>`
+                : `<td class="px-6 py-4 text-sm text-text-muted text-center">${spaceCount}</td>`;
+
             return `
                 <tr class="hover:bg-bg-color transition-colors duration-150">
                     <td class="px-6 py-4 text-sm text-text-primary">${host.id}</td>
                     <td class="px-6 py-4 text-sm text-text-primary font-medium truncate max-w-0" title="${escapeHtml(host.name)}">${escapeHtml(host.name)}</td>
-                    <td class="px-6 py-4 text-sm text-text-primary text-center">${spaceCount}</td>
+                    ${spaceCountCell}
                     <td class="px-6 py-4 text-sm text-text-secondary">${formatDateTime(host.createdAt)}</td>
                 </tr>
             `;
@@ -597,6 +608,218 @@ document.addEventListener('DOMContentLoaded', function() {
         else if (event.key === 'ArrowRight' && currentPage < totalPages) {
             event.preventDefault();
             goToPage(currentPage + 1);
+        }
+    });
+
+    // ======================================================================
+    // Modal Logic - 호스트 스페이스 목록
+    // ======================================================================
+
+    /**
+     * 모달 관련 DOM 요소 참조
+     */
+    const hostSpacesModal = document.getElementById('hostSpacesModal');
+    const hostSpacesModalTitle = document.getElementById('hostSpacesModalTitle');
+    const hostSpacesLoading = document.getElementById('hostSpacesLoading');
+    const hostSpacesError = document.getElementById('hostSpacesError');
+    const hostSpacesContent = document.getElementById('hostSpacesContent');
+    const closeHostSpacesModalBtn = document.getElementById('closeHostSpacesModalBtn');
+    const closeHostSpacesFooterBtn = document.getElementById('closeHostSpacesFooterBtn');
+
+    /**
+     * 모달 열기
+     * - display: flex로 변경 후 다음 프레임에서 .show 추가 (CSS 애니메이션)
+     * - body에 modal-open 추가하여 배경 스크롤 방지
+     */
+    function openHostSpacesModal() {
+        hostSpacesModal.style.display = 'flex';
+        requestAnimationFrame(() => {
+            hostSpacesModal.classList.add('show');
+        });
+        document.body.classList.add('modal-open');
+    }
+
+    /**
+     * 모달 닫기
+     * - .show 제거 후 300ms 대기 (CSS transition과 동일) → display: none
+     * - 모달 내용 초기화
+     */
+    function closeHostSpacesModal() {
+        hostSpacesModal.classList.remove('show');
+        document.body.classList.remove('modal-open');
+
+        setTimeout(() => {
+            hostSpacesModal.style.display = 'none';
+            resetHostSpacesModal();
+        }, 300);
+    }
+
+    /**
+     * 모달 내용 초기화
+     */
+    function resetHostSpacesModal() {
+        hostSpacesLoading.style.display = 'none';
+        hostSpacesError.style.display = 'none';
+        hostSpacesContent.style.display = 'none';
+        hostSpacesContent.innerHTML = '';
+    }
+
+    /**
+     * 모달 로딩 상태 표시
+     */
+    function showHostSpacesLoading() {
+        resetHostSpacesModal();
+        hostSpacesLoading.style.display = 'flex';
+    }
+
+    /**
+     * 모달 에러 상태 표시
+     * @param {string} message - 에러 메시지
+     */
+    function showHostSpacesError(message) {
+        resetHostSpacesModal();
+        hostSpacesError.textContent = message;
+        hostSpacesError.style.display = 'block';
+    }
+
+    /**
+     * 스페이스 목록 렌더링
+     * @param {Array} spaces - SimpleSpaceResponse 배열
+     *
+     * 각 아이템 구조:
+     * - 스페이스명 + 공개/비공개 뱃지
+     * - 스페이스 코드
+     * - 생성일
+     */
+    function renderHostSpaces(spaces) {
+        resetHostSpacesModal();
+
+        if (!spaces || spaces.length === 0) {
+            hostSpacesContent.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-2xl text-text-secondary">
+                    <svg class="w-12 h-12 mb-md text-text-muted opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                    <p class="text-sm">스페이스가 없습니다.</p>
+                </div>
+            `;
+            hostSpacesContent.style.display = 'block';
+            return;
+        }
+
+        const items = spaces.map(space => {
+            const publicBadge = space.isPublic
+                ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success/10 text-success">공개</span>'
+                : '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-danger/10 text-danger">비공개</span>';
+
+            return `
+                <div class="py-md">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-sm font-medium text-text-primary">${escapeHtml(space.name)}</span>
+                        ${publicBadge}
+                    </div>
+                    <div class="flex items-center gap-lg text-xs text-text-secondary">
+                        <span class="font-mono">${escapeHtml(space.code)}</span>
+                        <span>${formatDateTime(space.createdAt)}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        hostSpacesContent.innerHTML = items;
+        hostSpacesContent.style.display = 'block';
+    }
+
+    /**
+     * 호스트 스페이스 목록 로드
+     *
+     * @param {number} hostId - 호스트 ID
+     * @param {string} hostName - 호스트 이름 (모달 제목에 표시)
+     *
+     * 동작 흐름:
+     * 1. 모달 제목에 호스트명 설정
+     * 2. 모달 열기 + 로딩 표시
+     * 3. API 호출 (API.getHostSpaces)
+     * 4. 성공: 스페이스 목록 렌더링 / 실패: 에러 메시지 표시
+     */
+    async function loadHostSpaces(hostId, hostName) {
+        hostSpacesModalTitle.textContent = `${hostName}의 스페이스`;
+        openHostSpacesModal();
+        showHostSpacesLoading();
+
+        try {
+            const data = await API.getHostSpaces(hostId);
+            renderHostSpaces(data.spaces);
+        } catch (error) {
+            console.error('Failed to load host spaces:', error);
+            showHostSpacesError(error.message || '스페이스 목록을 불러오는데 실패했습니다.');
+        }
+    }
+
+    /**
+     * 테이블 바디 클릭 이벤트 핸들러 (이벤트 위임)
+     * - 스페이스 개수 셀(data-host-id) 클릭 시 모달 열기
+     */
+    hostsTableBody.addEventListener('click', function(event) {
+        const td = event.target.closest('td[data-host-id]');
+        if (td) {
+            const hostId = td.getAttribute('data-host-id');
+            const hostName = td.getAttribute('data-host-name');
+            if (hostId) {
+                loadHostSpaces(parseInt(hostId), hostName);
+            }
+        }
+    });
+
+    /**
+     * 스페이스 개수 셀 키보드 이벤트 (접근성)
+     * - Enter 또는 Space 키로 모달 열기
+     */
+    hostsTableBody.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            const td = event.target.closest('td[data-host-id]');
+            if (td) {
+                event.preventDefault();
+                const hostId = td.getAttribute('data-host-id');
+                const hostName = td.getAttribute('data-host-name');
+                if (hostId) {
+                    loadHostSpaces(parseInt(hostId), hostName);
+                }
+            }
+        }
+    });
+
+    /**
+     * 모달 닫기: 헤더 X 버튼
+     */
+    closeHostSpacesModalBtn.addEventListener('click', function() {
+        closeHostSpacesModal();
+    });
+
+    /**
+     * 모달 닫기: 푸터 닫기 버튼
+     */
+    closeHostSpacesFooterBtn.addEventListener('click', function() {
+        closeHostSpacesModal();
+    });
+
+    /**
+     * 모달 닫기: 오버레이(배경) 클릭
+     * - event.target === hostSpacesModal이면 오버레이 직접 클릭
+     */
+    hostSpacesModal.addEventListener('click', function(event) {
+        if (event.target === hostSpacesModal) {
+            closeHostSpacesModal();
+        }
+    });
+
+    /**
+     * 모달 닫기: ESC 키
+     * - 모달이 열려있을 때만 동작
+     */
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && hostSpacesModal.classList.contains('show')) {
+            closeHostSpacesModal();
         }
     });
 
