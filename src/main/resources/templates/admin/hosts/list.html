@@ -104,6 +104,30 @@
                 width: 30px;
             }
         }
+
+        /* JS 연동 클래스: Modal */
+        .modal-overlay {
+            opacity: 0;
+            visibility: hidden;
+            backdrop-filter: blur(0px);
+            transition: opacity 0.3s ease, visibility 0.3s ease, backdrop-filter 0.3s ease;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+            backdrop-filter: blur(4px);
+        }
+        .modal-container {
+            transform: translateY(20px) scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-overlay.show .modal-container {
+            transform: translateY(0) scale(1);
+        }
+        /* Body scroll lock */
+        body.modal-open {
+            overflow: hidden;
+        }
     </style>
 </head>
 <body class="bg-bg-color min-h-screen flex flex-col font-sans">
@@ -225,6 +249,62 @@
 
     <!-- Footer (Fragment 사용) -->
     <footer th:replace="~{admin/layout/fragments :: footer}"></footer>
+
+    <!--
+        호스트 스페이스 목록 모달
+        - 기본적으로 숨김 상태 (display: none)
+        - 호스트의 스페이스 개수 클릭 시 표시
+        - ESC 키 또는 오버레이 클릭 시 닫힘
+        - 모달이 열렸을 때 body의 스크롤 방지
+    -->
+    <div id="hostSpacesModal"
+         class="modal-overlay fixed inset-0 bg-black/60 flex justify-center items-center z-[10000]"
+         style="display: none;"
+         role="dialog" aria-labelledby="hostSpacesModalTitle" aria-modal="true">
+        <div class="modal-container bg-surface rounded-xl shadow-xl max-w-[600px] w-[90%] max-h-[85vh] flex flex-col">
+            <!-- 모달 헤더 -->
+            <div class="flex justify-between items-center p-lg border-b border-border-color">
+                <h3 id="hostSpacesModalTitle" class="text-xl font-bold text-text-primary m-0">스페이스 목록</h3>
+                <button id="closeHostSpacesModalBtn"
+                        class="w-11 h-11 flex items-center justify-center text-2xl text-text-secondary bg-transparent border-none rounded-lg cursor-pointer
+                               hover:bg-bg-color hover:text-text-primary transition-all duration-200"
+                        aria-label="모달 닫기">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <!-- 모달 내용 -->
+            <div class="p-lg overflow-y-auto flex-1">
+                <!-- 로딩 상태 -->
+                <div id="hostSpacesLoading" class="flex flex-col items-center justify-center py-2xl text-text-secondary" style="display: none;">
+                    <div class="w-10 h-10 border-3 border-border-color border-t-primary rounded-full animate-spin"></div>
+                    <p class="mt-md text-sm">스페이스 목록 로딩 중...</p>
+                </div>
+
+                <!-- 에러 상태 -->
+                <div id="hostSpacesError"
+                     class="p-md bg-red-50 border border-red-200 rounded-lg text-danger text-sm text-center"
+                     style="display: none;">
+                </div>
+
+                <!-- 스페이스 목록 (JavaScript로 동적 렌더링) -->
+                <div id="hostSpacesContent" class="divide-y divide-border-color" style="display: none;">
+                </div>
+            </div>
+
+            <!-- 모달 푸터 -->
+            <div class="p-lg border-t border-border-color flex justify-end">
+                <button id="closeHostSpacesFooterBtn"
+                        class="min-h-[44px] px-lg py-2.5 text-sm font-medium text-text-secondary
+                               bg-surface border border-border-color rounded-lg
+                               hover:bg-bg-color hover:text-text-primary
+                               active:scale-[0.98] transition-all duration-200 cursor-pointer
+                               focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!--
         Toast Notification
