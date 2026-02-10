@@ -12,9 +12,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.forgather.container.TestOnContainer;
 import com.forgather.back_office.dto.AdminHostResponse;
+import com.forgather.back_office.dto.HostSpacesResponse;
 import com.forgather.back_office.repository.AdminUserRepository;
+import com.forgather.container.TestOnContainer;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
@@ -68,6 +69,44 @@ class AdminHostServiceTest extends TestOnContainer {
             () -> assertThat(result.totalPages()).isEqualTo(1),
             () -> assertThat(result.hosts().get(0).spaceIds()).hasSize(2),
             () -> assertThat(result.hosts().get(1).spaceIds()).hasSize(0)
+        );
+    }
+
+    @DisplayName("호스트가 소유한 스페이스 목록을 조회한다.")
+    @Test
+    void getHostSpaces() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        Space space1 = spaceRepository.save(SpaceFixture.createSpaceWithCode("1111111111"));
+        Space space2 = spaceRepository.save(SpaceFixture.createSpaceWithCode("2222222222"));
+        spaceHostMapRepository.save(new SpaceHostMap(space1, host));
+        spaceHostMapRepository.save(new SpaceHostMap(space2, host));
+
+        // when
+        HostSpacesResponse result = adminHostService.getHostSpaces(host.getId());
+
+        // then
+        assertAll(
+            () -> assertThat(result.hostId()).isEqualTo(host.getId()),
+            () -> assertThat(result.hostName()).isEqualTo(host.getName()),
+            () -> assertThat(result.spaces()).hasSize(2)
+        );
+    }
+
+    @DisplayName("스페이스가 없는 호스트의 스페이스 목록을 조회하면 빈 목록을 반환한다.")
+    @Test
+    void getHostSpacesWithNoSpaces() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+
+        // when
+        HostSpacesResponse result = adminHostService.getHostSpaces(host.getId());
+
+        // then
+        assertAll(
+            () -> assertThat(result.hostId()).isEqualTo(host.getId()),
+            () -> assertThat(result.hostName()).isEqualTo(host.getName()),
+            () -> assertThat(result.spaces()).isEmpty()
         );
     }
 }
