@@ -67,8 +67,8 @@ class AdminHostServiceTest extends TestOnContainer {
             () -> assertThat(result.pageSize()).isEqualTo(10),
             () -> assertThat(result.totalCount()).isEqualTo(2),
             () -> assertThat(result.totalPages()).isEqualTo(1),
-            () -> assertThat(result.hosts().get(0).spaceIds()).hasSize(2),
-            () -> assertThat(result.hosts().get(1).spaceIds()).hasSize(0)
+            () -> assertThat(result.hosts().get(0).spaceCount()).isEqualTo(2L),
+            () -> assertThat(result.hosts().get(1).spaceCount()).isEqualTo(0L)
         );
     }
 
