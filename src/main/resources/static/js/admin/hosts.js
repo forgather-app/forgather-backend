@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function() {
      * 테이블 컬럼 구성:
      * 1. ID: host.id (숫자)
      * 2. 호스트명: host.name (문자열, XSS 방지를 위해 escapeHtml 적용)
-     * 3. 스페이스 개수: host.spaceIds.length (배열의 길이만 표시)
+     * 3. 스페이스 개수: host.spaceCount (서버에서 COUNT 쿼리로 계산된 값)
      * 4. 생성일: host.createdAt (formatDateTime으로 포맷팅)
      *
      * 빈 상태 처리:
@@ -296,12 +296,11 @@ document.addEventListener('DOMContentLoaded', function() {
          */
         const rows = hosts.map(host => {
             /**
-             * 스페이스 개수 계산
-             * - spaceIds는 배열이므로 .length로 개수 추출
-             * - 배열 자체를 렌더링하면 안 됨 (요구사항 명시)
-             * - 방어적 코드: spaceIds가 없거나 배열이 아닌 경우 0으로 표시
+             * 스페이스 개수
+             * - 서버에서 COUNT 쿼리로 계산된 값을 직접 사용
+             * - 방어적 코드: spaceCount가 없는 경우 0으로 표시
              */
-            const spaceCount = Array.isArray(host.spaceIds) ? host.spaceIds.length : 0;
+            const spaceCount = host.spaceCount || 0;
 
             /**
              * HTML 템플릿 리터럴로 테이블 행 생성

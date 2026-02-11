@@ -301,7 +301,7 @@ const API = {
      * - id: Host ID (숫자)
      * - name: Host 이름 (문자열)
      * - createdAt: 생성 일시 (ISO 8601 문자열)
-     * - spaceIds: 소유한 Space ID 배열 (숫자 배열)
+     * - spaceCount: 소유한 Space 개수 (숫자)
      *
      * 사용 예시:
      * ```javascript
