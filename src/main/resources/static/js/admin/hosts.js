@@ -629,6 +629,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeHostSpacesModalBtn = document.getElementById('closeHostSpacesModalBtn');
     const closeHostSpacesFooterBtn = document.getElementById('closeHostSpacesFooterBtn');
 
+    // 슬라이드 전환 관련 DOM 요소
+    const backToSpaceListBtn = document.getElementById('backToSpaceListBtn');
+    const hostModalVisitSpaceBtn = document.getElementById('hostModalVisitSpaceBtn');
+    const modalPanelContainer = document.getElementById('modalPanelContainer');
+    const spaceDetailLoading = document.getElementById('spaceDetailLoading');
+    const spaceDetailError = document.getElementById('spaceDetailError');
+    const spaceDetailContent = document.getElementById('spaceDetailContent');
+
+    /**
+     * 모달 내부 슬라이드 상태 관리
+     * - currentModalView: 현재 표시 중인 패널 ('list' | 'detail')
+     * - currentDetailSpaceCode: 현재 상세 보기 중인 스페이스 코드
+     * - savedModalTitle: 상세 전환 전 저장한 모달 제목 (복원용)
+     */
+    let currentModalView = 'list';
+    let currentDetailSpaceCode = null;
+    let savedModalTitle = '';
+
     /**
      * 모달 열기
      * - display: flex로 변경 후 다음 프레임에서 .show 추가 (CSS 애니메이션)
@@ -654,6 +672,14 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             hostSpacesModal.style.display = 'none';
             resetHostSpacesModal();
+            // 슬라이드 상태 즉시 초기화 (재열기 시 항상 목록부터)
+            modalPanelContainer.style.transform = 'translateX(0%)';
+            backToSpaceListBtn.style.display = 'none';
+            hostModalVisitSpaceBtn.style.display = 'none';
+            currentModalView = 'list';
+            currentDetailSpaceCode = null;
+            savedModalTitle = '';
+            resetSpaceDetailPanel();
         }, 300);
     }
 
@@ -667,6 +693,147 @@ document.addEventListener('DOMContentLoaded', function() {
         hostSpacesContent.innerHTML = '';
         hostSpacesScrollFade.style.display = 'none';
         hostSpacesCountInfo.textContent = '';
+    }
+
+    // ==================================================================
+    // 슬라이드 전환 함수
+    // ==================================================================
+
+    /**
+     * 스페이스 상세 패널 초기화
+     */
+    function resetSpaceDetailPanel() {
+        spaceDetailLoading.style.display = 'none';
+        spaceDetailError.style.display = 'none';
+        spaceDetailContent.style.display = 'none';
+        document.getElementById('detailSpaceId').textContent = '-';
+        document.getElementById('detailSpaceCode').textContent = '-';
+        document.getElementById('detailSpaceName').textContent = '-';
+        document.getElementById('detailSpacePublic').innerHTML = '-';
+        document.getElementById('detailProductCount').textContent = '-';
+        document.getElementById('detailGuestBookCount').textContent = '-';
+        document.getElementById('detailCreatedAt').textContent = '-';
+        document.getElementById('detailUpdatedAt').textContent = '-';
+    }
+
+    /**
+     * 목록 → 상세 슬라이드 전환
+     * @param {string} spaceName - 모달 제목에 표시할 스페이스 이름
+     */
+    function slideToDetail(spaceName) {
+        savedModalTitle = hostSpacesModalTitle.textContent;
+        hostSpacesModalTitle.textContent = spaceName;
+        modalPanelContainer.style.transform = 'translateX(-50%)';
+        backToSpaceListBtn.style.display = 'flex';
+        hostModalVisitSpaceBtn.style.display = 'inline-flex';
+        hostSpacesScrollFade.style.display = 'none';
+        hostSpacesCountInfo.textContent = '';
+        currentModalView = 'detail';
+    }
+
+    /**
+     * 상세 → 목록 슬라이드 복귀
+     */
+    function slideToList() {
+        hostSpacesModalTitle.textContent = savedModalTitle;
+        modalPanelContainer.style.transform = 'translateX(0%)';
+        backToSpaceListBtn.style.display = 'none';
+        hostModalVisitSpaceBtn.style.display = 'none';
+        currentModalView = 'list';
+        currentDetailSpaceCode = null;
+
+        // 슬라이드 애니메이션 완료 후 상세 패널 초기화
+        setTimeout(() => {
+            resetSpaceDetailPanel();
+            // 목록 패널 스크롤 인디케이터 복원
+            requestAnimationFrame(() => updateScrollFade());
+        }, 300);
+    }
+
+    /**
+     * 상세 패널 로딩 상태 표시
+     */
+    function showSpaceDetailLoading() {
+        spaceDetailLoading.style.display = 'flex';
+        spaceDetailError.style.display = 'none';
+        spaceDetailContent.style.display = 'none';
+    }
+
+    /**
+     * 상세 패널 에러 상태 표시
+     * @param {string} message - 에러 메시지
+     */
+    function showSpaceDetailError(message) {
+        spaceDetailLoading.style.display = 'none';
+        spaceDetailError.textContent = message;
+        spaceDetailError.style.display = 'block';
+        spaceDetailContent.style.display = 'none';
+    }
+
+    /**
+     * 상세 패널 콘텐츠 렌더링
+     * @param {object} data - SpaceDetailResponse (space, productCount, guestBookCount)
+     */
+    function showSpaceDetailContent(data) {
+        spaceDetailLoading.style.display = 'none';
+        spaceDetailError.style.display = 'none';
+
+        const space = data.space;
+
+        document.getElementById('detailSpaceId').textContent = space.id;
+        document.getElementById('detailSpaceCode').textContent = space.code;
+        document.getElementById('detailSpaceName').textContent = space.name;
+
+        const publicBadge = space.isPublic
+            ? '<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-success/10 text-success">공개</span>'
+            : '<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-danger/10 text-danger">비공개</span>';
+        document.getElementById('detailSpacePublic').innerHTML = publicBadge;
+
+        document.getElementById('detailProductCount').textContent = `${data.productCount}개`;
+        document.getElementById('detailGuestBookCount').textContent = `${data.guestBookCount}개`;
+        document.getElementById('detailCreatedAt').textContent = formatDateTime(space.createdAt);
+        document.getElementById('detailUpdatedAt').textContent = formatDateTime(space.updatedAt);
+
+        spaceDetailContent.style.display = 'block';
+    }
+
+    /**
+     * 모달 내 스페이스 상세 로드 + 슬라이드 전환
+     * @param {string} spaceCode - 스페이스 코드
+     * @param {string} spaceName - 스페이스 이름
+     */
+    async function loadSpaceDetailInModal(spaceCode, spaceName) {
+        currentDetailSpaceCode = spaceCode;
+        showSpaceDetailLoading();
+        slideToDetail(spaceName);
+
+        try {
+            const data = await API.getSpaceDetail(spaceCode);
+            showSpaceDetailContent(data);
+        } catch (error) {
+            console.error('Failed to load space detail:', error);
+            showSpaceDetailError(error.message || '스페이스 정보를 불러오는데 실패했습니다.');
+        }
+    }
+
+    /**
+     * 게스트 페이지 URL 생성
+     * @param {string} spaceCode - 스페이스 코드
+     * @returns {string} 게스트 페이지 URL
+     */
+    function getSpacePageUrl(spaceCode) {
+        const hostname = window.location.hostname;
+
+        let guestDomain;
+        if (hostname === 'api.forgather.app') {
+            guestDomain = 'forgather.app';
+        } else if (hostname === 'api.dev.forgather.app') {
+            guestDomain = 'dev.forgather.app';
+        } else {
+            guestDomain = 'dev.forgather.app';
+        }
+
+        return `https://${guestDomain}/guest/${spaceCode}/home`;
     }
 
     /**
@@ -733,13 +900,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 : '<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-danger/10 text-danger">비공개</span>';
 
             return `
-                <div class="p-md rounded-lg border border-border-color bg-bg-color hover:border-neutral-300 transition-colors duration-150 ${index > 0 ? 'mt-sm' : ''}">
+                <div class="p-md rounded-lg border border-border-color bg-bg-color transition-colors duration-150 space-card-clickable ${index > 0 ? 'mt-sm' : ''}"
+                     data-space-code="${escapeHtml(space.code)}" data-space-name="${escapeHtml(space.name)}"
+                     role="button" tabindex="0">
                     <div class="flex items-start justify-between gap-md mb-2">
                         <div class="flex items-center gap-sm min-w-0">
                             <span class="text-xs font-medium text-text-muted whitespace-nowrap">이름</span>
                             <span class="text-sm font-semibold text-text-primary truncate">${escapeHtml(space.name)}</span>
                         </div>
-                        ${publicBadge}
+                        <div class="flex items-center gap-xs shrink-0">
+                            ${publicBadge}
+                            <svg class="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </div>
                     </div>
                     <div class="grid grid-cols-2 gap-x-lg gap-y-1">
                         <div class="flex items-center gap-sm">
@@ -848,11 +1022,67 @@ document.addEventListener('DOMContentLoaded', function() {
 
     /**
      * 모달 닫기: ESC 키
-     * - 모달이 열려있을 때만 동작
+     * - 상세 화면: 목록으로 복귀
+     * - 목록 화면: 모달 닫기
      */
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape' && hostSpacesModal.classList.contains('show')) {
-            closeHostSpacesModal();
+            if (currentModalView === 'detail') {
+                slideToList();
+            } else {
+                closeHostSpacesModal();
+            }
+        }
+    });
+
+    // ======================================================================
+    // 슬라이드 전환 이벤트 리스너
+    // ======================================================================
+
+    /**
+     * 뒤로가기 버튼 클릭 → 목록 복귀
+     */
+    backToSpaceListBtn.addEventListener('click', function() {
+        slideToList();
+    });
+
+    /**
+     * 게스트 페이지 이동 버튼 클릭
+     */
+    hostModalVisitSpaceBtn.addEventListener('click', function() {
+        if (currentDetailSpaceCode) {
+            window.open(getSpacePageUrl(currentDetailSpaceCode), '_blank');
+        }
+    });
+
+    /**
+     * 스페이스 카드 클릭 → 상세 슬라이드 전환 (이벤트 위임)
+     */
+    hostSpacesContent.addEventListener('click', function(event) {
+        const card = event.target.closest('[data-space-code]');
+        if (card) {
+            const spaceCode = card.getAttribute('data-space-code');
+            const spaceName = card.getAttribute('data-space-name');
+            if (spaceCode) {
+                loadSpaceDetailInModal(spaceCode, spaceName);
+            }
+        }
+    });
+
+    /**
+     * 스페이스 카드 키보드 접근성 (Enter/Space)
+     */
+    hostSpacesContent.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            const card = event.target.closest('[data-space-code]');
+            if (card) {
+                event.preventDefault();
+                const spaceCode = card.getAttribute('data-space-code');
+                const spaceName = card.getAttribute('data-space-name');
+                if (spaceCode) {
+                    loadSpaceDetailInModal(spaceCode, spaceName);
+                }
+            }
         }
     });
 
