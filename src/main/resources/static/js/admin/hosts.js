@@ -594,7 +594,7 @@ document.addEventListener('DOMContentLoaded', function() {
             activeElement.isContentEditable
         );
 
-        if (isInputFocused) {
+        if (isInputFocused || hostSpacesModal.classList.contains('show')) {
             return;
         }
 
@@ -635,6 +635,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const spaceDetailLoading = document.getElementById('spaceDetailLoading');
     const spaceDetailError = document.getElementById('spaceDetailError');
     const spaceDetailContent = document.getElementById('spaceDetailContent');
+
+    // 상세 패널 DOM 요소 캐싱
+    const detailSpaceId = document.getElementById('detailSpaceId');
+    const detailSpaceCode = document.getElementById('detailSpaceCode');
+    const detailSpaceName = document.getElementById('detailSpaceName');
+    const detailSpacePublic = document.getElementById('detailSpacePublic');
+    const detailProductCount = document.getElementById('detailProductCount');
+    const detailGuestBookCount = document.getElementById('detailGuestBookCount');
+    const detailCreatedAt = document.getElementById('detailCreatedAt');
+    const detailUpdatedAt = document.getElementById('detailUpdatedAt');
+
+    /** CSS transition duration과 동기화된 모달 전환 시간(ms) */
+    const MODAL_TRANSITION_MS = 300;
 
     /**
      * 모달 내부 슬라이드 상태 관리
@@ -679,7 +692,7 @@ document.addEventListener('DOMContentLoaded', function() {
             currentDetailSpaceCode = null;
             savedModalTitle = '';
             resetSpaceDetailPanel();
-        }, 300);
+        }, MODAL_TRANSITION_MS);
     }
 
     /**
@@ -705,14 +718,14 @@ document.addEventListener('DOMContentLoaded', function() {
         spaceDetailLoading.style.display = 'none';
         spaceDetailError.style.display = 'none';
         spaceDetailContent.style.display = 'none';
-        document.getElementById('detailSpaceId').textContent = '-';
-        document.getElementById('detailSpaceCode').textContent = '-';
-        document.getElementById('detailSpaceName').textContent = '-';
-        document.getElementById('detailSpacePublic').innerHTML = '-';
-        document.getElementById('detailProductCount').textContent = '-';
-        document.getElementById('detailGuestBookCount').textContent = '-';
-        document.getElementById('detailCreatedAt').textContent = '-';
-        document.getElementById('detailUpdatedAt').textContent = '-';
+        detailSpaceId.textContent = '-';
+        detailSpaceCode.textContent = '-';
+        detailSpaceName.textContent = '-';
+        detailSpacePublic.innerHTML = '-';
+        detailProductCount.textContent = '-';
+        detailGuestBookCount.textContent = '-';
+        detailCreatedAt.textContent = '-';
+        detailUpdatedAt.textContent = '-';
     }
 
     /**
@@ -746,7 +759,7 @@ document.addEventListener('DOMContentLoaded', function() {
             resetSpaceDetailPanel();
             // 목록 패널 스크롤 인디케이터 복원
             requestAnimationFrame(() => updateScrollFade());
-        }, 300);
+        }, MODAL_TRANSITION_MS);
     }
 
     /**
@@ -770,6 +783,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
+     * 공개/비공개 뱃지 HTML 생성
+     * @param {boolean} isPublic - 공개 여부
+     * @returns {string} 뱃지 HTML 문자열
+     */
+    function createPublicBadge(isPublic) {
+        return isPublic
+            ? '<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-success/10 text-success">공개</span>'
+            : '<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-danger/10 text-danger">비공개</span>';
+    }
+
+    /**
      * 상세 패널 콘텐츠 렌더링
      * @param {object} data - SpaceDetailResponse (space, productCount, guestBookCount)
      */
@@ -779,19 +803,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const space = data.space;
 
-        document.getElementById('detailSpaceId').textContent = space.id;
-        document.getElementById('detailSpaceCode').textContent = space.code;
-        document.getElementById('detailSpaceName').textContent = space.name;
+        detailSpaceId.textContent = space.id;
+        detailSpaceCode.textContent = space.code;
+        detailSpaceName.textContent = space.name;
+        detailSpacePublic.innerHTML = createPublicBadge(space.isPublic);
 
-        const publicBadge = space.isPublic
-            ? '<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-success/10 text-success">공개</span>'
-            : '<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-danger/10 text-danger">비공개</span>';
-        document.getElementById('detailSpacePublic').innerHTML = publicBadge;
-
-        document.getElementById('detailProductCount').textContent = `${data.productCount}개`;
-        document.getElementById('detailGuestBookCount').textContent = `${data.guestBookCount}개`;
-        document.getElementById('detailCreatedAt').textContent = formatDateTime(space.createdAt);
-        document.getElementById('detailUpdatedAt').textContent = formatDateTime(space.updatedAt);
+        detailProductCount.textContent = `${data.productCount}개`;
+        detailGuestBookCount.textContent = `${data.guestBookCount}개`;
+        detailCreatedAt.textContent = formatDateTime(space.createdAt);
+        detailUpdatedAt.textContent = formatDateTime(space.updatedAt);
 
         spaceDetailContent.style.display = 'block';
     }
@@ -808,8 +828,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             const data = await API.getSpaceDetail(spaceCode);
+            if (currentDetailSpaceCode !== spaceCode) return;
             showSpaceDetailContent(data);
         } catch (error) {
+            if (currentDetailSpaceCode !== spaceCode) return;
             console.error('Failed to load space detail:', error);
             showSpaceDetailError(error.message || '스페이스 정보를 불러오는데 실패했습니다.');
         }
@@ -822,16 +844,9 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     function getSpacePageUrl(spaceCode) {
         const hostname = window.location.hostname;
-
-        let guestDomain;
-        if (hostname === 'api.forgather.app') {
-            guestDomain = 'forgather.app';
-        } else if (hostname === 'api.dev.forgather.app') {
-            guestDomain = 'dev.forgather.app';
-        } else {
-            guestDomain = 'dev.forgather.app';
-        }
-
+        const guestDomain = hostname.startsWith('api.')
+            ? hostname.substring(4)
+            : 'dev.forgather.app';
         return `https://${guestDomain}/guest/${spaceCode}/home`;
     }
 
@@ -868,7 +883,9 @@ document.addEventListener('DOMContentLoaded', function() {
         hostSpacesScrollFade.style.display = (isScrollable && !isAtBottom) ? 'block' : 'none';
     }
 
-    hostSpacesScrollArea.addEventListener('scroll', updateScrollFade);
+    if (hostSpacesScrollArea) {
+        hostSpacesScrollArea.addEventListener('scroll', updateScrollFade);
+    }
 
     /**
      * 스페이스 목록 렌더링
@@ -894,9 +911,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const items = spaces.map((space, index) => {
-            const publicBadge = space.isPublic
-                ? '<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-success/10 text-success">공개</span>'
-                : '<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-danger/10 text-danger">비공개</span>';
+            const publicBadge = createPublicBadge(space.isPublic);
 
             return `
                 <div class="p-md rounded-lg border border-border-color bg-bg-color transition-colors duration-150 space-card-clickable ${index > 0 ? 'mt-sm' : ''}"
@@ -963,19 +978,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
-     * 테이블 바디 클릭 이벤트 핸들러 (이벤트 위임)
-     * - 스페이스 개수 셀(data-host-id) 클릭 시 모달 열기
+     * 호스트 셀 활성화 공통 처리
+     * - data-host-id 셀을 찾아 모달 열기
+     * @param {Event} event - DOM 이벤트
      */
-    hostsTableBody.addEventListener('click', function(event) {
+    function handleHostCellActivation(event) {
         const td = event.target.closest('td[data-host-id]');
         if (td) {
             const hostId = td.getAttribute('data-host-id');
             const hostName = td.getAttribute('data-host-name');
             if (hostId) {
-                loadHostSpaces(parseInt(hostId), hostName);
+                loadHostSpaces(parseInt(hostId, 10), hostName);
             }
         }
-    });
+    }
+
+    /**
+     * 테이블 바디 클릭 이벤트 핸들러 (이벤트 위임)
+     * - 스페이스 개수 셀(data-host-id) 클릭 시 모달 열기
+     */
+    hostsTableBody.addEventListener('click', handleHostCellActivation);
 
     /**
      * 스페이스 개수 셀 키보드 이벤트 (접근성)
@@ -983,15 +1005,8 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     hostsTableBody.addEventListener('keydown', function(event) {
         if (event.key === 'Enter' || event.key === ' ') {
-            const td = event.target.closest('td[data-host-id]');
-            if (td) {
-                event.preventDefault();
-                const hostId = td.getAttribute('data-host-id');
-                const hostName = td.getAttribute('data-host-name');
-                if (hostId) {
-                    loadHostSpaces(parseInt(hostId), hostName);
-                }
-            }
+            event.preventDefault();
+            handleHostCellActivation(event);
         }
     });
 
