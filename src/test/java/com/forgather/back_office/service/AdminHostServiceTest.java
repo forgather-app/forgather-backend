@@ -1,6 +1,7 @@
 package com.forgather.back_office.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import org.junit.jupiter.api.DisplayName;
@@ -25,6 +26,7 @@ import com.forgather.fixture.SpaceFixture;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHostMap;
 import com.forgather.global.auth.repository.SpaceHostMapRepository;
+import com.forgather.global.exception.NotFoundException;
 
 @Transactional
 @ActiveProfiles("test")
@@ -113,5 +115,16 @@ class AdminHostServiceTest extends TestOnContainer {
             () -> assertThat(result.hostName()).isEqualTo(host.getName()),
             () -> assertThat(result.spaces()).isEmpty()
         );
+    }
+
+    @DisplayName("존재하지 않는 호스트의 스페이스 목록을 조회하면 예외가 발생한다.")
+    @Test
+    void getHostSpacesWithNonExistentHost() {
+        // given
+        Long nonExistentHostId = 9999L;
+
+        // when & then
+        assertThatThrownBy(() -> adminHostService.getHostSpaces(nonExistentHostId))
+            .isInstanceOf(NotFoundException.class);
     }
 }
