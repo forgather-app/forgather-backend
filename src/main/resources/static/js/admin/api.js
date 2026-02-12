@@ -344,6 +344,27 @@ const API = {
      */
     async getHostSpaces(hostId) {
         return this.get(`/hosts/${hostId}/spaces`, {});
+    },
+
+    /**
+     * Host 이름 검색 API
+     *
+     * @param {string} name - 검색할 호스트 이름 (부분 일치)
+     * @param {number} page - 페이지 번호 (1부터 시작)
+     * @param {number} size - 페이지 크기 (기본값: 15)
+     * @param {string} sort - 정렬 파라미터 (예: 'createdAt,desc')
+     * @returns {Promise<object>} Host 목록 응답
+     *
+     * 엔드포인트: GET /admin/hosts/search/by-name
+     *
+     * 사용 예시:
+     * ```javascript
+     * const response = await API.searchHostsByName('홍길동', 1, 15);
+     * console.log(response.hosts); // 이름에 '홍길동'이 포함된 호스트 목록
+     * ```
+     */
+    async searchHostsByName(name, page = 1, size = 15, sort = 'createdAt,desc') {
+        return this.get('/hosts/search/by-name', { name, page, size, sort });
     }
 };
 
