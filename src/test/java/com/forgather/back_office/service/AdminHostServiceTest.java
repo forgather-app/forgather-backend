@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.forgather.back_office.dto.AdminHostResponse;
 import com.forgather.back_office.dto.HostSpacesResponse;
+import com.forgather.back_office.dto.SimpleSpaceResponse;
 import com.forgather.back_office.repository.AdminUserRepository;
 import com.forgather.container.TestOnContainer;
 import com.forgather.domain.space.model.Space;
@@ -77,8 +78,8 @@ class AdminHostServiceTest extends TestOnContainer {
     void getHostSpaces() {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
-        Space space1 = spaceRepository.save(SpaceFixture.createSpaceWithCode("1111111111"));
-        Space space2 = spaceRepository.save(SpaceFixture.createSpaceWithCode("2222222222"));
+        Space space1 = spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", "첫번째 스페이스"));
+        Space space2 = spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("2222222222", "두번째 스페이스"));
         spaceHostMapRepository.save(new SpaceHostMap(space1, host));
         spaceHostMapRepository.save(new SpaceHostMap(space2, host));
 
@@ -89,7 +90,11 @@ class AdminHostServiceTest extends TestOnContainer {
         assertAll(
             () -> assertThat(result.hostId()).isEqualTo(host.getId()),
             () -> assertThat(result.hostName()).isEqualTo(host.getName()),
-            () -> assertThat(result.spaces()).hasSize(2)
+            () -> assertThat(result.spaces()).hasSize(2),
+            () -> assertThat(result.spaces()).extracting(SimpleSpaceResponse::code)
+                .containsExactlyInAnyOrder("1111111111", "2222222222"),
+            () -> assertThat(result.spaces()).extracting(SimpleSpaceResponse::name)
+                .containsExactlyInAnyOrder("첫번째 스페이스", "두번째 스페이스")
         );
     }
 
