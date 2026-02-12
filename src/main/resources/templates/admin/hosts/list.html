@@ -177,9 +177,6 @@
                 - JavaScript에서 변경 이벤트를 감지하여 데이터를 다시 로드합니다.
             -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md mb-lg p-lg bg-surface rounded-lg shadow-sm">
-                <div id="totalCountInfo" class="text-sm text-text-secondary">
-                    <!-- JavaScript에서 동적으로 업데이트 -->
-                </div>
                 <div class="flex items-center gap-sm w-full sm:w-auto">
                     <label for="pageSize" class="text-sm font-medium text-text-secondary whitespace-nowrap">
                         페이지당 항목:
@@ -190,6 +187,42 @@
                         <option value="30">30</option>
                         <option value="50">50</option>
                     </select>
+                </div>
+            </div>
+
+            <!--
+                테이블 상단 컨트롤: 총 개수 + 이름 검색
+                - 이름 검색 API (/admin/hosts/search/by-name)와 연동
+                - spaces/list.html의 검색 UI 패턴과 동일
+            -->
+            <div class="flex flex-wrap items-center justify-between gap-md mb-md">
+                <div id="totalCountInfo" class="text-sm text-text-secondary font-medium">
+                    <!-- JavaScript에서 동적으로 업데이트 -->
+                </div>
+                <div class="flex items-center gap-sm">
+                    <div class="relative">
+                        <input type="text"
+                               id="nameSearchInput"
+                               class="w-64 pl-md pr-12 py-2.5 min-h-[44px] text-sm border border-border-color rounded-lg bg-surface text-text-primary placeholder-text-muted
+                                      focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
+                                      transition-all duration-200"
+                               placeholder="호스트 이름 검색..."
+                               autocomplete="off">
+                        <button type="button" id="nameSearchBtn"
+                                class="absolute right-0 top-1/2 -translate-y-1/2 p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-text-muted hover:text-primary rounded transition-colors duration-150 cursor-pointer"
+                                aria-label="검색">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <button type="button" id="resetSearchBtn"
+                            class="px-md py-2.5 min-h-[44px] text-sm font-medium text-text-secondary bg-surface border border-border-color rounded-lg whitespace-nowrap
+                                   hover:bg-bg-color hover:text-text-primary active:scale-[0.98]
+                                   transition-all duration-200 cursor-pointer"
+                            style="display: none;">
+                        초기화
+                    </button>
                 </div>
             </div>
 
