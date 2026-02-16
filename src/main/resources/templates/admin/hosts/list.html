@@ -104,6 +104,54 @@
                 width: 30px;
             }
         }
+
+        /* JS 연동 클래스: Modal */
+        .modal-overlay {
+            opacity: 0;
+            visibility: hidden;
+            backdrop-filter: blur(0px);
+            transition: opacity 0.3s ease, visibility 0.3s ease, backdrop-filter 0.3s ease;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+            backdrop-filter: blur(4px);
+        }
+        .modal-container {
+            transform: translateY(20px) scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-overlay.show .modal-container {
+            transform: translateY(0) scale(1);
+        }
+        /* Body scroll lock */
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        /* 모달 내부 슬라이드 전환 */
+        #modalPanelContainer {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 스페이스 카드 클릭 가능 상태 */
+        .space-card-clickable {
+            cursor: pointer;
+        }
+        .space-card-clickable:hover {
+            border-color: #A3A3A3;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .space-card-clickable:active {
+            transform: scale(0.99);
+        }
+        .space-card-clickable:focus-visible {
+            outline: 2px solid #171717;
+            outline-offset: 2px;
+        }
+        .space-card-clickable:focus:not(:focus-visible) {
+            outline: none;
+        }
     </style>
 </head>
 <body class="bg-bg-color min-h-screen flex flex-col font-sans">
@@ -225,6 +273,157 @@
 
     <!-- Footer (Fragment 사용) -->
     <footer th:replace="~{admin/layout/fragments :: footer}"></footer>
+
+    <!--
+        호스트 스페이스 목록 모달
+        - 기본적으로 숨김 상태 (display: none)
+        - 호스트의 스페이스 개수 클릭 시 표시
+        - ESC 키 또는 오버레이 클릭 시 닫힘
+        - 모달이 열렸을 때 body의 스크롤 방지
+    -->
+    <div id="hostSpacesModal"
+         class="modal-overlay fixed inset-0 bg-black/60 flex justify-center items-center z-[10000]"
+         style="display: none;"
+         role="dialog" aria-labelledby="hostSpacesModalTitle" aria-modal="true">
+        <div class="modal-container bg-surface rounded-xl shadow-xl max-w-[960px] w-[90%] h-[85vh] flex flex-col">
+            <!-- 모달 헤더 -->
+            <div class="flex justify-between items-center p-lg border-b border-border-color">
+                <div class="flex items-center gap-sm">
+                    <button id="backToSpaceListBtn"
+                            class="w-9 h-9 flex items-center justify-center text-text-secondary bg-transparent border-none rounded-lg cursor-pointer
+                                   hover:bg-bg-color hover:text-text-primary transition-all duration-200"
+                            style="display: none;"
+                            aria-label="스페이스 목록으로 돌아가기">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <h3 id="hostSpacesModalTitle" class="text-xl font-bold text-text-primary m-0">스페이스 목록</h3>
+                </div>
+                <button id="closeHostSpacesModalBtn"
+                        class="w-11 h-11 flex items-center justify-center text-2xl text-text-secondary bg-transparent border-none rounded-lg cursor-pointer
+                               hover:bg-bg-color hover:text-text-primary transition-all duration-200"
+                        aria-label="모달 닫기">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <!-- 모달 내용 (슬라이드 래퍼) -->
+            <div id="modalSlideWrapper" class="flex-1 min-h-0 overflow-hidden relative">
+                <div id="modalPanelContainer" class="flex w-[200%] h-full"
+                     style="transform: translateX(0%);">
+
+                    <!-- [패널 1: 스페이스 목록] - 기존 콘텐츠 유지 -->
+                    <div class="w-1/2 h-full overflow-y-auto relative p-lg" id="hostSpacesScrollArea">
+                        <!-- 로딩 상태 -->
+                        <div id="hostSpacesLoading" class="flex flex-col items-center justify-center py-2xl text-text-secondary" style="display: none;">
+                            <div class="w-10 h-10 border-[3px] border-border-color border-t-primary rounded-full animate-spin"></div>
+                            <p class="mt-md text-sm">스페이스 목록 로딩 중...</p>
+                        </div>
+
+                        <!-- 에러 상태 -->
+                        <div id="hostSpacesError"
+                             class="p-md bg-red-50 border border-red-200 rounded-lg text-danger text-sm text-center"
+                             style="display: none;">
+                        </div>
+
+                        <!-- 스페이스 목록 (JavaScript로 동적 렌더링) -->
+                        <div id="hostSpacesContent" style="display: none;">
+                        </div>
+                    </div>
+
+                    <!-- [패널 2: 스페이스 상세] - 신규 -->
+                    <div class="w-1/2 h-full overflow-y-auto p-lg" id="spaceDetailPanel">
+                        <!-- 로딩 상태 -->
+                        <div id="spaceDetailLoading" class="flex flex-col items-center justify-center py-2xl text-text-secondary" style="display: none;">
+                            <div class="w-10 h-10 border-[3px] border-border-color border-t-primary rounded-full animate-spin"></div>
+                            <p class="mt-md text-sm">스페이스 정보 로딩 중...</p>
+                        </div>
+
+                        <!-- 에러 상태 -->
+                        <div id="spaceDetailError"
+                             class="p-md bg-red-50 border border-red-200 rounded-lg text-danger text-sm text-center"
+                             style="display: none;">
+                        </div>
+
+                        <!-- 상세 콘텐츠 -->
+                        <div id="spaceDetailContent" style="display: none;">
+                            <dl class="grid grid-cols-[auto_1fr] gap-x-10 gap-y-5 items-baseline">
+                                <!-- 스페이스 ID -->
+                                <dt class="text-sm text-text-secondary font-medium whitespace-nowrap">스페이스 ID</dt>
+                                <dd id="detailSpaceId" class="text-base text-text-primary font-mono m-0">-</dd>
+
+                                <!-- 스페이스 코드 -->
+                                <dt class="text-sm text-text-secondary font-medium whitespace-nowrap">스페이스 코드</dt>
+                                <dd id="detailSpaceCode" class="text-base text-text-primary font-mono m-0">-</dd>
+
+                                <!-- 스페이스 이름 -->
+                                <dt class="text-sm text-text-secondary font-medium whitespace-nowrap">스페이스 이름</dt>
+                                <dd id="detailSpaceName" class="text-base text-text-primary font-semibold m-0">-</dd>
+
+                                <!-- 공개 여부 -->
+                                <dt class="text-sm text-text-secondary font-medium whitespace-nowrap">공개 여부</dt>
+                                <dd id="detailSpacePublic" class="text-base m-0">-</dd>
+
+                                <!-- 구분선 -->
+                                <div class="col-span-2 border-t border-border-color my-1"></div>
+
+                                <!-- 작품소개 개수 -->
+                                <dt class="text-sm text-text-secondary font-medium whitespace-nowrap">작품소개 개수</dt>
+                                <dd id="detailProductCount" class="text-base text-text-primary font-semibold m-0">-</dd>
+
+                                <!-- 방명록 개수 -->
+                                <dt class="text-sm text-text-secondary font-medium whitespace-nowrap">방명록 개수</dt>
+                                <dd id="detailGuestBookCount" class="text-base text-text-primary font-semibold m-0">-</dd>
+
+                                <!-- 구분선 -->
+                                <div class="col-span-2 border-t border-border-color my-1"></div>
+
+                                <!-- 생성일 -->
+                                <dt class="text-sm text-text-secondary font-medium whitespace-nowrap">생성일</dt>
+                                <dd id="detailCreatedAt" class="text-base text-text-primary m-0">-</dd>
+
+                                <!-- 수정일 -->
+                                <dt class="text-sm text-text-secondary font-medium whitespace-nowrap">수정일</dt>
+                                <dd id="detailUpdatedAt" class="text-base text-text-primary m-0">-</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 스크롤 하단 페이드 인디케이터 (스크롤 영역 바로 아래, 푸터 위에 겹침) -->
+            <div id="hostSpacesScrollFade"
+                 class="h-12 -mt-12 pointer-events-none relative z-10 transition-opacity duration-200"
+                 style="background: linear-gradient(to top, rgba(255,255,255,0.95), transparent); display: none;">
+            </div>
+
+            <!-- 모달 푸터 -->
+            <div class="p-lg border-t border-border-color flex items-center justify-between">
+                <span id="hostSpacesCountInfo" class="text-xs text-text-muted"></span>
+                <div class="flex items-center gap-sm">
+                    <button id="hostModalVisitSpaceBtn"
+                            class="min-h-[44px] px-lg py-2.5 text-sm font-semibold text-white
+                                   bg-cta rounded-lg
+                                   hover:bg-cta-hover
+                                   active:scale-[0.98] transition-all duration-200 cursor-pointer
+                                   focus:outline-none focus:ring-2 focus:ring-cta focus:ring-offset-2"
+                            style="display: none;"
+                            aria-label="게스트 페이지로 이동">
+                        게스트 페이지로 이동
+                    </button>
+                    <button id="closeHostSpacesFooterBtn"
+                            class="min-h-[44px] px-lg py-2.5 text-sm font-medium text-text-secondary
+                                   bg-surface border border-border-color rounded-lg
+                                   hover:bg-bg-color hover:text-text-primary
+                                   active:scale-[0.98] transition-all duration-200 cursor-pointer
+                                   focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                        닫기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!--
         Toast Notification
