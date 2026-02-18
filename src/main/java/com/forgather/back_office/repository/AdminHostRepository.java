@@ -22,7 +22,7 @@ public interface AdminHostRepository {
                 h.id, h.name, h.createdAt,
                 (SELECT COUNT(shm.id)
                  FROM SpaceHostMap shm JOIN shm.space s
-                 WHERE shm.host = h AND s.deletedAt IS NULL
+                 WHERE shm.host = h AND s.deletedAt IS NULL AND shm.deletedAt IS NULL
                 )
             )
             FROM Host h
@@ -37,7 +37,7 @@ public interface AdminHostRepository {
                 h.id, h.name, h.createdAt,
                 (SELECT COUNT(shm.id)
                  FROM SpaceHostMap shm JOIN shm.space s
-                 WHERE shm.host = h AND s.deletedAt IS NULL
+                 WHERE shm.host = h AND s.deletedAt IS NULL AND shm.deletedAt IS NULL
                 )
             )
             FROM Host h
