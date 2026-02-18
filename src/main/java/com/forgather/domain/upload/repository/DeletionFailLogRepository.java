@@ -1,4 +1,4 @@
-package com.forgather.domain.upload.reposistory;
+package com.forgather.domain.upload.repository;
 
 import com.forgather.domain.upload.domain.DeletionFailLog;
 
