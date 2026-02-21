@@ -1,6 +1,6 @@
 ---
 name: admin-ui
-description: 어드민 UI 코드 생성. Thymeleaf 템플릿, CSS, JS 작성.
+description: 어드민 UI 코드 생성. Thymeleaf 템플릿, CSS, JS를 프로젝트 컨벤션에 맞춰 작성. Use when user says "어드민 페이지 만들어줘", "admin UI 생성", "관리자 화면 추가", "백오피스 페이지", or mentions Thymeleaf admin template, list/detail/form/crud page creation.
 allowed-tools: Read, Grep, Glob, Write, Edit
 user-invocable: true
 context: fork

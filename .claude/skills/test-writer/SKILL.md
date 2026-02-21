@@ -1,6 +1,6 @@
 ---
 name: test-writer
-description: 테스트 코드 생성 요청 시 사용. unit/service/acceptance 테스트 작성.
+description: 테스트 코드 생성. unit/service/acceptance 테스트를 프로젝트 컨벤션에 맞춰 작성. Use when user says "테스트 작성해줘", "test 코드 만들어줘", "단위 테스트 추가", "인수 테스트 작성", "서비스 테스트", or mentions JUnit, RestAssured, test fixture.
 allowed-tools: Read, Grep, Glob, Write, Edit
 user-invocable: true
 ---
@@ -215,78 +215,13 @@ void setUp() {
 
 ---
 
-## RestAssuredMockMvc 패턴
+## 상세 참조 문서
 
-### GET 요청
-```java
-SpaceResponse result = RestAssuredMockMvc.given()
-    .header("Authorization", "Bearer " + token)
-    .when()
-    .get("/spaces/{spaceCode}", space.getCode())
-    .then()
-    .statusCode(HttpStatus.OK.value())
-    .extract()
-    .body()
-    .as(SpaceResponse.class);
-```
+아래 문서에서 코드 패턴을 확인:
 
-### POST 요청 (JSON)
-```java
-CreateResponse response = RestAssuredMockMvc.given()
-    .header("Authorization", "Bearer " + token)
-    .contentType(ContentType.JSON)
-    .body(request)
-    .when()
-    .post("/endpoint")
-    .then()
-    .statusCode(HttpStatus.CREATED.value())
-    .extract()
-    .body()
-    .as(CreateResponse.class);
-```
-
-### POST 요청 (Multipart)
-```java
-MockMultipartFile file = new MockMultipartFile(
-    "file", "test.jpg", "image/jpeg", "content".getBytes()
-);
-String request = objectMapper.writeValueAsString(createRequest);
-
-CreateSpaceResponse response = RestAssuredMockMvc.given()
-    .header("Authorization", "Bearer " + token)
-    .multiPart("request", request, "application/json")
-    .multiPart("file", file.getOriginalFilename(), file.getBytes(), file.getContentType())
-    .when()
-    .post("/spaces")
-    .then()
-    .statusCode(HttpStatus.CREATED.value())
-    .extract()
-    .body()
-    .as(CreateSpaceResponse.class);
-```
-
-### DELETE 요청
-```java
-var response = RestAssuredMockMvc.given()
-    .header("Authorization", "Bearer " + token)
-    .when()
-    .delete("/spaces/{spaceCode}", space.getCode())
-    .then()
-    .extract();
-
-assertThat(response.statusCode()).isEqualTo(204);
-```
-
-### 인증 없는 요청 테스트
-```java
-var response = RestAssuredMockMvc.given()
-    .when()  // Authorization 헤더 없음
-    .delete("/spaces/{spaceCode}", space.getCode())
-    .then()
-    .extract();
-
-assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
-```
+- `references/restassured-patterns.md` - GET/POST/DELETE/Multipart 요청 패턴
+- `references/assertion-patterns.md` - 단일/다중/예외 검증 패턴
+- `references/import-guide.md` - 테스트 타입별 Import 목록
 
 ---
 
@@ -296,14 +231,8 @@ assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
 테스트 데이터는 `src/test/java/com/forgather/fixture/` 의 Fixture 클래스 활용:
 
 ```java
-import com.forgather.fixture.SpaceFixture;
-import com.forgather.fixture.HostFixture;
-
-// 기본 생성
 Space space = SpaceFixture.createSpace();
 Host host = HostFixture.createHost();
-
-// 커스텀 생성
 Space space = SpaceFixture.createSpaceWithCode("abcdefghij");
 ```
 
@@ -348,79 +277,4 @@ public class FakeContentStorage implements ContentsStorage {
 ```java
 @MockitoBean
 private ContentsStorage contentsStorage;
-```
-
----
-
-## Assertion 패턴
-
-### 단일 검증
-```java
-assertThat(result.getName()).isEqualTo("expected");
-```
-
-### 다중 검증 (assertAll)
-```java
-assertAll(
-    () -> assertThat(result.name()).isEqualTo("새로운 스페이스"),
-    () -> assertThat(result.description()).isEqualTo("새로운 설명"),
-    () -> assertThat(result.isPublic()).isFalse()
-);
-```
-
-### 예외 검증
-```java
-assertThatThrownBy(
-    () -> new Space(null, name, null, false, null, null)
-).isInstanceOf(BaseNullPointerException.class)
-    .hasMessageContaining("스페이스 코드");
-```
-
-### 예외 없음 검증
-```java
-assertThatCode(
-    () -> new Space(spaceCode, name, "", false, "", "")
-).doesNotThrowAnyException();
-```
-
----
-
-## Import 가이드
-
-### 단위 테스트
-```java
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertAll;
-
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-```
-
-### 서비스 테스트
-```java
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.forgather.container.TestOnContainer;
-```
-
-### 인수 테스트
-```java
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-
-import com.forgather.acceptance.AcceptanceTest;
-import io.restassured.module.mockmvc.RestAssuredMockMvc;
 ```
