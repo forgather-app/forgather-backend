@@ -3,6 +3,9 @@ name: test-writer
 description: 테스트 코드 생성. unit/service/acceptance 테스트를 프로젝트 컨벤션에 맞춰 작성. Use when user says "테스트 작성해줘", "test 코드 만들어줘", "단위 테스트 추가", "인수 테스트 작성", "서비스 테스트", or mentions JUnit, RestAssured, test fixture.
 allowed-tools: Read, Grep, Glob, Write, Edit
 user-invocable: true
+metadata:
+  author: Forgather
+  version: 1.0.0
 ---
 
 # Test Writer 스킬
@@ -18,7 +21,7 @@ user-invocable: true
 - **타입**: `unit` | `service` | `acceptance`
 - **대상클래스**: 테스트할 클래스 이름 (예: `SpaceService`, `Product`)
 
-## 예시
+## Examples
 
 ```
 /test-writer unit Space
@@ -40,86 +43,22 @@ user-invocable: true
 2. 테스트 타입 결정 (unit/service/acceptance)
 3. 기존 Fixture 확인 (`src/test/java/com/forgather/fixture/`)
 4. 기존 Fake 구현체 확인 (`src/test/java/com/forgather/fake/`)
-5. 이 스킬의 `templates/` 하위 템플릿 참조하여 코드 생성
+5. 이 스킬의 `assets/` 하위 템플릿 참조하여 코드 생성
 
 ## 템플릿 파일
 
-- `templates/unit.java.template` - 단위 테스트 기본 구조
-- `templates/service.java.template` - 서비스 통합 테스트 구조
-- `templates/acceptance.java.template` - 인수 테스트 구조
+- `assets/unit.java.template` - 단위 테스트 기본 구조
+- `assets/service.java.template` - 서비스 통합 테스트 구조
+- `assets/acceptance.java.template` - 인수 테스트 구조
 
 ---
 
-## 테스트 컨벤션
+## 컨벤션 요약
 
-### @DisplayName 작성 원칙
-
-- **동작 + 결과** 형태로 작성
-- 도메인 요구사항을 반영하여 한글로 작성
-- 예외 케이스는 조건 + 결과로 명시
-
-```java
-// Good
-@DisplayName("스페이스 생성에 코드와 이름은 필수값이다.")
-@DisplayName("스페이스 이름이 존재하지 않으면 스페이스를 생성할 수 없다.")
-@DisplayName("논리 삭제된 스페이스를 조회하면 예외를 던진다")
-
-// Bad
-@DisplayName("test1")
-@DisplayName("createSpace")
-```
-
-### 메서드명 규칙
-
-- **카멜케이스** 사용
-- 동작 중심으로 작성
-- 예외 케이스는 `Without`, `With` 접미사 활용
-
-```java
-// Good
-void createSpace() { }
-void createSpaceWithoutLogin() { }
-void createSpaceWithInvalidName() { }
-
-// Bad
-void test_create_space() { }
-void testCreateSpace() { }
-```
-
-### given-when-then 구조
-
-모든 테스트는 given-when-then 주석으로 구조화:
-
-```java
-@Test
-void createSpace() {
-    // given
-    String spaceCode = "1234567890";
-    String name = "나의 졸업전시";
-
-    // when
-    Space space = new Space(spaceCode, name, "", false, "", "");
-
-    // then
-    assertThat(space.getName()).isEqualTo(name);
-}
-```
-
-`when & then`을 함께 쓰는 경우 (예외 검증):
-
-```java
-@Test
-void createSpaceWithoutCode() {
-    // given
-    String name = "나의 졸업전시";
-
-    // when & then
-    assertThatThrownBy(
-        () -> new Space(null, name, null, false, null, null)
-    ).isInstanceOf(BaseNullPointerException.class)
-        .hasMessageContaining("스페이스 코드");
-}
-```
+- `@DisplayName`: 동작 + 결과, 한글 작성
+- 메서드명: camelCase, 동작 중심
+- 구조: given-when-then 주석 필수
+- 상세 가이드: `references/conventions.md`
 
 ---
 
@@ -217,64 +156,9 @@ void setUp() {
 
 ## 상세 참조 문서
 
-아래 문서에서 코드 패턴을 확인:
-
+- `references/conventions.md` - @DisplayName, 메서드명, given-when-then 상세 코드 예제
+- `references/fixture-guide.md` - Fixture 사용 원칙, Fake 구현체 활용법
 - `references/restassured-patterns.md` - GET/POST/DELETE/Multipart 요청 패턴
 - `references/assertion-patterns.md` - 단일/다중/예외 검증 패턴
 - `references/import-guide.md` - 테스트 타입별 Import 목록
-
----
-
-## Fixture 사용 원칙
-
-### 기존 Fixture 활용
-테스트 데이터는 `src/test/java/com/forgather/fixture/` 의 Fixture 클래스 활용:
-
-```java
-Space space = SpaceFixture.createSpace();
-Host host = HostFixture.createHost();
-Space space = SpaceFixture.createSpaceWithCode("abcdefghij");
-```
-
-### 새 Fixture 추가 시
-같은 패턴으로 정적 팩토리 메서드 제공:
-
-```java
-public class NewEntityFixture {
-
-    public static NewEntity createEntity() {
-        return new NewEntity("default", "values");
-    }
-
-    public static NewEntity createEntityWith{Condition}({Type} param) {
-        return new NewEntity(param, "values");
-    }
-}
-```
-
----
-
-## Fake 구현체 활용
-
-**원칙**: 테스트에서 실제 외부 API 호출 금지
-
-```java
-// src/test/java/com/forgather/fake/FakeContentStorage.java
-public class FakeContentStorage implements ContentsStorage {
-    @Override
-    public String upload(String spaceCode, MultipartFile file) {
-        return "";  // 실제 S3 업로드하지 않음
-    }
-
-    @Override
-    public String issueSignedUrl(String path) {
-        return "test-prefix-" + path + "-test-suffix";
-    }
-}
-```
-
-인수 테스트에서는 `@MockitoBean`으로 Mock 처리:
-```java
-@MockitoBean
-private ContentsStorage contentsStorage;
-```
+- `references/troubleshooting.md` - 자주 발생하는 문제와 해결법
