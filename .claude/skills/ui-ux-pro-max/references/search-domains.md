@@ -34,30 +34,30 @@
 
 ```bash
 # Style search
-python3 skills/ui-ux-pro-max/scripts/search.py "glassmorphism dark" --domain style
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "glassmorphism dark" --domain style
 
 # Chart recommendations
-python3 skills/ui-ux-pro-max/scripts/search.py "real-time dashboard" --domain chart
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "real-time dashboard" --domain chart
 
 # UX best practices
-python3 skills/ui-ux-pro-max/scripts/search.py "animation accessibility" --domain ux
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "animation accessibility" --domain ux
 
 # Alternative fonts
-python3 skills/ui-ux-pro-max/scripts/search.py "elegant luxury" --domain typography
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "elegant luxury" --domain typography
 
 # Landing structure
-python3 skills/ui-ux-pro-max/scripts/search.py "hero social-proof" --domain landing
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "hero social-proof" --domain landing
 ```
 
 ## Stack Search Examples
 
 ```bash
 # Default stack (html-tailwind)
-python3 skills/ui-ux-pro-max/scripts/search.py "layout responsive form" --stack html-tailwind
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "layout responsive form" --stack html-tailwind
 
 # React patterns
-python3 skills/ui-ux-pro-max/scripts/search.py "state management hooks" --stack react
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "state management hooks" --stack react
 
 # Next.js SSR
-python3 skills/ui-ux-pro-max/scripts/search.py "routing images api" --stack nextjs
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "routing images api" --stack nextjs
 ```

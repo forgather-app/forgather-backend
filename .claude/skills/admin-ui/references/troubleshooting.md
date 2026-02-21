@@ -18,9 +18,16 @@ background: var(--bg-secondary);
 ## escapeHtml() 미사용 경고
 
 **Cause:** `innerHTML`에 사용자 입력 직접 삽입
-**Solution:** `escapeHtml()`로 감싸서 XSS 방지
+**Solution:** 각 페이지 JS 파일 내에 `escapeHtml()` 함수를 정의하고, 사용자 입력을 감싸서 XSS 방지
+- 참고: `hosts.js`, `spaces.js` 등 기존 페이지에 동일 패턴으로 정의되어 있음
 
 ```javascript
+// 각 페이지 JS 파일 내에 아래 함수 정의 필요
+function escapeHtml(text) {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
+
 // Bad
 element.innerHTML = `<span>${userData.name}</span>`;
 
@@ -48,7 +55,7 @@ element.innerHTML = `<span>${escapeHtml(userData.name)}</span>`;
 
 ```javascript
 // API 호출 시 Auth 객체가 자동으로 토큰 헤더 추가
-API.get('/api/admin/hosts');  // Auth.getToken() 자동 포함
+API.get('/hosts');  // BASE_URL('/admin') + endpoint → '/admin/hosts'로 요청
 ```
 
 ## 페이지네이션 동작 안 함
@@ -57,9 +64,12 @@ API.get('/api/admin/hosts');  // Auth.getToken() 자동 포함
 **Solution:** 콜백 함수를 반드시 전달
 
 ```javascript
-PaginationUtil.render({
-    currentPage: data.currentPage,
-    totalPages: data.totalPages,
-    onPageChange: (page) => loadData(page)  // 콜백 필수
-});
+const paginationContainer = document.getElementById('pagination');
+PaginationUtil.render(
+    paginationContainer,           // container: HTMLElement
+    data.currentPage,              // currentPage (0-based)
+    data.totalPages,               // totalPages
+    data.totalCount,               // totalCount
+    (page) => loadData(page)       // onPageClick 콜백 (필수)
+);
 ```

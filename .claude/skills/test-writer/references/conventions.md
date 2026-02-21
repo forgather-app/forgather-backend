@@ -30,8 +30,8 @@ void createSpaceWithoutLogin() { }
 void createSpaceWithInvalidName() { }
 
 // Bad
-void test_create_space() { }
-void testCreateSpace() { }
+void test_create_space() { }   // 스네이크 케이스 금지
+void testCreateSpace() { }     // test 접두사 불필요 (@Test가 역할 대체)
 ```
 
 ## given-when-then 구조

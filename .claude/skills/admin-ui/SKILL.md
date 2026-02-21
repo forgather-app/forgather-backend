@@ -85,6 +85,7 @@ Actions:
 3. `assets/page.css.template` 참조하여 host.css 생성
 4. `assets/page.js.template` 참조하여 host.js 생성
 5. `scripts/convention-check.sh` 실행하여 컨벤션 검증
+
 Result: `/admin/hosts` 목록 페이지 완성
 
 ### Example 2: 기존 페이지에 상세 모달 추가
@@ -94,6 +95,7 @@ Actions:
 2. `assets/modal.html.template` 참조하여 모달 HTML 추가
 3. `assets/modal.js.template` 참조하여 모달 JS 로직 추가
 4. 기존 CSS에 모달 스타일 추가
+
 Result: 스페이스 목록에서 행 클릭 시 상세 모달 표시
 
 ## 상세 참조

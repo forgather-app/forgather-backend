@@ -1,6 +1,7 @@
 # RestAssuredMockMvc 패턴
 
 ## GET 요청
+
 ```java
 SpaceResponse result = RestAssuredMockMvc.given()
     .header("Authorization", "Bearer " + token)
@@ -14,6 +15,7 @@ SpaceResponse result = RestAssuredMockMvc.given()
 ```
 
 ## POST 요청 (JSON)
+
 ```java
 CreateResponse response = RestAssuredMockMvc.given()
     .header("Authorization", "Bearer " + token)
@@ -29,6 +31,7 @@ CreateResponse response = RestAssuredMockMvc.given()
 ```
 
 ## POST 요청 (Multipart)
+
 ```java
 MockMultipartFile file = new MockMultipartFile(
     "file", "test.jpg", "image/jpeg", "content".getBytes()
@@ -49,6 +52,7 @@ CreateSpaceResponse response = RestAssuredMockMvc.given()
 ```
 
 ## DELETE 요청
+
 ```java
 var response = RestAssuredMockMvc.given()
     .header("Authorization", "Bearer " + token)
@@ -61,6 +65,7 @@ assertThat(response.statusCode()).isEqualTo(204);
 ```
 
 ## 인증 없는 요청 테스트
+
 ```java
 var response = RestAssuredMockMvc.given()
     .when()  // Authorization 헤더 없음

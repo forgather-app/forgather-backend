@@ -8,7 +8,7 @@
 ```java
 Space space = SpaceFixture.createSpace();
 Host host = HostFixture.createHost();
-Space space = SpaceFixture.createSpaceWithCode("abcdefghij");
+Space spaceWithCode = SpaceFixture.createSpaceWithCode("abcdefghij");
 ```
 
 ### 새 Fixture 추가 시
