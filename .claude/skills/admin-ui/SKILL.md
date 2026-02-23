@@ -1,10 +1,13 @@
 ---
 name: admin-ui
-description: 어드민 UI 코드 생성. Thymeleaf 템플릿, CSS, JS 작성.
+description: 어드민 UI 코드 생성. Thymeleaf 템플릿, CSS, JS를 프로젝트 컨벤션에 맞춰 작성. Use when user says "어드민 페이지 만들어줘", "admin UI 생성", "관리자 화면 추가", "백오피스 페이지", or mentions Thymeleaf admin template, list/detail/form/crud page creation.
 allowed-tools: Read, Grep, Glob, Write, Edit
 user-invocable: true
 context: fork
 agent: general-purpose
+metadata:
+  author: Forgather
+  version: 1.0.0
 ---
 
 # Admin UI 생성 스킬
@@ -48,15 +51,15 @@ agent: general-purpose
 3. `static/css/admin/common.css` CSS 변수 확인
 4. `static/js/admin/` 전역 객체 패턴 확인 (API, Auth, PaginationUtil)
 5. 대상 Entity 필드/연관관계 분석
-6. 이 스킬의 `templates/` 하위 템플릿 참조하여 코드 생성
+6. 이 스킬의 `assets/` 하위 템플릿 참조하여 코드 생성
 
 ## 템플릿 파일
 
-- `templates/list.html.template` - 목록 페이지 기본 구조
-- `templates/page.css.template` - 페이지별 CSS 스타일
-- `templates/page.js.template` - 페이지별 JavaScript
-- `templates/modal.html.template` - 모달 HTML 구조
-- `templates/modal.js.template` - 모달 JavaScript
+- `assets/list.html.template` - 목록 페이지 기본 구조
+- `assets/page.css.template` - 페이지별 CSS 스타일
+- `assets/page.js.template` - 페이지별 JavaScript
+- `assets/modal.html.template` - 모달 HTML 구조
+- `assets/modal.js.template` - 모달 JavaScript
 
 ## Forgather 컨벤션 요약
 
@@ -71,3 +74,30 @@ agent: general-purpose
 ### HTML
 - 스크립트 순서: `auth.js` → `api.js` → `pagination.js` → `{page}.js`
 - 시맨틱 HTML5 + 접근성 속성 (aria-label, role)
+
+## Examples
+
+### Example 1: 호스트 관리 목록 페이지
+User says: "호스트 관리 어드민 페이지 만들어줘"
+Actions:
+1. Host 엔티티 필드/연관관계 분석
+2. `assets/list.html.template` 참조하여 list.html 생성
+3. `assets/page.css.template` 참조하여 host.css 생성
+4. `assets/page.js.template` 참조하여 host.js 생성
+5. `scripts/convention-check.sh` 실행하여 컨벤션 검증
+
+Result: `/admin/hosts` 목록 페이지 완성
+
+### Example 2: 기존 페이지에 상세 모달 추가
+User says: "스페이스 목록에서 상세보기 모달 추가해줘"
+Actions:
+1. 기존 `space/list.html` 분석
+2. `assets/modal.html.template` 참조하여 모달 HTML 추가
+3. `assets/modal.js.template` 참조하여 모달 JS 로직 추가
+4. 기존 CSS에 모달 스타일 추가
+
+Result: 스페이스 목록에서 행 클릭 시 상세 모달 표시
+
+## 상세 참조
+
+- `references/troubleshooting.md` - 자주 발생하는 문제와 해결법

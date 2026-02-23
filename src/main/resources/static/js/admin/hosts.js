@@ -54,6 +54,17 @@ const sortState = {
     direction: 'desc'
 };
 
+/**
+ * 이름 검색 상태를 관리하는 객체
+ *
+ * searchName 값:
+ * - null 또는 '': 검색 비활성화
+ * - 문자열: 해당 이름으로 검색 활성화
+ */
+const searchState = {
+    searchName: null
+};
+
 // ==========================================================================
 // 페이지 초기화
 // ==========================================================================
@@ -272,6 +283,22 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderHostsTable(hosts) {
         // 데이터가 없는 경우
         if (!hosts || hosts.length === 0) {
+            const hasSearch = hasActiveNameSearch();
+            const resetButtonHtml = hasSearch ? `
+                <button type="button"
+                        id="resetEmptyStateBtn"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px]
+                               text-sm font-medium text-white bg-primary rounded-lg
+                               hover:bg-primary-hover active:scale-[0.98]
+                               transition-all duration-200 cursor-pointer
+                               focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    검색 초기화
+                </button>
+            ` : '';
+
             hostsTableBody.innerHTML = `
                 <tr>
                     <td colspan="4" class="text-center py-12">
@@ -280,7 +307,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                             </svg>
                             <h3 class="text-lg font-semibold text-text-primary mb-2">호스트를 찾을 수 없습니다</h3>
-                            <p class="text-sm">표시할 호스트가 없습니다.</p>
+                            <p class="text-sm mb-6">${hasSearch ? '검색 조건에 맞는 호스트가 없습니다.' : '표시할 호스트가 없습니다.'}</p>
+                            ${resetButtonHtml}
                         </div>
                     </td>
                 </tr>
@@ -389,8 +417,14 @@ document.addEventListener('DOMContentLoaded', function() {
         showLoading();
 
         try {
+            let response;
             const sortParam = `${sortState.field},${sortState.direction}`;
-            const response = await API.getHosts(currentPage, currentPageSize, sortParam);
+
+            if (hasActiveNameSearch()) {
+                response = await API.searchHostsByName(searchState.searchName, currentPage, currentPageSize, sortParam);
+            } else {
+                response = await API.getHosts(currentPage, currentPageSize, sortParam);
+            }
 
             // API 응답 데이터로 전역 상태 업데이트
             currentPage = response.currentPage;
@@ -452,6 +486,68 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
+    }
+
+    // ======================================================================
+    // 이름 검색 함수
+    // ======================================================================
+
+    /**
+     * 이름 검색 활성화 여부 확인
+     *
+     * @returns {boolean} 이름 검색이 활성화되어 있으면 true
+     */
+    function hasActiveNameSearch() {
+        return searchState.searchName !== null && searchState.searchName.trim() !== '';
+    }
+
+    /**
+     * 이름 검색 실행
+     *
+     * 호출 시점:
+     * - 검색 버튼 클릭 또는 Enter 키 입력
+     */
+    function searchByName() {
+        const nameInput = document.getElementById('nameSearchInput');
+        const searchName = nameInput.value.trim();
+
+        if (!searchName) {
+            resetNameSearch();
+            return;
+        }
+
+        searchState.searchName = searchName;
+        updateNameSearchUI();
+        currentPage = 1;
+        loadHosts();
+    }
+
+    /**
+     * 이름 검색 초기화
+     *
+     * 호출 시점:
+     * - 초기화 버튼 클릭
+     * - Empty State 초기화 버튼 클릭
+     */
+    function resetNameSearch() {
+        const nameInput = document.getElementById('nameSearchInput');
+        nameInput.value = '';
+        searchState.searchName = null;
+        updateNameSearchUI();
+        currentPage = 1;
+        loadHosts();
+    }
+
+    /**
+     * 이름 검색 UI 업데이트
+     * - 검색 중: 초기화 버튼 표시
+     * - 검색 없음: 초기화 버튼 숨김
+     */
+    function updateNameSearchUI() {
+        const resetBtn = document.getElementById('resetSearchBtn');
+        if (resetBtn) {
+            resetBtn.style.display = hasActiveNameSearch() ? 'inline-flex' : 'none';
+        }
     }
 
     /**
@@ -997,7 +1093,16 @@ document.addEventListener('DOMContentLoaded', function() {
      * 테이블 바디 클릭 이벤트 핸들러 (이벤트 위임)
      * - 스페이스 개수 셀(data-host-id) 클릭 시 모달 열기
      */
-    hostsTableBody.addEventListener('click', handleHostCellActivation);
+    hostsTableBody.addEventListener('click', function(event) {
+        // Empty State 초기화 버튼 클릭 처리
+        if (event.target.closest('#resetEmptyStateBtn')) {
+            resetNameSearch();
+            return;
+        }
+
+        // 스페이스 개수 셀 클릭 처리
+        handleHostCellActivation(event);
+    });
 
     /**
      * 스페이스 개수 셀 키보드 이벤트 (접근성)
@@ -1099,6 +1204,39 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // ======================================================================
+    // 검색 이벤트 리스너
+    // ======================================================================
+
+    /**
+     * 이름 검색 버튼 클릭 이벤트 리스너
+     */
+    const nameSearchBtn = document.getElementById('nameSearchBtn');
+    if (nameSearchBtn) {
+        nameSearchBtn.addEventListener('click', searchByName);
+    }
+
+    /**
+     * 이름 검색 초기화 버튼 클릭 이벤트 리스너
+     */
+    const resetSearchBtn = document.getElementById('resetSearchBtn');
+    if (resetSearchBtn) {
+        resetSearchBtn.addEventListener('click', resetNameSearch);
+    }
+
+    /**
+     * 이름 검색 입력 필드 Enter 키 이벤트 리스너
+     */
+    const nameSearchInput = document.getElementById('nameSearchInput');
+    if (nameSearchInput) {
+        nameSearchInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                searchByName();
+            }
+        });
+    }
 
     // ======================================================================
     // 초기 로드

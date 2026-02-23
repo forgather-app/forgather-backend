@@ -159,6 +159,175 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
         assertThat(result.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
     }
 
+    @DisplayName("호스트 이름으로 검색한다. (완전 일치)")
+    @Test
+    void searchHostsByNameExactMatch() {
+        // given
+        hostRepository.save(HostFixture.createHostWithName("포스티"));
+        hostRepository.save(HostFixture.createHostWithName("레오"));
+
+        // when
+        AdminHostResponse result = givenWithSession()
+            .queryParam("name", "포스티")
+            .when()
+            .get("/admin/hosts/search/by-name")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(AdminHostResponse.class);
+
+        // then
+        assertAll(
+            () -> assertThat(result.hosts()).hasSize(1),
+            () -> assertThat(result.hosts().getFirst().name()).isEqualTo("포스티"),
+            () -> assertThat(result.totalCount()).isEqualTo(1)
+        );
+    }
+
+    @DisplayName("호스트 이름으로 검색한다. (부분 일치)")
+    @Test
+    void searchHostsByNameContaining() {
+        // given
+        hostRepository.save(HostFixture.createHostWithName("포스티"));
+        hostRepository.save(HostFixture.createHostWithName("포스트맨"));
+        hostRepository.save(HostFixture.createHostWithName("레오"));
+
+        // when
+        AdminHostResponse result = givenWithSession()
+            .queryParam("name", "포스")
+            .when()
+            .get("/admin/hosts/search/by-name")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(AdminHostResponse.class);
+
+        // then
+        assertAll(
+            () -> assertThat(result.hosts()).hasSize(2),
+            () -> assertThat(result.hosts()).allMatch(host -> host.name().contains("포스")),
+            () -> assertThat(result.totalCount()).isEqualTo(2)
+        );
+    }
+
+    @DisplayName("호스트 이름 검색 결과가 없으면 빈 목록을 반환한다.")
+    @Test
+    void searchHostsByNameNoResult() {
+        // given
+        hostRepository.save(HostFixture.createHostWithName("포스티"));
+        hostRepository.save(HostFixture.createHostWithName("레오"));
+
+        // when
+        AdminHostResponse result = givenWithSession()
+            .queryParam("name", "존재하지않는이름")
+            .when()
+            .get("/admin/hosts/search/by-name")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(AdminHostResponse.class);
+
+        // then
+        assertThat(result.hosts()).isEmpty();
+    }
+
+    @DisplayName("호스트 이름 검색 시 검색어가 없으면 모든 호스트를 반환한다.")
+    @Test
+    void searchHostsByNameWithEmptyKeyword() {
+        // given
+        hostRepository.save(HostFixture.createHostWithName("포스티"));
+        hostRepository.save(HostFixture.createHostWithName("클로버"));
+        hostRepository.save(HostFixture.createHostWithName("레오"));
+
+        // when
+        AdminHostResponse result = givenWithSession()
+            .queryParam("name", "")
+            .when()
+            .get("/admin/hosts/search/by-name")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(AdminHostResponse.class);
+
+        // then
+        assertAll(
+            () -> assertThat(result.hosts()).hasSize(3),
+            () -> assertThat(result.totalCount()).isEqualTo(3)
+        );
+    }
+
+    @DisplayName("호스트 이름 검색 시 검색어 파라미터가 없으면 모든 호스트를 반환한다.")
+    @Test
+    void searchHostsByNameWithoutParameter() {
+        // given
+        hostRepository.save(HostFixture.createHostWithName("포스티"));
+        hostRepository.save(HostFixture.createHostWithName("레오"));
+
+        // when
+        AdminHostResponse result = givenWithSession()
+            .when()
+            .get("/admin/hosts/search/by-name")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(AdminHostResponse.class);
+
+        // then
+        assertAll(
+            () -> assertThat(result.hosts()).hasSize(2),
+            () -> assertThat(result.totalCount()).isEqualTo(2)
+        );
+    }
+
+    @DisplayName("호스트 이름 검색 결과는 페이지네이션이 적용된다.")
+    @Test
+    void searchHostsByNameWithPagination() {
+        // given
+        for (int i = 0; i < 20; i++) {
+            hostRepository.save(HostFixture.createHostWithName("포스티 " + i));
+        }
+
+        // when
+        AdminHostResponse result = givenWithSession()
+            .queryParam("name", "포스티")
+            .when()
+            .get("/admin/hosts/search/by-name")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(AdminHostResponse.class);
+
+        // then
+        assertAll(
+            () -> assertThat(result.hosts()).hasSize(15),
+            () -> assertThat(result.currentPage()).isEqualTo(1),
+            () -> assertThat(result.pageSize()).isEqualTo(15),
+            () -> assertThat(result.totalCount()).isEqualTo(20),
+            () -> assertThat(result.totalPages()).isEqualTo(2)
+        );
+    }
+
+    @DisplayName("세션이 없으면 호스트 이름으로 검색할 수 없다.")
+    @Test
+    void searchHostsByNameWithoutSession() {
+        // when
+        var result = RestAssuredMockMvc.given()
+            .queryParam("name", "포스티")
+            .when()
+            .get("/admin/hosts/search/by-name")
+            .then()
+            .extract();
+
+        // then
+        assertThat(result.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+    }
+
     private void createHost(int count) {
         for (int i = 0; i < count; i++) {
             hostRepository.save(HostFixture.createHost());

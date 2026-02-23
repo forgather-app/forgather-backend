@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.forgather.domain.space.model.Space;
-import com.forgather.global.exception.BaseException;
+import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.NotFoundException;
 
 public interface SpaceRepository {
@@ -24,7 +24,7 @@ public interface SpaceRepository {
 
     default Space getByCodeAndDeletedAtIsNullOrThrow(String spaceCode) {
         if (spaceCode == null) {
-            throw new BaseException("스페이스 코드는 null일 수 없습니다. code: " + spaceCode);
+            throw new BaseNullPointerException("스페이스 코드는 null일 수 없습니다. code: " + spaceCode);
         }
         return findByCodeAndDeletedAtIsNull(spaceCode)
             .orElseThrow(() -> new NotFoundException("존재하지 않는 스페이스입니다. spaceCode: " + spaceCode));

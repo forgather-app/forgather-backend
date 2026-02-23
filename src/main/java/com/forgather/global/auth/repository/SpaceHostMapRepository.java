@@ -20,9 +20,10 @@ public interface SpaceHostMapRepository {
     @Query("""
         SELECT shm
         FROM SpaceHostMap shm
-        JOIN FETCH shm.space s
+            JOIN FETCH shm.space s
         WHERE shm.host = :host
-        AND s.deletedAt IS NULL
+            AND s.deletedAt IS NULL
+            AND shm.deletedAt IS NULL
         ORDER BY s.createdAt DESC
         """)
     List<SpaceHostMap> findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(@Param("host") Host host);

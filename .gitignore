@@ -38,3 +38,7 @@ out/
 ### Claude Code ###
 .claude/settings.local.json
 .claude/.hook-state/
+
+### Python ###
+__pycache__/
+*.pyc

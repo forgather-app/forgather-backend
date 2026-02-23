@@ -7,7 +7,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.forgather.domain.upload.domain.ContentsStorage;
 import com.forgather.domain.upload.domain.DeletionFailLog;
-import com.forgather.domain.upload.reposistory.DeletionFailLogRepository;
+import com.forgather.domain.upload.repository.DeletionFailLogRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

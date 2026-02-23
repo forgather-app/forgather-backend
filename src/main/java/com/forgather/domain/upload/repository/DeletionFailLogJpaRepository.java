@@ -1,4 +1,4 @@
-package com.forgather.domain.upload.reposistory;
+package com.forgather.domain.upload.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
