@@ -99,7 +99,7 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
                 newAttackIps, unblocked4xx, attackTypes, topAttackIps
             );
         } catch (Exception e) {
-            log.info("Prometheus 보안 메트릭 조회 실패, 기본값 반환: {}", e.getMessage());
+            log.warn("Prometheus 보안 메트릭 조회 실패, 기본값 반환: {}", e.getMessage());
             return SecuritySummary.empty();
         }
     }
@@ -111,11 +111,16 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
      */
     private long queryScalar(String query) {
         PrometheusResponse response = executeQuery(query);
-        if (response == null || response.data().result().isEmpty()) {
+        if (isResponseNonExists(response)) {
             return 0L;
         }
-        String value = String.valueOf(response.data().result().get(0).value().get(1));
-        return Math.round(Double.parseDouble(value));
+        return Math.round(Double.parseDouble(String.valueOf(
+            response.data()
+                .result()
+                .getFirst()
+                .value()
+                .get(1)
+        )));
     }
 
     /**
@@ -124,11 +129,16 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
      */
     private double queryDouble(String query) {
         PrometheusResponse response = executeQuery(query);
-        if (response == null || response.data().result().isEmpty()) {
+        if (isResponseNonExists(response)) {
             return 0.0;
         }
-        String value = String.valueOf(response.data().result().get(0).value().get(1));
-        double raw = Double.parseDouble(value);
+        double raw = Double.parseDouble(String.valueOf(
+            response.data()
+                .result()
+                .getFirst()
+                .value()
+                .get(1)
+        ));
         return Math.round(raw * 10.0) / 10.0;
     }
 
@@ -139,7 +149,7 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
      */
     private Map<AttackType, Long> queryVectorAsAttackTypes(String query) {
         PrometheusResponse response = executeQuery(query);
-        if (response == null || response.data().result().isEmpty()) {
+        if (isResponseNonExists(response)) {
             return Map.of();
         }
         Map<AttackType, Long> attackTypes = new LinkedHashMap<>();
@@ -162,7 +172,7 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
      */
     private List<AttackIpInfo> queryVectorAsAttackIps(String query) {
         PrometheusResponse response = executeQuery(query);
-        if (response == null || response.data().result().isEmpty()) {
+        if (isResponseNonExists(response)) {
             return List.of();
         }
         List<AttackIpInfo> attackIps = new ArrayList<>();
@@ -172,6 +182,13 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
             attackIps.add(new AttackIpInfo(ip, count));
         }
         return attackIps;
+    }
+
+    private boolean isResponseNonExists(PrometheusResponse response) {
+        return response == null ||
+            response.data() == null ||
+            response.data().result() == null ||
+            response.data().result().isEmpty();
     }
 
     /**
