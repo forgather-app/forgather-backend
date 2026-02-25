@@ -74,6 +74,9 @@ dependencies {
     // thymeleaf
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // WireMock
+    testImplementation 'org.wiremock:wiremock-standalone:3.10.0'
 }
 
 tasks.named('test') {
