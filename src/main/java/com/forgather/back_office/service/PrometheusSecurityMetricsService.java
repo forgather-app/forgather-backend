@@ -1,5 +1,15 @@
 package com.forgather.back_office.service;
 
+import static com.forgather.back_office.config.PrometheusConstants.ATTACK_TYPES;
+import static com.forgather.back_office.config.PrometheusConstants.BLOCKED_RATIO;
+import static com.forgather.back_office.config.PrometheusConstants.LABEL_PATH_CATEGORY;
+import static com.forgather.back_office.config.PrometheusConstants.LABEL_REMOTE_ADDR;
+import static com.forgather.back_office.config.PrometheusConstants.NEW_ATTACK_IPS;
+import static com.forgather.back_office.config.PrometheusConstants.RATE_LIMITED;
+import static com.forgather.back_office.config.PrometheusConstants.TODAY_BLOCKED;
+import static com.forgather.back_office.config.PrometheusConstants.TOP_ATTACK_IPS;
+import static com.forgather.back_office.config.PrometheusConstants.UNBLOCKED_4XX;
+
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -23,35 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 @Profile(value = {"prod", "dev"})
 @Service
 public class PrometheusSecurityMetricsService implements SecurityMetricsService {
-
-    private static final String QUERY_TODAY_BLOCKED =
-        "sum(increase(blocked_http_response_count_total[24h]))";
-
-    private static final String QUERY_BLOCKED_RATIO = """
-        sum(increase(blocked_http_response_count_total[24h]))
-         / sum(increase(access_http_response_count_total[24h]))
-         * 100
-        """;
-
-    private static final String QUERY_RATE_LIMITED =
-        "sum(increase(access_http_response_count_total{status=\"429\"}[24h]))";
-
-    private static final String QUERY_NEW_ATTACK_IPS = """
-        count(
-         count by (remote_addr)(increase(blocked_http_response_count_total[24h]) > 0)
-          unless
-         count by (remote_addr)(increase(blocked_http_response_count_total[24h] offset 1d) > 0)
-        )
-        """;
-
-    private static final String QUERY_UNBLOCKED_4XX =
-        "sum(increase(access_http_response_count_total{status=~\"4[0-9]{2}\",status!~\"403|429\"}[24h]))";
-
-    private static final String QUERY_ATTACK_TYPES =
-        "sum by (path_category)(increase(blocked_http_response_count_total[24h]))";
-
-    private static final String QUERY_TOP_ATTACK_IPS =
-        "topk(5, sum by (remote_addr)(increase(blocked_http_response_count_total[24h])))";
 
     private static final SimpleClientHttpRequestFactory REQUEST_FACTORY;
 
@@ -86,13 +67,13 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
     @Override
     public SecuritySummary getSummary() {
         try {
-            long todayBlocked = queryScalar(QUERY_TODAY_BLOCKED);
-            double blockedRatio = queryDouble(QUERY_BLOCKED_RATIO);
-            long rateLimited = queryScalar(QUERY_RATE_LIMITED);
-            long newAttackIps = queryScalar(QUERY_NEW_ATTACK_IPS);
-            long unblocked4xx = queryScalar(QUERY_UNBLOCKED_4XX);
-            Map<AttackType, Long> attackTypes = queryVectorAsAttackTypes(QUERY_ATTACK_TYPES);
-            List<AttackIpInfo> topAttackIps = queryVectorAsAttackIps(QUERY_TOP_ATTACK_IPS);
+            long todayBlocked = queryVectorAsLong(TODAY_BLOCKED);
+            double blockedRatio = queryVectorAsDouble(BLOCKED_RATIO);
+            long rateLimited = queryVectorAsLong(RATE_LIMITED);
+            long newAttackIps = queryVectorAsLong(NEW_ATTACK_IPS);
+            long unblocked4xx = queryVectorAsLong(UNBLOCKED_4XX);
+            Map<AttackType, Long> attackTypes = queryVectorAsAttackTypes(ATTACK_TYPES);
+            List<AttackIpInfo> topAttackIps = queryVectorAsAttackIps(TOP_ATTACK_IPS);
 
             return new SecuritySummary(
                 todayBlocked, blockedRatio, rateLimited,
@@ -105,11 +86,11 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
     }
 
     /**
-     * 스칼라 PromQL 쿼리를 실행하고 결과를 long으로 반환한다.
+     * 벡터 PromQL 쿼리를 실행하고 첫 번째 결과를 long으로 반환한다.
      * increase() 결과가 float(예: 1247.5)이므로 Math.round()로 변환한다.
      * 결과가 없으면(메트릭 미수집 등) 0을 반환한다.
      */
-    private long queryScalar(String query) {
+    private long queryVectorAsLong(String query) {
         PrometheusResponse response = executeQuery(query);
         if (isResponseNonExists(response)) {
             return 0L;
@@ -124,10 +105,10 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
     }
 
     /**
-     * 스칼라 PromQL 쿼리를 실행하고 결과를 소수점 1자리 double로 반환한다.
+     * 벡터 PromQL 쿼리를 실행하고 첫 번째 결과를 소수점 1자리 double로 반환한다.
      * blockedRatio 전용. NaN 응답(분모 0) 시 Math.round(NaN)=0 → 0.0 반환.
      */
-    private double queryDouble(String query) {
+    private double queryVectorAsDouble(String query) {
         PrometheusResponse response = executeQuery(query);
         if (isResponseNonExists(response)) {
             return 0.0;
@@ -154,7 +135,7 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
         }
         Map<AttackType, Long> attackTypes = new LinkedHashMap<>();
         for (PrometheusResponse.PrometheusResult result : response.data().result()) {
-            String category = result.metric().getOrDefault("path_category", "other");
+            String category = result.metric().getOrDefault(LABEL_PATH_CATEGORY, "other");
             long count = Math.round(Double.parseDouble(String.valueOf(result.value().get(1))));
             try {
                 AttackType type = AttackType.valueOf(category.toUpperCase());
@@ -177,7 +158,11 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
         }
         List<AttackIpInfo> attackIps = new ArrayList<>();
         for (PrometheusResponse.PrometheusResult result : response.data().result()) {
-            String ip = result.metric().get("remote_addr");
+            String ip = result.metric().get(LABEL_REMOTE_ADDR);
+            if (ip == null) {
+                log.warn("remote_addr 라벨이 누락된 Prometheus 결과 건너뜀: {}", result.metric());
+                continue;
+            }
             long count = Math.round(Double.parseDouble(String.valueOf(result.value().get(1))));
             attackIps.add(new AttackIpInfo(ip, count));
         }
