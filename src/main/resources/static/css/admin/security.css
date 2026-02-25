@@ -1,0 +1,147 @@
+/* ==========================================================================
+   Security Dashboard Styles
+   - dashboard.html에서만 로드
+   - 모든 클래스는 .security- 접두사로 스코프 제한
+   ========================================================================== */
+
+/* ==========================================================================
+   Card Hover Animation
+   ========================================================================== */
+
+.security-card {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.security-card:hover {
+    border-color: #A3A3A3;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* ==========================================================================
+   CSS Bar Chart
+   ========================================================================== */
+
+.security-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.security-bar-label {
+    flex-shrink: 0;
+    width: 160px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #525252;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.security-bar-track {
+    flex: 1;
+    height: 24px;
+    background-color: #F5F5F5;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.security-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background-color: #171717;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 2px;
+}
+
+.security-bar-value {
+    flex-shrink: 0;
+    width: 72px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #171717;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Bar color variants (monochrome gradient - darkest to lightest by rank) */
+.security-bar-fill[data-rank="0"] { background-color: #171717; }
+.security-bar-fill[data-rank="1"] { background-color: #404040; }
+.security-bar-fill[data-rank="2"] { background-color: #525252; }
+.security-bar-fill[data-rank="3"] { background-color: #737373; }
+.security-bar-fill[data-rank="4"] { background-color: #8A8A8A; }
+.security-bar-fill[data-rank="5"] { background-color: #A3A3A3; }
+
+/* ==========================================================================
+   Loading Skeleton
+   ========================================================================== */
+
+.security-skeleton {
+    color: transparent !important;
+    background: linear-gradient(90deg, #F5F5F5 25%, #E5E5E5 50%, #F5F5F5 75%);
+    background-size: 200% 100%;
+    animation: security-shimmer 1.5s infinite;
+    border-radius: 4px;
+    min-height: 1em;
+}
+
+.security-skeleton-bar {
+    height: 24px;
+    background: linear-gradient(90deg, #F5F5F5 25%, #E5E5E5 50%, #F5F5F5 75%);
+    background-size: 200% 100%;
+    animation: security-shimmer 1.5s infinite;
+    border-radius: 4px;
+}
+
+.security-skeleton-row {
+    height: 16px;
+    background: linear-gradient(90deg, #F5F5F5 25%, #E5E5E5 50%, #F5F5F5 75%);
+    background-size: 200% 100%;
+    animation: security-shimmer 1.5s infinite;
+    border-radius: 4px;
+    width: 80%;
+}
+
+@keyframes security-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media (max-width: 640px) {
+    .security-bar-label {
+        width: 100px;
+        font-size: 0.75rem;
+    }
+
+    .security-bar-value {
+        width: 56px;
+        font-size: 0.75rem;
+    }
+
+    .security-bar-track {
+        height: 20px;
+    }
+}
+
+/* ==========================================================================
+   Accessibility: Reduced Motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    .security-card,
+    .security-bar-fill {
+        transition: none;
+    }
+
+    .security-skeleton,
+    .security-skeleton-bar,
+    .security-skeleton-row {
+        animation: none;
+        background: #F5F5F5;
+    }
+}

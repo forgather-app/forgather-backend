@@ -365,6 +365,26 @@ const API = {
      */
     async searchHostsByName(name, page = 1, size = 15, sort = 'createdAt,desc') {
         return this.get('/hosts/search/by-name', { name, page, size, sort });
+    },
+
+    /**
+     * 보안 모니터링 요약 데이터 조회 API
+     *
+     * @returns {Promise<object>} 보안 요약 응답 (SecuritySummaryResponse)
+     * @returns {number} response.todayBlocked - 오늘 차단된 요청 수
+     * @returns {number} response.blockedRatio - 차단율 (%)
+     * @returns {number} response.rateLimited - 429 Rate Limited 횟수
+     * @returns {number} response.newAttackIps - 신규 공격 IP 수
+     * @returns {number} response.unblocked4xx - 차단되지 않은 4xx 응답 수
+     * @returns {object} response.attackTypes - 공격 유형별 건수 (key: 영문, value: 건수)
+     * @returns {Array} response.topAttackIps - 상위 공격 IP 목록 [{ip, count}]
+     * @returns {string} response.grafanaDashboardUrl - Grafana URL (빈 문자열일 수 있음)
+     * @returns {boolean} response.prometheusAvailable - Prometheus 연결 상태
+     *
+     * 엔드포인트: GET /admin/security/summary
+     */
+    async getSecuritySummary() {
+        return this.get('/security/summary');
     }
 };
 

@@ -4,8 +4,244 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>보안 모니터링 - Forgather Admin</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#171717',
+                            hover: '#262626',
+                            light: '#404040',
+                        },
+                        secondary: {
+                            DEFAULT: '#525252',
+                            hover: '#404040',
+                        },
+                        cta: {
+                            DEFAULT: '#22C55E',
+                            hover: '#16A34A',
+                        },
+                        success: '#22C55E',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        info: '#3B82F6',
+                        surface: '#FFFFFF',
+                        'bg-color': '#FAFAFA',
+                        'border-color': '#E5E5E5',
+                        'text-primary': '#171717',
+                        'text-secondary': '#525252',
+                        'text-muted': '#A3A3A3',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        mono: ['SF Mono', 'Monaco', 'Cascadia Code', 'monospace'],
+                    },
+                    boxShadow: {
+                        'sm': '0 1px 2px rgba(0,0,0,0.05)',
+                        'md': '0 4px 6px rgba(0,0,0,0.1)',
+                        'lg': '0 10px 15px rgba(0,0,0,0.1)',
+                        'xl': '0 20px 25px rgba(0,0,0,0.15)',
+                    },
+                    spacing: {
+                        'xs': '0.25rem',
+                        'sm': '0.5rem',
+                        'md': '1rem',
+                        'lg': '1.5rem',
+                        'xl': '2rem',
+                        '2xl': '3rem',
+                        '3xl': '4rem',
+                    },
+                    borderRadius: {
+                        'DEFAULT': '8px',
+                        'lg': '12px',
+                        'xl': '16px',
+                    },
+                },
+            },
+        }
+    </script>
+
+    <!-- Common CSS -->
+    <link rel="stylesheet" th:href="@{/css/admin/common.css}">
+    <!-- Security Dashboard CSS -->
+    <link rel="stylesheet" th:href="@{/css/admin/security.css}">
 </head>
-<body>
-<p>Security Dashboard - UI 구현 예정 (Phase 3 UI)</p>
+<body class="bg-bg-color min-h-screen flex flex-col font-sans">
+    <!-- Header (Fragment 사용) -->
+    <header th:replace="~{admin/layout/fragments :: header(currentPage='security')}"></header>
+
+    <!-- Main Content -->
+    <main class="flex-1 py-xl px-md">
+        <div class="max-w-7xl mx-auto">
+            <!-- Page Header -->
+            <div class="mb-xl pb-lg border-b border-border-color flex flex-col sm:flex-row sm:items-center sm:justify-between gap-md">
+                <div>
+                    <h2 class="text-3xl font-bold text-text-primary mb-xs">보안 모니터링</h2>
+                    <p class="text-text-secondary">실시간 보안 메트릭 및 공격 현황</p>
+                </div>
+                <a id="grafanaBtn"
+                   class="inline-flex items-center gap-sm px-lg py-2.5 min-h-[44px] text-sm font-medium text-white bg-primary rounded-lg
+                          hover:bg-primary-hover active:scale-[0.98] transition-all duration-200 cursor-pointer
+                          focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                   target="_blank" rel="noopener noreferrer"
+                   style="display: none;">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    Grafana 열기
+                </a>
+            </div>
+
+            <!-- Prometheus 연결 실패 배너 -->
+            <div id="prometheusBanner"
+                 class="mb-lg p-lg bg-danger/10 border border-danger/30 rounded-lg flex items-center gap-md"
+                 style="display: none;">
+                <svg class="w-5 h-5 text-danger flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+                <div>
+                    <p class="text-sm font-medium text-danger">Prometheus 연결 실패</p>
+                    <p class="text-xs text-danger/80 mt-xs">메트릭 데이터를 불러올 수 없습니다. 서버 상태를 확인해주세요.</p>
+                </div>
+            </div>
+
+            <!-- Summary Cards (4개) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg mb-xl" id="summaryCards">
+                <!-- 오늘 차단 -->
+                <div class="security-card bg-surface rounded-lg shadow-sm border border-border-color p-lg">
+                    <div class="flex items-center justify-between mb-md">
+                        <span class="text-sm font-medium text-text-secondary">오늘 차단</span>
+                        <svg class="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                        </svg>
+                    </div>
+                    <div id="todayBlocked" class="text-3xl font-bold text-text-primary security-skeleton">-</div>
+                    <p class="text-xs text-text-muted mt-sm">24시간 기준</p>
+                </div>
+
+                <!-- 차단율 -->
+                <div class="security-card bg-surface rounded-lg shadow-sm border border-border-color p-lg">
+                    <div class="flex items-center justify-between mb-md">
+                        <span class="text-sm font-medium text-text-secondary">차단율</span>
+                        <svg class="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <div id="blockedRatio" class="text-3xl font-bold text-text-primary security-skeleton">-</div>
+                    <p class="text-xs text-text-muted mt-sm">전체 트래픽 대비</p>
+                </div>
+
+                <!-- 신규 공격 IP -->
+                <div class="security-card bg-surface rounded-lg shadow-sm border border-border-color p-lg">
+                    <div class="flex items-center justify-between mb-md">
+                        <span class="text-sm font-medium text-text-secondary">신규 공격 IP</span>
+                        <svg class="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div id="newAttackIps" class="text-3xl font-bold text-text-primary security-skeleton">-</div>
+                    <p class="text-xs text-text-muted mt-sm">어제 대비 신규</p>
+                </div>
+
+                <!-- 429 발생 -->
+                <div class="security-card bg-surface rounded-lg shadow-sm border border-border-color p-lg">
+                    <div class="flex items-center justify-between mb-md">
+                        <span class="text-sm font-medium text-text-secondary">429 Rate Limited</span>
+                        <svg class="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div id="rateLimited" class="text-3xl font-bold text-text-primary security-skeleton">-</div>
+                    <p class="text-xs text-text-muted mt-sm">24시간 기준</p>
+                </div>
+            </div>
+
+            <!-- 주의 필요 배너 (unblocked4xx > 0일 때만 표시) -->
+            <div id="warningBanner"
+                 class="mb-xl p-lg bg-warning/10 border border-warning/30 rounded-lg flex items-start gap-md"
+                 style="display: none;">
+                <svg class="w-5 h-5 text-warning flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+                <div>
+                    <p class="text-sm font-semibold text-warning">주의 필요</p>
+                    <p class="text-sm text-text-secondary mt-xs">
+                        Nginx 차단을 우회하여 Spring Boot까지 도달한 4xx 응답이
+                        <span id="unblocked4xxCount" class="font-semibold text-warning">0</span>건
+                        감지되었습니다. (403, 429 제외)
+                    </p>
+                </div>
+            </div>
+
+            <!-- 두 컬럼: 공격 유형 분포 + 공격 IP Top 5 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-lg">
+                <!-- 공격 유형 분포 (CSS 막대 그래프) -->
+                <div class="bg-surface rounded-lg shadow-sm border border-border-color p-lg">
+                    <h3 class="text-lg font-semibold text-text-primary mb-lg">공격 유형 분포</h3>
+                    <div id="attackTypeChart" class="space-y-md" role="list" aria-label="공격 유형 분포">
+                        <!-- 로딩 스켈레톤 -->
+                        <div class="security-skeleton-bar"></div>
+                        <div class="security-skeleton-bar"></div>
+                        <div class="security-skeleton-bar"></div>
+                        <div class="security-skeleton-bar"></div>
+                        <div class="security-skeleton-bar"></div>
+                        <div class="security-skeleton-bar"></div>
+                    </div>
+                </div>
+
+                <!-- 공격 IP Top 5 -->
+                <div class="bg-surface rounded-lg shadow-sm border border-border-color p-lg">
+                    <h3 class="text-lg font-semibold text-text-primary mb-lg">공격 IP Top 5</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full" id="attackIpTable">
+                            <thead>
+                                <tr class="border-b-2 border-neutral-200">
+                                    <th scope="col" class="pb-md text-left text-xs font-bold text-text-secondary uppercase tracking-wider w-[15%]">순위</th>
+                                    <th scope="col" class="pb-md text-left text-xs font-bold text-text-secondary uppercase tracking-wider">IP 주소</th>
+                                    <th scope="col" class="pb-md text-right text-xs font-bold text-text-secondary uppercase tracking-wider w-[30%]">차단 횟수</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attackIpTableBody" class="divide-y divide-border-color">
+                                <!-- 로딩 스켈레톤 -->
+                                <tr><td colspan="3" class="py-md"><div class="security-skeleton-row"></div></td></tr>
+                                <tr><td colspan="3" class="py-md"><div class="security-skeleton-row"></div></td></tr>
+                                <tr><td colspan="3" class="py-md"><div class="security-skeleton-row"></div></td></tr>
+                                <tr><td colspan="3" class="py-md"><div class="security-skeleton-row"></div></td></tr>
+                                <tr><td colspan="3" class="py-md"><div class="security-skeleton-row"></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 마지막 업데이트 시각 -->
+            <div class="mt-lg text-center">
+                <p class="text-xs text-text-muted" id="lastUpdated" aria-live="polite"></p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer (Fragment 사용) -->
+    <footer th:replace="~{admin/layout/fragments :: footer}"></footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!--
+        Scripts
+        순서: auth.js -> api.js -> security.js
+    -->
+    <script th:src="@{/js/admin/auth.js}"></script>
+    <script th:src="@{/js/admin/api.js}"></script>
+    <script th:src="@{/js/admin/security.js}"></script>
 </body>
 </html>
