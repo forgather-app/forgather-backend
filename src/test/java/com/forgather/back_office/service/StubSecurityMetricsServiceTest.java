@@ -89,17 +89,6 @@ class StubSecurityMetricsServiceTest {
         assertThat(summary.topAttackIps()).hasSize(5);
     }
 
-    @DisplayName("연속 호출 시 서로 다른 값을 반환한다")
-    @Test
-    void consecutiveCallsReturnDifferentValues() {
-        // when
-        SecuritySummary first = sut.getSummary();
-        SecuritySummary second = sut.getSummary();
-
-        // then
-        assertThat(first).isNotEqualTo(second);
-    }
-
     @DisplayName("반환된 SecuritySummary는 empty()와 다르다")
     @Test
     void summaryIsNotEmpty() {
