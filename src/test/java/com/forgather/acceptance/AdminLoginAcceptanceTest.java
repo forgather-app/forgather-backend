@@ -1,5 +1,6 @@
 package com.forgather.acceptance;
 
+import static com.forgather.back_office.auth.session.SessionConstants.SESSION_COOKIE_NAME;
 import static com.forgather.fixture.AdminUserFixture.RAW_PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,8 +21,6 @@ import io.restassured.module.mockmvc.response.MockMvcResponse;
 
 @AutoConfigureMockMvc
 class AdminLoginAcceptanceTest extends AcceptanceTest {
-
-    private static final String SESSION_COOKIE_NAME = "ADMIN_SESSION_ID";
 
     @Autowired
     private MockMvc mockMvc;
