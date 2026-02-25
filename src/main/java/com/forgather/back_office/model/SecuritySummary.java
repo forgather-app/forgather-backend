@@ -13,6 +13,11 @@ public record SecuritySummary(
     List<AttackIpInfo> topAttackIps
 ) {
 
+    public SecuritySummary {
+        attackTypes = Map.copyOf(attackTypes);
+        topAttackIps = List.copyOf(topAttackIps);
+    }
+
     public static SecuritySummary empty() {
         return new SecuritySummary(0, 0.0, 0, 0, 0, Map.of(), List.of());
     }
