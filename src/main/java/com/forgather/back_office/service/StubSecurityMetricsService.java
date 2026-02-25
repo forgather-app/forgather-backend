@@ -20,9 +20,10 @@ import com.forgather.back_office.model.SecuritySummary;
 
 /**
  * 로컬 개발을 위한 Stub Security Metrics Service
- * - 고정된 값들을 반환
+ * - 고정된 더미 데이터를 반환
+ * - local, test 프로파일에서 활성화 (dev/prod는 PrometheusSecurityMetricsService 사용)
  */
-@Profile("!prod")
+@Profile("!prod & !dev")
 @Service
 public class StubSecurityMetricsService implements SecurityMetricsService {
 
