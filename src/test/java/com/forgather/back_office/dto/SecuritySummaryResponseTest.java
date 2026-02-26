@@ -21,7 +21,7 @@ class SecuritySummaryResponseTest {
     void fromSummary() {
         // given
         SecuritySummary summary = new SecuritySummary(
-            120, 23.5, 3, 18, 12,
+            120L, 23.5, 3L, 18L, 12L,
             Map.of(AttackType.CREDENTIAL_SCAN, 50L, AttackType.CMS_SCAN, 30L),
             List.of(new AttackIpInfo("1.2.3.4", 10), new AttackIpInfo("5.6.7.8", 5))
         );
@@ -49,7 +49,7 @@ class SecuritySummaryResponseTest {
     void fromConvertsAttackIpInfoToAttackIpResponse() {
         // given
         SecuritySummary summary = new SecuritySummary(
-            0, 0.0, 0, 0, 0, Map.of(),
+            0L, 0.0, 0L, 0L, 0L, Map.of(),
             List.of(
                 new AttackIpInfo("10.0.0.1", 100),
                 new AttackIpInfo("10.0.0.2", 50),
@@ -73,7 +73,7 @@ class SecuritySummaryResponseTest {
         );
     }
 
-    @DisplayName("빈 SecuritySummary 입력 시 기본값과 available=false를 반환한다")
+    @DisplayName("빈 SecuritySummary 입력 시 모든 필드가 null이고 available=false를 반환한다")
     @Test
     void fromEmptySummary() {
         // given
@@ -84,14 +84,38 @@ class SecuritySummaryResponseTest {
 
         // then
         assertAll(
-            () -> assertThat(response.todayBlocked()).isZero(),
-            () -> assertThat(response.blockedRatio()).isZero(),
-            () -> assertThat(response.rateLimited()).isZero(),
-            () -> assertThat(response.newAttackIps()).isZero(),
-            () -> assertThat(response.unblocked4xx()).isZero(),
-            () -> assertThat(response.attackTypes()).isEmpty(),
-            () -> assertThat(response.topAttackIps()).isEmpty(),
+            () -> assertThat(response.todayBlocked()).isNull(),
+            () -> assertThat(response.blockedRatio()).isNull(),
+            () -> assertThat(response.rateLimited()).isNull(),
+            () -> assertThat(response.newAttackIps()).isNull(),
+            () -> assertThat(response.unblocked4xx()).isNull(),
+            () -> assertThat(response.attackTypes()).isNull(),
+            () -> assertThat(response.topAttackIps()).isNull(),
             () -> assertThat(response.prometheusAvailable()).isFalse()
+        );
+    }
+
+    @DisplayName("부분 성공 시 실패 필드는 null로, 성공 필드는 정상 변환한다")
+    @Test
+    void fromPartialSummary() {
+        // given
+        SecuritySummary partial = new SecuritySummary(
+            100L, null, 3L, null, null,
+            Map.of(AttackType.CREDENTIAL_SCAN, 50L),
+            null
+        );
+
+        // when
+        SecuritySummaryResponse response = SecuritySummaryResponse.from(partial, "", true);
+
+        // then
+        assertAll(
+            () -> assertThat(response.todayBlocked()).isEqualTo(100),
+            () -> assertThat(response.blockedRatio()).isNull(),
+            () -> assertThat(response.rateLimited()).isEqualTo(3),
+            () -> assertThat(response.attackTypes()).containsEntry("credential_scan", 50L),
+            () -> assertThat(response.topAttackIps()).isNull(),
+            () -> assertThat(response.prometheusAvailable()).isTrue()
         );
     }
 

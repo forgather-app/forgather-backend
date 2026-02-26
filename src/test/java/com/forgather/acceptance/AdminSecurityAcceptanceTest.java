@@ -69,7 +69,7 @@ class AdminSecurityAcceptanceTest extends AcceptanceTest {
     void getSummary() {
         // given
         given(securityMetricsService.getSummary())
-            .willReturn(new SecuritySummary(10, 0.5, 3, 2, 1, Map.of(), List.of()));
+            .willReturn(new SecuritySummary(10L, 0.5, 3L, 2L, 1L, Map.of(), List.of()));
 
         // when
         SecuritySummaryResponse result = givenWithSession()
@@ -83,10 +83,13 @@ class AdminSecurityAcceptanceTest extends AcceptanceTest {
 
         // then
         assertAll(
-            () -> assertThat(result.todayBlocked()).isNotNegative(),
-            () -> assertThat(result.attackTypes()).isNotNull(),
-            () -> assertThat(result.topAttackIps()).isNotNull(),
-            () -> assertThat(result.grafanaDashboardUrl()).isNotNull(),
+            () -> assertThat(result.todayBlocked()).isEqualTo(10),
+            () -> assertThat(result.blockedRatio()).isEqualTo(0.5),
+            () -> assertThat(result.rateLimited()).isEqualTo(3),
+            () -> assertThat(result.newAttackIps()).isEqualTo(2),
+            () -> assertThat(result.unblocked4xx()).isEqualTo(1),
+            () -> assertThat(result.attackTypes()).isEmpty(),
+            () -> assertThat(result.topAttackIps()).isEmpty(),
             () -> assertThat(result.prometheusAvailable()).isTrue()
         );
     }
@@ -96,7 +99,7 @@ class AdminSecurityAcceptanceTest extends AcceptanceTest {
     void getSummaryWhenMetricsUnavailable() {
         // given
         given(securityMetricsService.getSummary())
-            .willThrow(new RuntimeException("Prometheus 연결 실패"));
+            .willReturn(SecuritySummary.empty());
 
         // when
         SecuritySummaryResponse result = givenWithSession()
@@ -111,11 +114,11 @@ class AdminSecurityAcceptanceTest extends AcceptanceTest {
         // then
         assertAll(
             () -> assertThat(result.prometheusAvailable()).isFalse(),
-            () -> assertThat(result.todayBlocked()).isZero(),
-            () -> assertThat(result.blockedRatio()).isZero(),
-            () -> assertThat(result.rateLimited()).isZero(),
-            () -> assertThat(result.attackTypes()).isEmpty(),
-            () -> assertThat(result.topAttackIps()).isEmpty()
+            () -> assertThat(result.todayBlocked()).isNull(),
+            () -> assertThat(result.blockedRatio()).isNull(),
+            () -> assertThat(result.rateLimited()).isNull(),
+            () -> assertThat(result.attackTypes()).isNull(),
+            () -> assertThat(result.topAttackIps()).isNull()
         );
     }
 

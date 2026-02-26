@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -61,27 +62,28 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
     /**
      * 7개 PromQL 쿼리를 순차 호출하여 보안 메트릭 요약을 반환한다.
      * <p>
-     * all-or-nothing 전략: 어느 하나라도 실패하면 전체를 {@link SecuritySummary#empty()}로 반환한다.
-     * 부분 성공 시 대시보드에 모순된 데이터가 표시되는 것을 방지하기 위함.
+     * 부분 성공 전략: 개별 쿼리 실패 시 해당 필드만 null로 반환하고 나머지는 정상 데이터를 유지한다.
+     * Controller에서 {@link SecuritySummary#hasAnyData()}로 Prometheus 가용성을 판단한다.
      */
     @Override
     public SecuritySummary getSummary() {
-        try {
-            long todayBlocked = queryVectorAsLong(TODAY_BLOCKED);
-            double blockedRatio = queryVectorAsDouble(BLOCKED_RATIO);
-            long rateLimited = queryVectorAsLong(RATE_LIMITED);
-            long newAttackIps = queryVectorAsLong(NEW_ATTACK_IPS);
-            long unblocked4xx = queryVectorAsLong(UNBLOCKED_4XX);
-            Map<AttackType, Long> attackTypes = queryVectorAsAttackTypes(ATTACK_TYPES);
-            List<AttackIpInfo> topAttackIps = queryVectorAsAttackIps(TOP_ATTACK_IPS);
+        return new SecuritySummary(
+            queryOrNull(() -> queryVectorAsLong(TODAY_BLOCKED)),
+            queryOrNull(() -> queryVectorAsDouble(BLOCKED_RATIO)),
+            queryOrNull(() -> queryVectorAsLong(RATE_LIMITED)),
+            queryOrNull(() -> queryVectorAsLong(NEW_ATTACK_IPS)),
+            queryOrNull(() -> queryVectorAsLong(UNBLOCKED_4XX)),
+            queryOrNull(() -> queryVectorAsAttackTypes(ATTACK_TYPES)),
+            queryOrNull(() -> queryVectorAsAttackIps(TOP_ATTACK_IPS))
+        );
+    }
 
-            return new SecuritySummary(
-                todayBlocked, blockedRatio, rateLimited,
-                newAttackIps, unblocked4xx, attackTypes, topAttackIps
-            );
+    private <T> T queryOrNull(Supplier<T> query) {
+        try {
+            return query.get();
         } catch (Exception e) {
-            log.warn("Prometheus 보안 메트릭 조회 실패, 기본값 반환: {}", e.getMessage());
-            return SecuritySummary.empty();
+            log.warn("Prometheus 메트릭 조회 실패: {}", e.getMessage());
+            return null;
         }
     }
 

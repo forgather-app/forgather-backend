@@ -82,19 +82,27 @@ class PrometheusSecurityMetricsServiceTest {
         assertThat(summary.unblocked4xx()).isZero();
     }
 
-    @DisplayName("중간 쿼리가 실패하면 SecuritySummary.empty()를 반환한다")
+    @DisplayName("중간 쿼리가 실패하면 해당 필드만 null이고 나머지는 정상 반환한다")
     @Test
-    void getSummary_queryFails_returnsEmpty() {
-        // given — todayBlocked 성공 후 blockedRatio에서 500 에러
-        stubSequenceWithFailAt(1,
-            scalarBody("1247")
+    void getSummary_queryFails_partialNull() {
+        // given — todayBlocked 성공, blockedRatio 실패(500), 나머지 성공
+        stubSequenceWithFailAndContinue(1,
+            scalarBody("1247"),       // 0: todayBlocked ✅
+            scalarBody("3"),          // 2: rateLimited ✅
+            scalarBody("18"),         // 3: newAttackIps ✅
+            scalarBody("12"),         // 4: unblocked4xx ✅
+            emptyResultBody(),        // 5: attackTypes ✅
+            emptyResultBody()         // 6: topAttackIps ✅
         );
 
         // when
         SecuritySummary summary = sut.getSummary();
 
         // then
-        assertThat(summary).isEqualTo(SecuritySummary.empty());
+        assertThat(summary.todayBlocked()).isEqualTo(1247);
+        assertThat(summary.blockedRatio()).isNull();
+        assertThat(summary.rateLimited()).isEqualTo(3);
+        assertThat(summary.hasAnyData()).isTrue();
     }
 
     @DisplayName("path_category 라벨을 AttackType Map으로 변환한다")
@@ -130,23 +138,28 @@ class PrometheusSecurityMetricsServiceTest {
         assertThat(summary.topAttackIps().get(1).getCount()).isEqualTo(128);
     }
 
-    @DisplayName("벡터 쿼리가 실패하면 SecuritySummary.empty()를 반환한다")
+    @DisplayName("벡터 쿼리가 실패하면 해당 필드만 null이고 나머지는 정상 반환한다")
     @Test
-    void getSummary_vectorQueryFails_returnsEmpty() {
-        // given — 스칼라 5개 성공 후 attackTypes에서 500 에러
-        stubSequenceWithFailAt(5,
-            scalarBody("1247"),
-            scalarBody("23.5"),
-            scalarBody("3"),
-            scalarBody("18"),
-            scalarBody("12")
+    void getSummary_vectorQueryFails_partialNull() {
+        // given — 스칼라 5개 성공, attackTypes 실패(500), topAttackIps 성공
+        stubSequenceWithFailAndContinue(5,
+            scalarBody("1247"),       // 0: todayBlocked ✅
+            scalarBody("23.5"),       // 1: blockedRatio ✅
+            scalarBody("3"),          // 2: rateLimited ✅
+            scalarBody("18"),         // 3: newAttackIps ✅
+            scalarBody("12"),         // 4: unblocked4xx ✅
+            topAttackIpsBody()        // 6: topAttackIps ✅
         );
 
         // when
         SecuritySummary summary = sut.getSummary();
 
         // then
-        assertThat(summary).isEqualTo(SecuritySummary.empty());
+        assertThat(summary.todayBlocked()).isEqualTo(1247);
+        assertThat(summary.blockedRatio()).isEqualTo(23.5);
+        assertThat(summary.attackTypes()).isNull();
+        assertThat(summary.topAttackIps()).hasSize(2);
+        assertThat(summary.hasAnyData()).isTrue();
     }
 
     @DisplayName("blockedRatio의 double 값을 소수점 1자리로 파싱한다")
@@ -162,24 +175,9 @@ class PrometheusSecurityMetricsServiceTest {
         assertThat(summary.blockedRatio()).isEqualTo(23.5);
     }
 
-    @DisplayName("double 쿼리가 실패하면 SecuritySummary.empty()를 반환한다")
+    @DisplayName("Prometheus 응답 지연 시 모든 필드가 null이고 데이터 없음으로 판단한다")
     @Test
-    void getSummary_doubleQueryFails_returnsEmpty() {
-        // given — todayBlocked 성공 후 blockedRatio에서 500 에러
-        stubSequenceWithFailAt(1,
-            scalarBody("1247")
-        );
-
-        // when
-        SecuritySummary summary = sut.getSummary();
-
-        // then
-        assertThat(summary).isEqualTo(SecuritySummary.empty());
-    }
-
-    @DisplayName("Prometheus 응답 지연 시 타임아웃으로 SecuritySummary.empty()를 반환한다")
-    @Test
-    void getSummary_timeout_returnsEmpty() {
+    void getSummary_timeout_allNull() {
         // given
         wireMock.stubFor(get(urlPathEqualTo("/api/v1/query"))
             .willReturn(aResponse()
@@ -200,7 +198,9 @@ class PrometheusSecurityMetricsServiceTest {
         SecuritySummary summary = timeoutSut.getSummary();
 
         // then
-        assertThat(summary).isEqualTo(SecuritySummary.empty());
+        assertThat(summary.hasAnyData()).isFalse();
+        assertThat(summary.todayBlocked()).isNull();
+        assertThat(summary.blockedRatio()).isNull();
     }
 
     @DisplayName("SecuritySummary.empty()와 정상 응답은 서로 다르다")
@@ -215,9 +215,9 @@ class PrometheusSecurityMetricsServiceTest {
 
         // then
         assertThat(summary).isNotEqualTo(empty);
-        assertThat(empty.todayBlocked()).isZero();
-        assertThat(empty.attackTypes()).isEmpty();
-        assertThat(empty.topAttackIps()).isEmpty();
+        assertThat(empty.todayBlocked()).isNull();
+        assertThat(empty.attackTypes()).isNull();
+        assertThat(empty.topAttackIps()).isNull();
     }
 
     // --- Scenario 기반 순차 응답 헬퍼 ---
@@ -256,29 +256,33 @@ class PrometheusSecurityMetricsServiceTest {
         }
     }
 
-    private void stubSequenceWithFailAt(int failIndex, String... successBodies) {
-        String[] states = new String[successBodies.length + 2];
+    private void stubSequenceWithFailAndContinue(int failIndex, String... successBodies) {
+        int totalResponses = successBodies.length + 1;
+        String[] states = new String[totalResponses + 1];
         states[0] = STARTED;
         for (int i = 1; i < states.length; i++) {
             states[i] = "state-" + i;
         }
 
-        for (int i = 0; i < successBodies.length; i++) {
-            wireMock.stubFor(get(urlPathEqualTo("/api/v1/query"))
-                .inScenario(SCENARIO)
-                .whenScenarioStateIs(states[i])
-                .willReturn(aResponse()
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(successBodies[i]))
-                .willSetStateTo(states[i + 1]));
+        int successIdx = 0;
+        for (int i = 0; i < totalResponses; i++) {
+            if (i == failIndex) {
+                wireMock.stubFor(get(urlPathEqualTo("/api/v1/query"))
+                    .inScenario(SCENARIO)
+                    .whenScenarioStateIs(states[i])
+                    .willReturn(aResponse().withStatus(500))
+                    .willSetStateTo(states[i + 1]));
+            } else {
+                wireMock.stubFor(get(urlPathEqualTo("/api/v1/query"))
+                    .inScenario(SCENARIO)
+                    .whenScenarioStateIs(states[i])
+                    .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(successBodies[successIdx]))
+                    .willSetStateTo(states[i + 1]));
+                successIdx++;
+            }
         }
-
-        // failIndex 번째에서 500 에러
-        wireMock.stubFor(get(urlPathEqualTo("/api/v1/query"))
-            .inScenario(SCENARIO)
-            .whenScenarioStateIs(states[failIndex])
-            .willReturn(aResponse().withStatus(500))
-            .willSetStateTo(states[failIndex + 1]));
     }
 
     // --- JSON 응답 바디 ---

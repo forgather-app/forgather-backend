@@ -4,21 +4,27 @@ import java.util.List;
 import java.util.Map;
 
 public record SecuritySummary(
-    long todayBlocked,
-    double blockedRatio,
-    long rateLimited,
-    long newAttackIps,
-    long unblocked4xx,
+    Long todayBlocked,
+    Double blockedRatio,
+    Long rateLimited,
+    Long newAttackIps,
+    Long unblocked4xx,
     Map<AttackType, Long> attackTypes,
     List<AttackIpInfo> topAttackIps
 ) {
 
     public SecuritySummary {
-        attackTypes = Map.copyOf(attackTypes);
-        topAttackIps = List.copyOf(topAttackIps);
+        attackTypes = attackTypes != null ? Map.copyOf(attackTypes) : null;
+        topAttackIps = topAttackIps != null ? List.copyOf(topAttackIps) : null;
     }
 
     public static SecuritySummary empty() {
-        return new SecuritySummary(0, 0.0, 0, 0, 0, Map.of(), List.of());
+        return new SecuritySummary(null, null, null, null, null, null, null);
+    }
+
+    public boolean hasAnyData() {
+        return todayBlocked != null || blockedRatio != null || rateLimited != null
+            || newAttackIps != null || unblocked4xx != null
+            || attackTypes != null || topAttackIps != null;
     }
 }

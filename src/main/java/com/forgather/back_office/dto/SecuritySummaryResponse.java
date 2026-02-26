@@ -4,14 +4,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.forgather.back_office.model.AttackIpInfo;
+import com.forgather.back_office.model.AttackType;
 import com.forgather.back_office.model.SecuritySummary;
 
 public record SecuritySummaryResponse(
-    long todayBlocked,
-    double blockedRatio,
-    long rateLimited,
-    long newAttackIps,
-    long unblocked4xx,
+    Long todayBlocked,
+    Double blockedRatio,
+    Long rateLimited,
+    Long newAttackIps,
+    Long unblocked4xx,
     Map<String, Long> attackTypes,
     List<AttackIpResponse> topAttackIps,
     String grafanaDashboardUrl,
@@ -32,18 +34,31 @@ public record SecuritySummaryResponse(
             summary.rateLimited(),
             summary.newAttackIps(),
             summary.unblocked4xx(),
-            summary.attackTypes()
-                .entrySet()
-                .stream()
-                .collect(Collectors.toMap(
-                    entry -> entry.getKey().getKey(),
-                    Map.Entry::getValue
-                )),
-            summary.topAttackIps().stream()
-                .map(info -> new AttackIpResponse(info.getIp(), info.getCount()))
-                .toList(),
+            mapAttackTypes(summary.attackTypes()),
+            mapAttackIps(summary.topAttackIps()),
             dashboardUrl,
             available
         );
+    }
+
+    private static Map<String, Long> mapAttackTypes(Map<AttackType, Long> types) {
+        if (types == null) {
+            return null;
+        }
+        return types.entrySet()
+            .stream()
+            .collect(Collectors.toMap(
+                entry -> entry.getKey().getKey(),
+                Map.Entry::getValue
+            ));
+    }
+
+    private static List<AttackIpResponse> mapAttackIps(List<AttackIpInfo> ips) {
+        if (ips == null) {
+            return null;
+        }
+        return ips.stream()
+            .map(info -> new AttackIpResponse(info.getIp(), info.getCount()))
+            .toList();
     }
 }
