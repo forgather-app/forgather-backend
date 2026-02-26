@@ -97,13 +97,7 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
         if (isResponseNonExists(response)) {
             return 0L;
         }
-        double raw = Double.parseDouble(String.valueOf(
-            response.data()
-                .result()
-                .getFirst()
-                .value()
-                .get(1)
-        ));
+        double raw = parseRawFromResponse(response);
         if (!Double.isFinite(raw)) {
             return 0L;
         }
@@ -119,13 +113,7 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
         if (isResponseNonExists(response)) {
             return 0.0;
         }
-        double raw = Double.parseDouble(String.valueOf(
-            response.data()
-                .result()
-                .getFirst()
-                .value()
-                .get(1)
-        ));
+        double raw = parseRawFromResponse(response);
         if (!Double.isFinite(raw)) {
             return 0.0;
         }
@@ -145,11 +133,10 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
         Map<AttackType, Long> attackTypes = new LinkedHashMap<>();
         for (PrometheusResponse.PrometheusResult result : response.data().result()) {
             String category = result.metric().getOrDefault(LABEL_PATH_CATEGORY, "other");
-            double rawCount = Double.parseDouble(String.valueOf(result.value().get(1)));
-            if (!Double.isFinite(rawCount)) {
+            long count = roundSafely(parseRawFromResult(result));
+            if (count == 0L) {
                 continue;
             }
-            long count = Math.round(rawCount);
             try {
                 AttackType type = AttackType.valueOf(category.toUpperCase());
                 attackTypes.put(type, count);
@@ -176,21 +163,13 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
                 log.warn("remote_addr 라벨이 누락된 Prometheus 결과 건너뜀: {}", result.metric());
                 continue;
             }
-            double rawCount = Double.parseDouble(String.valueOf(result.value().get(1)));
-            if (!Double.isFinite(rawCount)) {
+            long count = roundSafely(parseRawFromResult(result));
+            if (count == 0L) {
                 continue;
             }
-            long count = Math.round(rawCount);
             attackIps.add(new AttackIpInfo(ip, count));
         }
         return attackIps;
-    }
-
-    private boolean isResponseNonExists(PrometheusResponse response) {
-        return response == null ||
-            response.data() == null ||
-            response.data().result() == null ||
-            response.data().result().isEmpty();
     }
 
     /**
@@ -202,5 +181,27 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
             .uri("/api/v1/query?query={query}", query)
             .retrieve()
             .body(PrometheusResponse.class);
+    }
+
+    private double parseRawFromResponse(PrometheusResponse response) {
+        return parseRawFromResult(response.data().result().getFirst());
+    }
+
+    private double parseRawFromResult(PrometheusResponse.PrometheusResult result) {
+        return Double.parseDouble(String.valueOf(result.value().get(1)));
+    }
+
+    private long roundSafely(double raw) {
+        if (Double.isFinite(raw)) {
+            return Math.round(raw);
+        }
+        return 0L;
+    }
+
+    private boolean isResponseNonExists(PrometheusResponse response) {
+        return response == null ||
+            response.data() == null ||
+            response.data().result() == null ||
+            response.data().result().isEmpty();
     }
 }
