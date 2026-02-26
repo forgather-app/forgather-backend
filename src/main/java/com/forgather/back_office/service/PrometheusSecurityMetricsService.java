@@ -97,13 +97,17 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
         if (isResponseNonExists(response)) {
             return 0L;
         }
-        return Math.round(Double.parseDouble(String.valueOf(
+        double raw = Double.parseDouble(String.valueOf(
             response.data()
                 .result()
                 .getFirst()
                 .value()
                 .get(1)
-        )));
+        ));
+        if (!Double.isFinite(raw)) {
+            return 0L;
+        }
+        return Math.round(raw);
     }
 
     /**
@@ -122,6 +126,9 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
                 .value()
                 .get(1)
         ));
+        if (!Double.isFinite(raw)) {
+            return 0.0;
+        }
         return Math.round(raw * 10.0) / 10.0;
     }
 
@@ -138,7 +145,11 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
         Map<AttackType, Long> attackTypes = new LinkedHashMap<>();
         for (PrometheusResponse.PrometheusResult result : response.data().result()) {
             String category = result.metric().getOrDefault(LABEL_PATH_CATEGORY, "other");
-            long count = Math.round(Double.parseDouble(String.valueOf(result.value().get(1))));
+            double rawCount = Double.parseDouble(String.valueOf(result.value().get(1)));
+            if (!Double.isFinite(rawCount)) {
+                continue;
+            }
+            long count = Math.round(rawCount);
             try {
                 AttackType type = AttackType.valueOf(category.toUpperCase());
                 attackTypes.put(type, count);
@@ -165,7 +176,11 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
                 log.warn("remote_addr 라벨이 누락된 Prometheus 결과 건너뜀: {}", result.metric());
                 continue;
             }
-            long count = Math.round(Double.parseDouble(String.valueOf(result.value().get(1))));
+            double rawCount = Double.parseDouble(String.valueOf(result.value().get(1)));
+            if (!Double.isFinite(rawCount)) {
+                continue;
+            }
+            long count = Math.round(rawCount);
             attackIps.add(new AttackIpInfo(ip, count));
         }
         return attackIps;

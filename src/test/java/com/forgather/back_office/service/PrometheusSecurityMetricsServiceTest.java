@@ -175,6 +175,52 @@ class PrometheusSecurityMetricsServiceTest {
         assertThat(summary.blockedRatio()).isEqualTo(23.5);
     }
 
+    @DisplayName("NaN 값은 0으로 처리한다")
+    @Test
+    void getSummary_nanValue_treatedAsZero() {
+        // given
+        stubSequence(
+            scalarBody("NaN"),        // todayBlocked — NaN
+            scalarBody("23.5"),       // blockedRatio
+            scalarBody("3"),          // rateLimited
+            scalarBody("18"),         // newAttackIps
+            scalarBody("12"),         // unblocked4xx
+            attackTypesBody(),        // attackTypes
+            topAttackIpsBody()        // topAttackIps
+        );
+
+        // when
+        SecuritySummary summary = sut.getSummary();
+
+        // then
+        assertThat(summary.todayBlocked()).isZero();
+        assertThat(summary.blockedRatio()).isEqualTo(23.5);
+        assertThat(summary.attackTypes()).hasSize(3);
+    }
+
+    @DisplayName("Infinity 값은 0으로 처리한다")
+    @Test
+    void getSummary_infinityValue_treatedAsZero() {
+        // given — Java의 Double.parseDouble은 "Infinity"를 파싱하여 POSITIVE_INFINITY 반환
+        stubSequence(
+            scalarBody("Infinity"),   // todayBlocked — Infinity
+            scalarBody("23.5"),       // blockedRatio
+            scalarBody("3"),          // rateLimited
+            scalarBody("18"),         // newAttackIps
+            scalarBody("12"),         // unblocked4xx
+            attackTypesBody(),        // attackTypes
+            topAttackIpsBody()        // topAttackIps
+        );
+
+        // when
+        SecuritySummary summary = sut.getSummary();
+
+        // then
+        assertThat(summary.todayBlocked()).isZero();
+        assertThat(summary.blockedRatio()).isEqualTo(23.5);
+        assertThat(summary.attackTypes()).hasSize(3);
+    }
+
     @DisplayName("Prometheus 응답 지연 시 모든 필드가 null이고 데이터 없음으로 판단한다")
     @Test
     void getSummary_timeout_allNull() {
