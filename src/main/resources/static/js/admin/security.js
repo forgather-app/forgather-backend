@@ -21,6 +21,7 @@ const ATTACK_TYPE_LABELS = {
  * 자동 새로고침 간격 (ms)
  */
 const REFRESH_INTERVAL = 60000;
+let isDashboardLoading = false;
 
 /**
  * XSS 방지를 위한 HTML 이스케이프
@@ -39,7 +40,8 @@ function escapeHtml(str) {
  * @returns {string} 포맷된 문자열
  */
 function formatNumber(num) {
-    return Number(num).toLocaleString('ko-KR');
+    const n = Number(num);
+    return Number.isFinite(n) ? n.toLocaleString('ko-KR') : '-';
 }
 
 /**
@@ -74,6 +76,8 @@ function isValidHttpUrl(str) {
  * 대시보드 데이터 로드 및 렌더링
  */
 async function loadDashboard() {
+    if (isDashboardLoading) return;
+    isDashboardLoading = true;
     try {
         const data = await API.getSecuritySummary();
 
@@ -86,11 +90,11 @@ async function loadDashboard() {
         // Prometheus 가용성 체크
         const prometheusBanner = document.getElementById('prometheusBanner');
         if (!data.prometheusAvailable) {
-            prometheusBanner.style.display = 'flex';
+            if (prometheusBanner) prometheusBanner.style.display = 'flex';
             clearDashboard();
             return;
         }
-        prometheusBanner.style.display = 'none';
+        if (prometheusBanner) prometheusBanner.style.display = 'none';
 
         // Grafana 버튼 처리
         renderGrafanaButton(data.grafanaDashboardUrl);
@@ -109,6 +113,8 @@ async function loadDashboard() {
     } catch (error) {
         console.error('[Security] Dashboard load failed:', error.message);
         showToast('보안 데이터를 불러오는데 실패했습니다.', 'error');
+    } finally {
+        isDashboardLoading = false;
     }
 }
 

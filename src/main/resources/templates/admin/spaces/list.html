@@ -132,46 +132,8 @@
     </style>
 </head>
 <body class="min-h-screen flex flex-col bg-bg-color font-sans">
-    <!-- Header (Fragment 참조) -->
-    <header class="bg-surface border-b border-border-color shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-lg py-md flex justify-between items-center">
-            <div class="flex items-center">
-                <h1 class="text-xl font-semibold">
-                    <a th:href="@{/view/admin/spaces}" class="text-text-primary hover:text-primary transition-colors duration-200 cursor-pointer">
-                        Forgather Admin
-                    </a>
-                </h1>
-            </div>
-            <nav>
-                <ul class="flex items-center gap-lg">
-                    <li>
-                        <a th:href="@{/view/admin/spaces}"
-                           class="text-primary bg-neutral-100 font-medium transition-colors duration-200 cursor-pointer px-sm py-xs rounded">
-                            Spaces
-                        </a>
-                    </li>
-                    <li>
-                        <a th:href="@{/view/admin/hosts}"
-                           class="text-text-secondary hover:text-primary font-medium transition-colors duration-200 cursor-pointer px-sm py-xs rounded">
-                            Hosts
-                        </a>
-                    </li>
-                    <li>
-                        <a th:href="@{/view/admin/security}"
-                           class="text-text-secondary hover:text-primary font-medium transition-colors duration-200 cursor-pointer px-sm py-xs rounded">
-                            Security
-                        </a>
-                    </li>
-                    <li>
-                        <button id="logoutBtn"
-                                class="px-md py-2.5 min-h-[44px] text-sm font-medium text-text-secondary border border-border-color rounded bg-transparent hover:bg-gray-50 hover:text-text-primary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
-                            로그아웃
-                        </button>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+    <!-- Header (Fragment 사용) -->
+    <header th:replace="~{admin/layout/fragments :: header(currentPage='spaces')}"></header>
 
     <!-- Main Content -->
     <main class="flex-1 py-xl">
@@ -327,12 +289,8 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-surface border-t border-border-color mt-auto">
-        <div class="max-w-7xl mx-auto px-lg py-lg text-center">
-            <p class="text-text-muted text-sm">&copy; 2025 Forgather. All rights reserved.</p>
-        </div>
-    </footer>
+    <!-- Footer (Fragment 사용) -->
+    <footer th:replace="~{admin/layout/fragments :: footer}"></footer>
 
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>

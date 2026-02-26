@@ -77,29 +77,26 @@
    Loading Skeleton
    ========================================================================== */
 
-.security-skeleton {
-    color: transparent !important;
+.security-skeleton,
+.security-skeleton-bar,
+.security-skeleton-row {
     background: linear-gradient(90deg, #F5F5F5 25%, #E5E5E5 50%, #F5F5F5 75%);
     background-size: 200% 100%;
     animation: security-shimmer 1.5s infinite;
     border-radius: 4px;
+}
+
+.security-skeleton {
+    color: transparent !important;
     min-height: 1em;
 }
 
 .security-skeleton-bar {
     height: 24px;
-    background: linear-gradient(90deg, #F5F5F5 25%, #E5E5E5 50%, #F5F5F5 75%);
-    background-size: 200% 100%;
-    animation: security-shimmer 1.5s infinite;
-    border-radius: 4px;
 }
 
 .security-skeleton-row {
     height: 16px;
-    background: linear-gradient(90deg, #F5F5F5 25%, #E5E5E5 50%, #F5F5F5 75%);
-    background-size: 200% 100%;
-    animation: security-shimmer 1.5s infinite;
-    border-radius: 4px;
     width: 80%;
 }
 
