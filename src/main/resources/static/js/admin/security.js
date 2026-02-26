@@ -149,26 +149,35 @@ function renderGrafanaButton(url) {
 }
 
 /**
+ * 개별 카드 값 렌더링 (null 시 '-' 표시)
+ * @param {string} elementId - 대상 요소 ID
+ * @param {*} value - 표시할 값 (null이면 조회 실패)
+ * @param {function} formatter - 값 포맷 함수
+ */
+function renderCardValue(elementId, value, formatter) {
+    const el = document.getElementById(elementId);
+    el.classList.remove('security-skeleton');
+    if (value === null || value === undefined) {
+        el.textContent = '-';
+        el.title = '데이터를 불러올 수 없습니다';
+    } else {
+        el.textContent = formatter(value);
+        el.title = '';
+    }
+}
+
+/**
  * 요약 카드 4개 렌더링
  * @param {object} data - API 응답 데이터
  */
 function renderSummaryCards(data) {
-    const todayBlocked = document.getElementById('todayBlocked');
-    const blockedRatio = document.getElementById('blockedRatio');
-    const newAttackIps = document.getElementById('newAttackIps');
-    const rateLimited = document.getElementById('rateLimited');
-
-    // 스켈레톤 클래스 제거
-    todayBlocked.classList.remove('security-skeleton');
-    blockedRatio.classList.remove('security-skeleton');
-    newAttackIps.classList.remove('security-skeleton');
-    rateLimited.classList.remove('security-skeleton');
-
-    todayBlocked.textContent = formatNumber(data.todayBlocked);
-    const ratio = Number(data.blockedRatio);
-    blockedRatio.textContent = (isNaN(ratio) ? '0.0' : ratio.toFixed(1)) + '%';
-    newAttackIps.textContent = formatNumber(data.newAttackIps);
-    rateLimited.textContent = formatNumber(data.rateLimited);
+    renderCardValue('todayBlocked', data.todayBlocked, v => formatNumber(v));
+    renderCardValue('blockedRatio', data.blockedRatio, v => {
+        const ratio = Number(v);
+        return (isNaN(ratio) ? '0.0' : ratio.toFixed(1)) + '%';
+    });
+    renderCardValue('newAttackIps', data.newAttackIps, v => formatNumber(v));
+    renderCardValue('rateLimited', data.rateLimited, v => formatNumber(v));
 }
 
 /**
@@ -179,7 +188,7 @@ function renderWarningBanner(data) {
     const banner = document.getElementById('warningBanner');
     const count = document.getElementById('unblocked4xxCount');
 
-    if (data.unblocked4xx > 0) {
+    if (data.unblocked4xx != null && data.unblocked4xx > 0) {
         count.textContent = formatNumber(data.unblocked4xx);
         banner.style.display = 'flex';
     } else {
@@ -194,7 +203,11 @@ function renderWarningBanner(data) {
 function renderAttackTypeChart(attackTypes) {
     const container = document.getElementById('attackTypeChart');
 
-    if (!attackTypes || Object.keys(attackTypes).length === 0) {
+    if (attackTypes === null || attackTypes === undefined) {
+        container.innerHTML = '<p class="text-sm text-text-muted text-center py-xl">데이터를 불러올 수 없습니다.</p>';
+        return;
+    }
+    if (Object.keys(attackTypes).length === 0) {
         container.innerHTML = '<p class="text-sm text-text-muted text-center py-xl">공격 유형 데이터가 없습니다.</p>';
         return;
     }
@@ -232,7 +245,11 @@ function renderAttackTypeChart(attackTypes) {
 function renderTopAttackIps(topAttackIps) {
     const tbody = document.getElementById('attackIpTableBody');
 
-    if (!topAttackIps || topAttackIps.length === 0) {
+    if (topAttackIps === null || topAttackIps === undefined) {
+        tbody.innerHTML = '<tr><td colspan="3" class="py-xl text-sm text-text-muted text-center">데이터를 불러올 수 없습니다.</td></tr>';
+        return;
+    }
+    if (topAttackIps.length === 0) {
         tbody.innerHTML = '<tr><td colspan="3" class="py-xl text-sm text-text-muted text-center">공격 IP 데이터가 없습니다.</td></tr>';
         return;
     }
