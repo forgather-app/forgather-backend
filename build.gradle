@@ -82,3 +82,95 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+// =============================================================================
+// Tailwind CSS Standalone CLI
+// =============================================================================
+
+def tailwindVersion = '3.4.17'
+def tailwindDir = file("${rootDir}/tailwind")
+def isWindows = System.getProperty('os.name').toLowerCase().contains('windows')
+def tailwindBin = file("${tailwindDir}/.bin/tailwindcss${isWindows ? '.exe' : ''}")
+def tailwindInput = file("${tailwindDir}/input.css")
+def tailwindConfig = file("${tailwindDir}/tailwind.config.js")
+def tailwindOutput = file("${rootDir}/src/main/resources/static/css/admin/tailwind-output.css")
+
+tasks.register('downloadTailwind') {
+	description = 'Downloads the Tailwind CSS standalone CLI binary'
+	group = 'tailwind'
+
+	outputs.file(tailwindBin)
+
+	doLast {
+		def os = System.getProperty('os.name').toLowerCase()
+		def arch = System.getProperty('os.arch').toLowerCase()
+
+		def platform
+		if (os.contains('mac') || os.contains('darwin')) {
+			platform = arch.contains('aarch64') || arch.contains('arm') ? 'macos-arm64' : 'macos-x64'
+		} else if (os.contains('linux')) {
+			platform = arch.contains('aarch64') || arch.contains('arm') ? 'linux-arm64' : 'linux-x64'
+		} else if (os.contains('windows')) {
+			platform = arch.contains('aarch64') || arch.contains('arm') ? 'windows-arm64' : 'windows-x64'
+		} else {
+			throw new GradleException("Unsupported OS: ${os}")
+		}
+
+		def ext = os.contains('windows') ? '.exe' : ''
+		def url = "https://github.com/tailwindlabs/tailwindcss/releases/download/v${tailwindVersion}/tailwindcss-${platform}${ext}"
+		def binDir = tailwindBin.parentFile
+		if (!binDir.exists()) {
+			binDir.mkdirs()
+		}
+
+		logger.lifecycle("Downloading Tailwind CSS v${tailwindVersion} for ${platform}...")
+		ant.get(src: url, dest: tailwindBin, skipexisting: false)
+		if (!os.contains('windows')) {
+			tailwindBin.setExecutable(true)
+		}
+		logger.lifecycle("Tailwind CSS CLI downloaded to ${tailwindBin}")
+	}
+}
+
+tasks.register('tailwindBuild') {
+	description = 'Builds the Tailwind CSS output file'
+	group = 'tailwind'
+	dependsOn 'downloadTailwind'
+
+	inputs.file(tailwindInput)
+	inputs.file(tailwindConfig)
+	inputs.dir("${rootDir}/src/main/resources/templates")
+	inputs.dir("${rootDir}/src/main/resources/static/js/admin")
+	outputs.file(tailwindOutput)
+
+	doLast {
+		exec {
+			workingDir tailwindDir
+			commandLine tailwindBin,
+				'-i', tailwindInput.absolutePath,
+				'-o', tailwindOutput.absolutePath,
+				'-c', tailwindConfig.absolutePath,
+				'--minify'
+		}
+		logger.lifecycle("Tailwind CSS built: ${tailwindOutput}")
+	}
+}
+
+tasks.register('tailwindWatch') {
+	description = 'Watches for changes and rebuilds Tailwind CSS'
+	group = 'tailwind'
+	dependsOn 'downloadTailwind'
+
+	doLast {
+		exec {
+			workingDir tailwindDir
+			commandLine tailwindBin,
+				'-i', tailwindInput.absolutePath,
+				'-o', tailwindOutput.absolutePath,
+				'-c', tailwindConfig.absolutePath,
+				'--watch'
+		}
+	}
+}
+
+processResources.dependsOn tailwindBuild

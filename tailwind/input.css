@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   Login Page: Button disabled spinner
+   ========================================================================== */
+button:disabled {
+    position: relative;
+    color: transparent !important;
+}
+button:disabled::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid white;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+/* ==========================================================================
+   Shared: Modal overlay + container transition
+   ========================================================================== */
+.modal-overlay {
+    opacity: 0;
+    visibility: hidden;
+    backdrop-filter: blur(0px);
+    transition: opacity 0.3s ease, visibility 0.3s ease, backdrop-filter 0.3s ease;
+}
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+    backdrop-filter: blur(4px);
+}
+.modal-container {
+    transform: translateY(20px) scale(0.95);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.modal-overlay.show .modal-container {
+    transform: translateY(0) scale(1);
+}
+
+/* ==========================================================================
+   Shared: Body scroll lock (modal open)
+   ========================================================================== */
+body.modal-open {
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   Shared: Table scroll indicator
+   ========================================================================== */
+.table-scroll-wrapper {
+    position: relative;
+}
+.table-scroll-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 40px;
+    background: linear-gradient(to left, rgba(255,255,255,0.9), transparent);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+.table-scroll-wrapper.has-scroll::after {
+    opacity: 1;
+}
+.table-scroll-wrapper.scrolled-end::after {
+    opacity: 0;
+}
+@media (max-width: 768px) {
+    .table-scroll-wrapper::after {
+        width: 30px;
+    }
+}
+
+/* ==========================================================================
+   Hosts Page: Modal panel slide transition
+   ========================================================================== */
+#modalPanelContainer {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================================================
+   Hosts Page: Space card clickable state
+   ========================================================================== */
+.space-card-clickable {
+    cursor: pointer;
+}
+.space-card-clickable:hover {
+    border-color: #A3A3A3;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.space-card-clickable:active {
+    transform: scale(0.99);
+}
+.space-card-clickable:focus-visible {
+    outline: 2px solid #171717;
+    outline-offset: 2px;
+}
+.space-card-clickable:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* ==========================================================================
+   Shared: Keyframes
+   ========================================================================== */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
