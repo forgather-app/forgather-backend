@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,7 @@ public class PrometheusSecurityMetricsService implements SecurityMetricsService 
 
     private final RestClient restClient;
 
+    @Autowired
     public PrometheusSecurityMetricsService(MonitoringProperties properties) {
         this.restClient = RestClient.builder()
             .baseUrl(properties.prometheusUrl())
