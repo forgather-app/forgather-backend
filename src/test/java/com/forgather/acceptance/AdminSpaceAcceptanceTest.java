@@ -1,5 +1,6 @@
 package com.forgather.acceptance;
 
+import static com.forgather.back_office.auth.session.SessionConstants.SESSION_COOKIE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
@@ -41,8 +42,6 @@ import jakarta.servlet.http.Cookie;
 
 @AutoConfigureMockMvc
 class AdminSpaceAcceptanceTest extends AcceptanceTest {
-
-    private static final String SESSION_COOKIE_NAME = "ADMIN_SESSION_ID";
 
     @Autowired
     private MockMvc mockMvc;

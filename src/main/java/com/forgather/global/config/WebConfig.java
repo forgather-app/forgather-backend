@@ -81,6 +81,8 @@ public class WebConfig implements WebMvcConfigurer {
             .setViewName("admin/spaces/list");
         registry.addViewController("/view/admin/hosts")
             .setViewName("admin/hosts/list");
+        registry.addViewController("/view/admin/security")
+            .setViewName("admin/security/dashboard");
     }
 
     @Override

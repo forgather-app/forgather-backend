@@ -39,6 +39,10 @@ out/
 .claude/settings.local.json
 .claude/.hook-state/
 
+### Tailwind CSS ###
+tailwind/.bin/
+src/main/resources/static/css/admin/tailwind-output.css
+
 ### Python ###
 __pycache__/
 *.pyc

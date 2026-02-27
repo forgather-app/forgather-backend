@@ -10,162 +10,17 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        // Design System: Forgather Admin (Monochrome Theme)
-                        primary: {
-                            DEFAULT: '#171717',
-                            hover: '#262626',
-                            light: '#404040',
-                        },
-                        secondary: {
-                            DEFAULT: '#525252',
-                            hover: '#404040',
-                        },
-                        cta: {
-                            DEFAULT: '#22C55E',
-                            hover: '#16A34A',
-                        },
-                        success: '#22C55E',
-                        danger: '#EF4444',
-                        warning: '#F59E0B',
-                        info: '#3B82F6',
-                        // Surface & Background (Monochrome)
-                        surface: '#FFFFFF',
-                        'bg-color': '#FAFAFA',
-                        'border-color': '#E5E5E5',
-                        // Text (Monochrome)
-                        'text-primary': '#171717',
-                        'text-secondary': '#525252',
-                        'text-muted': '#A3A3A3',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-                        mono: ['SF Mono', 'Monaco', 'Cascadia Code', 'monospace'],
-                    },
-                    boxShadow: {
-                        'sm': '0 1px 2px rgba(0,0,0,0.05)',
-                        'md': '0 4px 6px rgba(0,0,0,0.1)',
-                        'lg': '0 10px 15px rgba(0,0,0,0.1)',
-                        'xl': '0 20px 25px rgba(0,0,0,0.15)',
-                    },
-                    spacing: {
-                        'xs': '0.25rem',
-                        'sm': '0.5rem',
-                        'md': '1rem',
-                        'lg': '1.5rem',
-                        'xl': '2rem',
-                        '2xl': '3rem',
-                        '3xl': '4rem',
-                    },
-                },
-            },
-        }
-    </script>
+    <!-- Tailwind CSS (build-time) -->
+    <link rel="stylesheet" th:href="@{/css/admin/tailwind-output.css}">
 
     <!-- Common CSS (Toast 등 JS 연동 클래스용) -->
     <link rel="stylesheet" th:href="@{/css/admin/common.css}">
     <!-- Spaces CSS (JS 동적 생성 요소용: badge, empty-state, table rows) -->
     <link rel="stylesheet" th:href="@{/css/admin/spaces.css}">
-
-    <style>
-        /* JS 연동 클래스: Modal */
-        .modal-overlay {
-            opacity: 0;
-            visibility: hidden;
-            backdrop-filter: blur(0px);
-            transition: opacity 0.3s ease, visibility 0.3s ease, backdrop-filter 0.3s ease;
-        }
-        .modal-overlay.show {
-            opacity: 1;
-            visibility: visible;
-            backdrop-filter: blur(4px);
-        }
-        .modal-container {
-            transform: translateY(20px) scale(0.95);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .modal-overlay.show .modal-container {
-            transform: translateY(0) scale(1);
-        }
-        /* Body scroll lock */
-        body.modal-open {
-            overflow: hidden;
-        }
-
-        /* 테이블 스크롤 인디케이터 */
-        .table-scroll-wrapper {
-            position: relative;
-        }
-        .table-scroll-wrapper::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            width: 40px;
-            background: linear-gradient(to left, rgba(255,255,255,0.9), transparent);
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-        }
-        .table-scroll-wrapper.has-scroll::after {
-            opacity: 1;
-        }
-        .table-scroll-wrapper.scrolled-end::after {
-            opacity: 0;
-        }
-        @media (max-width: 768px) {
-            .table-scroll-wrapper::after {
-                width: 30px;
-            }
-        }
-        /* Spinner animation */
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
 </head>
 <body class="min-h-screen flex flex-col bg-bg-color font-sans">
-    <!-- Header (Fragment 참조) -->
-    <header class="bg-surface border-b border-border-color shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-lg py-md flex justify-between items-center">
-            <div class="flex items-center">
-                <h1 class="text-xl font-semibold">
-                    <a th:href="@{/view/admin/spaces}" class="text-text-primary hover:text-primary transition-colors duration-200 cursor-pointer">
-                        Forgather Admin
-                    </a>
-                </h1>
-            </div>
-            <nav>
-                <ul class="flex items-center gap-lg">
-                    <li>
-                        <a th:href="@{/view/admin/spaces}"
-                           class="text-primary bg-neutral-100 font-medium transition-colors duration-200 cursor-pointer px-sm py-xs rounded">
-                            Spaces
-                        </a>
-                    </li>
-                    <li>
-                        <a th:href="@{/view/admin/hosts}"
-                           class="text-text-secondary hover:text-primary font-medium transition-colors duration-200 cursor-pointer px-sm py-xs rounded">
-                            Hosts
-                        </a>
-                    </li>
-                    <li>
-                        <button id="logoutBtn"
-                                class="px-md py-2.5 min-h-[44px] text-sm font-medium text-text-secondary border border-border-color rounded bg-transparent hover:bg-gray-50 hover:text-text-primary transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
-                            로그아웃
-                        </button>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+    <!-- Header (Fragment 사용) -->
+    <header th:replace="~{admin/layout/fragments :: header(currentPage='spaces')}"></header>
 
     <!-- Main Content -->
     <main class="flex-1 py-xl">
@@ -321,12 +176,8 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-surface border-t border-border-color mt-auto">
-        <div class="max-w-7xl mx-auto px-lg py-lg text-center">
-            <p class="text-text-muted text-sm">&copy; 2025 Forgather. All rights reserved.</p>
-        </div>
-    </footer>
+    <!-- Footer (Fragment 사용) -->
+    <footer th:replace="~{admin/layout/fragments :: footer}"></footer>
 
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
