@@ -48,11 +48,13 @@ public class GuestBookController {
             @Parameter(
                 name = "page",
                 description = "페이지 번호 (1부터 시작)",
+                schema = @Schema(type = "integer", minimum = "1"),
                 example = "1"
             ),
             @Parameter(
                 name = "size",
                 description = "페이지 크기",
+                schema = @Schema(type = "integer"),
                 example = "15"
             ),
             @Parameter(
@@ -61,6 +63,8 @@ public class GuestBookController {
                 example = "createdAt,desc",
                 array = @ArraySchema(schema = @Schema(type = "string"))
             )
+            // 향후 페이지네이션 API가 추가되어 동일한 파라미터 정의가 반복될 경우,
+            // @Parameters 메타 어노테이션을 활용한 @PageableParameters 커스텀 어노테이션으로 중복을 제거할 수 있다.
         }
     )
     @GetMapping
