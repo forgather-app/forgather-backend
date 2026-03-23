@@ -54,7 +54,7 @@ public class GuestBookController {
             @Parameter(
                 name = "size",
                 description = "페이지 크기",
-                schema = @Schema(type = "integer"),
+                schema = @Schema(type = "integer", minimum = "1"),
                 example = "15"
             ),
             @Parameter(
