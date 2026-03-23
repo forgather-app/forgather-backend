@@ -48,11 +48,13 @@ public class GuestBookController {
             @Parameter(
                 name = "page",
                 description = "페이지 번호 (1부터 시작)",
+                schema = @Schema(type = "integer", minimum = "1"),
                 example = "1"
             ),
             @Parameter(
                 name = "size",
                 description = "페이지 크기",
+                schema = @Schema(type = "integer", minimum = "1"),
                 example = "15"
             ),
             @Parameter(
