@@ -2,8 +2,8 @@
 
 JAR_NAME="forgather-0.0.1-SNAPSHOT.jar"
 PORT=8080
-LOG_DIR="/home/ubuntu/2025-PhotoGather/logs"
-JAR_PATH="/home/ubuntu/2025-PhotoGather/$JAR_NAME"
+LOG_DIR="/home/ubuntu/forgather-backend/logs"
+JAR_PATH="/home/ubuntu/forgather-backend/$JAR_NAME"
 LOG_FILE="$LOG_DIR/app.log"
 
 echo "🛑 기존 $PORT 포트 프로세스 종료 시도..."
