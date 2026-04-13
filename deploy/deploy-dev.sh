@@ -1,49 +1,44 @@
 #!/bin/bash
+set -euo pipefail
 
+# ─── 상수 ────────────────────────────────────────────────────────────────────
 JAR_NAME="forgather-0.0.1-SNAPSHOT.jar"
-PORT=8080
 PROFILE="dev"
 APP_DIR="/home/ubuntu/forgather-backend"
-LOG_DIR="$APP_DIR/logs"
-JAR_PATH="$APP_DIR/$JAR_NAME"
-NOHUP_LOG="$LOG_DIR/nohup.log"
+SERVICE="forgather"
+PORT=8080
+HEALTH_TIMEOUT=90
 
-echo "기존 $PORT 포트 프로세스 종료 시도..."
-PID=$(sudo lsof -t -i:$PORT)
+# ─── jar 배치 ─────────────────────────────────────────────────────────────────
+echo "[deploy] jar 배치: $APP_DIR/$JAR_NAME"
+mkdir -p "$APP_DIR/logs"
+chown -R ubuntu:ubuntu "$APP_DIR"
 
-if [ -n "$PID" ]; then
-  echo "PID $PID 종료 중..."
-  kill -9 $PID
-  echo "프로세스 종료 완료"
-else
-  echo "$PORT 포트에 실행 중인 프로세스 없음"
-fi
+# ─── 서비스 재시작 ────────────────────────────────────────────────────────────
+echo "[deploy] $SERVICE 재시작..."
+systemctl stop "$SERVICE" 2>/dev/null || true
+systemctl start "$SERVICE"
 
-echo "디렉토리 및 파일 소유자 변경..."
-sudo chown -R ubuntu:ubuntu "$APP_DIR"
-sudo chmod 744 "$JAR_PATH"
+# ─── 헬스체크 ─────────────────────────────────────────────────────────────────
+echo "[deploy] 헬스체크 시작 (최대 ${HEALTH_TIMEOUT}초)..."
+ELAPSED=0
+while true; do
+  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+    "http://localhost:${PORT}/actuator/health" || echo "000")
 
-echo "로그 디렉토리 생성..."
-sudo -u ubuntu mkdir -p "$LOG_DIR"
+  if [[ "$HTTP_CODE" == "200" ]]; then
+    echo "[deploy] 헬스체크 성공 (${ELAPSED}초 경과)"
+    break
+  fi
 
-echo "ubuntu 사용자로 애플리케이션 실행 (포트: $PORT, 프로파일: $PROFILE)..."
-sudo -u ubuntu nohup java -jar "$JAR_PATH" \
-  --server.port=$PORT \
-  --spring.profiles.active=$PROFILE \
-  >> "$NOHUP_LOG" 2>&1 &
+  if [[ "$ELAPSED" -ge "$HEALTH_TIMEOUT" ]]; then
+    echo "[deploy] 헬스체크 실패 — 최근 로그:"
+    journalctl -u "$SERVICE" --no-pager -n 100 || true
+    exit 1
+  fi
 
-echo "10초 후 프로세스 실행 확인..."
-sleep 10
+  sleep 1
+  ELAPSED=$((ELAPSED + 1))
+done
 
-if pgrep -f "$JAR_NAME" > /dev/null; then
-  echo "애플리케이션 프로세스 실행 확인"
-  echo "stdout 로그: $NOHUP_LOG"
-  echo "애플리케이션 로그: $LOG_DIR/app.log (logback)"
-else
-  echo "애플리케이션 프로세스 실행 실패"
-  echo "stdout 로그 마지막 50줄:"
-  sudo tail -50 "$NOHUP_LOG" 2>/dev/null || echo "(로그 파일 없음)"
-  exit 1
-fi
-
-echo "배포 완료"
+echo "[deploy] 배포 완료: PROFILE=$PROFILE port=$PORT"
