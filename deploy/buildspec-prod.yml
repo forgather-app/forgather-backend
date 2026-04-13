@@ -7,7 +7,7 @@ phases:
     commands:
       - echo "Git clone 시작"
       - rm -rf *
-      - git clone -b v2/main --single-branch https://github.com/forgather-app/forgather-backend.git
+      - git clone -b v2/develop --single-branch https://github.com/forgather-app/forgather-backend.git
       - cd forgather-backend
       - echo "[install] git-crypt 설치"
       - sudo apt-get install git-crypt
