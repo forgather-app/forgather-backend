@@ -46,7 +46,7 @@ systemctl start "$NEXT_SERVICE"
 echo "[deploy] 헬스체크 시작 (최대 ${HEALTH_TIMEOUT}초)..."
 ELAPSED=0
 while true; do
-  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 \
     "http://localhost:${NEXT_PORT}/actuator/health" || echo "000")
 
   if [[ "$HTTP_CODE" == "200" ]]; then
