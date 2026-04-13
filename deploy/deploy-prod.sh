@@ -14,6 +14,7 @@ NGINX_UPSTREAM_ACTIVE="/etc/nginx/upstream-active.conf"
 HEALTH_TIMEOUT=90
 
 # ─── 현재 활성 슬롯 파악 ──────────────────────────────────────────────────────
+mkdir -p "$(dirname "$ACTIVE_FILE")"
 CURRENT=$(cat "$ACTIVE_FILE" 2>/dev/null || echo "blue")
 if [[ "$CURRENT" == "blue" ]]; then
   NEXT="green"
