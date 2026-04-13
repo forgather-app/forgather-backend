@@ -3,9 +3,22 @@ os: linux
 files:
   - source: /forgather-0.0.1-SNAPSHOT.jar
     destination: /home/ubuntu/forgather-backend
-file_exists_behavior: OVERWRITE  # 이것만 추가!
-
+file_exists_behavior: OVERWRITE
+permissions:
+  - object: /home/ubuntu/forgather-backend
+    owner: ubuntu
+    group: ubuntu
+    mode: "755"
+    type:
+      - directory
+  - object: /home/ubuntu/forgather-backend/forgather-0.0.1-SNAPSHOT.jar
+    owner: ubuntu
+    group: ubuntu
+    mode: "644"
+    type:
+      - file
 hooks:
   AfterInstall:
     - location: /deploy.sh
-      runas: ubuntu
+      timeout: 240
+      runas: root
