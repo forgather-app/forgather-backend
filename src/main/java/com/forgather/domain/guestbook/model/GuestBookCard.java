@@ -36,8 +36,8 @@ public class GuestBookCard extends SoftDeleteEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "guest_id", nullable = false)
     private Guest guest;
-
-    @Column(name = "nickname", length = 10, nullable = false)
+    
+    @Column(name = "nickname", length = 10, nullable = true)
     private String nickname;
 
     @Column(name = "message", length = 500, nullable = false)
