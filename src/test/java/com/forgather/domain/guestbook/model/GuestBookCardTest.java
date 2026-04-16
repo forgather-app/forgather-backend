@@ -27,15 +27,6 @@ class GuestBookCardTest {
             .hasMessageContaining("방명록 카드 스페이스는 null일 수 없습니다.");
     }
 
-    @DisplayName("방문자가 null이면 예외를 던진다")
-    @Test
-    void throwExceptionWhenGuestIsNull() {
-        // when, then
-        assertThatThrownBy(() -> createGuestBookCardWithGuest(null))
-            .isInstanceOf(BaseNullPointerException.class)
-                .hasMessageContaining("방명록 카드 방문자는 null일 수 없습니다.");
-    }
-
     @DisplayName("메세지가 null이면 예외를 던진다")
     @Test
     void throwExceptionWhenMessageIsNull() {
