@@ -47,23 +47,38 @@ public class GuestBookCard extends SoftDeleteEntity {
     private boolean isRead;
 
     public GuestBookCard(Space space, Guest guest, String message) {
-        validateRequiredFields(space, guest, message);
+        validateRequiredFields(space, guest, guest.getNickname(), message);
+        validateNickname(guest.getNickname());
         validateMessage(message);
         this.space = space;
         this.guest = guest;
+        this.nickname = guest.getNickname();
         this.message = message;
         this.isRead = false;
     }
 
-    private void validateRequiredFields(Space space, Guest guest, String message) {
+    private void validateRequiredFields(Space space, Guest guest, String nickname, String message) {
         if (space == null) {
             throw new BaseNullPointerException("방명록 카드 스페이스는 null일 수 없습니다.");
         }
         if (guest == null) {
             throw new BaseNullPointerException("방명록 카드 방문자는 null일 수 없습니다.");
         }
+        if (nickname == null) {
+            throw new BaseNullPointerException("방명록 카드 방문자는 null일 수 없습니다.");
+        }
         if (message == null) {
             throw new BaseNullPointerException("방명록 카드 메세지는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private void validateNickname(String nickname) {
+        if (nickname.isBlank()) {
+            throw new BaseException("방문자 닉네임은 공백만 입력할 수 없습니다.");
+        }
+        int length = TextLengthCounter.count(nickname);
+        if (length > 10) {
+            throw new BaseException("방문자 닉네임은 최대 10자까지 입력 가능합니다. nickname.length: " + length);
         }
     }
 
