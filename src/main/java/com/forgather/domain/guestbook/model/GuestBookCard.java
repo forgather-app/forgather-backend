@@ -65,7 +65,7 @@ public class GuestBookCard extends SoftDeleteEntity {
             throw new BaseNullPointerException("방명록 카드 방문자는 null일 수 없습니다.");
         }
         if (nickname == null) {
-            throw new BaseNullPointerException("방명록 카드 방문자는 null일 수 없습니다.");
+            throw new BaseNullPointerException("방문자 닉네임은 null일 수 없습니다.");
         }
         if (message == null) {
             throw new BaseNullPointerException("방명록 카드 메세지는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
