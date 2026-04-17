@@ -5,26 +5,21 @@ phases:
     runtime-versions:
       java: corretto21
     commands:
-      - echo "[install] Start git clone"
+      - echo "[install] Git clone 시작"
       - pwd
       - ls
-      - rm -rf * # 소스 스테이지에서 내려온 불완전한 zip 제거
-      - ls
+      - rm -rf *
       - git clone -b v2/develop --single-branch https://github.com/forgather-app/forgather-backend.git
-      - echo "After git clone"
-      - ls
-      - cd forgather-backend
-      - echo "[install] install git-crypt"
+      - echo "[install] git-crypt 설치"
       - sudo apt-get update
       - sudo apt-get install -y git-crypt
-      - echo "[install] 압축 해제 준비 및 디렉토리 생성"
-      - mkdir -p src/main/resources/
 
   pre_build:
     commands:
       - pwd
       - ls
-      - echo ".yml 등 설정 파일 준비"
+      - cd forgather-backend
+      - echo "[pre_build] git-crypt unlock"
       - echo $gitcrypt | xxd -r -p > git-crypt-key
       - git-crypt unlock git-crypt-key
 
@@ -32,18 +27,10 @@ phases:
     commands:
       - pwd
       - ls
-      - ls src/main/resources
-      - echo "[build] application-dev.yml → application.yml로 교체"
-      - ls src/main/resources
-      - cp src/main/resources/application-dev.yml src/main/resources/application.yml
-      - echo "[build] application-dev, prod.yml 삭제"
-      - rm src/main/resources/application-dev.yml
-      - rm src/main/resources/application-prod.yml
-      - ls src/main/resources
       - echo "[build] Gradle 빌드 (테스트 생략)"
       - chmod +x ./gradlew
       - ./gradlew build -x test
-      - echo "[build] JAR, deploy 파일 복사"
+      - echo "[build] jar, appspec, deploy 파일 복사"
       - cp build/libs/forgather-0.0.1-SNAPSHOT.jar ..
       - cp deploy/appspec.yml ..
       - cp deploy/deploy-dev.sh ../deploy.sh
