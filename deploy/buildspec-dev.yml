@@ -34,6 +34,7 @@ phases:
       - ls
       - ls src/main/resources
       - echo "[build] application-dev.yml → application.yml로 교체"
+      - ls src/main/resources
       - cp src/main/resources/application-dev.yml src/main/resources/application.yml
       - echo "[build] application-dev, prod.yml 삭제"
       - rm src/main/resources/application-dev.yml
