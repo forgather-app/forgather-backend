@@ -5,27 +5,33 @@ phases:
     runtime-versions:
       java: corretto21
     commands:
-      - echo "Git clone 시작"
+      - echo "[install] Git clone 시작"
+      - pwd
+      - ls
       - rm -rf *
       - git clone -b v2/main --single-branch https://github.com/forgather-app/forgather-backend.git
-      - cd forgather-backend
+      - ls
       - echo "[install] git-crypt 설치"
-      - sudo apt-get install git-crypt
-      - echo "[install] 디렉토리 생성"
-      - mkdir -p src/main/resources/
+      - sudo apt-get update
+      - sudo apt-get install -y git-crypt
 
   pre_build:
     commands:
-      - echo "[pre_build] .yml 등 설정 파일 준비"
+      - pwd
+      - ls
+      - cd forgather-backend
+      - echo "[pre_build] git-crypt unlock"
       - echo $gitcrypt | xxd -r -p > git-crypt-key
       - git-crypt unlock git-crypt-key
 
   build:
     commands:
+      - pwd
+      - ls
       - echo "[build] Gradle 빌드 (테스트 생략)"
       - chmod +x ./gradlew
       - ./gradlew build -x test
-      - echo "[build] JAR, deploy 파일 복사"
+      - echo "[build] jar, appspec, deploy 파일 복사"
       - cp build/libs/forgather-0.0.1-SNAPSHOT.jar ..
       - cp deploy/appspec.yml ..
       - cp deploy/deploy-prod.sh ../deploy.sh
