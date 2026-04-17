@@ -22,7 +22,11 @@ phases:
 
   build:
     commands:
+      - cd forgather-backend
+      - echo "[build] application-dev.yml → application.yml로 교체"
       - cp src/main/resources/application-dev.yml src/main/resources/application.yml
+      - rm src/main/resources/application-dev.yml
+      - rm src/main/resources/application-prod.yml
       - echo "[build] Gradle 빌드 (테스트 생략)"
       - chmod +x ./gradlew
       - ./gradlew build -x test
