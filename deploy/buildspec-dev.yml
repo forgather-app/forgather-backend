@@ -22,6 +22,7 @@ phases:
 
   build:
     commands:
+      - cp src/main/resources/application-dev.yml src/main/resources/application.yml
       - echo "[build] Gradle 빌드 (테스트 생략)"
       - chmod +x ./gradlew
       - ./gradlew build -x test
