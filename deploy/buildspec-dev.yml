@@ -7,12 +7,12 @@ phases:
     commands:
       - echo "[install] Start git clone"
       - pwd
-      - ls -R .
+      - ls
       - rm -rf * # 소스 스테이지에서 내려온 불완전한 zip 제거
-      - ls -R .
+      - ls
       - git clone -b v2/develop --single-branch https://github.com/forgather-app/forgather-backend.git
       - echo "After git clone"
-      - ls -R .
+      - ls
       - cd forgather-backend
       - echo "[install] install git-crypt"
       - sudo apt-get update
@@ -23,7 +23,7 @@ phases:
   pre_build:
     commands:
       - pwd
-      - ls -R .
+      - ls
       - echo ".yml 등 설정 파일 준비"
       - echo $gitcrypt | xxd -r -p > git-crypt-key
       - git-crypt unlock git-crypt-key
@@ -31,11 +31,11 @@ phases:
   build:
     commands:
       - pwd
-      - ls -R .
-      - cd forgather-backend
-      - echo "[build] application-dev.yml → application.yml로 교체"
+      - ls
       - ls src/main/resources
+      - echo "[build] application-dev.yml → application.yml로 교체"
       - cp src/main/resources/application-dev.yml src/main/resources/application.yml
+      - echo "[build] application-dev, prod.yml 삭제"
       - rm src/main/resources/application-dev.yml
       - rm src/main/resources/application-prod.yml
       - ls src/main/resources
