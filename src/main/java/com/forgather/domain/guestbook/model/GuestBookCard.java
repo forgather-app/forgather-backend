@@ -39,7 +39,7 @@ public class GuestBookCard extends SoftDeleteEntity {
     @JoinColumn(name = "guest_id", nullable = false)
     private Guest guest;
     
-    @Column(name = "nickname", length = 10, nullable = true)
+    @Column(name = "nickname", length = 10)
     private String nickname;
 
     @Column(name = "message", length = 500, nullable = false)
@@ -50,7 +50,7 @@ public class GuestBookCard extends SoftDeleteEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "visibility_status", nullable = false)
-    private VisibilityStatus visibilityStatus;
+    private VisibilityStatus visibilityStatus;  // VISIBLE, HIDDEN_BY_USER, HIDDEN_BY_ADMIN
 
     public GuestBookCard(Space space, Guest guest, String message) {
         validateRequiredFields(space, guest, guest.getNickname(), message);
