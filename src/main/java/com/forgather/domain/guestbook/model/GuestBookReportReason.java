@@ -19,15 +19,15 @@ public class GuestBookReportReason extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 30, unique = true, nullable = false)
+    @Column(name = "code", length = 30, unique = true, nullable = false)
     private String code;
 
-    @Column(length = 30, nullable = false)
+    @Column(name = "label", length = 30, nullable = false)
     private String label;
 
-    @Column(nullable = false)
+    @Column(name = "display_order", nullable = false)
     private int displayOrder;
 
-    @Column(nullable = false)
+    @Column(name = "is_active", nullable = false)
     private boolean isActive;
 }
