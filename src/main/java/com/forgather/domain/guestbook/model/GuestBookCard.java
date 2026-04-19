@@ -50,7 +50,7 @@ public class GuestBookCard extends SoftDeleteEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "visibility_status", nullable = false)
-    private VisibilityStatus visibilityStatus;  // VISIBLE, HIDDEN_BY_USER, HIDDEN_BY_ADMIN
+    private VisibilityStatus visibilityStatus = VisibilityStatus.VISIBLE;  // VISIBLE, HIDDEN_BY_USER, HIDDEN_BY_ADMIN
 
     public GuestBookCard(Space space, Guest guest, String message) {
         validateRequiredFields(space, guest, guest.getNickname(), message);
@@ -61,6 +61,7 @@ public class GuestBookCard extends SoftDeleteEntity {
         this.nickname = guest.getNickname();
         this.message = message;
         this.isRead = false;
+        this.visibilityStatus = VisibilityStatus.VISIBLE;
     }
 
     private void validateRequiredFields(Space space, Guest guest, String nickname, String message) {
