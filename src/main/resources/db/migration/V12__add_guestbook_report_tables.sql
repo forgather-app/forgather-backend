@@ -13,6 +13,8 @@ CREATE TABLE `guest_book_report_reason`
     PRIMARY KEY (`id`)
 );
 
+CREATE UNIQUE INDEX `UX_guest_book_report_reason_code` ON `guest_book_report_reason` (`code`);
+
 CREATE TABLE `guest_book_report`
 (
     `id`                  BIGINT       NOT NULL AUTO_INCREMENT,
