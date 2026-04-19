@@ -7,7 +7,7 @@ CREATE TABLE `guest_book_report_reason`
     `code`          VARCHAR(30) NOT NULL,
     `label`         VARCHAR(30) NOT NULL,
     `display_order` INT         NOT NULL,
-    `is_active`     TINYINT(1)   NOT NULL,
+    `is_hidden`     TINYINT(1)   NOT NULL,
     `created_at`    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
