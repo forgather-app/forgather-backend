@@ -45,7 +45,7 @@ public class GuestBookReport extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "reporter_type", nullable = false)
-    private ReporterType reporterType;  // HOST, USER, SYSTEM
+    private ReporterType reporterType;  // HOST
 
     @Column(name = "detail", length = 500)
     private String detail;
