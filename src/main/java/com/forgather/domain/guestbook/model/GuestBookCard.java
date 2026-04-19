@@ -10,6 +10,8 @@ import com.forgather.global.util.TextLengthCounter;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -37,7 +39,7 @@ public class GuestBookCard extends SoftDeleteEntity {
     @JoinColumn(name = "guest_id", nullable = false)
     private Guest guest;
     
-    @Column(name = "nickname", length = 10, nullable = true)
+    @Column(name = "nickname", length = 10)
     private String nickname;
 
     @Column(name = "message", length = 500, nullable = false)
@@ -45,6 +47,10 @@ public class GuestBookCard extends SoftDeleteEntity {
 
     @Column(name = "is_read", nullable = false)
     private boolean isRead;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "visibility_status", nullable = false)
+    private VisibilityStatus visibilityStatus = VisibilityStatus.VISIBLE;  // VISIBLE, HIDDEN_BY_USER, HIDDEN_BY_ADMIN
 
     public GuestBookCard(Space space, Guest guest, String message) {
         validateRequiredFields(space, guest, guest.getNickname(), message);
@@ -55,6 +61,7 @@ public class GuestBookCard extends SoftDeleteEntity {
         this.nickname = guest.getNickname();
         this.message = message;
         this.isRead = false;
+        this.visibilityStatus = VisibilityStatus.VISIBLE;
     }
 
     private void validateRequiredFields(Space space, Guest guest, String nickname, String message) {
