@@ -1237,3 +1237,6 @@ Claude Code 세션이 끝난 뒤, 세션 내용을 분석해서 인사이트를 
 - [plugins-for-claude-natives](https://github.com/plugins-for-claude-natives) — Team Attention에서 자주 쓰는 실무 검증된 플러그인 모음
 - [karpathy/autoresearch](https://github.com/karpathy/autoresearch) — 자율 실험 루프 (수정→실행→평가→반복)
 - [garrytan/gstack](https://github.com/garrytan/gstack), [obra/superpowers](https://github.com/obra/superpowers), [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) — Harness 오픈소스 도구
+- [HumanLayer — Writing a Good CLAUDE.md](https://www.humanlayer.dev/blog/writing-a-good-claude-md) — CLAUDE.md 작성 원칙 (Less is More, 레버리지 피라미드)
+- [Anthropic Engineering — Claude Code Best Practices](https://www.anthropic.com/engineering/claude-code-best-practices) — 공식 CLAUDE.md 포함 항목 권장
+- [Anthropic — Using CLAUDE.md Files](https://claude.com/blog/using-claude-md-files) — WHAT-WHY-HOW 구조, 팀 공유 권장 사항
