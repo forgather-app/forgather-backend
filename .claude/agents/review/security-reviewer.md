@@ -91,7 +91,7 @@ grep -rn "password\s*=" --include="*.java" --include="*.yml" src/
 grep -rn "secret\s*=" --include="*.java" --include="*.yml" src/
 grep -rn '@Query.*".*+' --include="*.java" src/
 grep -rn "public.*Response.*(@PathVariable" --include="*.java" src/ | grep -v "@Valid"
-grep -rn "log\.\(info\|debug\|warn\|error\).*password\|token\|secret" --include="*.java" src/
+grep -rn "log\.\(info\|debug\|warn\|error\).*\(password\|token\|secret\)" --include="*.java" src/
 ```
 
 ## 오버엔지니어링 방지 (제안 금지)
