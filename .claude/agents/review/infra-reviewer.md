@@ -1,7 +1,7 @@
 ---
 name: infra-reviewer
 description: 인프라 전문 리뷰어. CI/CD 파이프라인, 배포 스크립트, 환경 설정, 모니터링을 분석한다.
-tools: ["Read", "Grep", "Glob", "Bash"]
+tools: ["Read", "Grep", "Glob", "Bash", "Write"]
 model: opus
 ---
 

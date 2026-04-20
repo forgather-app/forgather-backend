@@ -1,7 +1,7 @@
 ---
 name: api-design-reviewer
 description: API 설계 전문 리뷰어. REST 설계, 응답 포맷, 에러 처리, 일관성을 분석한다.
-tools: ["Read", "Grep", "Glob", "Bash"]
+tools: ["Read", "Grep", "Glob", "Bash", "Write"]
 model: opus
 ---
 

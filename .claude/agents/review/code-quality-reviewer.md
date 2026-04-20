@@ -1,7 +1,7 @@
 ---
 name: code-quality-reviewer
 description: 코드 품질 전문 리뷰어. 클린 코드, 네이밍, 중복, 에러 처리, 테스트를 분석한다. 기존 code-reviewer 에이전트를 참조한다.
-tools: ["Read", "Grep", "Glob", "Bash"]
+tools: ["Read", "Grep", "Glob", "Bash", "Write"]
 model: opus
 ---
 

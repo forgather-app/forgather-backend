@@ -1,7 +1,7 @@
 ---
 name: architecture-reviewer
 description: 아키텍처 전문 리뷰어. 패키지 구조, 계층 분리, 의존성 방향, 도메인 설계를 분석한다.
-tools: ["Read", "Grep", "Glob", "Bash"]
+tools: ["Read", "Grep", "Glob", "Bash", "Write"]
 model: opus
 ---
 

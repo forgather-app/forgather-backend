@@ -1,7 +1,7 @@
 ---
 name: db-schema-reviewer
 description: DB 스키마 전문 리뷰어. 스키마 설계, 인덱싱, Flyway 마이그레이션, 정규화를 분석한다.
-tools: ["Read", "Grep", "Glob", "Bash"]
+tools: ["Read", "Grep", "Glob", "Bash", "Write"]
 model: opus
 ---
 

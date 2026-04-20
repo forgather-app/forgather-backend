@@ -1,7 +1,7 @@
 ---
 name: security-reviewer
 description: 보안 전문 리뷰어. 인증/인가, 입력 검증, 시크릿 관리, 취약점을 분석한다.
-tools: ["Read", "Grep", "Glob", "Bash"]
+tools: ["Read", "Grep", "Glob", "Bash", "Write"]
 model: opus
 ---
 

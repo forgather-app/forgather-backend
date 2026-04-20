@@ -1,7 +1,7 @@
 ---
 name: performance-reviewer
 description: 성능 전문 리뷰어. JPA N+1, 쿼리 최적화, 캐싱, 비동기 처리를 분석한다. 기존 jpa-analyzer 에이전트를 참조한다.
-tools: ["Read", "Grep", "Glob", "Bash"]
+tools: ["Read", "Grep", "Glob", "Bash", "Write"]
 model: opus
 ---
 
