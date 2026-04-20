@@ -49,22 +49,25 @@ src/main/java/com/forgather/
 - 기능 브랜치: `v2/{type}/#{issue-number}-{description}`
 
 ## 핵심 규칙
-- **Soft Delete**: 삭제 시 `SoftDeleteEntity` 상속, `delete()` 호출
-- **DTO 변환**: 엔티티 직접 반환 금지, Response DTO로 변환 필수
-- **읽기 전용**: 조회 메서드는 `@Transactional(readOnly=true)` 적용
-- **Repository 패턴**: `findBy...()`는 Optional, `getBy...()`는 예외 던짐
+- **ALWAYS** extend `SoftDeleteEntity` for domain entities; call `entity.delete()` instead of `repository.delete()`
+- **NEVER** return JPA entities from controllers; convert to `*Response` DTO
+- **ALWAYS** annotate read-only service methods with `@Transactional(readOnly = true)`
+- **ALWAYS** make `findBy...()` return `Optional<T>`; **ALWAYS** make `getBy...()` throw on missing
 
 ## 주의사항
-- **git-crypt 사용**: `application*.yml`은 git-crypt로 자동 암호화됨
-- 새 민감 파일 추가 시 `.gitattributes`에 git-crypt 설정 필요
-- S3 파일 삭제는 soft delete 우선
-- 테스트에서 실제 외부 API 호출 금지 (Fake 구현 사용)
+- **ALWAYS** register new/moved sensitive files in `.gitattributes` with `filter=git-crypt diff=git-crypt` **before** the first commit
+- **ALWAYS** run `git-crypt status` on new/moved sensitive files before push; un-encrypted entries must be zero
+- **NEVER** let CI/CD pipelines (buildspec.yml 등) commit back generated `application*.yml` without a prior git-crypt check
+- **ALWAYS** prefer soft delete over physical deletion, including S3 objects
+- **NEVER** call real external APIs from tests; use Fake implementations
 
 ## 코딩 규칙
 coderabbit_rules.md 참조 (프로젝트 루트)
 
 ## 상세 문서
-- docs/architecture.md - 아키텍처 상세
-- docs/domains.md - 도메인 모델 설명
-- docs/testing.md - 테스트 전략
-- admin-ui-guide.md - 어드민 UI 컨벤션
+- `.claude/guides/harness-guideline.md` — Claude Code 하네스 설계 기준 (SSOT)
+- `.claude/docs/architecture.md` — 아키텍처 상세
+- `.claude/docs/domains.md` — 도메인 모델 설명
+- `.claude/docs/testing.md` — 테스트 전략
+- `.claude/guides/admin-ui-guide.md` — 어드민 UI 컨벤션
+- `.claude/guides/agents-guide.md` · `skills-guide.md` · `hooks-guide.md` — 하네스 작성 가이드
