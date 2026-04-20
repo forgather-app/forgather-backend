@@ -1224,6 +1224,21 @@ Claude Code 세션이 끝난 뒤, 세션 내용을 분석해서 인사이트를 
 
 ---
 
+### Forgather 프로젝트 결정 기록 (ADR)
+
+가이드라인 권장 구조 중 Forgather에서 **의도적으로 미도입한 항목**과 재검토 트리거.
+
+| 결정 | 사유 | 재검토 트리거 |
+|---|---|---|
+| `contexts/` 미도입 | dev/review/research 모드 분리 수요 없음 | 리뷰·연구 워크플로우가 독립될 때 |
+| `rules/common/` 미도입 | `CLAUDE.md` + `coderabbit_rules.md` + review agent들이 충족 | 규칙이 20개 초과할 때 |
+| `session-wrap` 미도입 | 세션 사용 빈도 낮음 | 반복 실수가 문서에 3회 이상 기록될 때 |
+| `code-simplifier` agent 미도입 | `code-reviewer` agent가 단순화 제안까지 커버 | 리팩토링 전용 요청 3회 이상 누적 시 |
+| `.mcp.json` 미도입 | 개인별 JetBrains/OMC MCP로 충분 | 팀 공유 MCP(GitHub, DB 등) 수요 발생 시 |
+| `test-writer` skill 확장 보류 | `references/` 6개로 충분, God Skill 방지 | 테스트 생성 실패 패턴 3회 이상 발견 시 |
+
+---
+
 ## 13. References
 
 - [[What is Harness?]] — Harness 이론적 프레임워크 (이 문서의 기반)
