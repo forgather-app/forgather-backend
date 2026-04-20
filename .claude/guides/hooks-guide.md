@@ -11,12 +11,14 @@ Claude Code의 특정 이벤트 발생 시 자동으로 실행되는 쉘 스크�
 
 | 이벤트 | 시점 | 용도 | 권장 timeout |
 |--------|------|------|-------------|
-| `PreToolUse` | 도구 실행 **전** | 입력 검증, 위험 명령 차단 | 5~10s |
-| `PostToolUse` | 도구 실행 **후** | 산출물 품질 검사 (lint, type check) | 30s |
-| `Stop` | Claude 응답 완료 시 | 배치 포맷팅, 세션 저장, 사후 검증 | 5~10s |
-| `SessionStart` | 세션 시작 시 | 컨텍스트 로드, 환경 감지 | 10s |
-| `SessionEnd` | 세션 종료 시 | 상태 저장, 정리 | 5s |
-| `UserPromptSubmit` | 사용자 프롬프트 제출 시 | 키워드 탐지, 메타 명령 처리 | 5s |
+| `PreToolUse` | 도구 실행 **전** | 입력 검증, 위험 명령 차단 | 5~10 |
+| `PostToolUse` | 도구 실행 **후** | 산출물 품질 검사 (lint, type check) | 30 |
+| `Stop` | Claude 응답 완료 시 | 배치 포맷팅, 세션 저장, 사후 검증 | 5~10 |
+| `SessionStart` | 세션 시작 시 | 컨텍스트 로드, 환경 감지 | 10 |
+| `SessionEnd` | 세션 종료 시 | 상태 저장, 정리 | 5 |
+| `UserPromptSubmit` | 사용자 프롬프트 제출 시 | 키워드 탐지, 메타 명령 처리 | 5 |
+
+> `timeout` 단위는 **초(seconds)**. Bash 도구의 timeout(milliseconds)과 혼동 주의.
 
 ---
 
@@ -38,7 +40,7 @@ Claude Code의 특정 이벤트 발생 시 자동으로 실행되는 쉘 스크�
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "bash .claude/hooks/scripts/foo.sh", "timeout": 5000 }
+          { "type": "command", "command": "bash .claude/hooks/scripts/foo.sh", "timeout": 5 }
         ]
       }
     ]
@@ -84,8 +86,9 @@ Claude 응답을 의심하고 재검증을 요청하는 기능.
 
 ### Timeout 원칙
 
-- 빠른 검사(키워드, 패턴 매칭): 5~10초
-- 무거운 검사(테스트 실행, 전체 lint): 30~300초
+- **단위는 초(seconds)** — Bash 도구 timeout(ms)과 다르므로 주의
+- 빠른 검사(키워드, 패턴 매칭): 5~10
+- 무거운 검사(테스트 실행, 전체 lint): 30~300
 - timeout 초과 시 hook은 무시되고 작업은 진행됨
 
 ---
