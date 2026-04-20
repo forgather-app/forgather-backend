@@ -116,6 +116,14 @@ Claude 응답을 의심하고 재검증을 요청하는 기능.
 
 ---
 
+## 현재 프로젝트의 MCP
+
+- 프로젝트 자체 `.mcp.json` **없음** — 팀 공유 MCP 미도입 (ADR: `harness-guideline.md §12`)
+- 개인 설정(`settings.local.json`)에서 JetBrains MCP · OMC 플러그인 MCP 허용 중
+- 팀 공유 MCP(GitHub, DB 등) 수요 발생 시 `.mcp.json` 도입, `harness-guideline.md §5` 참조 (10개 이하 유지)
+
+---
+
 ## 참고
 
 - [Claude Code Hooks 공식 문서](https://docs.anthropic.com/en/docs/claude-code/hooks)
