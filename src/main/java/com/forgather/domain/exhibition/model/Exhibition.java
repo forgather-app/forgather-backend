@@ -27,21 +27,22 @@ public class Exhibition extends SoftDeleteEntity {
     @Column(name = "title", nullable = false)
     private String title;
 
-    @Column(name = "description")
-    private String description;
-
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
+    @Column(name = "description")
+    private String description;
+
     @Enumerated(value = EnumType.STRING)
     @Column(name = "operation_type")
     private OperationType operationType;
 
+    @Enumerated(value = EnumType.STRING)
     @Column(name = "location_type")
-    private String locationType;
+    private LocationType locationType;
 
     @Column(name = "online_url")
     private String onlineUrl;
