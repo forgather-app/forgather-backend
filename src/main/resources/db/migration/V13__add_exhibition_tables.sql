@@ -21,7 +21,7 @@ CREATE TABLE `exhibition_host`
     `id`            BIGINT    NOT NULL AUTO_INCREMENT,
     `exhibition_id` BIGINT    NOT NULL,
     `host_id`       BIGINT    NOT NULL,
-    `is_creator`    TINYINT(1) NOT NULL DEFAULT 0,
+    `is_creator`    TINYINT(1) NOT NULL,
     `created_at`    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deleted_at`    TIMESTAMP NULL,
