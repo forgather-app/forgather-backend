@@ -6,6 +6,8 @@ import com.forgather.domain.model.SoftDeleteEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -33,6 +35,10 @@ public class Exhibition extends SoftDeleteEntity {
 
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
+
+    @Enumerated(value = EnumType.STRING)
+    @Column(name = "operation_type")
+    private OperationType operationType;
 
     @Column(name = "location_type")
     private String locationType;
