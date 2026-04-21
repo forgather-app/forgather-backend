@@ -2,6 +2,8 @@ package com.forgather.domain.exhibition.model;
 
 import java.time.LocalTime;
 
+import com.forgather.domain.model.SoftDeleteEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -19,7 +21,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-public class ExhibitionTime {
+public class ExhibitionTime extends SoftDeleteEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

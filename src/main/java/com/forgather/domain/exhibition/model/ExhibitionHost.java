@@ -1,5 +1,6 @@
 package com.forgather.domain.exhibition.model;
 
+import com.forgather.domain.model.SoftDeleteEntity;
 import com.forgather.global.auth.model.Host;
 
 import jakarta.persistence.Column;
@@ -17,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-public class ExhibitionHost {
+public class ExhibitionHost extends SoftDeleteEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
