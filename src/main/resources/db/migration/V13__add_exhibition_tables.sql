@@ -1,18 +1,19 @@
 CREATE TABLE `exhibition`
 (
-    `id`             BIGINT       NOT NULL AUTO_INCREMENT,
-    `title`          VARCHAR(255) NOT NULL,
-    `start_date`     DATE         NOT NULL,
-    `end_date`       DATE         NOT NULL,
-    `description`    VARCHAR(255) NULL,
-    `operation_type` ENUM ('SAME_EVERY_DAY', 'WEEKDAY_WEEKEND_DIFFERENT') NULL,
-    `location_type`  ENUM ('ONLINE', 'OFFLINE') NULL,
-    `online_url`     VARCHAR(255) NULL,
-    `base_address`   VARCHAR(255) NULL,
-    `detail_address` VARCHAR(255) NULL,
-    `created_at`     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at`     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deleted_at`     TIMESTAMP NULL,
+    `id`               BIGINT       NOT NULL AUTO_INCREMENT,
+    `title`            VARCHAR(255) NOT NULL,
+    `start_date`       DATE         NOT NULL,
+    `end_date`         DATE         NOT NULL,
+    `description`      VARCHAR(255) NULL,
+    `operation_type`   ENUM ('SAME_EVERY_DAY', 'WEEKDAY_WEEKEND_DIFFERENT') NULL,
+    `operation_notice` VARCHAR(255) NULL,
+    `location_type`    ENUM ('ONLINE', 'OFFLINE') NULL,
+    `online_url`       VARCHAR(255) NULL,
+    `base_address`     VARCHAR(255) NULL,
+    `detail_address`   VARCHAR(255) NULL,
+    `created_at`       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at`       TIMESTAMP NULL,
     PRIMARY KEY (`id`)
 );
 
