@@ -29,7 +29,7 @@ ELAPSED=0
 log "ValidateService" "nginx 트래픽 헬스체크 시작 (최대 ${NGINX_HEALTH_TIMEOUT}초)"
 
 while true; do
-  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 -L \
+  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 -L -k \
     "http://localhost/actuator/health" || echo "000")
 
   if [[ "$HTTP_CODE" == "200" ]]; then
