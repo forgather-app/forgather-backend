@@ -54,17 +54,6 @@ CREATE TABLE `exhibition_time`
     PRIMARY KEY (`id`)
 );
 
-CREATE TABLE `exhibition_closed_day`
-(
-    `id`            BIGINT    NOT NULL AUTO_INCREMENT,
-    `exhibition_id` BIGINT    NOT NULL,
-    `closed_date`   DATE      NOT NULL,
-    `created_at`    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at`    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deleted_at`    TIMESTAMP NULL,
-    PRIMARY KEY (`id`)
-);
-
 ALTER TABLE `exhibition_host`
     ADD CONSTRAINT `FK_exhibition_TO_exhibition_host`
         FOREIGN KEY (`exhibition_id`) REFERENCES `exhibition` (`id`);
@@ -79,8 +68,4 @@ ALTER TABLE `exhibition_photo`
 
 ALTER TABLE `exhibition_time`
     ADD CONSTRAINT `FK_exhibition_TO_exhibition_time`
-        FOREIGN KEY (`exhibition_id`) REFERENCES `exhibition` (`id`);
-
-ALTER TABLE `exhibition_closed_day`
-    ADD CONSTRAINT `FK_exhibition_TO_exhibition_closed_day`
         FOREIGN KEY (`exhibition_id`) REFERENCES `exhibition` (`id`);
