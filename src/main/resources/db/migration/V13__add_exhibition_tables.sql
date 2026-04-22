@@ -5,7 +5,7 @@ CREATE TABLE `exhibition`
     `start_date`       DATE         NOT NULL,
     `end_date`         DATE         NOT NULL,
     `description`      VARCHAR(255) NULL,
-    `operation_type`   ENUM ('SAME_EVERY_DAY', 'WEEKDAY_WEEKEND_DIFFERENT') NULL,
+    `operation_type`   VARCHAR(255) NULL,
     `operation_notice` VARCHAR(255) NULL,
     `location_type`    ENUM ('ONLINE', 'OFFLINE') NULL,
     `online_url`       VARCHAR(255) NULL,
