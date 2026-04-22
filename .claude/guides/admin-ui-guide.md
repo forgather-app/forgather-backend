@@ -1,7 +1,7 @@
 # Forgather Admin UI Guide
 
 이 문서는 Forgather 프로젝트의 어드민 UI 컨벤션을 정의합니다.
-`spring-backoffice-ui-generator` 에이전트가 이 가이드를 참조하여 일관된 코드를 생성합니다.
+`/admin-ui` skill과 `analyze-admin` agent가 이 가이드를 참조하여 일관된 코드를 생성합니다.
 
 ## 디렉토리 구조
 

@@ -6,7 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/scripts/doubt-detector.sh"
+            "command": "bash .claude/hooks/scripts/doubt-detector.sh",
+            "timeout": 5
           }
         ]
       }
@@ -17,7 +18,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/scripts/doubt-validator.sh"
+            "command": "bash .claude/hooks/scripts/doubt-validator.sh",
+            "timeout": 5
           }
         ]
       }
