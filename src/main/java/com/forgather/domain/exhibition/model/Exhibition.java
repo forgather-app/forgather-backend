@@ -36,10 +36,6 @@ public class Exhibition extends SoftDeleteEntity {
     @Column(name = "description")
     private String description;
 
-    @Enumerated(value = EnumType.STRING)
-    @Column(name = "operation_type")
-    private OperationType operationType;
-
     @Column(name = "operation_notice")
     private String operationNotice;
 
