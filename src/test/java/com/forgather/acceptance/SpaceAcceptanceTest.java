@@ -23,11 +23,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.forgather.domain.guestbook.model.Guest;
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.repository.GuestBookCardPhotoRepository;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
-import com.forgather.domain.guestbook.repository.GuestRepository;
 import com.forgather.domain.product.model.Product;
 import com.forgather.domain.product.repository.ProductPhotoRepository;
 import com.forgather.domain.product.repository.ProductRepository;
@@ -44,7 +42,6 @@ import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.domain.ContentsStorage;
 import com.forgather.fixture.GuestBookCardFixture;
 import com.forgather.fixture.GuestBookCardPhotoFixture;
-import com.forgather.fixture.GuestFixture;
 import com.forgather.fixture.ProductFixture;
 import com.forgather.fixture.ProductPhotoFixture;
 import com.forgather.fixture.SpaceFixture;
@@ -74,9 +71,6 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
     @Autowired
     private SpaceHostMapRepository spaceHostMapRepository;
-
-    @Autowired
-    private GuestRepository guestRepository;
 
     @Autowired
     private GuestBookCardRepository guestBookCardRepository;
@@ -198,10 +192,8 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         SpacePhoto spacePhoto = spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
         spaceHostMapRepository.save(new SpaceHostMap(space, host));
-        Guest guest1 = guestRepository.save(GuestFixture.createGuest());
-        Guest guest2 = guestRepository.save(GuestFixture.createGuest());
-        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, guest1, "카드1"));
-        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, guest2, "카드2"));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "nickname1", "카드1"));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "nickname2", "카드2"));
 
         // when
         SpaceResponse result = RestAssuredMockMvc.given()
@@ -255,9 +247,8 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         spaceHostMapRepository.save(new SpaceHostMap(space, host));
         Product product = productRepository.save(ProductFixture.createProductWithSpace(space));
         productPhotoRepository.save(ProductPhotoFixture.createProductPhotoWithProduct(product));
-        Guest guest = guestRepository.save(GuestFixture.createGuest());
         GuestBookCard guestBookCard = guestBookCardRepository.save(
-            GuestBookCardFixture.createGuestBookCard(space, guest, "message"));
+            GuestBookCardFixture.createGuestBookCard(space, "nickname", "message"));
         guestBookCardPhotoRepository.saveAll(List.of(
             GuestBookCardPhotoFixture.createGuestBookCardPhotoWithGuestBookCard(guestBookCard)));
 
@@ -464,8 +455,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space2));
         spaceHostMapRepository.save(new SpaceHostMap(space1, host));
         spaceHostMapRepository.save(new SpaceHostMap(space2, host));
-        Guest guest1 = guestRepository.save(GuestFixture.createGuest());
-        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space1, guest1, "방명록1"));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space1, "nickname", "방명록1"));
 
         // when
         HostSpaceResponse result = RestAssuredMockMvc.given()

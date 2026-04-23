@@ -10,14 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.forgather.domain.guestbook.model.Guest;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
-import com.forgather.domain.guestbook.repository.GuestRepository;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.stats.dto.LandingStatsResponse;
 import com.forgather.fixture.GuestBookCardFixture;
-import com.forgather.fixture.GuestFixture;
 import com.forgather.fixture.SpaceFixture;
 
 import io.restassured.http.ContentType;
@@ -35,15 +32,8 @@ public class StatsAcceptanceTest extends AcceptanceTest{
     @Autowired
     private GuestBookCardRepository guestBookCardRepository;
 
-    @Autowired
-    private GuestRepository guestRepository;
-
-    private Guest guest;
-
     @BeforeEach
     public void setup() {
-        guest = guestRepository.save(GuestFixture.createGuest());
-
         RestAssuredMockMvc.mockMvc(mockMvc);
     }
 
@@ -53,11 +43,11 @@ public class StatsAcceptanceTest extends AcceptanceTest{
         // given
         Space space1 = spaceRepository.save(SpaceFixture.createSpace());
         Space space2 = spaceRepository.save(SpaceFixture.createSpaceWithCode("0123456789"));
-        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpaceAndGuest(space1, guest));
-        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpaceAndGuest(space1, guest));
-        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpaceAndGuest(space2, guest));
-        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpaceAndGuest(space2, guest));
-        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpaceAndGuest(space2, guest));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpace(space1));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpace(space1));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpace(space2));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpace(space2));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpace(space2));
 
         // when
         LandingStatsResponse result = RestAssuredMockMvc.given()

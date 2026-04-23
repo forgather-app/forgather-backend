@@ -38,14 +38,13 @@ public interface GuestBookCardRepository {
     @Query("""
             SELECT new com.forgather.domain.guestbook.repository.dto.GuestBookCardListDto(
                 g.id,
-                guest.nickname,
+                g.nickname,
                 g.isRead,
                 CASE WHEN (
                     SELECT COUNT(p) FROM GuestBookCardPhoto p WHERE p.guestBookCard = g
                 ) > 0 THEN true ELSE false END
             )
             FROM GuestBookCard g
-            JOIN g.guest guest
             WHERE g.space = :space AND g.deletedAt IS NULL
         """)
     Page<GuestBookCardListDto> findAllDtoBySpaceAndDeletedAtIsNull(@Param("space") Space space, Pageable pageable);

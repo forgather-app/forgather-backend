@@ -16,14 +16,11 @@ import com.forgather.back_office.dto.AdminSpaceFilterRequest;
 import com.forgather.back_office.dto.AdminSpaceResponse;
 import com.forgather.back_office.dto.SpaceDetailResponse;
 import com.forgather.container.TestOnContainer;
-import com.forgather.domain.guestbook.model.Guest;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
-import com.forgather.domain.guestbook.repository.GuestRepository;
 import com.forgather.domain.product.repository.ProductRepository;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fixture.GuestBookCardFixture;
-import com.forgather.fixture.GuestFixture;
 import com.forgather.fixture.ProductFixture;
 import com.forgather.fixture.SpaceFixture;
 
@@ -40,9 +37,6 @@ class AdminSpaceServiceTest extends TestOnContainer {
 
     @Autowired
     private GuestBookCardRepository guestBookCardRepository;
-
-    @Autowired
-    private GuestRepository guestRepository;
 
     @Autowired
     private ProductRepository productRepository;
@@ -74,9 +68,8 @@ class AdminSpaceServiceTest extends TestOnContainer {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         productRepository.save(ProductFixture.createProductWithSpace(space));
-        Guest guest = guestRepository.save(GuestFixture.createGuest());
-        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, guest, "메시지1"));
-        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, guest, "메시지2"));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "nickname", "메시지1"));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "nickname", "메시지2"));
 
         // when
         SpaceDetailResponse result = adminSpaceService.getSpaceDetail(space.getCode());

@@ -19,13 +19,11 @@ import com.forgather.domain.guestbook.dto.GuestBookResponse;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardPhotoRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardResponse;
-import com.forgather.domain.guestbook.model.Guest;
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookCardPhoto;
 import com.forgather.domain.guestbook.model.GuestBookCardPhotos;
 import com.forgather.domain.guestbook.repository.GuestBookCardPhotoRepository;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
-import com.forgather.domain.guestbook.repository.GuestRepository;
 import com.forgather.domain.guestbook.repository.dto.GuestBookCardListDto;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.SpaceRepository;
@@ -44,7 +42,6 @@ public class GuestBookService {
 
     private final SpaceRepository spaceRepository;
     private final SpaceHostMapRepository spaceHostMapRepository;
-    private final GuestRepository guestRepository;
     private final GuestBookCardRepository guestBookCardRepository;
     private final GuestBookCardPhotoRepository guestBookCardPhotoRepository;
     private final ContentsStorage contentsStorage;
@@ -52,8 +49,7 @@ public class GuestBookService {
     @Transactional
     public WriteGuestBookCardResponse writeCard(String spaceCode, WriteGuestBookCardRequest request) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
-        Guest guest = guestRepository.save(new Guest(request.nickname()));
-        GuestBookCard guestBookCard = guestBookCardRepository.save(request.toEntity(space, guest));
+        GuestBookCard guestBookCard = guestBookCardRepository.save(request.toEntity(space));
 
         GuestBookCardPhotos guestBookCardPhotos = getGuestBookCardPhotos(spaceCode, request, guestBookCard);
         guestBookCardPhotoRepository.saveAll(guestBookCardPhotos.getAll());

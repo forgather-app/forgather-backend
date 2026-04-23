@@ -13,17 +13,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
-import com.forgather.domain.guestbook.model.Guest;
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookCardPhoto;
 import com.forgather.domain.guestbook.repository.GuestBookCardPhotoRepository;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
-import com.forgather.domain.guestbook.repository.GuestRepository;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fake.FakeContentStorage;
-import com.forgather.fixture.GuestFixture;
 import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
 import com.forgather.global.auth.model.Host;
@@ -44,9 +41,6 @@ public class GuestBookDeleteServiceTest {
     GuestBookCardPhotoRepository guestBookCardPhotoRepository;
 
     @Autowired
-    private GuestRepository guestRepository;
-
-    @Autowired
     private HostRepository hostRepository;
 
     @Autowired
@@ -57,7 +51,6 @@ public class GuestBookDeleteServiceTest {
 
     private Host host;
     private Space space;
-    private Guest guest;
 
     @BeforeEach
     void setUp() {
@@ -68,18 +61,15 @@ public class GuestBookDeleteServiceTest {
         hostRepository.save(host);
 
         spaceHostMapRepository.save(new SpaceHostMap(space, host));
-
-        guest = GuestFixture.createGuest();
-        guestRepository.save(guest);
     }
 
     @DisplayName("지정한 방명록을 논리 삭제한다")
     @Test
     void softDeleteGuestBookCard() {
         // given
-        GuestBookCard guestBookCard1 = guestBookCardRepository.save(new GuestBookCard(space, guest, "test1"));
-        GuestBookCard guestBookCard2 = guestBookCardRepository.save(new GuestBookCard(space, guest, "test2"));
-        GuestBookCard guestBookCard3 = guestBookCardRepository.save(new GuestBookCard(space, guest, "test3"));
+        GuestBookCard guestBookCard1 = guestBookCardRepository.save(new GuestBookCard(space, "nickname", "test1"));
+        GuestBookCard guestBookCard2 = guestBookCardRepository.save(new GuestBookCard(space, "nickname", "test2"));
+        GuestBookCard guestBookCard3 = guestBookCardRepository.save(new GuestBookCard(space, "nickname", "test3"));
         GuestBookCardPhoto guestBookCardPhoto1 = createGuestBookCardPhotoWithGuestBookCard(guestBookCard1);
         GuestBookCardPhoto guestBookCardPhoto2 = createGuestBookCardPhotoWithGuestBookCard(guestBookCard1);
         guestBookCardPhotoRepository.saveAll(List.of(guestBookCardPhoto1, guestBookCardPhoto2));
@@ -108,9 +98,9 @@ public class GuestBookDeleteServiceTest {
     @Test
     void softDeleteGuestBookBySpace() {
         // given
-        GuestBookCard guestBookCard1 = guestBookCardRepository.save(new GuestBookCard(space, guest, "test1"));
-        GuestBookCard guestBookCard2 = guestBookCardRepository.save(new GuestBookCard(space, guest, "test2"));
-        GuestBookCard guestBookCard3 = guestBookCardRepository.save(new GuestBookCard(space, guest, "test3"));
+        GuestBookCard guestBookCard1 = guestBookCardRepository.save(new GuestBookCard(space, "nickname", "test1"));
+        GuestBookCard guestBookCard2 = guestBookCardRepository.save(new GuestBookCard(space, "nickname", "test2"));
+        GuestBookCard guestBookCard3 = guestBookCardRepository.save(new GuestBookCard(space, "nickname", "test3"));
 
         // when
         guestBookService.deleteAllCardsBySpace(host, space);
