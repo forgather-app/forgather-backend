@@ -18,16 +18,13 @@ import com.forgather.back_office.dto.SpaceDetailResponse;
 import com.forgather.back_office.model.AdminSession;
 import com.forgather.back_office.model.AdminUser;
 import com.forgather.back_office.repository.AdminUserRepository;
-import com.forgather.domain.guestbook.model.Guest;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
-import com.forgather.domain.guestbook.repository.GuestRepository;
 import com.forgather.domain.product.repository.ProductRepository;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fixture.AdminUserFixture;
 import com.forgather.fixture.GuestBookCardFixture;
-import com.forgather.fixture.GuestFixture;
 import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.ProductFixture;
 import com.forgather.fixture.SpaceFixture;
@@ -57,9 +54,6 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
 
     @Autowired
     private SpaceHostMapRepository spaceHostMapRepository;
-
-    @Autowired
-    private GuestRepository guestRepository;
 
     @Autowired
     private GuestBookCardRepository guestBookCardRepository;
@@ -146,10 +140,8 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
         Space space = spaceRepository.save(SpaceFixture.createSpaceWithCode("1234567890"));
         spaceHostMapRepository.save(new SpaceHostMap(space, host));
         productRepository.save(ProductFixture.createProductWithSpace(space));
-        Guest guest1 = guestRepository.save(GuestFixture.createGuestWithNickname("1"));
-        Guest guest2 = guestRepository.save(GuestFixture.createGuestWithNickname("2"));
-        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpaceAndGuest(space, guest1));
-        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpaceAndGuest(space, guest2));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpaceAndNickname(space, "1"));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpaceAndNickname(space, "2"));
 
         // when
         SpaceDetailResponse result = givenWithSession()
@@ -175,10 +167,8 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpaceWithCode("1234567890"));
         spaceHostMapRepository.save(new SpaceHostMap(space, host));
-        Guest guest1 = guestRepository.save(GuestFixture.createGuestWithNickname("1"));
-        Guest guest2 = guestRepository.save(GuestFixture.createGuestWithNickname("2"));
-        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpaceAndGuest(space, guest1));
-        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpaceAndGuest(space, guest2));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpaceAndNickname(space, "1"));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpaceAndNickname(space, "2"));
 
         // when
         SpaceDetailResponse result = givenWithSession()

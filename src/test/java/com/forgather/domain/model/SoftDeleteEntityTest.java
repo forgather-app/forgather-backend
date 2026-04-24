@@ -12,7 +12,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import com.forgather.fixture.GuestBookCardFixture;
 import com.forgather.fixture.GuestBookCardPhotoFixture;
-import com.forgather.fixture.GuestFixture;
 import com.forgather.fixture.ProductFixture;
 import com.forgather.fixture.ProductPhotoFixture;
 import com.forgather.fixture.SpaceFixture;
@@ -47,7 +46,6 @@ class SoftDeleteEntityTest {
             arguments(SpaceHostMapFixture.createSpaceHostMap()),
             arguments(GuestBookCardFixture.createGuestBookCard()),
             arguments(GuestBookCardPhotoFixture.createGuestBookCardPhoto()),
-            arguments(GuestFixture.createGuest()),
             arguments(ProductFixture.createProduct()),
             arguments(ProductPhotoFixture.createProductPhoto())
         );

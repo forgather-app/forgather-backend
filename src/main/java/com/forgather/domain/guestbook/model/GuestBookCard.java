@@ -35,10 +35,6 @@ public class GuestBookCard extends SoftDeleteEntity {
     @JoinColumn(name = "space_id", nullable = false)
     private Space space;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "guest_id", nullable = false)
-    private Guest guest;
-    
     @Column(name = "nickname", length = 10)
     private String nickname;
 
@@ -52,24 +48,20 @@ public class GuestBookCard extends SoftDeleteEntity {
     @Column(name = "visibility_status", nullable = false)
     private VisibilityStatus visibilityStatus = VisibilityStatus.VISIBLE;  // VISIBLE, HIDDEN_BY_USER, HIDDEN_BY_ADMIN
 
-    public GuestBookCard(Space space, Guest guest, String message) {
-        validateRequiredFields(space, guest, guest.getNickname(), message);
-        validateNickname(guest.getNickname());
+    public GuestBookCard(Space space, String nickname, String message) {
+        validateRequiredFields(space, nickname, message);
+        validateNickname(nickname);
         validateMessage(message);
         this.space = space;
-        this.guest = guest;
-        this.nickname = guest.getNickname();
+        this.nickname = nickname;
         this.message = message;
         this.isRead = false;
         this.visibilityStatus = VisibilityStatus.VISIBLE;
     }
 
-    private void validateRequiredFields(Space space, Guest guest, String nickname, String message) {
+    private void validateRequiredFields(Space space, String nickname, String message) {
         if (space == null) {
             throw new BaseNullPointerException("방명록 카드 스페이스는 null일 수 없습니다.");
-        }
-        if (guest == null) {
-            throw new BaseNullPointerException("방명록 카드 방문자는 null일 수 없습니다.");
         }
         if (nickname == null) {
             throw new BaseNullPointerException("방문자 닉네임은 null일 수 없습니다.");
@@ -94,10 +86,6 @@ public class GuestBookCard extends SoftDeleteEntity {
         if (length > 400) {
             throw new BaseException("방명록 카드 메세지는 최대 400까지 입력 가능합니다. message.length: " + length);
         }
-    }
-
-    public String getNickname() {
-        return guest.getNickname();
     }
 
     public boolean equalsSpace(Space other) {

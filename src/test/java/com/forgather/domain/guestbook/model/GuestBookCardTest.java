@@ -1,7 +1,6 @@
 package com.forgather.domain.guestbook.model;
 
 import static com.forgather.fixture.GuestBookCardFixture.createGuestBookCard;
-import static com.forgather.fixture.GuestBookCardFixture.createGuestBookCardWithGuest;
 import static com.forgather.fixture.GuestBookCardFixture.createGuestBookCardWithMessage;
 import static com.forgather.fixture.GuestBookCardFixture.createGuestBookCardWithSpace;
 import static org.assertj.core.api.Assertions.assertThat;
