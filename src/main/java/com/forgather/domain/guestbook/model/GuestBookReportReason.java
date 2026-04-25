@@ -31,4 +31,11 @@ public class GuestBookReportReason extends BaseTimeEntity {
 
     @Column(name = "is_hidden", nullable = false)
     private boolean isHidden;
+
+    public GuestBookReportReason(String code, String label, int displayOrder, boolean isHidden) {
+        this.code = code;
+        this.label = label;
+        this.displayOrder = displayOrder;
+        this.isHidden = isHidden;
+    }
 }
