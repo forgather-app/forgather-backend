@@ -110,7 +110,7 @@ class GuestBookReportTest {
         assertAll(
             () -> assertThat(report.getNicknameSnapshot()).isEqualTo(card.getNickname()),
             () -> assertThat(report.getMessageSnapshot()).isEqualTo(card.getMessage()),
-            () -> assertThat(report.getMessageSnapshot()).isEqualTo(card.getMessage())
+            () -> assertThat(report.getCreatedAtSnapshot()).isEqualTo(card.getCreatedAt())
         );
     }
 }
