@@ -60,7 +60,7 @@ class GuestBookCardTest {
 
     @DisplayName("방명록 카드를 생성하면 미읽음 처리된다")
     @Test
-    void aaa() {
+    void defaultIsReadFalse() {
         // given
         GuestBookCard guestBookCard = createGuestBookCard();
 
@@ -70,7 +70,7 @@ class GuestBookCardTest {
 
     @DisplayName("방명록 카드를 읽음 처리한다")
     @Test
-    void aa() {
+    void IsReadTrueAfterRead() {
         // given
         GuestBookCard guestBookCard = createGuestBookCard();
 
@@ -79,5 +79,28 @@ class GuestBookCardTest {
 
         // then
         assertThat(guestBookCard.isRead()).isTrue();
+    }
+
+    @DisplayName("생성 시에는 기본 노출 상태이다")
+    @Test
+    void defaultStatusIsVisible() {
+        // given
+        GuestBookCard guestBookCard = createGuestBookCard();
+
+        // when, then
+        assertThat(guestBookCard.getVisibilityStatus()).isEqualTo(VisibilityStatus.VISIBLE);
+    }
+
+    @DisplayName("관리자에 의해 숨김 처리된다")
+    @Test
+    void hideByAdmin() {
+        // given
+        GuestBookCard guestBookCard = createGuestBookCard();
+
+        // when
+        guestBookCard.hideByAdmin();
+
+        // then
+        assertThat(guestBookCard.getVisibilityStatus()).isEqualTo(VisibilityStatus.HIDDEN_BY_ADMIN);
     }
 }
