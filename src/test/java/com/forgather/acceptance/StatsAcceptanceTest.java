@@ -16,12 +16,15 @@ import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.stats.dto.LandingStatsResponse;
 import com.forgather.fixture.GuestBookCardFixture;
 import com.forgather.fixture.SpaceFixture;
+import com.forgather.global.response.ApiResponse;
+import com.forgather.global.response.ResponseCode;
 
+import io.restassured.common.mapper.TypeRef;
 import io.restassured.http.ContentType;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 
 @AutoConfigureMockMvc
-public class StatsAcceptanceTest extends AcceptanceTest{
+class StatsAcceptanceTest extends AcceptanceTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -33,13 +36,13 @@ public class StatsAcceptanceTest extends AcceptanceTest{
     private GuestBookCardRepository guestBookCardRepository;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         RestAssuredMockMvc.mockMvc(mockMvc);
     }
 
     @DisplayName("랜딩 페이지용 통계로 스페이스와 방명록 카드의 총 개수를 조회한다")
     @Test
-    public void landing() {
+    void landing() {
         // given
         Space space1 = spaceRepository.save(SpaceFixture.createSpace());
         Space space2 = spaceRepository.save(SpaceFixture.createSpaceWithCode("0123456789"));
@@ -50,7 +53,7 @@ public class StatsAcceptanceTest extends AcceptanceTest{
         guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpace(space2));
 
         // when
-        LandingStatsResponse result = RestAssuredMockMvc.given()
+        ApiResponse<LandingStatsResponse> result = RestAssuredMockMvc.given()
             .accept(ContentType.JSON)
             .when()
             .get("/stats/landing")
@@ -58,12 +61,15 @@ public class StatsAcceptanceTest extends AcceptanceTest{
             .statusCode(200)
             .extract()
             .body()
-            .as(LandingStatsResponse.class);
+            .as(new TypeRef<>() {
+            });
 
         // then
         assertAll(
-            () -> assertThat(result.spaceStats().spaceCount()).isEqualTo(2),
-            () -> assertThat(result.guestBookStats().cardCount()).isEqualTo(5)
+            () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+            () -> assertThat(result.message()).isNull(),
+            () -> assertThat(result.data().spaceStats().spaceCount()).isEqualTo(2),
+            () -> assertThat(result.data().guestBookStats().cardCount()).isEqualTo(5)
         );
     }
 }
