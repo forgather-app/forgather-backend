@@ -32,6 +32,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -121,8 +122,8 @@ public class GuestBookController {
     public ResponseEntity<CreateGuestBookReportResponse> report(
         @PathVariable(value = "spaceCode") String spaceCode,
         @PathVariable(value = "guestBookCardId") Long guestBookCardId,
-        @RequestBody CreateGuestBookReportRequest request,
-        @LoginHost(required = true) Host host
+        @LoginHost(required = true) Host host,
+        @RequestBody @Valid CreateGuestBookReportRequest request
     ) {
         var response = guestBookReportService.report(host, spaceCode, guestBookCardId, request);
         return ResponseEntity.status(CREATED).body(response);

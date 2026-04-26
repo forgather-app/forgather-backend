@@ -9,6 +9,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
@@ -230,5 +232,23 @@ public class GuestBookReportAcceptanceTest extends AcceptanceTest {
                 .then()
                 .statusCode(HttpStatus.NOT_FOUND.value());
         }
+    }
+
+    @DisplayName("신고 사유 id가 null이면 400 예외를 발생한다")
+    @Test
+    void throwExceptionWhenReasonIdNull() {
+        // given
+        CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(null, null);
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + accessToken)
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/spaces/{spaceCode}/guestbook/{cardId}/reports",
+                space.getCode(), card.getId())
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value());
     }
 }
