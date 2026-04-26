@@ -1,5 +1,6 @@
 package com.forgather.domain.guestbook.service;
 
+import static com.forgather.fixture.GuestBookReportReasonFixture.createHiddenReason;
 import static com.forgather.fixture.GuestBookReportReasonFixture.createReason;
 import static com.forgather.fixture.HostFixture.createHost;
 import static com.forgather.fixture.SpaceFixture.createSpace;
@@ -134,6 +135,19 @@ class GuestBookReportServiceTest {
     void throwExceptionWhenReasonNotFound() {
         // given
         CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(999L, null);
+
+        // when & then
+        assertThatThrownBy(() -> guestBookReportService.report(host, space.getCode(), card.getId(), request))
+            .isInstanceOf(NotFoundException.class);
+    }
+
+    @DisplayName("숨김 처리된 신고 사유로는 신고할 수 없다")
+    @Test
+    void throwExceptionWhenReasonIsHidden() {
+        // given
+        GuestBookReportReason hiddenReason = createHiddenReason();
+        reportReasonRepository.save(hiddenReason);
+        CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(hiddenReason.getId(), null);
 
         // when & then
         assertThatThrownBy(() -> guestBookReportService.report(host, space.getCode(), card.getId(), request))

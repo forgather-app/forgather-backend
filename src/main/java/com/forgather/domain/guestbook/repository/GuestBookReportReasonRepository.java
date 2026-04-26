@@ -8,13 +8,13 @@ import com.forgather.global.exception.NotFoundException;
 
 public interface GuestBookReportReasonRepository {
 
-    Optional<GuestBookReportReason> findById(Long id);
+    Optional<GuestBookReportReason> findByIdAndIsHiddenFalse(Long id);
 
-    default GuestBookReportReason getByIdOrThrow(Long id) {
+    default GuestBookReportReason getByIdAndIsHiddenFalseOrThrow(Long id) {
         if (id == null) {
             throw new BaseNullPointerException("신고 사유의 id는 null일 수 없습니다.");
         }
-        return findById(id)
+        return findByIdAndIsHiddenFalse(id)
             .orElseThrow(() -> new NotFoundException("존재하지 않는 신고 사유입니다. id: " + id));
     }
 }

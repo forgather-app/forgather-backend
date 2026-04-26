@@ -45,7 +45,7 @@ public class GuestBookReportService {
         GuestBookCard card = getCardBySpace(guestBookCardId, space);
         validateAlreadyReported(host, card);  // 동일 사용자의 중복 신고 불가능
 
-        GuestBookReportReason reason = guestBookReportReasonRepository.getByIdOrThrow(request.reasonId());
+        GuestBookReportReason reason = guestBookReportReasonRepository.getByIdAndIsHiddenFalseOrThrow(request.reasonId());
         GuestBookReport report = guestBookReportRepository.save(
             new GuestBookReport(card, host, host, ReporterType.HOST, reason, request.detail())
         );
