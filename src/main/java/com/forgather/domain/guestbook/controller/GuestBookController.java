@@ -14,11 +14,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.forgather.domain.guestbook.dto.CreateGuestBookReportRequest;
+import com.forgather.domain.guestbook.dto.CreateGuestBookReportResponse;
 import com.forgather.domain.guestbook.dto.DeleteGuestBookCardPhotosRequest;
 import com.forgather.domain.guestbook.dto.GuestBookCardResponse;
 import com.forgather.domain.guestbook.dto.GuestBookResponse;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardResponse;
+import com.forgather.domain.guestbook.service.GuestBookReportService;
 import com.forgather.domain.guestbook.service.GuestBookService;
 import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.auth.model.Host;
@@ -29,6 +32,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 public class GuestBookController {
 
     private final GuestBookService guestBookService;
+    private final GuestBookReportService guestBookReportService;
 
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "방명록 조회",
@@ -109,6 +114,19 @@ public class GuestBookController {
     ) {
         guestBookService.deleteCard(host, spaceCode, guestBookCardId);
         return ResponseEntity.noContent().build();
+    }
+
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "방명록 신고", description = "호스트가 자신의 스페이스에 작성된 방명록을 신고한다. 신고 즉시 해당 방명록은 숨김 처리된다.")
+    @PostMapping("/{guestBookCardId}/reports")
+    public ResponseEntity<CreateGuestBookReportResponse> report(
+        @PathVariable(value = "spaceCode") String spaceCode,
+        @PathVariable(value = "guestBookCardId") Long guestBookCardId,
+        @LoginHost(required = true) Host host,
+        @RequestBody @Valid CreateGuestBookReportRequest request
+    ) {
+        var response = guestBookReportService.report(host, spaceCode, guestBookCardId, request);
+        return ResponseEntity.status(CREATED).body(response);
     }
 
     @SecurityRequirement(name = "bearerAuth")
