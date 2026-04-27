@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @RequestMapping("/spaces/{spaceCode}/guestbook")
 @RestController
-public class GuestBookController {
+public class SpaceGuestbookController {
 
     private final GuestBookService guestBookService;
     private final GuestBookReportService guestBookReportService;
