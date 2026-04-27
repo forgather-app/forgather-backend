@@ -58,7 +58,7 @@ public class GuestbookController {
     @GetMapping("/me/reports")
     public ResponseEntity<ReportHistoryResponse> retrieveReportHistory(
         @LoginHost(required = true) Host loginUser,
-        @PageableDefault(size = 15, sort = {"createdAt"}, direction = Sort.Direction.DESC)
+        @PageableDefault(size = 15, sort = {"createdAt", "id"}, direction = Sort.Direction.DESC)
         Pageable pageable
     ) {
         Page<ReportHistoryDto> reportHistory = guestBookReportService.retrieveReportHistory(loginUser, pageable);
