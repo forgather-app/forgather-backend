@@ -70,7 +70,7 @@ class GuestBookCardTest {
 
     @DisplayName("방명록 카드를 읽음 처리한다")
     @Test
-    void IsReadTrueAfterRead() {
+    void isReadTrueAfterRead() {
         // given
         GuestBookCard guestBookCard = createGuestBookCard();
 
