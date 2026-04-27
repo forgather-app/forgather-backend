@@ -36,7 +36,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Tag(name = "GuestBook: 방명록", description = "방명록 관련 API")
+@Tag(name = "SpaceGuestbook: 스페이스 방명록", description = "스페이스 내 방명록 관련 API")
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/spaces/{spaceCode}/guestbook")
