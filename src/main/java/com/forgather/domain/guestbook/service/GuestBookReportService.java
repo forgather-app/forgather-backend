@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportRequest;
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportResponse;
-import com.forgather.domain.guestbook.dto.ReportHistoryDto;
+import com.forgather.domain.guestbook.dto.ReportHistoryResponse;
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookReport;
 import com.forgather.domain.guestbook.model.GuestBookReportReason;
@@ -36,12 +36,12 @@ public class GuestBookReportService {
     private final GuestBookReportReasonRepository guestBookReportReasonRepository;
 
     @Transactional(readOnly = true)
-    public Page<ReportHistoryDto> retrieveReportHistory(Host loginUser, Pageable pageable) {
+    public ReportHistoryResponse retrieveReportHistory(Host loginUser, Pageable pageable) {
         Page<GuestBookReport> reports = guestBookReportRepository.findAllByReporterUser(
             loginUser,
             pageable
         );
-        return reports.map(ReportHistoryDto::new);
+        return ReportHistoryResponse.from(reports);
     }
 
     @Transactional

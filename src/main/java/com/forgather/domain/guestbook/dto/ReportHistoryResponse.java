@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 
+import com.forgather.domain.guestbook.model.GuestBookReport;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record ReportHistoryResponse(
@@ -21,9 +23,9 @@ public record ReportHistoryResponse(
     @Schema(description = "총 페이지 수", example = "1")
     int totalPages
 ) {
-    public static ReportHistoryResponse from(Page<ReportHistoryDto> reportHistory) {
+    public static ReportHistoryResponse from(Page<GuestBookReport> reportHistory) {
         return new ReportHistoryResponse(
-            reportHistory.toList(),
+            reportHistory.map(ReportHistoryDto::new).toList(),
             reportHistory.getNumber() + 1,
             reportHistory.getSize(),
             reportHistory.getTotalElements(),

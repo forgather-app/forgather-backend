@@ -15,13 +15,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportRequest;
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportResponse;
-import com.forgather.domain.guestbook.dto.ReportHistoryDto;
+import com.forgather.domain.guestbook.dto.ReportHistoryResponse;
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookReportReason;
 import com.forgather.domain.guestbook.model.VisibilityStatus;
@@ -160,12 +159,12 @@ class GuestBookReportServiceTest {
     @DisplayName("신고 내역이 없으면 빈 페이지를 반환한다")
     @Test
     void retrieveReportHistoryEmpty() {
-        Page<ReportHistoryDto> result = guestBookReportService.retrieveReportHistory(
+        ReportHistoryResponse result = guestBookReportService.retrieveReportHistory(
             host, PageRequest.of(0, 15)
         );
 
-        assertThat(result.getContent()).isEmpty();
-        assertThat(result.getTotalElements()).isEqualTo(0);
+        assertThat(result.reportHistory()).isEmpty();
+        assertThat(result.totalCount()).isEqualTo(0);
     }
 
     @DisplayName("자신의 신고 내역을 반환한다")
@@ -176,15 +175,15 @@ class GuestBookReportServiceTest {
             new CreateGuestBookReportRequest(reason.getId(), null));
 
         // when
-        Page<ReportHistoryDto> result = guestBookReportService.retrieveReportHistory(
+        ReportHistoryResponse result = guestBookReportService.retrieveReportHistory(
             host, PageRequest.of(0, 15)
         );
 
         // then
         assertAll(
-            () -> assertThat(result.getTotalElements()).isEqualTo(1),
-            () -> assertThat(result.getContent().get(0).nicknameSnapshot()).isEqualTo(card.getNickname()),
-            () -> assertThat(result.getContent().get(0).messageSnapshot()).isEqualTo(card.getMessage())
+            () -> assertThat(result.totalCount()).isEqualTo(1),
+            () -> assertThat(result.reportHistory().get(0).nicknameSnapshot()).isEqualTo(card.getNickname()),
+            () -> assertThat(result.reportHistory().get(0).messageSnapshot()).isEqualTo(card.getMessage())
         );
     }
 
@@ -199,15 +198,15 @@ class GuestBookReportServiceTest {
             new CreateGuestBookReportRequest(reason.getId(), null));
 
         // when
-        Page<ReportHistoryDto> result = guestBookReportService.retrieveReportHistory(
+        ReportHistoryResponse result = guestBookReportService.retrieveReportHistory(
             host, PageRequest.of(0, 15, Sort.by(Sort.Direction.DESC, "id"))
         );
 
         // then
         assertAll(
-            () -> assertThat(result.getTotalElements()).isEqualTo(2),
-            () -> assertThat(result.getContent().get(0).messageSnapshot()).isEqualTo(card2.getMessage()),
-            () -> assertThat(result.getContent().get(1).messageSnapshot()).isEqualTo(card.getMessage())
+            () -> assertThat(result.totalCount()).isEqualTo(2),
+            () -> assertThat(result.reportHistory().get(0).messageSnapshot()).isEqualTo(card2.getMessage()),
+            () -> assertThat(result.reportHistory().get(1).messageSnapshot()).isEqualTo(card.getMessage())
         );
     }
 
@@ -225,11 +224,11 @@ class GuestBookReportServiceTest {
             new CreateGuestBookReportRequest(reason.getId(), null));
 
         // when
-        Page<ReportHistoryDto> result = guestBookReportService.retrieveReportHistory(
+        ReportHistoryResponse result = guestBookReportService.retrieveReportHistory(
             host, PageRequest.of(0, 15)
         );
 
         // then
-        assertThat(result.getContent()).isEmpty();
+        assertThat(result.reportHistory()).isEmpty();
     }
 }
