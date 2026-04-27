@@ -24,6 +24,7 @@ import com.forgather.domain.space.dto.UpdateSpaceRequest;
 import com.forgather.domain.space.service.SpaceService;
 import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.auth.model.Host;
+import com.forgather.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -44,7 +45,7 @@ public class SpaceController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "스페이스 생성", description = "새로운 스페이스를 생성합니다.")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<CreateSpaceResponse> create(
+    public ResponseEntity<ApiResponse<CreateSpaceResponse>> create(
         @Parameter(description = "스페이스 생성 정보 (JSON, text/plain)", required = true,
             content = @Content(schema = @Schema(implementation = CreateSpaceRequest.class)))
         @RequestPart("request") @Validated CreateSpaceRequest request,
@@ -52,14 +53,15 @@ public class SpaceController {
         @LoginHost Host host
     ) {
         var response = spaceService.create(request, file, host);
-        return ResponseEntity.status(CREATED).body(response);
+        return ResponseEntity.status(CREATED).body(ApiResponse.success(response));
     }
 
     @GetMapping("/{spaceCode}")
     @Operation(summary = "스페이스 조회", description = "스페이스 코드를 통해 스페이스 정보를 조회합니다.")
-    public ResponseEntity<SpaceResponse> getSpaceInformation(@PathVariable(name = "spaceCode") String spaceCode) {
+    public ResponseEntity<ApiResponse<SpaceResponse>> getSpaceInformation(
+        @PathVariable(name = "spaceCode") String spaceCode) {
         var response = spaceService.getSpaceInformation(spaceCode);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @DeleteMapping("/{spaceCode}")
@@ -75,7 +77,7 @@ public class SpaceController {
     @PatchMapping(value = "/{spaceCode}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "스페이스 정보 수정", description = "해당 스페이스 코드의 정보를 수정합니다.")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<SpaceResponse> update(
+    public ResponseEntity<ApiResponse<SpaceResponse>> update(
         @PathVariable(name = "spaceCode") String spaceCode,
         @Parameter(description = "스페이스 수정 정보 (JSON, text/plain)", required = true,
             content = @Content(schema = @Schema(implementation = UpdateSpaceRequest.class)))
@@ -84,25 +86,25 @@ public class SpaceController {
         @LoginHost Host host
     ) {
         var response = spaceService.update(spaceCode, request, file, host);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping("/me")
     @Operation(summary = "호스트의 스페이스 목록 조회", description = "로그인한 호스트의 스페이스 목록을 조회합니다.")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<HostSpaceResponse> getSpacesInformation(@LoginHost Host host) {
+    public ResponseEntity<ApiResponse<HostSpaceResponse>> getSpacesInformation(@LoginHost Host host) {
         var response = spaceService.getSpacesInformation(host);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping("/{spaceCode}/host-check")
     @Operation(summary = "스페이스의 호스트 여부 조회", description = "로그인한 호스트의 스페이스 호스트 여부를 조회합니다.")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<CheckSpaceHostResponse> checkHost(
+    public ResponseEntity<ApiResponse<CheckSpaceHostResponse>> checkHost(
         @PathVariable(name = "spaceCode") String spaceCode,
         @LoginHost Host host
     ) {
         var response = spaceService.checkSpaceHost(spaceCode, host);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }
