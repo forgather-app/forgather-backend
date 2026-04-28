@@ -4,6 +4,7 @@ import static com.forgather.fixture.GuestBookReportReasonFixture.createReason;
 import static com.forgather.fixture.HostFixture.createHost;
 import static com.forgather.fixture.SpaceFixture.createSpace;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,7 +36,7 @@ import io.restassured.module.mockmvc.RestAssuredMockMvc;
 
 @AutoConfigureMockMvc
 @DisplayName("인수 테스트: 방명록 신고")
-public class GuestBookReportAcceptanceTest extends AcceptanceTest {
+public class GuestbookReportAcceptanceTest extends AcceptanceTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -107,8 +108,10 @@ public class GuestBookReportAcceptanceTest extends AcceptanceTest {
                 .as(CreateGuestBookReportResponse.class);
 
             // then
-            assertThat(response.id()).isNotNull();
-            assertThat(response.guestBookCardId()).isEqualTo(card.getId());
+            assertAll(
+                () -> assertThat(response.id()).isNotNull(),
+                () -> assertThat(response.guestBookCardId()).isEqualTo(card.getId())
+            );
         }
 
         @DisplayName("신고 후 방명록의 상태가 숨김으로 변경된다")
@@ -260,10 +263,12 @@ public class GuestBookReportAcceptanceTest extends AcceptanceTest {
                 .extract().body().as(ReportHistoryResponse.class);
 
             // then
-            assertThat(response.reportHistory()).hasSize(1);
-            assertThat(response.totalCount()).isEqualTo(1);
-            assertThat(response.reportHistory().get(0).nicknameSnapshot()).isEqualTo("닉네임");
-            assertThat(response.reportHistory().get(0).messageSnapshot()).isEqualTo("방명록 메시지");
+            assertAll(
+                () -> assertThat(response.reportHistory()).hasSize(1),
+                () -> assertThat(response.totalCount()).isEqualTo(1),
+                () -> assertThat(response.reportHistory().get(0).nicknameSnapshot()).isEqualTo("닉네임"),
+                () -> assertThat(response.reportHistory().get(0).messageSnapshot()).isEqualTo("방명록 메시지")
+            );
         }
 
         @DisplayName("신고 내역이 없으면 빈 목록을 반환한다")

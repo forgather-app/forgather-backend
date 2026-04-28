@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.forgather.domain.guestbook.dto.ReportHistoryResponse;
-import com.forgather.domain.guestbook.service.GuestBookReportService;
+import com.forgather.domain.guestbook.service.GuestbookReportService;
 import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.auth.model.Host;
 
@@ -27,7 +27,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 public class GuestbookController {
 
-    private final GuestBookReportService guestBookReportService;
+    private final GuestbookReportService guestBookReportService;
 
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "방명록 신고내역 조회",

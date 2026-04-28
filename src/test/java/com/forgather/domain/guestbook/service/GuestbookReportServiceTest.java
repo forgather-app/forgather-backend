@@ -37,12 +37,12 @@ import com.forgather.global.exception.ConflictException;
 import com.forgather.global.exception.ForbiddenException;
 import com.forgather.global.exception.NotFoundException;
 
-@Import(GuestBookReportService.class)
+@Import(GuestbookReportService.class)
 @DataJpaTest
-class GuestBookReportServiceTest {
+class GuestbookReportServiceTest {
 
     @Autowired
-    private GuestBookReportService guestBookReportService;
+    private GuestbookReportService guestBookReportService;
 
     @Autowired
     private GuestBookCardRepository guestBookCardRepository;

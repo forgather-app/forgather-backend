@@ -27,7 +27,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Service
-public class GuestBookReportService {
+public class GuestbookReportService {
 
     private final SpaceRepository spaceRepository;
     private final SpaceHostMapRepository spaceHostMapRepository;

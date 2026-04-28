@@ -21,7 +21,7 @@ import com.forgather.domain.guestbook.dto.GuestBookCardResponse;
 import com.forgather.domain.guestbook.dto.GuestBookResponse;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardResponse;
-import com.forgather.domain.guestbook.service.GuestBookReportService;
+import com.forgather.domain.guestbook.service.GuestbookReportService;
 import com.forgather.domain.guestbook.service.GuestBookService;
 import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.auth.model.Host;
@@ -44,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SpaceGuestbookController {
 
     private final GuestBookService guestBookService;
-    private final GuestBookReportService guestBookReportService;
+    private final GuestbookReportService guestBookReportService;
 
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "방명록 조회",
