@@ -21,8 +21,8 @@ import com.forgather.domain.guestbook.dto.GuestBookCardResponse;
 import com.forgather.domain.guestbook.dto.GuestBookResponse;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardResponse;
-import com.forgather.domain.guestbook.service.GuestbookReportService;
 import com.forgather.domain.guestbook.service.GuestBookService;
+import com.forgather.domain.guestbook.service.GuestbookReportService;
 import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.response.ApiResponse;
@@ -120,14 +120,14 @@ public class SpaceGuestbookController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "방명록 신고", description = "호스트가 자신의 스페이스에 작성된 방명록을 신고한다. 신고 즉시 해당 방명록은 숨김 처리된다.")
     @PostMapping("/{guestBookCardId}/reports")
-    public ResponseEntity<CreateGuestBookReportResponse> report(
+    public ResponseEntity<ApiResponse<CreateGuestBookReportResponse>> report(
         @PathVariable(value = "spaceCode") String spaceCode,
         @PathVariable(value = "guestBookCardId") Long guestBookCardId,
         @LoginHost(required = true) Host host,
         @RequestBody @Valid CreateGuestBookReportRequest request
     ) {
         var response = guestBookReportService.report(host, spaceCode, guestBookCardId, request);
-        return ResponseEntity.status(CREATED).body(response);
+        return ResponseEntity.status(CREATED).body(ApiResponse.success(response));
     }
 
     @SecurityRequirement(name = "bearerAuth")

@@ -12,6 +12,7 @@ import com.forgather.domain.guestbook.dto.ReportHistoryResponse;
 import com.forgather.domain.guestbook.service.GuestbookReportService;
 import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.auth.model.Host;
+import com.forgather.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -54,12 +55,12 @@ public class GuestbookController {
         }
     )
     @GetMapping("/me/reports")
-    public ResponseEntity<ReportHistoryResponse> retrieveReportHistory(
+    public ResponseEntity<ApiResponse<ReportHistoryResponse>> retrieveReportHistory(
         @LoginHost(required = true) Host loginUser,
         @PageableDefault(size = 15, sort = {"createdAt", "id"}, direction = Sort.Direction.DESC)
         Pageable pageable
     ) {
         var response = guestBookReportService.retrieveReportHistory(loginUser, pageable);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }
