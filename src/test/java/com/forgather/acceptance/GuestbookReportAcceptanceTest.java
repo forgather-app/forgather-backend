@@ -4,13 +4,12 @@ import static com.forgather.fixture.GuestBookReportReasonFixture.createReason;
 import static com.forgather.fixture.HostFixture.createHost;
 import static com.forgather.fixture.SpaceFixture.createSpace;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
@@ -18,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportRequest;
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportResponse;
+import com.forgather.domain.guestbook.dto.ReportHistoryResponse;
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookReportReason;
 import com.forgather.domain.guestbook.model.VisibilityStatus;
@@ -36,7 +36,7 @@ import io.restassured.module.mockmvc.RestAssuredMockMvc;
 
 @AutoConfigureMockMvc
 @DisplayName("인수 테스트: 방명록 신고")
-public class GuestBookReportAcceptanceTest extends AcceptanceTest {
+public class GuestbookReportAcceptanceTest extends AcceptanceTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -108,8 +108,10 @@ public class GuestBookReportAcceptanceTest extends AcceptanceTest {
                 .as(CreateGuestBookReportResponse.class);
 
             // then
-            assertThat(response.id()).isNotNull();
-            assertThat(response.guestBookCardId()).isEqualTo(card.getId());
+            assertAll(
+                () -> assertThat(response.id()).isNotNull(),
+                () -> assertThat(response.guestBookCardId()).isEqualTo(card.getId())
+            );
         }
 
         @DisplayName("신고 후 방명록의 상태가 숨김으로 변경된다")
@@ -231,6 +233,69 @@ public class GuestBookReportAcceptanceTest extends AcceptanceTest {
                     space.getCode(), card.getId())
                 .then()
                 .statusCode(HttpStatus.NOT_FOUND.value());
+        }
+    }
+
+    @DisplayName("신고 내역 조회")
+    @Nested
+    class retrieveReportHistory {
+
+        @DisplayName("신고 내역이 있으면 200과 목록을 반환한다")
+        @Test
+        void retrieveReportHistory() {
+            // given
+            RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(ContentType.JSON)
+                .body(new CreateGuestBookReportRequest(reason.getId(), null))
+                .when()
+                .post("/spaces/{spaceCode}/guestbook/{cardId}/reports",
+                    space.getCode(), card.getId());
+
+            // when
+            ReportHistoryResponse response = RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + accessToken)
+                .accept(ContentType.JSON)
+                .when()
+                .get("/guestbook/me/reports")
+                .then()
+                .statusCode(HttpStatus.OK.value())
+                .extract().body().as(ReportHistoryResponse.class);
+
+            // then
+            assertAll(
+                () -> assertThat(response.reportHistory()).hasSize(1),
+                () -> assertThat(response.totalCount()).isEqualTo(1),
+                () -> assertThat(response.reportHistory().get(0).nicknameSnapshot()).isEqualTo("닉네임"),
+                () -> assertThat(response.reportHistory().get(0).messageSnapshot()).isEqualTo("방명록 메시지")
+            );
+        }
+
+        @DisplayName("신고 내역이 없으면 빈 목록을 반환한다")
+        @Test
+        void retrieveReportHistoryEmpty() {
+            ReportHistoryResponse response = RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + accessToken)
+                .accept(ContentType.JSON)
+                .when()
+                .get("/guestbook/me/reports")
+                .then()
+                .statusCode(HttpStatus.OK.value())
+                .extract().body().as(ReportHistoryResponse.class);
+
+            assertThat(response.reportHistory()).isEmpty();
+            assertThat(response.totalCount()).isEqualTo(0);
+        }
+
+        @DisplayName("비로그인 사용자는 조회할 수 없다")
+        @Test
+        void throwExceptionWhenNotLoggedIn() {
+            RestAssuredMockMvc.given()
+                .accept(ContentType.JSON)
+                .when()
+                .get("/guestbook/me/reports")
+                .then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value());
         }
     }
 

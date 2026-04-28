@@ -1,10 +1,13 @@
 package com.forgather.domain.guestbook.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportRequest;
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportResponse;
+import com.forgather.domain.guestbook.dto.ReportHistoryResponse;
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookReport;
 import com.forgather.domain.guestbook.model.GuestBookReportReason;
@@ -24,13 +27,22 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Service
-public class GuestBookReportService {
+public class GuestbookReportService {
 
     private final SpaceRepository spaceRepository;
     private final SpaceHostMapRepository spaceHostMapRepository;
     private final GuestBookCardRepository guestBookCardRepository;
     private final GuestBookReportRepository guestBookReportRepository;
     private final GuestBookReportReasonRepository guestBookReportReasonRepository;
+
+    @Transactional(readOnly = true)
+    public ReportHistoryResponse retrieveReportHistory(Host loginUser, Pageable pageable) {
+        Page<GuestBookReport> reports = guestBookReportRepository.findAllByReporterUser(
+            loginUser,
+            pageable
+        );
+        return ReportHistoryResponse.from(reports);
+    }
 
     @Transactional
     public CreateGuestBookReportResponse report(

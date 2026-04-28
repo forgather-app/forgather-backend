@@ -21,7 +21,7 @@ import com.forgather.domain.guestbook.dto.GuestBookCardResponse;
 import com.forgather.domain.guestbook.dto.GuestBookResponse;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardResponse;
-import com.forgather.domain.guestbook.service.GuestBookReportService;
+import com.forgather.domain.guestbook.service.GuestbookReportService;
 import com.forgather.domain.guestbook.service.GuestBookService;
 import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.auth.model.Host;
@@ -36,15 +36,15 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Tag(name = "GuestBook: 방명록", description = "방명록 관련 API")
+@Tag(name = "SpaceGuestbook: 스페이스 방명록", description = "스페이스 내 방명록 관련 API")
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/spaces/{spaceCode}/guestbook")
 @RestController
-public class GuestBookController {
+public class SpaceGuestbookController {
 
     private final GuestBookService guestBookService;
-    private final GuestBookReportService guestBookReportService;
+    private final GuestbookReportService guestBookReportService;
 
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "방명록 조회",

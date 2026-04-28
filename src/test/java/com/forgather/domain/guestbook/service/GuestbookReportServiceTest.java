@@ -15,9 +15,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportRequest;
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportResponse;
+import com.forgather.domain.guestbook.dto.ReportHistoryResponse;
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookReportReason;
 import com.forgather.domain.guestbook.model.VisibilityStatus;
@@ -30,17 +33,16 @@ import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHostMap;
 import com.forgather.global.auth.repository.SpaceHostMapRepository;
-import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.ConflictException;
 import com.forgather.global.exception.ForbiddenException;
 import com.forgather.global.exception.NotFoundException;
 
-@Import(GuestBookReportService.class)
+@Import(GuestbookReportService.class)
 @DataJpaTest
-class GuestBookReportServiceTest {
+class GuestbookReportServiceTest {
 
     @Autowired
-    private GuestBookReportService guestBookReportService;
+    private GuestbookReportService guestBookReportService;
 
     @Autowired
     private GuestBookCardRepository guestBookCardRepository;
@@ -152,5 +154,81 @@ class GuestBookReportServiceTest {
         // when & then
         assertThatThrownBy(() -> guestBookReportService.report(host, space.getCode(), card.getId(), request))
             .isInstanceOf(NotFoundException.class);
+    }
+
+    @DisplayName("신고 내역이 없으면 빈 페이지를 반환한다")
+    @Test
+    void retrieveReportHistoryEmpty() {
+        ReportHistoryResponse result = guestBookReportService.retrieveReportHistory(
+            host, PageRequest.of(0, 15)
+        );
+
+        assertThat(result.reportHistory()).isEmpty();
+        assertThat(result.totalCount()).isEqualTo(0);
+    }
+
+    @DisplayName("자신의 신고 내역을 반환한다")
+    @Test
+    void retrieveReportHistory() {
+        // given
+        guestBookReportService.report(host, space.getCode(), card.getId(),
+            new CreateGuestBookReportRequest(reason.getId(), null));
+
+        // when
+        ReportHistoryResponse result = guestBookReportService.retrieveReportHistory(
+            host, PageRequest.of(0, 15)
+        );
+
+        // then
+        assertAll(
+            () -> assertThat(result.totalCount()).isEqualTo(1),
+            () -> assertThat(result.reportHistory().get(0).nicknameSnapshot()).isEqualTo(card.getNickname()),
+            () -> assertThat(result.reportHistory().get(0).messageSnapshot()).isEqualTo(card.getMessage())
+        );
+    }
+
+    @DisplayName("Pageable 정렬 조건이 적용된다")
+    @Test
+    void retrieveReportHistoryWithSort() {
+        // given
+        GuestBookCard card2 = guestBookCardRepository.save(new GuestBookCard(space, "nick2", "msg2"));
+        guestBookReportService.report(host, space.getCode(), card.getId(),
+            new CreateGuestBookReportRequest(reason.getId(), null));
+        guestBookReportService.report(host, space.getCode(), card2.getId(),
+            new CreateGuestBookReportRequest(reason.getId(), null));
+
+        // when
+        ReportHistoryResponse result = guestBookReportService.retrieveReportHistory(
+            host, PageRequest.of(0, 15, Sort.by(Sort.Direction.DESC, "id"))
+        );
+
+        // then
+        assertAll(
+            () -> assertThat(result.totalCount()).isEqualTo(2),
+            () -> assertThat(result.reportHistory().get(0).messageSnapshot()).isEqualTo(card2.getMessage()),
+            () -> assertThat(result.reportHistory().get(1).messageSnapshot()).isEqualTo(card.getMessage())
+        );
+    }
+
+    @DisplayName("다른 호스트의 신고 내역은 포함되지 않는다")
+    @Test
+    void retrieveReportHistoryExcludesOtherHost() {
+        // given
+        Host anotherHost = hostRepository.save(createHost());
+        Space anotherSpace = spaceRepository.save(createSpaceWithCode("ANOTHER123"));
+        spaceHostMapRepository.save(new SpaceHostMap(anotherSpace, anotherHost));
+        GuestBookCard anotherCard = guestBookCardRepository.save(
+            new GuestBookCard(anotherSpace, "nick", "msg")
+        );
+        guestBookReportService.report(anotherHost, anotherSpace.getCode(), anotherCard.getId(),
+            new CreateGuestBookReportRequest(reason.getId(), null));
+
+        // when
+        ReportHistoryResponse result = guestBookReportService.retrieveReportHistory(
+            host, PageRequest.of(0, 15)
+        );
+
+        // then
+        assertThat(result.reportHistory()).isEmpty();
     }
 }
