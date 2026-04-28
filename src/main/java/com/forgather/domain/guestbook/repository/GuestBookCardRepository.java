@@ -7,7 +7,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.http.HttpStatus;
 
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.repository.dto.GuestBookCardListDto;
@@ -55,7 +54,7 @@ public interface GuestBookCardRepository {
 
     default GuestBookCard getByIdAndDeletedAtIsNullOrThrow(Long id) {
         if (id == null) {
-            throw new BaseNullPointerException("방명록 카드의 id는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+            throw new BaseNullPointerException("방명록 카드의 id는 null일 수 없습니다.");
         }
         return findByIdAndDeletedAtIsNull(id)
             .orElseThrow(() -> new NotFoundException("존재하지 않는 방명록 카드입니다. id: " + id));
