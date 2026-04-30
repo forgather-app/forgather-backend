@@ -173,9 +173,14 @@ public class GlobalExceptionHandler {
             logServerError(e);
         }
 
+        ResponseCode code = resolveCode(e);
+        String message = e.getStatusCode() >= INTERNAL_SERVER_ERROR.value()
+            ? maskServerMessage(code)
+            : e.getMessage();
+
         return ResponseEntity.status(e.getStatusCode())
             .contentType(APPLICATION_JSON)
-            .body(ApiResponse.error(resolveCode(e), e.getMessage()));
+            .body(ApiResponse.error(code, message));
     }
 
     private ResponseCode resolveCode(BaseException e) {
@@ -198,6 +203,14 @@ public class GlobalExceptionHandler {
         return ResponseCode.BAD_REQUEST;
     }
 
+    private String maskServerMessage(ResponseCode code) {
+        return switch (code) {
+            case FILE_UPLOAD_FAILED -> "파일 업로드 처리 중 오류가 발생했습니다.";
+            case FILE_DOWNLOAD_FAILED -> "파일 다운로드 처리 중 오류가 발생했습니다.";
+            default -> "예상치 못한 오류가 발생했습니다.";
+        };
+    }
+
     private void logClientInfo(Exception e) {
         log.atInfo().log("{}: {}", e.getClass().getSimpleName(), e.getMessage());
     }
@@ -208,22 +221,18 @@ public class GlobalExceptionHandler {
 
     /**
      * 핸들링 되지 않은 모든 예외 -> error
+     * 원본 메시지는 내부 정보(스키마/경로/라이브러리 내부 구조 등) 유출 우려가 있어 응답에서는 마스킹하고
+     * 추적은 logServerError가 남기는 stack trace로 수행한다.
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception e) {
+    public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
         logServerError(e);
         return ResponseEntity.internalServerError()
             .contentType(APPLICATION_JSON)
-            .body(ErrorResponse.from(e.getMessage()));
+            .body(ApiResponse.error(ResponseCode.INTERNAL_ERROR, "예상치 못한 오류가 발생했습니다."));
     }
 
     private void logServerError(Exception e) {
         log.atError().setCause(e).log("{}: {}", e.getClass().getSimpleName(), e.getMessage());
-    }
-
-    public record ErrorResponse(String message) {
-        public static ErrorResponse from(String message) {
-            return new ErrorResponse(message);
-        }
     }
 }
