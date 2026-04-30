@@ -1,6 +1,8 @@
 package com.forgather.global.exception;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
@@ -162,7 +164,7 @@ public class GlobalExceptionHandler {
      * 5XX -> error
      */
     @ExceptionHandler(BaseException.class)
-    public ResponseEntity<ErrorResponse> handleBaseException(BaseException e) {
+    public ResponseEntity<ApiResponse<Void>> handleBaseException(BaseException e) {
         if (e.isSecurityError()) {
             logClientWarning(e);
         } else if (e.isClientError()) {
@@ -173,7 +175,27 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(e.getStatusCode())
             .contentType(APPLICATION_JSON)
-            .body(ErrorResponse.from(e.getMessage()));
+            .body(ApiResponse.error(resolveCode(e), e.getMessage()));
+    }
+
+    private ResponseCode resolveCode(BaseException e) {
+        if (e instanceof JwtBaseException) {
+            return ResponseCode.JWT_INVALID;
+        }
+        if (e instanceof FileUploadException) {
+            return ResponseCode.FILE_UPLOAD_FAILED;
+        }
+        if (e instanceof FileDownloadException) {
+            return ResponseCode.FILE_DOWNLOAD_FAILED;
+        }
+        int status = e.getStatusCode();
+        if (status == CONFLICT.value()) {
+            return ResponseCode.CONFLICT;
+        }
+        if (status >= INTERNAL_SERVER_ERROR.value()) {
+            return ResponseCode.INTERNAL_ERROR;
+        }
+        return ResponseCode.BAD_REQUEST;
     }
 
     private void logClientInfo(Exception e) {

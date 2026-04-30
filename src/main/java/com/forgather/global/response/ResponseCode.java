@@ -20,5 +20,13 @@ public enum ResponseCode {
     // 리소스 응답
     NOT_FOUND,
     RESOURCE_NOT_FOUND,
+    CONFLICT,
+
+    // 파일 처리 응답
+    FILE_UPLOAD_FAILED,
+    FILE_DOWNLOAD_FAILED,
+
+    // 서버 오류 응답
+    INTERNAL_ERROR,
     ;
 }
