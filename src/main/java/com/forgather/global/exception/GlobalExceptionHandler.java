@@ -61,12 +61,11 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNoResourceFoundException(NoResourceFoundException e) {
+    public ResponseEntity<ApiResponse<Void>> handleNoResourceFoundException(NoResourceFoundException e) {
         logClientInfo(e);
-        var errorResponse = ErrorResponse.from(e.getMessage());
         return ResponseEntity.status(e.getStatusCode())
             .contentType(APPLICATION_JSON)
-            .body(errorResponse);
+            .body(ApiResponse.error(ResponseCode.RESOURCE_NOT_FOUND, e.getMessage()));
     }
 
     @ExceptionHandler(MissingRequestCookieException.class)
@@ -78,11 +77,11 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException e) {
+    public ResponseEntity<ApiResponse<Void>> handleNotFoundException(NotFoundException e) {
         logClientInfo(e);
         return ResponseEntity.status(e.getStatusCode())
             .contentType(APPLICATION_JSON)
-            .body(ErrorResponse.from(e.getMessage()));
+            .body(ApiResponse.error(ResponseCode.NOT_FOUND, e.getMessage()));
     }
 
     // 컨트롤러 요청 파라미터의 타입 불일치

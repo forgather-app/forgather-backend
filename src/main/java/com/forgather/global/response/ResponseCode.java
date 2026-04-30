@@ -16,5 +16,9 @@ public enum ResponseCode {
     UNAUTHORIZED,
     FORBIDDEN,
     JWT_INVALID,
+
+    // 리소스 응답
+    NOT_FOUND,
+    RESOURCE_NOT_FOUND,
     ;
 }
