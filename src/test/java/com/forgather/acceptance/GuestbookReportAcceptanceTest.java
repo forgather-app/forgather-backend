@@ -26,17 +26,21 @@ import com.forgather.domain.guestbook.repository.jpa.GuestBookReportReasonJpaRep
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
+import com.forgather.fixture.SpaceFixture;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHostMap;
 import com.forgather.global.auth.repository.SpaceHostMapRepository;
 import com.forgather.global.auth.util.JwtTokenProvider;
+import com.forgather.global.response.ApiResponse;
+import com.forgather.global.response.ResponseCode;
 
+import io.restassured.common.mapper.TypeRef;
 import io.restassured.http.ContentType;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 
 @AutoConfigureMockMvc
 @DisplayName("인수 테스트: 방명록 신고")
-public class GuestbookReportAcceptanceTest extends AcceptanceTest {
+class GuestbookReportAcceptanceTest extends AcceptanceTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -94,7 +98,7 @@ public class GuestbookReportAcceptanceTest extends AcceptanceTest {
             CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason.getId(), null);
 
             // when
-            CreateGuestBookReportResponse response = RestAssuredMockMvc.given()
+            ApiResponse<CreateGuestBookReportResponse> result = RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
                 .contentType(ContentType.JSON)
                 .body(request)
@@ -105,12 +109,15 @@ public class GuestbookReportAcceptanceTest extends AcceptanceTest {
                 .statusCode(HttpStatus.CREATED.value())
                 .extract()
                 .body()
-                .as(CreateGuestBookReportResponse.class);
+                .as(new TypeRef<>() {
+                });
 
             // then
             assertAll(
-                () -> assertThat(response.id()).isNotNull(),
-                () -> assertThat(response.guestBookCardId()).isEqualTo(card.getId())
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().id()).isNotNull(),
+                () -> assertThat(result.data().guestBookCardId()).isEqualTo(card.getId())
             );
         }
 
@@ -175,7 +182,7 @@ public class GuestbookReportAcceptanceTest extends AcceptanceTest {
         @Test
         void throwExceptionWhenCardNotBelongToSpace() {
             // given
-            Space anotherSpace = spaceRepository.save(com.forgather.fixture.SpaceFixture.createSpaceWithCode("ANOTHER123"));
+            Space anotherSpace = spaceRepository.save(SpaceFixture.createSpaceWithCode("ANOTHER123"));
             spaceHostMapRepository.save(new SpaceHostMap(anotherSpace, host));
             GuestBookCard anotherCard = guestBookCardRepository.save(new GuestBookCard(anotherSpace, "nick", "msg"));
             CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason.getId(), null);
@@ -253,38 +260,50 @@ public class GuestbookReportAcceptanceTest extends AcceptanceTest {
                     space.getCode(), card.getId());
 
             // when
-            ReportHistoryResponse response = RestAssuredMockMvc.given()
+            ApiResponse<ReportHistoryResponse> result = RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
                 .accept(ContentType.JSON)
                 .when()
                 .get("/guestbook/me/reports")
                 .then()
                 .statusCode(HttpStatus.OK.value())
-                .extract().body().as(ReportHistoryResponse.class);
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
 
             // then
             assertAll(
-                () -> assertThat(response.reportHistory()).hasSize(1),
-                () -> assertThat(response.totalCount()).isEqualTo(1),
-                () -> assertThat(response.reportHistory().get(0).nicknameSnapshot()).isEqualTo("닉네임"),
-                () -> assertThat(response.reportHistory().get(0).messageSnapshot()).isEqualTo("방명록 메시지")
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().reportHistory()).hasSize(1),
+                () -> assertThat(result.data().totalCount()).isEqualTo(1),
+                () -> assertThat(result.data().reportHistory().get(0).nicknameSnapshot()).isEqualTo("닉네임"),
+                () -> assertThat(result.data().reportHistory().get(0).messageSnapshot()).isEqualTo("방명록 메시지")
             );
         }
 
         @DisplayName("신고 내역이 없으면 빈 목록을 반환한다")
         @Test
         void retrieveReportHistoryEmpty() {
-            ReportHistoryResponse response = RestAssuredMockMvc.given()
+            ApiResponse<ReportHistoryResponse> result = RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
                 .accept(ContentType.JSON)
                 .when()
                 .get("/guestbook/me/reports")
                 .then()
                 .statusCode(HttpStatus.OK.value())
-                .extract().body().as(ReportHistoryResponse.class);
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
 
-            assertThat(response.reportHistory()).isEmpty();
-            assertThat(response.totalCount()).isEqualTo(0);
+            assertAll(
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().reportHistory()).isEmpty(),
+                () -> assertThat(result.data().totalCount()).isEqualTo(0)
+            );
         }
 
         @DisplayName("비로그인 사용자는 조회할 수 없다")

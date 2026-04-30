@@ -15,6 +15,7 @@ import com.forgather.global.auth.dto.LoginResponse;
 import com.forgather.global.auth.dto.RefreshRequest;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.service.AuthService;
+import com.forgather.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,46 +33,46 @@ public class AuthController {
     @Operation(summary = "내 정보 확인",
         description = "현재 로그인된 사용자의 정보를 확인합니다. " +
             "로그인된 사용자가 없으면 401 Unauthorized를 반환합니다.")
-    public ResponseEntity<HostResponse> getCurrentUser(@LoginHost Host host) {
+    public ResponseEntity<ApiResponse<HostResponse>> getCurrentUser(@LoginHost Host host) {
         var response = authService.getCurrentUser(host);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping("/login/kakao")
     @Operation(summary = "Kakao 로그인을 위한 토큰 발급",
         description = "Kakao 로그인 페이지로 리다이렉트하기 위한 URL을 반환합니다.")
-    public ResponseEntity<KakaoLoginTokenResponse> getKakaoLoginToken() {
+    public ResponseEntity<ApiResponse<KakaoLoginTokenResponse>> getKakaoLoginToken() {
         var response = authService.getKakaoLoginToken();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @PostMapping("/login/kakao/confirm")
     @Operation(summary = "Kakao 로그인 완료",
         description = "Kakao 로그인 후 발급받은 액세스토큰을 전달하여 로그인합니다. " +
             "로그인 성공 시, 액세스토큰과 리프레시토큰을 반환합니다.")
-    public ResponseEntity<LoginResponse> kakaoLoginConfirm(
+    public ResponseEntity<ApiResponse<LoginResponse>> kakaoLoginConfirm(
         @RequestBody KakaoLoginConfirmRequest request
     ) {
         var response = authService.kakaoLoginConfirm(request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @PostMapping("/refresh")
     @Operation(summary = "로그인 세션 갱신",
         description = "리프레시 토큰을 사용하여 로그인 세션을 갱신합니다. " +
             "로그인 이력이 있다면 재로그인 없이 로그인 세션을 갱신할 수 있습니다.")
-    public ResponseEntity<LoginResponse> refresh(
+    public ResponseEntity<ApiResponse<LoginResponse>> refresh(
         @RequestBody RefreshRequest request
     ) {
         var response = authService.refresh(request.refreshToken());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @PostMapping("/terms")
     @Operation(summary = "서비스 이용 약관 동의",
         description = "서비스 이용 약관에 동의합니다. ")
-    public ResponseEntity<Void> agreeTerms(@LoginHost Host host) {
+    public ResponseEntity<ApiResponse<Void>> agreeTerms(@LoginHost Host host) {
         authService.agreeTerms(host);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success());
     }
 }

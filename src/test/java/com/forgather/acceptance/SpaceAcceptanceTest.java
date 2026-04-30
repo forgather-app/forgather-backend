@@ -50,7 +50,10 @@ import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHostMap;
 import com.forgather.global.auth.repository.SpaceHostMapRepository;
 import com.forgather.global.auth.util.JwtTokenProvider;
+import com.forgather.global.response.ApiResponse;
+import com.forgather.global.response.ResponseCode;
 
+import io.restassured.common.mapper.TypeRef;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 
 @DisplayName("인수 테스트: Space")
@@ -123,7 +126,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         );
 
         // when
-        CreateSpaceResponse response = RestAssuredMockMvc.given()
+        ApiResponse<CreateSpaceResponse> response = RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
             .multiPart("request", request, "application/json")
             .multiPart("file", file.getOriginalFilename(), file.getBytes(), file.getContentType())
@@ -133,10 +136,15 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             .statusCode(HttpStatus.CREATED.value())
             .extract()
             .body()
-            .as(CreateSpaceResponse.class);
+            .as(new TypeRef<>() {
+            });
 
         // then
-        assertThat(response.spaceCode()).isNotEmpty();
+        assertAll(
+            () -> assertThat(response.code()).isEqualTo(ResponseCode.SUCCESS),
+            () -> assertThat(response.message()).isNull(),
+            () -> assertThat(response.data().spaceCode()).isNotEmpty()
+        );
     }
 
     @DisplayName("스페이스 사진이 없는 스페이스를 생성한다.")
@@ -149,7 +157,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         );
 
         // when
-        CreateSpaceResponse response = RestAssuredMockMvc.given()
+        ApiResponse<CreateSpaceResponse> response = RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
             .multiPart("request", request, "application/json")
             .when()
@@ -158,10 +166,15 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             .statusCode(HttpStatus.CREATED.value())
             .extract()
             .body()
-            .as(CreateSpaceResponse.class);
+            .as(new TypeRef<>() {
+            });
 
         // then
-        assertThat(response.spaceCode()).isNotEmpty();
+        assertAll(
+            () -> assertThat(response.code()).isEqualTo(ResponseCode.SUCCESS),
+            () -> assertThat(response.message()).isNull(),
+            () -> assertThat(response.data().spaceCode()).isNotEmpty()
+        );
     }
 
     @DisplayName("스페이스를 생성하려면 로그인이 필요하다.")
@@ -196,7 +209,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "nickname2", "카드2"));
 
         // when
-        SpaceResponse result = RestAssuredMockMvc.given()
+        ApiResponse<SpaceResponse> result = RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
             .when()
             .get("/spaces/{spaceCode}", space.getCode())
@@ -204,13 +217,16 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             .statusCode(HttpStatus.OK.value())
             .extract()
             .body()
-            .as(SpaceResponse.class);
+            .as(new TypeRef<>() {
+            });
 
         // then
         assertAll(
-            () -> assertThat(result.spaceCode()).isEqualTo(space.getCode()),
-            () -> assertThat(result.spacePhoto().path()).isEqualTo(spacePhoto.getPath()),
-            () -> assertThat(result.guestBookCardCount()).isEqualTo(2)
+            () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+            () -> assertThat(result.message()).isNull(),
+            () -> assertThat(result.data().spaceCode()).isEqualTo(space.getCode()),
+            () -> assertThat(result.data().spacePhoto().path()).isEqualTo(spacePhoto.getPath()),
+            () -> assertThat(result.data().guestBookCardCount()).isEqualTo(2)
         );
     }
 
@@ -332,7 +348,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         );
 
         // when
-        SpaceResponse result = RestAssuredMockMvc.given()
+        ApiResponse<SpaceResponse> result = RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
             .multiPart("request", request, "application/json")
             .multiPart("file", newFile.getOriginalFilename(), newFile.getBytes(), newFile.getContentType())
@@ -342,17 +358,20 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             .statusCode(HttpStatus.OK.value())
             .extract()
             .body()
-            .as(SpaceResponse.class);
+            .as(new TypeRef<>() {
+            });
 
         // then
         assertAll(
-            () -> assertThat(result.name()).isEqualTo("새로운 스페이스"),
-            () -> assertThat(result.description()).isEqualTo("새로운 설명"),
-            () -> assertThat(result.isPublic()).isFalse(),
-            () -> assertThat(result.instagramUsername()).isEqualTo("forgather_official_new"),
-            () -> assertThat(result.email()).isEqualTo("forgather_new@forgather.me"),
+            () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+            () -> assertThat(result.message()).isNull(),
+            () -> assertThat(result.data().name()).isEqualTo("새로운 스페이스"),
+            () -> assertThat(result.data().description()).isEqualTo("새로운 설명"),
+            () -> assertThat(result.data().isPublic()).isFalse(),
+            () -> assertThat(result.data().instagramUsername()).isEqualTo("forgather_official_new"),
+            () -> assertThat(result.data().email()).isEqualTo("forgather_new@forgather.me"),
             () -> assertThat(spacePhotoRepository.getBySpaceAndDeletedAtIsNullOrEmpty(space).getOriginalName()).isEqualTo("new.jpg"),
-            () -> assertThat(result.guestBookCardCount()).isZero()
+            () -> assertThat(result.data().guestBookCardCount()).isZero()
         );
     }
 
@@ -369,7 +388,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         );
 
         // when
-        SpaceResponse response = RestAssuredMockMvc.given()
+        ApiResponse<SpaceResponse> response = RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
             .multiPart("request", request, "application/json")
             .when()
@@ -378,16 +397,19 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             .statusCode(HttpStatus.OK.value())
             .extract()
             .body()
-            .as(SpaceResponse.class);
+            .as(new TypeRef<>() {
+            });
 
         // then
         assertAll(
-            () -> assertThat(response.name()).isEqualTo("새로운 스페이스"),
-            () -> assertThat(response.description()).isEqualTo("description"),
-            () -> assertThat(response.isPublic()).isTrue(),
-            () -> assertThat(response.instagramUsername()).isEqualTo("instagramUsername"),
-            () -> assertThat(response.email()).isEqualTo("email@forgather.me"),
-            () -> assertThat(response.spacePhoto().path()).isEqualTo("path"),
+            () -> assertThat(response.code()).isEqualTo(ResponseCode.SUCCESS),
+            () -> assertThat(response.message()).isNull(),
+            () -> assertThat(response.data().name()).isEqualTo("새로운 스페이스"),
+            () -> assertThat(response.data().description()).isEqualTo("description"),
+            () -> assertThat(response.data().isPublic()).isTrue(),
+            () -> assertThat(response.data().instagramUsername()).isEqualTo("instagramUsername"),
+            () -> assertThat(response.data().email()).isEqualTo("email@forgather.me"),
+            () -> assertThat(response.data().spacePhoto().path()).isEqualTo("path"),
 
             () -> verify(contentsStorage, never()).deletePhotos(anyList())
         );
@@ -458,7 +480,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space1, "nickname", "방명록1"));
 
         // when
-        HostSpaceResponse result = RestAssuredMockMvc.given()
+        ApiResponse<HostSpaceResponse> result = RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
             .when()
             .get("/spaces/me")
@@ -466,15 +488,18 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             .statusCode(HttpStatus.OK.value())
             .extract()
             .body()
-            .as(HostSpaceResponse.class);
+            .as(new TypeRef<>() {
+            });
 
         // then
         assertAll(
-            () -> assertThat(result.spaces().getFirst().spaceCode()).isEqualTo(space2.getCode()),
-            () -> assertThat(result.spaces().getFirst().guestBookCardCount()).isZero(),
+            () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+            () -> assertThat(result.message()).isNull(),
+            () -> assertThat(result.data().spaces().getFirst().spaceCode()).isEqualTo(space2.getCode()),
+            () -> assertThat(result.data().spaces().getFirst().guestBookCardCount()).isZero(),
 
-            () -> assertThat(result.spaces().getLast().spaceCode()).isEqualTo(space1.getCode()),
-            () -> assertThat(result.spaces().getLast().guestBookCardCount()).isOne()
+            () -> assertThat(result.data().spaces().getLast().spaceCode()).isEqualTo(space1.getCode()),
+            () -> assertThat(result.data().spaces().getLast().guestBookCardCount()).isOne()
         );
     }
 }

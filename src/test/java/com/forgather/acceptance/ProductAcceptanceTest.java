@@ -32,12 +32,15 @@ import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHostMap;
 import com.forgather.global.auth.repository.SpaceHostMapRepository;
 import com.forgather.global.auth.util.JwtTokenProvider;
+import com.forgather.global.response.ApiResponse;
+import com.forgather.global.response.ResponseCode;
 
+import io.restassured.common.mapper.TypeRef;
 import io.restassured.http.ContentType;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 
 @AutoConfigureMockMvc
-public class ProductAcceptanceTest extends AcceptanceTest {
+class ProductAcceptanceTest extends AcceptanceTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -106,7 +109,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             ProductResponse registerResponse2 = registerProductV3();
 
             // when
-            ProductsResponse result = RestAssuredMockMvc.given()
+            ApiResponse<ProductsResponse> result = RestAssuredMockMvc.given()
                 .header("X-API-Version", "3")
                 .accept(ContentType.JSON)
                 .when()
@@ -115,23 +118,27 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(ProductsResponse.class);
+                .as(new TypeRef<>() {
+                });
 
             // then
             assertAll(
-                () -> assertThat(result.products().getFirst().id()).isEqualTo(registerResponse1.id()),
-                () -> assertThat(result.products().getFirst().title()).isEqualTo(registerResponse1.title()),
-                () -> assertThat(result.products().getFirst().category()).isEqualTo(registerResponse1.category()),
-                () -> assertThat(result.products().getFirst().videoUrl()).isEqualTo(registerResponse1.videoUrl()),
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().products().get(0).id()).isEqualTo(registerResponse1.id()),
+                () -> assertThat(result.data().products().get(0).title()).isEqualTo(registerResponse1.title()),
+                () -> assertThat(result.data().products().get(0).category()).isEqualTo(registerResponse1.category()),
+                () -> assertThat(result.data().products().get(0).videoUrl()).isEqualTo(registerResponse1.videoUrl()),
 
-                () -> assertThat(result.products().get(1).id()).isEqualTo(registerResponse2.id()),
-                () -> assertThat(result.products().get(1).title()).isEqualTo(registerResponse2.title()),
-                () -> assertThat(result.products().get(1).category()).isEqualTo(registerResponse2.category()),
-                () -> assertThat(result.products().get(1).videoUrl()).isEqualTo(registerResponse2.videoUrl()),
+                () -> assertThat(result.data().products().get(1).id()).isEqualTo(registerResponse2.id()),
+                () -> assertThat(result.data().products().get(1).title()).isEqualTo(registerResponse2.title()),
+                () -> assertThat(result.data().products().get(1).category()).isEqualTo(registerResponse2.category()),
+                () -> assertThat(result.data().products().get(1).videoUrl()).isEqualTo(registerResponse2.videoUrl()),
 
-                () -> assertThat(result.products().getFirst().firstPhoto().originalName()).isEqualTo("photo1"),
-                () -> assertThat(result.products().getFirst().firstPhoto().path()).endsWith("/spaces/1234567890/product/file1.png"),
-                () -> assertThat(result.products().getFirst().firstPhoto().order()).isEqualTo(1)
+                () -> assertThat(result.data().products().get(0).firstPhoto().originalName()).isEqualTo("photo1"),
+                () -> assertThat(result.data().products().get(0).firstPhoto().path()).endsWith(
+                    "/spaces/1234567890/product/file1.png"),
+                () -> assertThat(result.data().products().get(0).firstPhoto().order()).isEqualTo(1)
             );
         }
 
@@ -139,7 +146,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
         @Test
         void returnEmptyListWhenNoProducts() {
             // when
-            ProductsResponse result = RestAssuredMockMvc.given()
+            ApiResponse<ProductsResponse> result = RestAssuredMockMvc.given()
                 .header("X-API-Version", "3")
                 .accept(ContentType.JSON)
                 .when()
@@ -148,10 +155,15 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(ProductsResponse.class);
+                .as(new TypeRef<>() {
+                });
 
             // then
-            assertThat(result.products()).isEmpty();
+            assertAll(
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().products()).isEmpty()
+            );
         }
     }
 
@@ -164,7 +176,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             ProductResponse registerResponse = registerProductV3();
 
             // when
-            ProductResponse result = RestAssuredMockMvc.given()
+            ApiResponse<ProductResponse> result = RestAssuredMockMvc.given()
                 .header("X-API-Version", "1")
                 .accept(ContentType.JSON)
                 .when()
@@ -173,26 +185,29 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(ProductResponse.class);
+                .as(new TypeRef<>() {
+                });
 
             // then
             assertAll(
-                () -> assertThat(result.id()).isEqualTo(registerResponse.id()),
-                () -> assertThat(result.title()).isEqualTo(registerResponse.title()),
-                () -> assertThat(result.category()).isEqualTo(registerResponse.category()),
-                () -> assertThat(result.authorName()).isEqualTo(registerResponse.authorName()),
-                () -> assertThat(result.description()).isEqualTo(registerResponse.description()),
-                () -> assertThat(result.videoUrl()).isEqualTo(registerResponse.videoUrl()),
-                () -> assertThat(result.isVideoAfterPhoto()).isEqualTo(registerResponse.isVideoAfterPhoto()),
-                () -> assertThat(result.photos().get(0).originalName()).isEqualTo("photo1"),
-                () -> assertThat(result.photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
-                () -> assertThat(result.photos().get(0).order()).isEqualTo(1),
-                () -> assertThat(result.photos().get(1).originalName()).isEqualTo("photo2"),
-                () -> assertThat(result.photos().get(1).path()).endsWith("/spaces/1234567890/product/file2.png"),
-                () -> assertThat(result.photos().get(1).order()).isEqualTo(2),
-                () -> assertThat(result.photos().get(2).originalName()).isEqualTo("photo3"),
-                () -> assertThat(result.photos().get(2).path()).endsWith("/spaces/1234567890/product/file3.png"),
-                () -> assertThat(result.photos().get(2).order()).isEqualTo(3)
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().id()).isEqualTo(registerResponse.id()),
+                () -> assertThat(result.data().title()).isEqualTo(registerResponse.title()),
+                () -> assertThat(result.data().category()).isEqualTo(registerResponse.category()),
+                () -> assertThat(result.data().authorName()).isEqualTo(registerResponse.authorName()),
+                () -> assertThat(result.data().description()).isEqualTo(registerResponse.description()),
+                () -> assertThat(result.data().videoUrl()).isEqualTo(registerResponse.videoUrl()),
+                () -> assertThat(result.data().isVideoAfterPhoto()).isEqualTo(registerResponse.isVideoAfterPhoto()),
+                () -> assertThat(result.data().photos().get(0).originalName()).isEqualTo("photo1"),
+                () -> assertThat(result.data().photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
+                () -> assertThat(result.data().photos().get(0).order()).isEqualTo(1),
+                () -> assertThat(result.data().photos().get(1).originalName()).isEqualTo("photo2"),
+                () -> assertThat(result.data().photos().get(1).path()).endsWith("/spaces/1234567890/product/file2.png"),
+                () -> assertThat(result.data().photos().get(1).order()).isEqualTo(2),
+                () -> assertThat(result.data().photos().get(2).originalName()).isEqualTo("photo3"),
+                () -> assertThat(result.data().photos().get(2).path()).endsWith("/spaces/1234567890/product/file3.png"),
+                () -> assertThat(result.data().photos().get(2).order()).isEqualTo(3)
             );
         }
 
@@ -218,7 +233,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
         @Test
         void register() {
             // when
-            ProductResponse response = RestAssuredMockMvc.given()
+            ApiResponse<ProductResponse> response = RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
                 .header("X-API-Version", "3")
                 .body(registerRequest)
@@ -230,26 +245,32 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .statusCode(201)
                 .extract()
                 .body()
-                .as(ProductResponse.class);
+                .as(new TypeRef<>() {
+                });
 
             // then
             assertAll(
-                () -> assertThat(response.id()).isNotNull(),
-                () -> assertThat(response.title()).isEqualTo(registerRequest.title()),
-                () -> assertThat(response.category()).isEqualTo(registerRequest.category()),
-                () -> assertThat(response.authorName()).isEqualTo(registerRequest.authorName()),
-                () -> assertThat(response.description()).isEqualTo(registerRequest.description()),
-                () -> assertThat(response.videoUrl()).isEqualTo(registerRequest.videoUrl()),
-                () -> assertThat(response.isVideoAfterPhoto()).isEqualTo(registerRequest.isVideoAfterPhoto()),
-                () -> assertThat(response.photos().get(0).originalName()).isEqualTo("photo1"),
-                () -> assertThat(response.photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
-                () -> assertThat(response.photos().get(0).order()).isEqualTo(1),
-                () -> assertThat(response.photos().get(1).originalName()).isEqualTo("photo2"),
-                () -> assertThat(response.photos().get(1).path()).endsWith("/spaces/1234567890/product/file2.png"),
-                () -> assertThat(response.photos().get(1).order()).isEqualTo(2),
-                () -> assertThat(response.photos().get(2).originalName()).isEqualTo("photo3"),
-                () -> assertThat(response.photos().get(2).path()).endsWith("/spaces/1234567890/product/file3.png"),
-                () -> assertThat(response.photos().get(2).order()).isEqualTo(3)
+                () -> assertThat(response.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(response.message()).isNull(),
+                () -> assertThat(response.data().id()).isNotNull(),
+                () -> assertThat(response.data().title()).isEqualTo(registerRequest.title()),
+                () -> assertThat(response.data().category()).isEqualTo(registerRequest.category()),
+                () -> assertThat(response.data().authorName()).isEqualTo(registerRequest.authorName()),
+                () -> assertThat(response.data().description()).isEqualTo(registerRequest.description()),
+                () -> assertThat(response.data().videoUrl()).isEqualTo(registerRequest.videoUrl()),
+                () -> assertThat(response.data().isVideoAfterPhoto()).isEqualTo(registerRequest.isVideoAfterPhoto()),
+                () -> assertThat(response.data().photos().get(0).originalName()).isEqualTo("photo1"),
+                () -> assertThat(response.data().photos().get(0).path()).endsWith(
+                    "/spaces/1234567890/product/file1.png"),
+                () -> assertThat(response.data().photos().get(0).order()).isEqualTo(1),
+                () -> assertThat(response.data().photos().get(1).originalName()).isEqualTo("photo2"),
+                () -> assertThat(response.data().photos().get(1).path()).endsWith(
+                    "/spaces/1234567890/product/file2.png"),
+                () -> assertThat(response.data().photos().get(1).order()).isEqualTo(2),
+                () -> assertThat(response.data().photos().get(2).originalName()).isEqualTo("photo3"),
+                () -> assertThat(response.data().photos().get(2).path()).endsWith(
+                    "/spaces/1234567890/product/file3.png"),
+                () -> assertThat(response.data().photos().get(2).order()).isEqualTo(3)
             );
         }
 
@@ -379,7 +400,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             );
 
             // when
-            ProductResponse result = RestAssuredMockMvc.given()
+            ApiResponse<ProductResponse> result = RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
                 .header("X-API-Version", "1")
                 .body(request)
@@ -391,29 +412,32 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(ProductResponse.class);
+                .as(new TypeRef<>() {
+                });
 
             // then
             assertAll(
-                () -> assertThat(result.id()).isEqualTo(registerResponse.id()),
-                () -> assertThat(result.title()).isEqualTo(request.title()),
-                () -> assertThat(result.category()).isEqualTo(registerResponse.category()),
-                () -> assertThat(result.authorName()).isEqualTo(registerResponse.authorName()),
-                () -> assertThat(result.description()).isEqualTo(request.description()),
-                () -> assertThat(result.videoUrl()).isEqualTo(request.videoUrl()),
-                () -> assertThat(result.isVideoAfterPhoto()).isEqualTo(request.isVideoAfterPhoto()),
-                () -> assertThat(result.photos().get(0).originalName()).isEqualTo("photo1"),
-                () -> assertThat(result.photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
-                () -> assertThat(result.photos().get(0).order()).isEqualTo(1),
-                () -> assertThat(result.photos().get(1).originalName()).isEqualTo("photo3"),
-                () -> assertThat(result.photos().get(1).path()).endsWith("/spaces/1234567890/product/file3.png"),
-                () -> assertThat(result.photos().get(1).order()).isEqualTo(2),
-                () -> assertThat(result.photos().get(2).originalName()).isEqualTo("photo4"),
-                () -> assertThat(result.photos().get(2).path()).endsWith("/spaces/1234567890/product/file4.png"),
-                () -> assertThat(result.photos().get(2).order()).isEqualTo(3),
-                () -> assertThat(result.photos().get(3).originalName()).isEqualTo("photo5"),
-                () -> assertThat(result.photos().get(3).path()).endsWith("/spaces/1234567890/product/file5.png"),
-                () -> assertThat(result.photos().get(3).order()).isEqualTo(4)
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().id()).isEqualTo(registerResponse.id()),
+                () -> assertThat(result.data().title()).isEqualTo(request.title()),
+                () -> assertThat(result.data().category()).isEqualTo(registerResponse.category()),
+                () -> assertThat(result.data().authorName()).isEqualTo(registerResponse.authorName()),
+                () -> assertThat(result.data().description()).isEqualTo(request.description()),
+                () -> assertThat(result.data().videoUrl()).isEqualTo(request.videoUrl()),
+                () -> assertThat(result.data().isVideoAfterPhoto()).isEqualTo(request.isVideoAfterPhoto()),
+                () -> assertThat(result.data().photos().get(0).originalName()).isEqualTo("photo1"),
+                () -> assertThat(result.data().photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
+                () -> assertThat(result.data().photos().get(0).order()).isEqualTo(1),
+                () -> assertThat(result.data().photos().get(1).originalName()).isEqualTo("photo3"),
+                () -> assertThat(result.data().photos().get(1).path()).endsWith("/spaces/1234567890/product/file3.png"),
+                () -> assertThat(result.data().photos().get(1).order()).isEqualTo(2),
+                () -> assertThat(result.data().photos().get(2).originalName()).isEqualTo("photo4"),
+                () -> assertThat(result.data().photos().get(2).path()).endsWith("/spaces/1234567890/product/file4.png"),
+                () -> assertThat(result.data().photos().get(2).order()).isEqualTo(3),
+                () -> assertThat(result.data().photos().get(3).originalName()).isEqualTo("photo5"),
+                () -> assertThat(result.data().photos().get(3).path()).endsWith("/spaces/1234567890/product/file5.png"),
+                () -> assertThat(result.data().photos().get(3).order()).isEqualTo(4)
             );
         }
 
@@ -577,7 +601,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
     }
 
     private ProductResponse registerProductV3() {
-        return RestAssuredMockMvc.given()
+        ApiResponse<ProductResponse> response = RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + accessToken)
             .header("X-API-Version", "3")
             .body(registerRequest)
@@ -589,6 +613,8 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             .statusCode(201)
             .extract()
             .body()
-            .as(ProductResponse.class);
+            .as(new TypeRef<>() {
+            });
+        return response.data();
     }
 }

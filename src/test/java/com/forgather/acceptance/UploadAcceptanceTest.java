@@ -18,17 +18,20 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.forgather.domain.upload.dto.IssueSignedUrlRequest;
-import com.forgather.domain.upload.dto.IssueSignedUrlResponse;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.AwsS3Cloud;
+import com.forgather.domain.upload.dto.IssueSignedUrlRequest;
+import com.forgather.domain.upload.dto.IssueSignedUrlResponse;
+import com.forgather.global.response.ApiResponse;
+import com.forgather.global.response.ResponseCode;
 
+import io.restassured.common.mapper.TypeRef;
 import io.restassured.http.ContentType;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 
 @AutoConfigureMockMvc
-public class UploadAcceptanceTest extends AcceptanceTest {
+class UploadAcceptanceTest extends AcceptanceTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -50,7 +53,7 @@ public class UploadAcceptanceTest extends AcceptanceTest {
 
     @DisplayName("서명된 url 발급")
     @Test
-    public void issueSignedUrls() {
+    void issueSignedUrls() {
         // given
         IssueSignedUrlRequest request = new IssueSignedUrlRequest(GUESTBOOK, List.of("abc.jpg", "def.jpg", "hij.png"));
         when(awsS3Cloud.getRootDirectory()).thenReturn("photogather/v2");
@@ -60,7 +63,7 @@ public class UploadAcceptanceTest extends AcceptanceTest {
         });
 
         // when
-        Map<String, String> result = RestAssuredMockMvc.given()
+        ApiResponse<IssueSignedUrlResponse> result = RestAssuredMockMvc.given()
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(request)
@@ -70,16 +73,19 @@ public class UploadAcceptanceTest extends AcceptanceTest {
             .statusCode(200)
             .extract()
             .body()
-            .as(IssueSignedUrlResponse.class)
-            .signedUrls();
+            .as(new TypeRef<>() {
+            });
+        Map<String, String> signedUrls = result.data().signedUrls();
 
         // then
         assertAll(
-            () -> assertThat(result.get("abc.jpg"))
+            () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+            () -> assertThat(result.message()).isNull(),
+            () -> assertThat(signedUrls.get("abc.jpg"))
                 .isEqualTo("test-prefix-photogather/v2/spaces/1234567890/guestbook/abc.jpg-test-suffix"),
-            () -> assertThat(result.get("def.jpg"))
+            () -> assertThat(signedUrls.get("def.jpg"))
                 .isEqualTo("test-prefix-photogather/v2/spaces/1234567890/guestbook/def.jpg-test-suffix"),
-            () -> assertThat(result.get("hij.png"))
+            () -> assertThat(signedUrls.get("hij.png"))
                 .isEqualTo("test-prefix-photogather/v2/spaces/1234567890/guestbook/hij.png-test-suffix")
         );
     }

@@ -33,12 +33,15 @@ import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHostMap;
 import com.forgather.global.auth.repository.SpaceHostMapRepository;
 import com.forgather.global.auth.util.JwtTokenProvider;
+import com.forgather.global.response.ApiResponse;
+import com.forgather.global.response.ResponseCode;
 
+import io.restassured.common.mapper.TypeRef;
 import io.restassured.http.ContentType;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 
 @AutoConfigureMockMvc
-public class GuestBookCardAcceptanceTest extends AcceptanceTest {
+class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -103,7 +106,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
             writeGuestBookCard(publicSpace);
 
             // when
-            GuestBookResponse result = RestAssuredMockMvc.given()
+            ApiResponse<GuestBookResponse> result = RestAssuredMockMvc.given()
                 .accept(ContentType.JSON)
                 .queryParam("page", 1)
                 .queryParam("size", 15)
@@ -115,15 +118,18 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(GuestBookResponse.class);
+                .as(new TypeRef<>() {
+                });
 
             // then
             assertAll(
-                () -> assertThat(result.guestBookCards()).size().isEqualTo(2),
-                () -> assertThat(result.currentPage()).isEqualTo(1),
-                () -> assertThat(result.pageSize()).isEqualTo(15),
-                () -> assertThat(result.totalCount()).isEqualTo(2),
-                () -> assertThat(result.totalPages()).isEqualTo(1)
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().guestBookCards()).size().isEqualTo(2),
+                () -> assertThat(result.data().currentPage()).isEqualTo(1),
+                () -> assertThat(result.data().pageSize()).isEqualTo(15),
+                () -> assertThat(result.data().totalCount()).isEqualTo(2),
+                () -> assertThat(result.data().totalPages()).isEqualTo(1)
             );
         }
 
@@ -161,7 +167,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
             WriteGuestBookCardResponse writeResponseWithNoPhoto = writeGuestBookCardWithNoPhoto(publicSpace);
 
             // when
-            GuestBookResponse result = RestAssuredMockMvc.given()
+            ApiResponse<GuestBookResponse> result = RestAssuredMockMvc.given()
                 .accept(ContentType.JSON)
                 .queryParam("page", 1)
                 .queryParam("size", 15)
@@ -173,21 +179,26 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(GuestBookResponse.class);
+                .as(new TypeRef<>() {
+                });
 
             // then
             assertAll(
-                () -> assertThat(result.guestBookCards()).size().isEqualTo(2),
-                () -> assertThat(result.guestBookCards().getFirst().nickname()).isEqualTo(writeResponseWithNoPhoto.nickname()),
-                () -> assertThat(result.guestBookCards().getFirst().containsPhoto()).isFalse(),
-                () -> assertThat(result.guestBookCards().getFirst().isRead()).isNull(),
-                () -> assertThat(result.guestBookCards().getLast().nickname()).isEqualTo(writeResponse.nickname()),
-                () -> assertThat(result.guestBookCards().getLast().containsPhoto()).isTrue(),
-                () -> assertThat(result.guestBookCards().getLast().isRead()).isNull(),
-                () -> assertThat(result.currentPage()).isEqualTo(1),
-                () -> assertThat(result.pageSize()).isEqualTo(15),
-                () -> assertThat(result.totalCount()).isEqualTo(2),
-                () -> assertThat(result.totalPages()).isEqualTo(1)
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().guestBookCards()).size().isEqualTo(2),
+                () -> assertThat(result.data().guestBookCards().getFirst().nickname()).isEqualTo(
+                    writeResponseWithNoPhoto.nickname()),
+                () -> assertThat(result.data().guestBookCards().getFirst().containsPhoto()).isFalse(),
+                () -> assertThat(result.data().guestBookCards().getFirst().isRead()).isNull(),
+                () -> assertThat(result.data().guestBookCards().getLast().nickname()).isEqualTo(
+                    writeResponse.nickname()),
+                () -> assertThat(result.data().guestBookCards().getLast().containsPhoto()).isTrue(),
+                () -> assertThat(result.data().guestBookCards().getLast().isRead()).isNull(),
+                () -> assertThat(result.data().currentPage()).isEqualTo(1),
+                () -> assertThat(result.data().pageSize()).isEqualTo(15),
+                () -> assertThat(result.data().totalCount()).isEqualTo(2),
+                () -> assertThat(result.data().totalPages()).isEqualTo(1)
             );
         }
 
@@ -281,7 +292,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
             WriteGuestBookCardResponse writeResponse = writeGuestBookCard(publicSpace);
 
             // when
-            GuestBookCardResponse result = RestAssuredMockMvc.given()
+            ApiResponse<GuestBookCardResponse> result = RestAssuredMockMvc.given()
                 .accept(ContentType.JSON)
                 .when()
                 .get("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), writeResponse.id()))
@@ -289,23 +300,27 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(GuestBookCardResponse.class);
+                .as(new TypeRef<>() {
+                });
 
             // then
             assertAll(
-                () -> assertThat(result.id()).isNotNull(),
-                () -> assertThat(result.nickname()).isEqualTo(writeRequest.nickname()),
-                () -> assertThat(result.message()).isEqualTo(writeRequest.message()),
-                () -> assertThat(result.createdAt()).isBetween(LocalDateTime.now().minusMinutes(1), LocalDateTime.now()),
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().id()).isNotNull(),
+                () -> assertThat(result.data().nickname()).isEqualTo(writeRequest.nickname()),
+                () -> assertThat(result.data().message()).isEqualTo(writeRequest.message()),
+                () -> assertThat(result.data().createdAt()).isBetween(LocalDateTime.now().minusMinutes(1),
+                    LocalDateTime.now()),
 
-                () -> assertThat(result.photos().get(0).originalName()).isEqualTo("photo1.jpg"),
-                () -> assertThat(result.photos().get(0).path()).endsWith("/spaces/1234567890/guestbook/abc.jpg"),
+                () -> assertThat(result.data().photos().get(0).originalName()).isEqualTo("photo1.jpg"),
+                () -> assertThat(result.data().photos().get(0).path()).endsWith("/spaces/1234567890/guestbook/abc.jpg"),
 
-                () -> assertThat(result.photos().get(1).originalName()).isEqualTo("photo2.jpg"),
-                () -> assertThat(result.photos().get(1).path()).endsWith("/spaces/1234567890/guestbook/def.jpg"),
+                () -> assertThat(result.data().photos().get(1).originalName()).isEqualTo("photo2.jpg"),
+                () -> assertThat(result.data().photos().get(1).path()).endsWith("/spaces/1234567890/guestbook/def.jpg"),
 
-                () -> assertThat(result.photos().get(2).originalName()).isEqualTo("photo3.jpg"),
-                () -> assertThat(result.photos().get(2).path()).endsWith("/spaces/1234567890/guestbook/ghi.jpg")
+                () -> assertThat(result.data().photos().get(2).originalName()).isEqualTo("photo3.jpg"),
+                () -> assertThat(result.data().photos().get(2).path()).endsWith("/spaces/1234567890/guestbook/ghi.jpg")
             );
         }
 
@@ -374,7 +389,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(200);
 
             // then
-            GuestBookResponse result = RestAssuredMockMvc.given()
+            ApiResponse<GuestBookResponse> result = RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
                 .accept(ContentType.JSON)
                 .queryParam("page", 1)
@@ -387,9 +402,14 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(GuestBookResponse.class);
+                .as(new TypeRef<>() {
+                });
 
-            assertThat(result.guestBookCards().getFirst().isRead()).isTrue();
+            assertAll(
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().guestBookCards().getFirst().isRead()).isTrue()
+            );
         }
     }
 
@@ -408,7 +428,8 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.nickname()).isEqualTo(writeRequest.nickname()),
                 () -> assertThat(result.message()).isEqualTo(writeRequest.message()),
                 () -> assertThat(result.isRead()).isFalse(),
-                () -> assertThat(result.createdAt()).isBetween(LocalDateTime.now().minusMinutes(1), LocalDateTime.now()),
+                () -> assertThat(result.createdAt()).isBetween(LocalDateTime.now().minusMinutes(1),
+                    LocalDateTime.now()),
 
                 () -> assertThat(result.photos().get(0).originalName()).isEqualTo("photo1.jpg"),
                 () -> assertThat(result.photos().get(0).path()).endsWith(
@@ -576,7 +597,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(204);
 
             // then
-            GuestBookCardResponse response = RestAssuredMockMvc.given()
+            ApiResponse<GuestBookCardResponse> response = RestAssuredMockMvc.given()
                 .accept(ContentType.JSON)
                 .when()
                 .get("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), writeResponse.id()))
@@ -584,10 +605,13 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(GuestBookCardResponse.class);
+                .as(new TypeRef<>() {
+                });
             assertAll(
-                () -> assertThat(response.photos()).size().isEqualTo(1),
-                () -> assertThat(response.photos().getFirst().id()).isEqualTo(writeResponse.photos().get(1).id())
+                () -> assertThat(response.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(response.message()).isNull(),
+                () -> assertThat(response.data().photos()).size().isEqualTo(1),
+                () -> assertThat(response.data().photos().getFirst().id()).isEqualTo(writeResponse.photos().get(1).id())
             );
         }
 
@@ -663,7 +687,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
     }
 
     private WriteGuestBookCardResponse writeGuestBookCard(Space space) {
-        return RestAssuredMockMvc.given()
+        ApiResponse<WriteGuestBookCardResponse> response = RestAssuredMockMvc.given()
             .body(writeRequest)
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
@@ -673,7 +697,9 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
             .statusCode(201)
             .extract()
             .body()
-            .as(WriteGuestBookCardResponse.class);
+            .as(new TypeRef<>() {
+            });
+        return response.data();
     }
 
     private WriteGuestBookCardResponse writeGuestBookCardWithNoPhoto(Space space) {
@@ -682,7 +708,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
             "message2",
             List.of()
         );
-        return RestAssuredMockMvc.given()
+        ApiResponse<WriteGuestBookCardResponse> response = RestAssuredMockMvc.given()
             .body(writeRequestWithNoPicture)
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
@@ -692,6 +718,8 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
             .statusCode(201)
             .extract()
             .body()
-            .as(WriteGuestBookCardResponse.class);
+            .as(new TypeRef<>() {
+            });
+        return response.data();
     }
 }

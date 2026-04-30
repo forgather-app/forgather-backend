@@ -1,6 +1,6 @@
 package com.forgather.domain.guestbook.controller;
 
-import static software.amazon.awssdk.http.HttpStatusCode.CREATED;
+import static org.springframework.http.HttpStatus.CREATED;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -21,10 +21,11 @@ import com.forgather.domain.guestbook.dto.GuestBookCardResponse;
 import com.forgather.domain.guestbook.dto.GuestBookResponse;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardResponse;
-import com.forgather.domain.guestbook.service.GuestbookReportService;
 import com.forgather.domain.guestbook.service.GuestBookService;
+import com.forgather.domain.guestbook.service.GuestbookReportService;
 import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.auth.model.Host;
+import com.forgather.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -71,7 +72,7 @@ public class SpaceGuestbookController {
         }
     )
     @GetMapping
-    public ResponseEntity<GuestBookResponse> readGuestBook(
+    public ResponseEntity<ApiResponse<GuestBookResponse>> readGuestBook(
         @PathVariable(value = "spaceCode") String spaceCode,
         @Parameter(hidden = true)
         @PageableDefault(size = 15, sort = {"createdAt", "id"}, direction = Sort.Direction.DESC)
@@ -79,29 +80,29 @@ public class SpaceGuestbookController {
         @LoginHost(required = false) Host host
     ) {
         GuestBookResponse response = guestBookService.read(host, spaceCode, pageable);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "방명록 카드 조회", description = "공개 스페이스가 아닌 경우 호스트만 조회 가능")
     @GetMapping("/{guestBookCardId}")
-    public ResponseEntity<GuestBookCardResponse> readCard(
+    public ResponseEntity<ApiResponse<GuestBookCardResponse>> readCard(
         @PathVariable(value = "spaceCode") String spaceCode,
         @PathVariable(value = "guestBookCardId") Long guestBookCardId,
         @LoginHost(required = false) Host host
     ) {
         GuestBookCardResponse response = guestBookService.readCard(host, spaceCode, guestBookCardId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @Operation(summary = "방명록 카드 작성", description = "방문자 닉네임(10자), 메세지(400자)")
     @PostMapping
-    public ResponseEntity<WriteGuestBookCardResponse> writeCard(
+    public ResponseEntity<ApiResponse<WriteGuestBookCardResponse>> writeCard(
         @PathVariable(value = "spaceCode") String spaceCode,
         @RequestBody WriteGuestBookCardRequest request
     ) {
         var response = guestBookService.writeCard(spaceCode, request);
-        return ResponseEntity.status(CREATED).body(response);
+        return ResponseEntity.status(CREATED).body(ApiResponse.success(response));
     }
 
     @SecurityRequirement(name = "bearerAuth")
@@ -119,14 +120,14 @@ public class SpaceGuestbookController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "방명록 신고", description = "호스트가 자신의 스페이스에 작성된 방명록을 신고한다. 신고 즉시 해당 방명록은 숨김 처리된다.")
     @PostMapping("/{guestBookCardId}/reports")
-    public ResponseEntity<CreateGuestBookReportResponse> report(
+    public ResponseEntity<ApiResponse<CreateGuestBookReportResponse>> report(
         @PathVariable(value = "spaceCode") String spaceCode,
         @PathVariable(value = "guestBookCardId") Long guestBookCardId,
         @LoginHost(required = true) Host host,
         @RequestBody @Valid CreateGuestBookReportRequest request
     ) {
         var response = guestBookReportService.report(host, spaceCode, guestBookCardId, request);
-        return ResponseEntity.status(CREATED).body(response);
+        return ResponseEntity.status(CREATED).body(ApiResponse.success(response));
     }
 
     @SecurityRequirement(name = "bearerAuth")
