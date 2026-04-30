@@ -17,6 +17,9 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import com.forgather.global.response.ApiResponse;
+import com.forgather.global.response.ResponseCode;
+
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,31 +33,31 @@ public class GlobalExceptionHandler {
      * 예측 가능한 클라이언트발 예외 -> info
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+    public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         logClientInfo(e);
         return ResponseEntity.status(e.getStatusCode())
             .contentType(APPLICATION_JSON)
-            .body(ErrorResponse.from(e.getMessage()));
+            .body(ApiResponse.error(ResponseCode.VALIDATION_FAILED, e.getMessage()));
     }
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
-    public ResponseEntity<ErrorResponse> handleHttpMediaTypeNotSupportedException(
+    public ResponseEntity<ApiResponse<Void>> handleHttpMediaTypeNotSupportedException(
         HttpMediaTypeNotSupportedException e
     ) {
         logClientInfo(e);
         return ResponseEntity.status(e.getStatusCode())
             .contentType(APPLICATION_JSON)
-            .body(ErrorResponse.from(e.getMessage()));
+            .body(ApiResponse.error(ResponseCode.UNSUPPORTED_MEDIA_TYPE, e.getMessage()));
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupportedException(
+    public ResponseEntity<ApiResponse<Void>> handleHttpRequestMethodNotSupportedException(
         HttpRequestMethodNotSupportedException e
     ) {
         logClientInfo(e);
         return ResponseEntity.status(e.getStatusCode())
             .contentType(APPLICATION_JSON)
-            .body(ErrorResponse.from(e.getMessage()));
+            .body(ApiResponse.error(ResponseCode.METHOD_NOT_ALLOWED, e.getMessage()));
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
@@ -67,11 +70,11 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MissingRequestCookieException.class)
-    public ResponseEntity<ErrorResponse> handleMissingRequestCookieException(MissingRequestCookieException e) {
+    public ResponseEntity<ApiResponse<Void>> handleMissingRequestCookieException(MissingRequestCookieException e) {
         logClientInfo(e);
         return ResponseEntity.status(e.getStatusCode())
             .contentType(APPLICATION_JSON)
-            .body(ErrorResponse.from("필요한 쿠키가 누락되었습니다: " + e.getCookieName()));
+            .body(ApiResponse.error(ResponseCode.MISSING_COOKIE, "필요한 쿠키가 누락되었습니다: " + e.getCookieName()));
     }
 
     @ExceptionHandler(NotFoundException.class)
@@ -84,7 +87,7 @@ public class GlobalExceptionHandler {
 
     // 컨트롤러 요청 파라미터의 타입 불일치
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(
+    public ResponseEntity<ApiResponse<Void>> handleMethodArgumentTypeMismatchException(
         MethodArgumentTypeMismatchException e) {
 
         logClientWarning(e);
@@ -93,38 +96,41 @@ public class GlobalExceptionHandler {
         String message = String.format("파라미터 '%s'의 타입이 올바르지 않습니다. 필요한 타입: %s", parameterName, requiredType);
         return ResponseEntity.status(BAD_REQUEST)
             .contentType(APPLICATION_JSON)
-            .body(ErrorResponse.from(message));
+            .body(ApiResponse.error(ResponseCode.BAD_REQUEST, message));
     }
 
     // 클라이언트가 요청에 기재한 속성 존재하지 않을 경우 ex) 페이지네이션 sort 조건 속성
     // 서버에서 잘못된 코드를 작성해서 이 예외가 발생할 수도 있지만 여기까지 도달하지 않을 것이라 판단 ex) 잘못된 jpa 쿼리 메서드명
     @ExceptionHandler(PropertyReferenceException.class)
-    public ResponseEntity<ErrorResponse> handlePropertyReferenceException(PropertyReferenceException e) {
+    public ResponseEntity<ApiResponse<Void>> handlePropertyReferenceException(PropertyReferenceException e) {
         logClientWarning(e);
         String propertyName = e.getPropertyName();
         String simpleTypeName = e.getType().getType().getSimpleName();
         return ResponseEntity.status(BAD_REQUEST)
             .contentType(APPLICATION_JSON)
-            .body(ErrorResponse.from("'%s' 타입에 '%s' 속성이 존재하지 않습니다.".formatted(simpleTypeName, propertyName)));
+            .body(ApiResponse.error(
+                ResponseCode.BAD_REQUEST,
+                "'%s' 타입에 '%s' 속성이 존재하지 않습니다.".formatted(simpleTypeName, propertyName)
+            ));
     }
 
     /**
      * 예측 가능하지만 주의해야할 예외 -> warn
      */
     @ExceptionHandler(MultipartException.class)
-    public ResponseEntity<ErrorResponse> handleMultipartException(MultipartException e) {
+    public ResponseEntity<ApiResponse<Void>> handleMultipartException(MultipartException e) {
         logClientWarning(e);
         return ResponseEntity.status(BAD_REQUEST)
             .contentType(APPLICATION_JSON)
-            .body(ErrorResponse.from(e.getMessage()));
+            .body(ApiResponse.error(ResponseCode.BAD_REQUEST, e.getMessage()));
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e) {
+    public ResponseEntity<ApiResponse<Void>> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e) {
         logClientWarning(e);
         return ResponseEntity.status(e.getStatusCode())
             .contentType(APPLICATION_JSON)
-            .body(ErrorResponse.from(e.getMessage()));
+            .body(ApiResponse.error(ResponseCode.PAYLOAD_TOO_LARGE, e.getMessage()));
     }
 
     @ExceptionHandler(JwtException.class)
