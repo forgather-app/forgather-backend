@@ -11,5 +11,10 @@ public enum ResponseCode {
     UNSUPPORTED_MEDIA_TYPE,
     MISSING_COOKIE,
     PAYLOAD_TOO_LARGE,
+
+    // 인증/인가 응답
+    UNAUTHORIZED,
+    FORBIDDEN,
+    JWT_INVALID,
     ;
 }

@@ -134,27 +134,27 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(JwtException.class)
-    public ResponseEntity<ErrorResponse> handleJwtException(JwtException e) {
+    public ResponseEntity<ApiResponse<Void>> handleJwtException(JwtException e) {
         logClientWarning(e);
         return ResponseEntity.status(UNAUTHORIZED)
             .contentType(APPLICATION_JSON)
-            .body(ErrorResponse.from(e.getMessage()));
+            .body(ApiResponse.error(ResponseCode.JWT_INVALID, e.getMessage()));
     }
 
     @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<ErrorResponse> handleForbiddenException(ForbiddenException e) {
+    public ResponseEntity<ApiResponse<Void>> handleForbiddenException(ForbiddenException e) {
         logClientWarning(e);
         return ResponseEntity.status(e.getStatusCode())
             .contentType(APPLICATION_JSON)
-            .body(ErrorResponse.from(e.getMessage()));
+            .body(ApiResponse.error(ResponseCode.FORBIDDEN, e.getMessage()));
     }
 
     @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException e) {
+    public ResponseEntity<ApiResponse<Void>> handleUnauthorizedException(UnauthorizedException e) {
         logClientWarning(e);
         return ResponseEntity.status(e.getStatusCode())
             .contentType(APPLICATION_JSON)
-            .body(ErrorResponse.from(e.getMessage()));
+            .body(ApiResponse.error(ResponseCode.UNAUTHORIZED, e.getMessage()));
     }
 
     /**
