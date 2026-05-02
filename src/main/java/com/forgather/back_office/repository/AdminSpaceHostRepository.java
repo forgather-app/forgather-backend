@@ -17,9 +17,9 @@ public interface AdminSpaceHostRepository {
         value = """
             SELECT new com.forgather.back_office.dto.HostDetailResponse(
                 h.id, h.name, h.createdAt,
-                (SELECT COUNT(shm.id)
-                 FROM SpaceHost shm JOIN shm.space s
-                 WHERE shm.host = h AND s.deletedAt IS NULL
+                (SELECT COUNT(sh.id)
+                 FROM SpaceHost sh JOIN sh.space s
+                 WHERE sh.host = h AND s.deletedAt IS NULL
                 )
             )
             FROM Host h
@@ -29,12 +29,12 @@ public interface AdminSpaceHostRepository {
     Page<HostDetailResponse> findAllHostsWithSpaceCount(Pageable pageable);
 
     @Query("""
-        SELECT shm
-        FROM SpaceHost shm
-            JOIN FETCH shm.space s
-        WHERE shm.host = :host
+        SELECT sh
+        FROM SpaceHost sh
+            JOIN FETCH sh.space s
+        WHERE sh.host = :host
             AND s.deletedAt IS NULL
-            AND shm.deletedAt IS NULL
+            AND sh.deletedAt IS NULL
         ORDER BY s.createdAt DESC
         """)
     List<SpaceHost> findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(@Param("host") Host host);

@@ -18,12 +18,12 @@ public interface SpaceHostRepository {
     SpaceHost save(SpaceHost spaceHost);
 
     @Query("""
-        SELECT shm
-        FROM SpaceHost shm
-            JOIN FETCH shm.space s
-        WHERE shm.host = :host
+        SELECT sh
+        FROM SpaceHost sh
+            JOIN FETCH sh.space s
+        WHERE sh.host = :host
             AND s.deletedAt IS NULL
-            AND shm.deletedAt IS NULL
+            AND sh.deletedAt IS NULL
         ORDER BY s.createdAt DESC
         """)
     List<SpaceHost> findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(@Param("host") Host host);

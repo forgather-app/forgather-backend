@@ -176,7 +176,7 @@ public void delete(String spaceCode, Host host) {
     Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
     validateSpaceHost(space, host);
     deleteGuestBookAndProduct(host, space);  // 하위 서비스 호출
-    deleteSpaceHostMap(host, space);
+    deleteSpaceHost(host, space);
     deleteSpacePhoto(space);
     space.delete();
 }
