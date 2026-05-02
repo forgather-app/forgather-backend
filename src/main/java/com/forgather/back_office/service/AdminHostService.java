@@ -13,7 +13,7 @@ import com.forgather.back_office.dto.HostSpacesResponse;
 import com.forgather.back_office.repository.AdminHostRepository;
 import com.forgather.back_office.repository.AdminSpaceHostRepository;
 import com.forgather.domain.space.model.Space;
-import com.forgather.global.auth.model.Host;
+import com.forgather.global.auth.model.AppUser;
 import com.forgather.global.auth.model.SpaceHost;
 
 import lombok.RequiredArgsConstructor;
@@ -31,7 +31,7 @@ public class AdminHostService {
     }
 
     public HostSpacesResponse getHostSpaces(Long hostId) {
-        Host host = adminHostRepository.getByIdOrThrow(hostId);
+        AppUser host = adminHostRepository.getByIdOrThrow(hostId);
         List<Space> spaces = adminSpaceHostRepository
             .findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host)
             .stream()

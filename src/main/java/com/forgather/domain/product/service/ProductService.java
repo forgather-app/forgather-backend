@@ -22,7 +22,7 @@ import com.forgather.domain.product.repository.ProductRepository;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.domain.ContentsStorage;
-import com.forgather.global.auth.model.Host;
+import com.forgather.global.auth.model.AppUser;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
@@ -66,9 +66,9 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductResponse register(Host host, String spaceCode, RegisterProductRequest request) {
+    public ProductResponse register(AppUser user, String spaceCode, RegisterProductRequest request) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
-        validateSpaceHost(host, space);
+        validateSpaceHost(user, space);
         validateExceedProductMaxCount(space);
         Product product = productRepository.save(request.toEntity(space));
 
@@ -94,10 +94,10 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductResponse update(Host host, String spaceCode, Long productId, UpdateProductRequest request) {
+    public ProductResponse update(AppUser user, String spaceCode, Long productId, UpdateProductRequest request) {
         // Product 정보 수정
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
-        validateSpaceHost(host, space);
+        validateSpaceHost(user, space);
         Product product = productRepository.getBySpaceAndIdAndDeletedAtIsNullOrThrow(space, productId);
         product.update(request.title(), request.category(), request.authorName(), request.description(),
             request.videoUrl(), request.isVideoAfterPhoto());
@@ -125,9 +125,9 @@ public class ProductService {
     }
 
     @Transactional
-    public void delete(Host host, String spaceCode, Long productId) {
+    public void delete(AppUser user, String spaceCode, Long productId) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
-        validateSpaceHost(host, space);
+        validateSpaceHost(user, space);
         Product product = productRepository.getBySpaceAndIdAndDeletedAtIsNullOrThrow(space, productId);
         deleteAllProductPhotos(product);
         product.delete();
@@ -137,8 +137,8 @@ public class ProductService {
      * 스페이스 삭제
      */
     @Transactional
-    public void deleteIfExists(Host host, Space space) {
-        validateSpaceHost(host, space);
+    public void deleteIfExists(AppUser user, Space space) {
+        validateSpaceHost(user, space);
         for (Product product : productRepository.findAllBySpaceAndDeletedAtIsNull(space)) {
             deleteAllProductPhotos(product);
             product.delete();
@@ -164,19 +164,19 @@ public class ProductService {
         }
     }
 
-    private void validateSpaceHost(Host host, Space space) {
-        if (isSpaceHost(space, host)) {
+    private void validateSpaceHost(AppUser user, Space space) {
+        if (isSpaceHost(space, user)) {
             return;
         }
         throw new ForbiddenException(
-            "해당 스페이스에 대한 접근 권한이 없습니다. spaceCode: %s, hostId: %d".formatted(space.getCode(), host.getId())
+            "해당 스페이스에 대한 접근 권한이 없습니다. spaceCode: %s, hostId: %d".formatted(space.getCode(), user.getId())
         );
     }
 
-    private boolean isSpaceHost(Space space, Host host) {
-        if (space == null || host == null) {
-            throw new BaseNullPointerException("스페이스와 호스트는 null일 수 없습니다.");
+    private boolean isSpaceHost(Space space, AppUser user) {
+        if (space == null || user == null) {
+            throw new BaseNullPointerException("스페이스와 사용자는 null일 수 없습니다.");
         }
-        return spaceHostRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent();
+        return spaceHostRepository.findBySpaceAndAppUserAndDeletedAtIsNull(space, user).isPresent();
     }
 }

@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 
 import com.forgather.domain.space.model.Space;
-import com.forgather.global.auth.model.Host;
+import com.forgather.global.auth.model.AppUser;
 import com.forgather.global.auth.model.SpaceHost;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.NotFoundException;
@@ -21,24 +21,26 @@ public interface SpaceHostRepository {
         SELECT sh
         FROM SpaceHost sh
             JOIN FETCH sh.space s
-        WHERE sh.host = :host
+        WHERE sh.appUser = :appUser
             AND s.deletedAt IS NULL
             AND sh.deletedAt IS NULL
         ORDER BY s.createdAt DESC
         """)
-    List<SpaceHost> findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(@Param("host") Host host);
+    List<SpaceHost> findAllByAppUserAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(
+        @Param("appUser") AppUser appUser
+    );
 
-    Optional<SpaceHost> findBySpaceAndHostAndDeletedAtIsNull(Space space, Host host);
+    Optional<SpaceHost> findBySpaceAndAppUserAndDeletedAtIsNull(Space space, AppUser appUser);
 
-    default SpaceHost getBySpaceAndHostAndDeletedAtIsNullOrThrow(Space space, Host host) {
+    default SpaceHost getBySpaceAndAppUserAndDeletedAtIsNullOrThrow(Space space, AppUser appUser) {
         if (space == null) {
             throw new BaseNullPointerException("스페이스는 null일 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        if (host == null) {
-            throw new BaseNullPointerException("호스트는 null일 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+        if (appUser == null) {
+            throw new BaseNullPointerException("유저는 null일 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return findBySpaceAndHostAndDeletedAtIsNull(space, host)
+        return findBySpaceAndAppUserAndDeletedAtIsNull(space, appUser)
             .orElseThrow(() -> new NotFoundException("존재하지 않는 자원입니다. spaceCode: %s, hostId: %d"
-                .formatted(space.getCode(), host.getId())));
+                .formatted(space.getCode(), appUser.getId())));
     }
 }

@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "host_kakao")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class KakaoHost {
+public class KakaoAppUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,10 +29,10 @@ public class KakaoHost {
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "host_id", nullable = false)
-    private Host host;
+    private AppUser appUser;
 
-    public KakaoHost(Host host, String userId) {
-        this.host = host;
+    public KakaoAppUser(AppUser appUser, String userId) {
+        this.appUser = appUser;
         this.userId = userId;
     }
 }

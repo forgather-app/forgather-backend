@@ -1,7 +1,7 @@
 package com.forgather.acceptance;
 
 import static com.forgather.fixture.GuestBookReportReasonFixture.createReason;
-import static com.forgather.fixture.HostFixture.createHost;
+import static com.forgather.fixture.AppUserFixture.createAppUser;
 import static com.forgather.fixture.SpaceFixture.createSpace;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -24,10 +24,10 @@ import com.forgather.domain.guestbook.model.VisibilityStatus;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
 import com.forgather.domain.guestbook.repository.jpa.GuestBookReportReasonJpaRepository;
 import com.forgather.domain.space.model.Space;
-import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.space.repository.AppUserRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fixture.SpaceFixture;
-import com.forgather.global.auth.model.Host;
+import com.forgather.global.auth.model.AppUser;
 import com.forgather.global.auth.model.SpaceHost;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.auth.util.JwtTokenProvider;
@@ -49,7 +49,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
     private SpaceRepository spaceRepository;
 
     @Autowired
-    private HostRepository hostRepository;
+    private AppUserRepository appUserRepository;
 
     @Autowired
     private SpaceHostRepository spaceHostRepository;
@@ -64,7 +64,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
     private JwtTokenProvider jwtTokenProvider;
 
     private Space space;
-    private Host host;
+    private AppUser user;
     private GuestBookCard card;
     private GuestBookReportReason reason;
     private String accessToken;
@@ -74,12 +74,12 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
     void setUp() {
         space = spaceRepository.save(createSpace());
 
-        host = hostRepository.save(createHost());
-        Host anotherHost = hostRepository.save(createHost());
-        accessToken = jwtTokenProvider.generateAccessToken(host.getId());
+        user = appUserRepository.save(createAppUser());
+        AppUser anotherHost = appUserRepository.save(createAppUser());
+        accessToken = jwtTokenProvider.generateAccessToken(user.getId());
         anotherAccessToken = jwtTokenProvider.generateAccessToken(anotherHost.getId());
 
-        spaceHostRepository.save(new SpaceHost(space, host));
+        spaceHostRepository.save(new SpaceHost(space, user));
 
         card = guestBookCardRepository.save(new GuestBookCard(space, "닉네임", "방명록 메시지"));
         reason = reportReasonRepository.save(createReason());
@@ -183,7 +183,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
         void throwExceptionWhenCardNotBelongToSpace() {
             // given
             Space anotherSpace = spaceRepository.save(SpaceFixture.createSpaceWithCode("ANOTHER123"));
-            spaceHostRepository.save(new SpaceHost(anotherSpace, host));
+            spaceHostRepository.save(new SpaceHost(anotherSpace, user));
             GuestBookCard anotherCard = guestBookCardRepository.save(new GuestBookCard(anotherSpace, "nick", "msg"));
             CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason.getId(), null);
 

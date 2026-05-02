@@ -17,8 +17,8 @@ import com.forgather.domain.product.dto.ProductsResponse;
 import com.forgather.domain.product.dto.RegisterProductRequest;
 import com.forgather.domain.product.dto.UpdateProductRequest;
 import com.forgather.domain.product.service.ProductService;
-import com.forgather.global.auth.annotation.LoginHost;
-import com.forgather.global.auth.model.Host;
+import com.forgather.global.auth.annotation.LoginAppUser;
+import com.forgather.global.auth.model.AppUser;
 import com.forgather.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -59,9 +59,9 @@ public class ProductController {
     public ResponseEntity<ApiResponse<ProductResponse>> registerV3(
         @PathVariable(value = "spaceCode") String spaceCode,
         @RequestBody RegisterProductRequest request,
-        @LoginHost(required = true) Host host
+        @LoginAppUser(required = true) AppUser user
     ) {
-        var response = productService.register(host, spaceCode, request);
+        var response = productService.register(user, spaceCode, request);
         return ResponseEntity.status(CREATED).body(ApiResponse.success(response));
     }
 
@@ -73,9 +73,9 @@ public class ProductController {
         @PathVariable(value = "spaceCode") String spaceCode,
         @PathVariable(value = "productId") Long productId,
         @RequestBody UpdateProductRequest request,
-        @LoginHost(required = true) Host host
+        @LoginAppUser(required = true) AppUser user
     ) {
-        var response = productService.update(host, spaceCode, productId, request);
+        var response = productService.update(user, spaceCode, productId, request);
         return ResponseEntity.ok().body(ApiResponse.success(response));
     }
 
@@ -85,9 +85,9 @@ public class ProductController {
     public ResponseEntity<Void> deleteV2(
         @PathVariable(value = "spaceCode") String spaceCode,
         @PathVariable(value = "productId") Long productId,
-        @LoginHost(required = true) Host host
+        @LoginAppUser(required = true) AppUser user
     ) {
-        productService.delete(host, spaceCode, productId);
+        productService.delete(user, spaceCode, productId);
         return ResponseEntity.noContent().build();
     }
 }

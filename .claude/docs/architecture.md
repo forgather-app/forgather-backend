@@ -36,7 +36,7 @@ private String buildAccessToken(Long id, String role) {
     return Jwts.builder()
         .subject(String.valueOf(id))
         .claim("id", id)
-        .claim("role", role)  // HOST 또는 ADMIN
+        .claim("role", role)  // AppUser 또는 ADMIN
         .issuedAt(now)
         .expiration(expiry)
         .signWith(getSigningKey())  // HmacSHA256
@@ -44,20 +44,20 @@ private String buildAccessToken(Long id, String role) {
 }
 ```
 
-### Host vs Admin 인증 분리
+### AppUser vs Admin 인증 분리
 
-| 구분 | Host (작가) | Admin (관리자) |
+| 구분 | AppUser (작가) | Admin (관리자) |
 |-----|------------|---------------|
 | 인증 방식 | JWT + Kakao OAuth | JWT + 세션 |
-| 리졸버 | `LoginHostArgumentResolver` | `LoginAdminUserArgumentResolver` |
+| 리졸버 | `LoginAppUserArgumentResolver` | `LoginAdminUserArgumentResolver` |
 | 인터셉터 | - | `AdminAuthInterceptor` |
-| 어노테이션 | `@LoginHost` | `@LoginAdminUser` |
+| 어노테이션 | `@LoginAppUser` | `@LoginAdminUser` |
 | 경로 | `/spaces/**`, `/products/**` 등 | `/admin/**`, `/view/admin/**` |
 
 ```java
-// LoginHostArgumentResolver - @LoginHost 처리 (global/auth/resolver/LoginHostArgumentResolver.java)
+// LoginAppUserArgumentResolver - @LoginAppUser 처리 (global/auth/resolver/LoginAppUserArgumentResolver.java)
 @Override
-public Host resolveArgument(MethodParameter parameter, ...) {
+public AppUser resolveArgument(MethodParameter parameter, ...) {
     String jwtToken = request.getHeader("Authorization");
     if (jwtToken == null) {
         throwExceptionIfRequired(required);
@@ -67,12 +67,12 @@ public Host resolveArgument(MethodParameter parameter, ...) {
     jwtToken = jwtToken.substring(BEARER.length());
     jwtTokenProvider.validateToken(jwtToken);
 
-    if (!jwtTokenProvider.getRole(jwtToken).equals(HOST)) {
+    if (!jwtTokenProvider.getRole(jwtToken).equals(AppUser)) {
         throw new UnauthorizedException("호스트 로그인이 필요합니다.");
     }
 
-    Long hostId = jwtTokenProvider.getId(jwtToken);
-    return hostRepository.getByIdOrThrow(hostId);
+    Long AppUserId = jwtTokenProvider.getId(jwtToken);
+    return userRepository.getByIdOrThrow(hostId);
 }
 ```
 

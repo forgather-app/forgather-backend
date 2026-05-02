@@ -3,7 +3,7 @@ package com.forgather.domain.guestbook.model;
 import java.time.LocalDateTime;
 
 import com.forgather.domain.model.BaseTimeEntity;
-import com.forgather.global.auth.model.Host;
+import com.forgather.global.auth.model.AppUser;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.util.TextLengthCounter;
@@ -37,11 +37,11 @@ public class GuestBookReport extends BaseTimeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "host_user_id", nullable = false)
-    private Host hostUser;
+    private AppUser hostUser;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reporter_user_id", nullable = false)
-    private Host reporterUser;
+    private AppUser reporterUser;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reason_id", nullable = false)
@@ -65,8 +65,8 @@ public class GuestBookReport extends BaseTimeEntity {
 
     public GuestBookReport(
         GuestBookCard guestBookCard,
-        Host hostUser,
-        Host reporterUser,
+        AppUser hostUser,
+        AppUser reporterUser,
         ReporterType reporterType,
         GuestBookReportReason reason,
         String detail
@@ -86,8 +86,8 @@ public class GuestBookReport extends BaseTimeEntity {
 
     private void validateRequiredFields(
         GuestBookCard guestBookCard,
-        Host hostUser,
-        Host reporterUser,
+        AppUser hostUser,
+        AppUser reporterUser,
         ReporterType reporterType,
         GuestBookReportReason reason
     ) {
@@ -95,7 +95,7 @@ public class GuestBookReport extends BaseTimeEntity {
             throw new BaseNullPointerException("방명록 카드는 null일 수 없습니다.");
         }
         if (hostUser == null) {
-            throw new BaseNullPointerException("호스트는 null일 수 없습니다.");
+            throw new BaseNullPointerException("호스트 유저는 null일 수 없습니다.");
         }
         if (reporterUser == null) {
             throw new BaseNullPointerException("신고자는 null일 수 없습니다.");

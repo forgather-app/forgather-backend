@@ -23,8 +23,8 @@ import com.forgather.domain.guestbook.dto.WriteGuestBookCardRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardResponse;
 import com.forgather.domain.guestbook.service.GuestBookService;
 import com.forgather.domain.guestbook.service.GuestbookReportService;
-import com.forgather.global.auth.annotation.LoginHost;
-import com.forgather.global.auth.model.Host;
+import com.forgather.global.auth.annotation.LoginAppUser;
+import com.forgather.global.auth.model.AppUser;
 import com.forgather.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -77,9 +77,9 @@ public class SpaceGuestbookController {
         @Parameter(hidden = true)
         @PageableDefault(size = 15, sort = {"createdAt", "id"}, direction = Sort.Direction.DESC)
         Pageable pageable,
-        @LoginHost(required = false) Host host
+        @LoginAppUser(required = false) AppUser user
     ) {
-        GuestBookResponse response = guestBookService.read(host, spaceCode, pageable);
+        GuestBookResponse response = guestBookService.read(user, spaceCode, pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -89,9 +89,9 @@ public class SpaceGuestbookController {
     public ResponseEntity<ApiResponse<GuestBookCardResponse>> readCard(
         @PathVariable(value = "spaceCode") String spaceCode,
         @PathVariable(value = "guestBookCardId") Long guestBookCardId,
-        @LoginHost(required = false) Host host
+        @LoginAppUser(required = false) AppUser user
     ) {
-        GuestBookCardResponse response = guestBookService.readCard(host, spaceCode, guestBookCardId);
+        GuestBookCardResponse response = guestBookService.readCard(user, spaceCode, guestBookCardId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -111,9 +111,9 @@ public class SpaceGuestbookController {
     public ResponseEntity<Void> deleteCard(
         @PathVariable(value = "spaceCode") String spaceCode,
         @PathVariable(value = "guestBookCardId") Long guestBookCardId,
-        @LoginHost(required = true) Host host
+        @LoginAppUser(required = true) AppUser user
     ) {
-        guestBookService.deleteCard(host, spaceCode, guestBookCardId);
+        guestBookService.deleteCard(user, spaceCode, guestBookCardId);
         return ResponseEntity.noContent().build();
     }
 
@@ -123,10 +123,10 @@ public class SpaceGuestbookController {
     public ResponseEntity<ApiResponse<CreateGuestBookReportResponse>> report(
         @PathVariable(value = "spaceCode") String spaceCode,
         @PathVariable(value = "guestBookCardId") Long guestBookCardId,
-        @LoginHost(required = true) Host host,
+        @LoginAppUser(required = true) AppUser user,
         @RequestBody @Valid CreateGuestBookReportRequest request
     ) {
-        var response = guestBookReportService.report(host, spaceCode, guestBookCardId, request);
+        var response = guestBookReportService.report(user, spaceCode, guestBookCardId, request);
         return ResponseEntity.status(CREATED).body(ApiResponse.success(response));
     }
 
@@ -137,9 +137,9 @@ public class SpaceGuestbookController {
         @PathVariable(value = "spaceCode") String spaceCode,
         @PathVariable(value = "guestBookCardId") Long guestBookCardId,
         @RequestBody DeleteGuestBookCardPhotosRequest request,
-        @LoginHost(required = true) Host host
+        @LoginAppUser(required = true) AppUser user
     ) {
-        guestBookService.deleteCardPhotos(host, spaceCode, guestBookCardId, request);
+        guestBookService.deleteCardPhotos(user, spaceCode, guestBookCardId, request);
         return ResponseEntity.noContent().build();
     }
 }

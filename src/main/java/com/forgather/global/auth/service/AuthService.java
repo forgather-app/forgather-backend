@@ -4,16 +4,16 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
-import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.space.repository.AppUserRepository;
 import com.forgather.global.auth.client.KakaoAuthClient;
-import com.forgather.global.auth.dto.HostResponse;
+import com.forgather.global.auth.dto.AppUserResponse;
 import com.forgather.global.auth.dto.KakaoIdToken;
 import com.forgather.global.auth.dto.KakaoLoginConfirmRequest;
 import com.forgather.global.auth.dto.KakaoLoginTokenResponse;
 import com.forgather.global.auth.dto.LoginResponse;
-import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.KakaoHost;
-import com.forgather.global.auth.repository.KakaoHostRepository;
+import com.forgather.global.auth.model.AppUser;
+import com.forgather.global.auth.model.KakaoAppUser;
+import com.forgather.global.auth.repository.KakaoAppUserRepository;
 import com.forgather.global.auth.util.JwtParser;
 import com.forgather.global.auth.util.JwtTokenProvider;
 
@@ -27,8 +27,8 @@ public class AuthService {
     private final JwtParser jwtParser;
     private final JwtTokenProvider jwtTokenProvider;
     private final KakaoAuthClient kakaoAuthClient;
-    private final KakaoHostRepository kakaoHostRepository;
-    private final HostRepository hostRepository;
+    private final KakaoAppUserRepository kakaoAppUserRepository;
+    private final AppUserRepository appUserRepository;
 
     public KakaoLoginTokenResponse getKakaoLoginToken() {
         return new KakaoLoginTokenResponse(kakaoAuthClient.getKakaoClientId());
@@ -36,34 +36,34 @@ public class AuthService {
 
     @Transactional
     public LoginResponse kakaoLoginConfirm(KakaoLoginConfirmRequest request) {
-        KakaoHost kakaoHost = toKakaoHost(request);
-        String accessToken = jwtTokenProvider.generateAccessToken(kakaoHost.getHost().getId());
-        String refreshToken= jwtTokenProvider.generateRefreshToken(kakaoHost.getHost().getId());
+        KakaoAppUser kakaoAppUser = toKakaoAppUser(request);
+        String accessToken = jwtTokenProvider.generateAccessToken(kakaoAppUser.getAppUser().getId());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(kakaoAppUser.getAppUser().getId());
         return LoginResponse.of(accessToken, refreshToken);
     }
 
-    private KakaoHost toKakaoHost(KakaoLoginConfirmRequest request) {
+    private KakaoAppUser toKakaoAppUser(KakaoLoginConfirmRequest request) {
         KakaoIdToken idToken = jwtParser.parseIdToken(request.idToken());
-        Optional<KakaoHost> kakaoHost = kakaoHostRepository.findByUserId(idToken.sub());
-        Host host = new Host(idToken.nickname(), idToken.picture());
+        Optional<KakaoAppUser> kakaoAppUser = kakaoAppUserRepository.findByUserId(idToken.sub());
+        AppUser appUser = new AppUser(idToken.nickname(), idToken.picture());
 
-        return kakaoHost.orElseGet(() -> kakaoHostRepository.save(new KakaoHost(host, idToken.sub())));
+        return kakaoAppUser.orElseGet(() -> kakaoAppUserRepository.save(new KakaoAppUser(appUser, idToken.sub())));
     }
 
     public LoginResponse refresh(String refreshToken) {
         jwtTokenProvider.validateToken(refreshToken);
-        Long hostId = jwtTokenProvider.getId(refreshToken);
-        Host host = hostRepository.getByIdOrThrow(hostId);
-        String accessToken = jwtTokenProvider.generateAccessToken(host.getId());
+        Long appUserId = jwtTokenProvider.getId(refreshToken);
+        AppUser appUser = appUserRepository.getByIdOrThrow(appUserId);
+        String accessToken = jwtTokenProvider.generateAccessToken(appUser.getId());
         return LoginResponse.of(accessToken, refreshToken);
     }
 
-    public HostResponse getCurrentUser(Host host) {
-        return HostResponse.from(host);
+    public AppUserResponse getCurrentUser(AppUser appUser) {
+        return AppUserResponse.from(appUser);
     }
 
     @Transactional
-    public void agreeTerms(Host host) {
-        host.agreeTerms();
+    public void agreeTerms(AppUser appUser) {
+        appUser.agreeTerms();
     }
 }

@@ -15,14 +15,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.forgather.domain.space.dto.CreateSpaceRequest;
-import com.forgather.domain.space.dto.HostSpaceResponse;
+import com.forgather.domain.space.dto.UserSpaceResponse;
 import com.forgather.domain.space.model.Space;
-import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.space.repository.AppUserRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
-import com.forgather.fixture.HostFixture;
+import com.forgather.fixture.AppUserFixture;
 import com.forgather.fixture.SpaceFixture;
 import com.forgather.fixture.SpaceHostFixture;
-import com.forgather.global.auth.model.Host;
+import com.forgather.global.auth.model.AppUser;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.NotFoundException;
 import com.forgather.container.TestOnContainer;
@@ -34,16 +34,16 @@ class SpaceServiceTest extends TestOnContainer {
 
     private final SpaceService spaceService;
     private final SpaceRepository spaceRepository;
-    private final HostRepository hostRepository;
+    private final AppUserRepository userRepository;
     private final SpaceHostRepository spaceHostRepository;
 
     @Autowired
-    public SpaceServiceTest(SpaceService spaceService, SpaceRepository spaceRepository, HostRepository hostRepository,
+    public SpaceServiceTest(SpaceService spaceService, SpaceRepository spaceRepository, AppUserRepository userRepository,
         SpaceHostRepository spaceHostRepository
     ) {
         this.spaceService = spaceService;
         this.spaceRepository = spaceRepository;
-        this.hostRepository = hostRepository;
+        this.userRepository = userRepository;
         this.spaceHostRepository = spaceHostRepository;
     }
 
@@ -51,7 +51,7 @@ class SpaceServiceTest extends TestOnContainer {
     @Test
     void createSpaceWithInvalidName() {
         // given
-        Host host = hostRepository.save(HostFixture.createHost());
+        AppUser user = userRepository.save(AppUserFixture.createAppUser());
         String invalidSpaceName = " "; // 스페이스 이름이 공백인 경우
         CreateSpaceRequest request = new CreateSpaceRequest(
             invalidSpaceName,
@@ -64,24 +64,24 @@ class SpaceServiceTest extends TestOnContainer {
 
         // when & then
         assertAll(
-            () -> assertThatException().isThrownBy(() -> spaceService.create(request, file, host)),
+            () -> assertThatException().isThrownBy(() -> spaceService.create(request, file, user)),
             () -> assertThat(spaceRepository.findAllByDeletedAtIsNull()).isEmpty()
         );
     }
 
     @DisplayName("호스트의 스페이스 목록 조회 시 논리 삭제된 스페이스는 조회하지 않는다")
     @Test
-    void doesNotReturnSoftDeletedSpaceWhenQueryHostSpaces() {
+    void doesNotReturnSoftDeletedSpaceWhenQueryUserSpaces() {
         // given
-        Host host = hostRepository.save(HostFixture.createHost());
+        AppUser user = userRepository.save(AppUserFixture.createAppUser());
         Space space1 = spaceRepository.save(SpaceFixture.createSpaceWithCode("abcdefghij"));
         Space space2 = spaceRepository.save(SpaceFixture.createSpaceWithCode("1234567890"));
-        spaceHostRepository.save(SpaceHostFixture.createSpaceHostWithSpaceAndHost(space1, host));
-        spaceHostRepository.save(SpaceHostFixture.createSpaceHostWithSpaceAndHost(space2, host));
-        spaceService.delete(space1.getCode(), host);
+        spaceHostRepository.save(SpaceHostFixture.createSpaceHostWithSpaceAndAppUser(space1, user));
+        spaceHostRepository.save(SpaceHostFixture.createSpaceHostWithSpaceAndAppUser(space2, user));
+        spaceService.delete(space1.getCode(), user);
 
         // when
-        HostSpaceResponse result = spaceService.getSpacesInformation(host);
+        UserSpaceResponse result = spaceService.getSpacesInformation(user);
 
         // then
         assertThat(result.spaces().getFirst().spaceCode()).isEqualTo(space2.getCode());
@@ -91,10 +91,10 @@ class SpaceServiceTest extends TestOnContainer {
     @Test
     void shouldThrowExceptionWhenQuerySoftDeletedSpace() {
         // given
-        Host host = hostRepository.save(HostFixture.createHost());
+        AppUser user = userRepository.save(AppUserFixture.createAppUser());
         Space space = spaceRepository.save(SpaceFixture.createSpaceWithCode("abcdefghij"));
-        spaceHostRepository.save(SpaceHostFixture.createSpaceHostWithSpaceAndHost(space, host));
-        spaceService.delete(space.getCode(), host);
+        spaceHostRepository.save(SpaceHostFixture.createSpaceHostWithSpaceAndAppUser(space, user));
+        spaceService.delete(space.getCode(), user);
 
         // when & then
         assertThatThrownBy(() -> spaceService.getSpaceInformation(space.getCode()))

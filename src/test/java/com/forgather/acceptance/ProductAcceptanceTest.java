@@ -23,12 +23,12 @@ import com.forgather.domain.product.dto.RegisterProductRequest;
 import com.forgather.domain.product.dto.UpdateProductRequest;
 import com.forgather.domain.product.repository.ProductRepository;
 import com.forgather.domain.space.model.Space;
-import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.space.repository.AppUserRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.AwsS3Cloud;
-import com.forgather.fixture.HostFixture;
+import com.forgather.fixture.AppUserFixture;
 import com.forgather.fixture.SpaceFixture;
-import com.forgather.global.auth.model.Host;
+import com.forgather.global.auth.model.AppUser;
 import com.forgather.global.auth.model.SpaceHost;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.auth.util.JwtTokenProvider;
@@ -52,7 +52,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
     private SpaceRepository spaceRepository;
 
     @Autowired
-    private HostRepository hostRepository;
+    private AppUserRepository userRepository;
 
     @Autowired
     private SpaceHostRepository spaceHostRepository;
@@ -86,13 +86,13 @@ class ProductAcceptanceTest extends AcceptanceTest {
         space = SpaceFixture.createSpace();
         spaceRepository.save(space);
 
-        Host host = HostFixture.createHost();
-        Host anotherHost = HostFixture.createHost();
-        hostRepository.save(host);
-        hostRepository.save(anotherHost);
-        spaceHostRepository.save(new SpaceHost(space, host));
+        AppUser user = AppUserFixture.createAppUser();
+        AppUser anotherHost = AppUserFixture.createAppUser();
+        userRepository.save(user);
+        userRepository.save(anotherHost);
+        spaceHostRepository.save(new SpaceHost(space, user));
 
-        accessToken = jwtTokenProvider.generateAccessToken(host.getId());
+        accessToken = jwtTokenProvider.generateAccessToken(user.getId());
         anotherAccessToken = jwtTokenProvider.generateAccessToken(anotherHost.getId());
 
         RestAssuredMockMvc.mockMvc(mockMvc);

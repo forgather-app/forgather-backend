@@ -2,7 +2,7 @@ package com.forgather.domain.guestbook.service;
 
 import static com.forgather.fixture.GuestBookReportReasonFixture.createHiddenReason;
 import static com.forgather.fixture.GuestBookReportReasonFixture.createReason;
-import static com.forgather.fixture.HostFixture.createHost;
+import static com.forgather.fixture.AppUserFixture.createAppUser;
 import static com.forgather.fixture.SpaceFixture.createSpace;
 import static com.forgather.fixture.SpaceFixture.createSpaceWithCode;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,9 +28,9 @@ import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
 import com.forgather.domain.guestbook.repository.GuestBookReportRepository;
 import com.forgather.domain.guestbook.repository.jpa.GuestBookReportReasonJpaRepository;
 import com.forgather.domain.space.model.Space;
-import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.space.repository.AppUserRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
-import com.forgather.global.auth.model.Host;
+import com.forgather.global.auth.model.AppUser;
 import com.forgather.global.auth.model.SpaceHost;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.ConflictException;
@@ -54,7 +54,7 @@ class GuestbookReportServiceTest {
     private GuestBookReportReasonJpaRepository reportReasonRepository;
 
     @Autowired
-    private HostRepository hostRepository;
+    private AppUserRepository userRepository;
 
     @Autowired
     private SpaceRepository spaceRepository;
@@ -62,7 +62,7 @@ class GuestbookReportServiceTest {
     @Autowired
     private SpaceHostRepository spaceHostRepository;
 
-    private Host host;
+    private AppUser user;
     private Space space;
     private GuestBookCard card;
     private GuestBookReportReason reason;
@@ -70,8 +70,8 @@ class GuestbookReportServiceTest {
     @BeforeEach
     void setUp() {
         space = spaceRepository.save(createSpace());
-        host = hostRepository.save(createHost());
-        spaceHostRepository.save(new SpaceHost(space, host));
+        user = userRepository.save(createAppUser());
+        spaceHostRepository.save(new SpaceHost(space, user));
         card = guestBookCardRepository.save(new GuestBookCard(space, "nickname", "message"));
         reason = reportReasonRepository.save(createReason());
     }
@@ -83,13 +83,13 @@ class GuestbookReportServiceTest {
         CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason.getId(), null);
 
         // when
-        CreateGuestBookReportResponse response = guestBookReportService.report(host, space.getCode(), card.getId(), request);
+        CreateGuestBookReportResponse response = guestBookReportService.report(user, space.getCode(), card.getId(), request);
 
         // then
         assertAll(
             () -> assertThat(response.id()).isNotNull(),
             () -> assertThat(response.guestBookCardId()).isEqualTo(card.getId()),
-            () -> assertThat(guestBookReportRepository.existsByGuestBookCardAndReporterUser(card, host)).isTrue(),
+            () -> assertThat(guestBookReportRepository.existsByGuestBookCardAndReporterUser(card, user)).isTrue(),
             () -> assertThat(card.getVisibilityStatus()).isEqualTo(VisibilityStatus.HIDDEN_BY_ADMIN)
         );
     }
@@ -98,7 +98,7 @@ class GuestbookReportServiceTest {
     @Test
     void throwExceptionWhenNotSpaceHost() {
         // given
-        Host anotherHost = hostRepository.save(createHost());
+        AppUser anotherHost = userRepository.save(createAppUser());
         CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason.getId(), null);
 
         // when & then
@@ -111,12 +111,12 @@ class GuestbookReportServiceTest {
     void throwExceptionWhenCardNotBelongToSpace() {
         // given
         Space anotherSpace = spaceRepository.save(createSpaceWithCode("ANOTHER123"));
-        spaceHostRepository.save(new SpaceHost(anotherSpace, host));
+        spaceHostRepository.save(new SpaceHost(anotherSpace, user));
         GuestBookCard anotherCard = guestBookCardRepository.save(new GuestBookCard(anotherSpace, "nick", "msg"));
         CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason.getId(), null);
 
         // when & then
-        assertThatThrownBy(() -> guestBookReportService.report(host, space.getCode(), anotherCard.getId(), request))
+        assertThatThrownBy(() -> guestBookReportService.report(user, space.getCode(), anotherCard.getId(), request))
             .isInstanceOf(NotFoundException.class);
     }
 
@@ -125,10 +125,10 @@ class GuestbookReportServiceTest {
     void throwExceptionWhenAlreadyReported() {
         // given
         CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason.getId(), null);
-        guestBookReportService.report(host, space.getCode(), card.getId(), request);
+        guestBookReportService.report(user, space.getCode(), card.getId(), request);
 
         // when & then
-        assertThatThrownBy(() -> guestBookReportService.report(host, space.getCode(), card.getId(), request))
+        assertThatThrownBy(() -> guestBookReportService.report(user, space.getCode(), card.getId(), request))
             .isInstanceOf(ConflictException.class);
     }
 
@@ -139,7 +139,7 @@ class GuestbookReportServiceTest {
         CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(999L, null);
 
         // when & then
-        assertThatThrownBy(() -> guestBookReportService.report(host, space.getCode(), card.getId(), request))
+        assertThatThrownBy(() -> guestBookReportService.report(user, space.getCode(), card.getId(), request))
             .isInstanceOf(NotFoundException.class);
     }
 
@@ -152,7 +152,7 @@ class GuestbookReportServiceTest {
         CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(hiddenReason.getId(), null);
 
         // when & then
-        assertThatThrownBy(() -> guestBookReportService.report(host, space.getCode(), card.getId(), request))
+        assertThatThrownBy(() -> guestBookReportService.report(user, space.getCode(), card.getId(), request))
             .isInstanceOf(NotFoundException.class);
     }
 
@@ -160,7 +160,7 @@ class GuestbookReportServiceTest {
     @Test
     void retrieveReportHistoryEmpty() {
         ReportHistoryResponse result = guestBookReportService.retrieveReportHistory(
-            host, PageRequest.of(0, 15)
+            user, PageRequest.of(0, 15)
         );
 
         assertThat(result.reportHistory()).isEmpty();
@@ -171,12 +171,12 @@ class GuestbookReportServiceTest {
     @Test
     void retrieveReportHistory() {
         // given
-        guestBookReportService.report(host, space.getCode(), card.getId(),
+        guestBookReportService.report(user, space.getCode(), card.getId(),
             new CreateGuestBookReportRequest(reason.getId(), null));
 
         // when
         ReportHistoryResponse result = guestBookReportService.retrieveReportHistory(
-            host, PageRequest.of(0, 15)
+            user, PageRequest.of(0, 15)
         );
 
         // then
@@ -192,14 +192,14 @@ class GuestbookReportServiceTest {
     void retrieveReportHistoryWithSort() {
         // given
         GuestBookCard card2 = guestBookCardRepository.save(new GuestBookCard(space, "nick2", "msg2"));
-        guestBookReportService.report(host, space.getCode(), card.getId(),
+        guestBookReportService.report(user, space.getCode(), card.getId(),
             new CreateGuestBookReportRequest(reason.getId(), null));
-        guestBookReportService.report(host, space.getCode(), card2.getId(),
+        guestBookReportService.report(user, space.getCode(), card2.getId(),
             new CreateGuestBookReportRequest(reason.getId(), null));
 
         // when
         ReportHistoryResponse result = guestBookReportService.retrieveReportHistory(
-            host, PageRequest.of(0, 15, Sort.by(Sort.Direction.DESC, "id"))
+            user, PageRequest.of(0, 15, Sort.by(Sort.Direction.DESC, "id"))
         );
 
         // then
@@ -214,7 +214,7 @@ class GuestbookReportServiceTest {
     @Test
     void retrieveReportHistoryExcludesOtherHost() {
         // given
-        Host anotherHost = hostRepository.save(createHost());
+        AppUser anotherHost = userRepository.save(createAppUser());
         Space anotherSpace = spaceRepository.save(createSpaceWithCode("ANOTHER123"));
         spaceHostRepository.save(new SpaceHost(anotherSpace, anotherHost));
         GuestBookCard anotherCard = guestBookCardRepository.save(
@@ -225,7 +225,7 @@ class GuestbookReportServiceTest {
 
         // when
         ReportHistoryResponse result = guestBookReportService.retrieveReportHistory(
-            host, PageRequest.of(0, 15)
+            user, PageRequest.of(0, 15)
         );
 
         // then

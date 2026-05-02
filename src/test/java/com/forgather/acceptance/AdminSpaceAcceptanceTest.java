@@ -21,14 +21,14 @@ import com.forgather.back_office.repository.AdminUserRepository;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
 import com.forgather.domain.product.repository.ProductRepository;
 import com.forgather.domain.space.model.Space;
-import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.space.repository.AppUserRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fixture.AdminUserFixture;
 import com.forgather.fixture.GuestBookCardFixture;
-import com.forgather.fixture.HostFixture;
+import com.forgather.fixture.AppUserFixture;
 import com.forgather.fixture.ProductFixture;
 import com.forgather.fixture.SpaceFixture;
-import com.forgather.global.auth.model.Host;
+import com.forgather.global.auth.model.AppUser;
 import com.forgather.global.auth.model.SpaceHost;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.util.RandomCodeGenerator;
@@ -50,7 +50,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
     private SpaceRepository spaceRepository;
 
     @Autowired
-    private HostRepository hostRepository;
+    private AppUserRepository hostRepository;
 
     @Autowired
     private SpaceHostRepository spaceHostRepository;
@@ -69,11 +69,11 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
 
     private AdminUser adminUser;
     private String sessionId;
-    private Host host;
+    private AppUser host;
 
     @BeforeEach
     void setUp() {
-        host = hostRepository.save(HostFixture.createHost());
+        host = hostRepository.save(AppUserFixture.createAppUser());
 
         adminUser = adminUserRepository.save(AdminUserFixture.createAdminUser("어드민"));
         AdminSession session = sessionManager.createSession(adminUser.getId(), adminUser.getUsername());

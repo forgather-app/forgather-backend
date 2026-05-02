@@ -327,7 +327,7 @@ const API = {
      * 특정 Host의 스페이스 목록 조회 API
      *
      * @param {number} hostId - 조회할 호스트 ID
-     * @returns {Promise<object>} 호스트 스페이스 목록 응답 (HostSpacesResponse)
+     * @returns {Promise<object>} 호스트 스페이스 목록 응답 (UserSpacesResponse)
      * @returns {number} response.hostId - 호스트 ID
      * @returns {string} response.hostName - 호스트 이름
      * @returns {Array} response.spaces - 스페이스 목록 배열
@@ -342,7 +342,7 @@ const API = {
      *
      * 엔드포인트: GET /admin/hosts/{hostId}/spaces
      */
-    async getHostSpaces(hostId) {
+    async getUserSpaces(hostId) {
         return this.get(`/hosts/${hostId}/spaces`, {});
     },
 

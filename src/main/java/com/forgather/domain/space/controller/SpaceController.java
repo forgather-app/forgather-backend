@@ -18,12 +18,12 @@ import org.springframework.web.multipart.MultipartFile;
 import com.forgather.domain.space.dto.CheckSpaceHostResponse;
 import com.forgather.domain.space.dto.CreateSpaceRequest;
 import com.forgather.domain.space.dto.CreateSpaceResponse;
-import com.forgather.domain.space.dto.HostSpaceResponse;
+import com.forgather.domain.space.dto.UserSpaceResponse;
 import com.forgather.domain.space.dto.SpaceResponse;
 import com.forgather.domain.space.dto.UpdateSpaceRequest;
 import com.forgather.domain.space.service.SpaceService;
-import com.forgather.global.auth.annotation.LoginHost;
-import com.forgather.global.auth.model.Host;
+import com.forgather.global.auth.annotation.LoginAppUser;
+import com.forgather.global.auth.model.AppUser;
 import com.forgather.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,9 +50,9 @@ public class SpaceController {
             content = @Content(schema = @Schema(implementation = CreateSpaceRequest.class)))
         @RequestPart("request") @Validated CreateSpaceRequest request,
         @RequestPart(value = "file", required = false) MultipartFile file,
-        @LoginHost Host host
+        @LoginAppUser AppUser user
     ) {
-        var response = spaceService.create(request, file, host);
+        var response = spaceService.create(request, file, user);
         return ResponseEntity.status(CREATED).body(ApiResponse.success(response));
     }
 
@@ -68,9 +68,9 @@ public class SpaceController {
     @Operation(summary = "스페이스 삭제", description = "스페이스를 삭제합니다.")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<Void> delete(@PathVariable(name = "spaceCode") String spaceCode,
-        @LoginHost Host host
+        @LoginAppUser AppUser user
     ) {
-        spaceService.delete(spaceCode, host);
+        spaceService.delete(spaceCode, user);
         return ResponseEntity.noContent().build();
     }
 
@@ -83,17 +83,17 @@ public class SpaceController {
             content = @Content(schema = @Schema(implementation = UpdateSpaceRequest.class)))
         @RequestPart("request") @Validated UpdateSpaceRequest request,
         @RequestPart(value = "file", required = false) MultipartFile file,
-        @LoginHost Host host
+        @LoginAppUser AppUser user
     ) {
-        var response = spaceService.update(spaceCode, request, file, host);
+        var response = spaceService.update(spaceCode, request, file, user);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping("/me")
     @Operation(summary = "호스트의 스페이스 목록 조회", description = "로그인한 호스트의 스페이스 목록을 조회합니다.")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<ApiResponse<HostSpaceResponse>> getSpacesInformation(@LoginHost Host host) {
-        var response = spaceService.getSpacesInformation(host);
+    public ResponseEntity<ApiResponse<UserSpaceResponse>> getSpacesInformation(@LoginAppUser AppUser user) {
+        var response = spaceService.getSpacesInformation(user);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -102,9 +102,9 @@ public class SpaceController {
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<CheckSpaceHostResponse>> checkHost(
         @PathVariable(name = "spaceCode") String spaceCode,
-        @LoginHost Host host
+        @LoginAppUser AppUser user
     ) {
-        var response = spaceService.checkSpaceHost(spaceCode, host);
+        var response = spaceService.checkSpaceHost(spaceCode, user);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

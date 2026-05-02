@@ -33,8 +33,8 @@ git log -1 --stat                 # 최근 커밋
 **Security (CRITICAL)**
 - 하드코딩된 크리덴셜 (API 키, 패스워드, 토큰)
 - `@Query` 문자열 연결로 인한 SQL Injection
-- 누락된 `@LoginHost` / `@LoginAdminUser`
-- Host 권한 검증(`validateSpaceHost()`) 누락
+- 누락된 `@LoginAppUser` / `@LoginAdminUser`
+- AppUser 권한 검증(`validateSpaceHost()`) 누락
 - 로그에 민감 정보 출력
 - `.gitattributes` 미등록 민감 파일
 
