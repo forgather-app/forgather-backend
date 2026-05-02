@@ -30,8 +30,8 @@ import com.forgather.domain.upload.AwsS3Cloud;
 import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
 import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.SpaceHostMap;
-import com.forgather.global.auth.repository.SpaceHostMapRepository;
+import com.forgather.global.auth.model.SpaceHost;
+import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.response.ApiResponse;
 import com.forgather.global.response.ResponseCode;
@@ -53,7 +53,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
     private HostRepository hostRepository;
 
     @Autowired
-    private SpaceHostMapRepository spaceHostMapRepository;
+    private SpaceHostRepository spaceHostRepository;
 
     @MockitoBean
     private AwsS3Cloud awsS3Cloud;
@@ -89,8 +89,8 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
         accessToken = jwtTokenProvider.generateAccessToken(host.getId());
         anotherAccessToken = jwtTokenProvider.generateAccessToken(anotherHost.getId());
 
-        spaceHostMapRepository.save(new SpaceHostMap(publicSpace, host));
-        spaceHostMapRepository.save(new SpaceHostMap(privateSpace, host));
+        spaceHostRepository.save(new SpaceHost(publicSpace, host));
+        spaceHostRepository.save(new SpaceHost(privateSpace, host));
 
         RestAssuredMockMvc.mockMvc(mockMvc);
     }

@@ -31,8 +31,8 @@ import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.SpaceHostMap;
-import com.forgather.global.auth.repository.SpaceHostMapRepository;
+import com.forgather.global.auth.model.SpaceHost;
+import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.ConflictException;
 import com.forgather.global.exception.ForbiddenException;
 import com.forgather.global.exception.NotFoundException;
@@ -60,7 +60,7 @@ class GuestbookReportServiceTest {
     private SpaceRepository spaceRepository;
 
     @Autowired
-    private SpaceHostMapRepository spaceHostMapRepository;
+    private SpaceHostRepository spaceHostRepository;
 
     private Host host;
     private Space space;
@@ -71,7 +71,7 @@ class GuestbookReportServiceTest {
     void setUp() {
         space = spaceRepository.save(createSpace());
         host = hostRepository.save(createHost());
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
         card = guestBookCardRepository.save(new GuestBookCard(space, "nickname", "message"));
         reason = reportReasonRepository.save(createReason());
     }
@@ -111,7 +111,7 @@ class GuestbookReportServiceTest {
     void throwExceptionWhenCardNotBelongToSpace() {
         // given
         Space anotherSpace = spaceRepository.save(createSpaceWithCode("ANOTHER123"));
-        spaceHostMapRepository.save(new SpaceHostMap(anotherSpace, host));
+        spaceHostRepository.save(new SpaceHost(anotherSpace, host));
         GuestBookCard anotherCard = guestBookCardRepository.save(new GuestBookCard(anotherSpace, "nick", "msg"));
         CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason.getId(), null);
 
@@ -216,7 +216,7 @@ class GuestbookReportServiceTest {
         // given
         Host anotherHost = hostRepository.save(createHost());
         Space anotherSpace = spaceRepository.save(createSpaceWithCode("ANOTHER123"));
-        spaceHostMapRepository.save(new SpaceHostMap(anotherSpace, anotherHost));
+        spaceHostRepository.save(new SpaceHost(anotherSpace, anotherHost));
         GuestBookCard anotherCard = guestBookCardRepository.save(
             new GuestBookCard(anotherSpace, "nick", "msg")
         );

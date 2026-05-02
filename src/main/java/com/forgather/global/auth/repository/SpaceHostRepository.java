@@ -9,28 +9,28 @@ import org.springframework.http.HttpStatus;
 
 import com.forgather.domain.space.model.Space;
 import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.SpaceHostMap;
+import com.forgather.global.auth.model.SpaceHost;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.NotFoundException;
 
-public interface SpaceHostMapRepository {
+public interface SpaceHostRepository {
 
-    SpaceHostMap save(SpaceHostMap spaceHostMap);
+    SpaceHost save(SpaceHost spaceHost);
 
     @Query("""
         SELECT shm
-        FROM SpaceHostMap shm
+        FROM SpaceHost shm
             JOIN FETCH shm.space s
         WHERE shm.host = :host
             AND s.deletedAt IS NULL
             AND shm.deletedAt IS NULL
         ORDER BY s.createdAt DESC
         """)
-    List<SpaceHostMap> findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(@Param("host") Host host);
+    List<SpaceHost> findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(@Param("host") Host host);
 
-    Optional<SpaceHostMap> findBySpaceAndHostAndDeletedAtIsNull(Space space, Host host);
+    Optional<SpaceHost> findBySpaceAndHostAndDeletedAtIsNull(Space space, Host host);
 
-    default SpaceHostMap getBySpaceAndHostAndDeletedAtIsNullOrThrow(Space space, Host host) {
+    default SpaceHost getBySpaceAndHostAndDeletedAtIsNullOrThrow(Space space, Host host) {
         if (space == null) {
             throw new BaseNullPointerException("스페이스는 null일 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
         }

@@ -9,16 +9,16 @@ import org.springframework.data.repository.query.Param;
 
 import com.forgather.back_office.dto.HostDetailResponse;
 import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.SpaceHostMap;
+import com.forgather.global.auth.model.SpaceHost;
 
-public interface AdminSpaceHostMapRepository {
+public interface AdminSpaceHostRepository {
 
     @Query(
         value = """
             SELECT new com.forgather.back_office.dto.HostDetailResponse(
                 h.id, h.name, h.createdAt,
                 (SELECT COUNT(shm.id)
-                 FROM SpaceHostMap shm JOIN shm.space s
+                 FROM SpaceHost shm JOIN shm.space s
                  WHERE shm.host = h AND s.deletedAt IS NULL
                 )
             )
@@ -30,12 +30,12 @@ public interface AdminSpaceHostMapRepository {
 
     @Query("""
         SELECT shm
-        FROM SpaceHostMap shm
+        FROM SpaceHost shm
             JOIN FETCH shm.space s
         WHERE shm.host = :host
             AND s.deletedAt IS NULL
             AND shm.deletedAt IS NULL
         ORDER BY s.createdAt DESC
         """)
-    List<SpaceHostMap> findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(@Param("host") Host host);
+    List<SpaceHost> findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(@Param("host") Host host);
 }

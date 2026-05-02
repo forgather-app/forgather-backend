@@ -25,8 +25,8 @@ import com.forgather.fixture.AdminUserFixture;
 import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
 import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.SpaceHostMap;
-import com.forgather.global.auth.repository.SpaceHostMapRepository;
+import com.forgather.global.auth.model.SpaceHost;
+import com.forgather.global.auth.repository.SpaceHostRepository;
 
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import io.restassured.module.mockmvc.specification.MockMvcRequestSpecification;
@@ -48,7 +48,7 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
     private SpaceRepository spaceRepository;
 
     @Autowired
-    private SpaceHostMapRepository spaceHostMapRepository;
+    private SpaceHostRepository spaceHostRepository;
 
     @Autowired
     private SessionManager sessionManager;
@@ -120,8 +120,8 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
         Host host = hostRepository.save(HostFixture.createHost());
         Space space1 = spaceRepository.save(SpaceFixture.createSpaceWithCode("1111111111"));
         Space space2 = spaceRepository.save(SpaceFixture.createSpaceWithCode("2222222222"));
-        spaceHostMapRepository.save(new SpaceHostMap(space1, host));
-        spaceHostMapRepository.save(new SpaceHostMap(space2, host));
+        spaceHostRepository.save(new SpaceHost(space1, host));
+        spaceHostRepository.save(new SpaceHost(space2, host));
 
         // when
         HostSpacesResponse result = givenWithSession()

@@ -25,8 +25,8 @@ import com.forgather.domain.space.repository.SpacePhotoRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.service.UploadService;
 import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.SpaceHostMap;
-import com.forgather.global.auth.repository.SpaceHostMapRepository;
+import com.forgather.global.auth.model.SpaceHost;
+import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.ForbiddenException;
@@ -46,7 +46,7 @@ public class SpaceService {
     private final UploadService uploadService;
     private final SpaceRepository spaceRepository;
     private final SpacePhotoRepository spacePhotoRepository;
-    private final SpaceHostMapRepository spaceHostMapRepository;
+    private final SpaceHostRepository spaceHostRepository;
     private final GuestBookCardRepository guestBookCardRepository;
     private final RandomCodeGenerator codeGenerator;
 
@@ -55,7 +55,7 @@ public class SpaceService {
         validateHostNull(host);
         String spaceCode = codeGenerator.generate(10);
         Space space = spaceRepository.save(request.toEntity(spaceCode));
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
         if (file == null || file.isEmpty()) {
             return CreateSpaceResponse.from(space);
         }
@@ -133,7 +133,7 @@ public class SpaceService {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(space, host);
         deleteGuestBookAndProduct(host, space);
-        deleteSpaceHostMap(host, space);
+        deleteSpaceHost(host, space);
         deleteSpacePhoto(space);
         space.delete();
     }
@@ -143,7 +143,7 @@ public class SpaceService {
         if (space == null) {
             throw new BaseNullPointerException("스페이스는 null일 수 없습니다.");
         }
-        if (spaceHostMapRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent()) {
+        if (spaceHostRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent()) {
             return;
         }
         throw new ForbiddenException("권한이 존재하지 않습니다.");
@@ -154,9 +154,9 @@ public class SpaceService {
         productService.deleteIfExists(host, space);
     }
 
-    private void deleteSpaceHostMap(Host host, Space space) {
-        SpaceHostMap spaceHostMap = spaceHostMapRepository.getBySpaceAndHostAndDeletedAtIsNullOrThrow(space, host);
-        spaceHostMap.delete();
+    private void deleteSpaceHost(Host host, Space space) {
+        SpaceHost spaceHost = spaceHostRepository.getBySpaceAndHostAndDeletedAtIsNullOrThrow(space, host);
+        spaceHost.delete();
     }
 
     private void deleteSpacePhoto(Space space) {
@@ -170,17 +170,17 @@ public class SpaceService {
 
     @Transactional(readOnly = true)
     public HostSpaceResponse getSpacesInformation(Host host) {
-        List<SpaceHostMap> spaceHostMaps = spaceHostMapRepository.findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host);
-        if (spaceHostMaps.isEmpty()) {
+        List<SpaceHost> spaceHosts = spaceHostRepository.findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host);
+        if (spaceHosts.isEmpty()) {
             return new HostSpaceResponse(Collections.emptyList());
         }
-        List<SpaceResponse> spaceResponses = createSpaceResponses(spaceHostMaps);
+        List<SpaceResponse> spaceResponses = createSpaceResponses(spaceHosts);
         return new HostSpaceResponse(spaceResponses);
     }
 
-    private List<SpaceResponse> createSpaceResponses(List<SpaceHostMap> spaceHostMaps) {
-        List<Long> spaceIds = spaceHostMaps.stream()
-            .map(spaceHostMap -> spaceHostMap.getSpace().getId())
+    private List<SpaceResponse> createSpaceResponses(List<SpaceHost> spaceHosts) {
+        List<Long> spaceIds = spaceHosts.stream()
+            .map(spaceHost -> spaceHost.getSpace().getId())
             .toList();
 
         Map<Long, Long> guestBookCardCounts = guestBookCardRepository.countBySpaceIdAndDeletedAtIsNullIn(spaceIds)
@@ -197,9 +197,9 @@ public class SpaceService {
                 spacePhoto -> spacePhoto)
             );
 
-        return spaceHostMaps.stream()
-            .map(spaceHostMap -> {
-                Space space = spaceHostMap.getSpace();
+        return spaceHosts.stream()
+            .map(spaceHost -> {
+                Space space = spaceHost.getSpace();
                 Long guestBookCardCount = guestBookCardCounts.getOrDefault(space.getId(), 0L);
                 SpacePhoto spacePhoto = spacePhotos.getOrDefault(space.getId(), SpacePhoto.empty(space));
                 return SpaceResponse.from(space, spacePhoto, guestBookCardCount);
@@ -211,7 +211,7 @@ public class SpaceService {
     public CheckSpaceHostResponse checkSpaceHost(String spaceCode, Host host) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateHostNull(host);
-        return new CheckSpaceHostResponse(spaceHostMapRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent());
+        return new CheckSpaceHostResponse(spaceHostRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent());
     }
 
     private void validateHostNull(Host host) {

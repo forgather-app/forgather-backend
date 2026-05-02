@@ -11,10 +11,10 @@ import com.forgather.back_office.dto.AdminHostResponse;
 import com.forgather.back_office.dto.HostDetailResponse;
 import com.forgather.back_office.dto.HostSpacesResponse;
 import com.forgather.back_office.repository.AdminHostRepository;
-import com.forgather.back_office.repository.AdminSpaceHostMapRepository;
+import com.forgather.back_office.repository.AdminSpaceHostRepository;
 import com.forgather.domain.space.model.Space;
 import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.SpaceHostMap;
+import com.forgather.global.auth.model.SpaceHost;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class AdminHostService {
 
     private final AdminHostRepository adminHostRepository;
-    private final AdminSpaceHostMapRepository adminSpaceHostMapRepository;
+    private final AdminSpaceHostRepository adminSpaceHostRepository;
 
     public AdminHostResponse getAllHosts(Pageable pageable) {
         return AdminHostResponse.from(adminHostRepository.findAllHostsWithSpaceCount(pageable));
@@ -32,10 +32,10 @@ public class AdminHostService {
 
     public HostSpacesResponse getHostSpaces(Long hostId) {
         Host host = adminHostRepository.getByIdOrThrow(hostId);
-        List<Space> spaces = adminSpaceHostMapRepository
+        List<Space> spaces = adminSpaceHostRepository
             .findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host)
             .stream()
-            .map(SpaceHostMap::getSpace)
+            .map(SpaceHost::getSpace)
             .toList();
 
         return HostSpacesResponse.of(host, spaces);
