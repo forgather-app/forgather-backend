@@ -1,7 +1,7 @@
 package com.forgather.domain.exhibition.model;
 
 import com.forgather.domain.model.SoftDeleteEntity;
-import com.forgather.global.auth.model.AppUser;
+import com.forgather.global.auth.model.Host;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,7 +30,7 @@ public class ExhibitionHost extends SoftDeleteEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "host_id", nullable = false)
-    private AppUser appUser;
+    private Host host;
 
     @Column(name = "is_creator", nullable = false)
     private boolean isCreator;

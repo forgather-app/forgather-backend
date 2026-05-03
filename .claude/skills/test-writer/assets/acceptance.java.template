@@ -15,7 +15,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.forgather.domain.space.repository.UserRepository;
+import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.upload.domain.ContentsStorage;
 import com.forgather.fixture.HostFixture;
 import com.forgather.global.auth.model.Host;
@@ -31,7 +31,7 @@ class ${Domain}AcceptanceTest extends AcceptanceTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private UserRepository userRepository;
+    private HostRepository hostRepository;
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
@@ -50,7 +50,7 @@ class ${Domain}AcceptanceTest extends AcceptanceTest {
         RestAssuredMockMvc.mockMvc(mockMvc);
 
         host = HostFixture.createHost();
-        userRepository.save(host);
+        hostRepository.save(host);
         token = jwtTokenProvider.generateAccessToken(host.getId());
     }
 

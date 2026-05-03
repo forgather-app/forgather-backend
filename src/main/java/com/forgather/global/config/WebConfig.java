@@ -16,7 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.back_office.interceptor.AdminAuthInterceptor;
 import com.forgather.back_office.interceptor.LoginPageRedirectInterceptor;
 import com.forgather.back_office.resolver.LoginAdminUserArgumentResolver;
-import com.forgather.global.auth.resolver.LoginAppUserArgumentResolver;
+import com.forgather.global.auth.resolver.LoginHostArgumentResolver;
 import com.forgather.global.converter.MultipartJsonConverter;
 import com.forgather.global.logging.LoggingInterceptor;
 
@@ -30,7 +30,7 @@ public class WebConfig implements WebMvcConfigurer {
     private final LoggingInterceptor loggingInterceptor;
     private final AdminAuthInterceptor adminAuthInterceptor;
     private final LoginPageRedirectInterceptor loginPageRedirectInterceptor;
-    private final LoginAppUserArgumentResolver loginAppUserArgumentResolver;
+    private final LoginHostArgumentResolver loginHostArgumentResolver;
     private final LoginAdminUserArgumentResolver loginAdminUserArgumentResolver;
     private final ObjectMapper objectMapper;
 
@@ -49,7 +49,7 @@ public class WebConfig implements WebMvcConfigurer {
         PageableHandlerMethodArgumentResolver pageableResolver = new PageableHandlerMethodArgumentResolver();
         pageableResolver.setOneIndexedParameters(true); // 1부터 시작
         resolvers.add(pageableResolver);
-        resolvers.add(loginAppUserArgumentResolver);
+        resolvers.add(loginHostArgumentResolver);
         resolvers.add(loginAdminUserArgumentResolver);
     }
 

@@ -9,17 +9,15 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
-import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Table(name = "host")
 @Inheritance(strategy = InheritanceType.JOINED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class AppUser extends BaseTimeEntity {
+public class Host extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,7 +32,7 @@ public class AppUser extends BaseTimeEntity {
     @Column(name = "agreed_terms")
     private Boolean agreedTerms = false;
 
-    public AppUser(String name, String pictureUrl) {
+    public Host(String name, String pictureUrl) {
         this.name = name;
         this.pictureUrl = pictureUrl;
     }

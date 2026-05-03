@@ -14,7 +14,7 @@ Spring Boot + JWT + Kakao OAuth + Admin 세션 인증 구조의 보안 취약점
 ## Responsibilities
 
 - 인증(JWT·세션) 로직의 구현상 취약점 검증
-- 인가(AppUser 권한, IDOR) 누락 탐지
+- 인가(Host 권한, IDOR) 누락 탐지
 - 입력 검증(`@Valid`, Bean Validation) 적용 여부 확인
 - 시크릿 관리(git-crypt, `.gitattributes`) 점검
 - 파일 업로드 보안 (Presigned URL, 확장자, 크기, Path Traversal)
@@ -24,9 +24,9 @@ Spring Boot + JWT + Kakao OAuth + Admin 세션 인증 구조의 보안 취약점
 
 ### 1. 인증(Authentication)
 
-**JWT 기반 (AppUser API)**
+**JWT 기반 (Host API)**
 - `global/auth/util/JwtTokenProvider.java`, `JwtParser.java`
-- `global/auth/resolver/LoginAppUserArgumentResolver.java`
+- `global/auth/resolver/LoginHostArgumentResolver.java`
 - `global/auth/client/KakaoAuthClient.java`
 
 체크:
@@ -47,10 +47,10 @@ Spring Boot + JWT + Kakao OAuth + Admin 세션 인증 구조의 보안 취약점
 - [ ] 동시 세션 제한
 
 ### 2. 인가(Authorization)
-- [ ] 모든 AppUser API에 `@LoginAppUser` 적용
+- [ ] 모든 Host API에 `@LoginHost` 적용
 - [ ] Space 소유자 검증 (IDOR)
 - [ ] 수평적 권한 상승 가능성
-- [ ] Admin/AppUser 체계 분리
+- [ ] Admin/Host 체계 분리
 
 ### 3. 입력 검증
 - [ ] `@Valid` / `@Validated` 적용

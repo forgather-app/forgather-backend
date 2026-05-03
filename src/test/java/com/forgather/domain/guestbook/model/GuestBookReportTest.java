@@ -4,7 +4,7 @@ import static com.forgather.fixture.GuestBookCardFixture.createGuestBookCard;
 import static com.forgather.fixture.GuestBookReportFixture.createReport;
 import static com.forgather.fixture.GuestBookReportFixture.createReportWithDetail;
 import static com.forgather.fixture.GuestBookReportReasonFixture.createReason;
-import static com.forgather.fixture.AppUserFixture.createAppUser;
+import static com.forgather.fixture.HostFixture.createHost;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -15,11 +15,11 @@ import org.junit.jupiter.api.Test;
 
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
-import com.forgather.global.auth.model.AppUser;
+import com.forgather.global.auth.model.Host;
 
 class GuestBookReportTest {
 
-    private final AppUser user = createAppUser();
+    private final Host host = createHost();
     private final GuestBookCard card = createGuestBookCard();
     private final GuestBookReportReason reason = createReason();
 
@@ -27,7 +27,7 @@ class GuestBookReportTest {
     @Test
     void throwExceptionWhenGuestBookCardIsNull() {
         // when & then
-        assertThatThrownBy(() -> new GuestBookReport(null, user, user, ReporterType.HOST, reason, "기분 나빠요"))
+        assertThatThrownBy(() -> new GuestBookReport(null, host, host, ReporterType.HOST, reason, "기분 나빠요"))
             .isInstanceOf(BaseNullPointerException.class)
             .hasMessageContaining("방명록 카드는 null일 수 없습니다.");
     }
@@ -36,16 +36,16 @@ class GuestBookReportTest {
     @Test
     void throwExceptionWhenHostUserIsNull() {
         // when & then
-        assertThatThrownBy(() -> new GuestBookReport(card, null, user, ReporterType.HOST, reason, "기분 나빠요"))
+        assertThatThrownBy(() -> new GuestBookReport(card, null, host, ReporterType.HOST, reason, "기분 나빠요"))
             .isInstanceOf(BaseNullPointerException.class)
-            .hasMessageContaining("유저는 null일 수 없습니다.");
+            .hasMessageContaining("호스트는 null일 수 없습니다.");
     }
 
     @DisplayName("신고자가 null이면 예외를 던진다")
     @Test
     void throwExceptionWhenReporterUserIsNull() {
         // when & then
-        assertThatThrownBy(() -> new GuestBookReport(card, user, null, ReporterType.HOST, reason, "기분 나빠요"))
+        assertThatThrownBy(() -> new GuestBookReport(card, host, null, ReporterType.HOST, reason, "기분 나빠요"))
             .isInstanceOf(BaseNullPointerException.class)
             .hasMessageContaining("신고자는 null일 수 없습니다.");
     }
@@ -54,7 +54,7 @@ class GuestBookReportTest {
     @Test
     void throwExceptionWhenReporterTypeIsNull() {
         // when & then
-        assertThatThrownBy(() -> new GuestBookReport(card, user, user, null, reason, "기분 나빠요"))
+        assertThatThrownBy(() -> new GuestBookReport(card, host, host, null, reason, "기분 나빠요"))
             .isInstanceOf(BaseNullPointerException.class)
             .hasMessageContaining("신고자 유형은 null일 수 없습니다.");
     }
@@ -63,7 +63,7 @@ class GuestBookReportTest {
     @Test
     void throwExceptionWhenReasonIsNull() {
         // when & then
-        assertThatThrownBy(() -> new GuestBookReport(card, user, user, ReporterType.HOST, null, "기분 나빠요"))
+        assertThatThrownBy(() -> new GuestBookReport(card, host, host, ReporterType.HOST, null, "기분 나빠요"))
             .isInstanceOf(BaseNullPointerException.class)
             .hasMessageContaining("신고 사유는 null일 수 없습니다.");
     }
@@ -75,7 +75,7 @@ class GuestBookReportTest {
         String detail = "1234";
 
         // when & then
-        assertThatThrownBy(() -> createReportWithDetail(card, user, reason, detail))
+        assertThatThrownBy(() -> createReportWithDetail(card, host, reason, detail))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("상세 사유는 최소 5자, 최대 200자까지 입력 가능합니다.");
     }
@@ -87,7 +87,7 @@ class GuestBookReportTest {
         String detail = "a".repeat(201);
 
         // when & then
-        assertThatThrownBy(() -> createReportWithDetail(card, user, reason, detail))
+        assertThatThrownBy(() -> createReportWithDetail(card, host, reason, detail))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("상세 사유는 최소 5자, 최대 200자까지 입력 가능합니다.");
     }
@@ -96,7 +96,7 @@ class GuestBookReportTest {
     @Test
     void detailCanBeNull() {
         // when & then
-        assertThatCode(() -> createReport(card, user, reason))
+        assertThatCode(() -> createReport(card, host, reason))
             .doesNotThrowAnyException();
     }
 
@@ -104,7 +104,7 @@ class GuestBookReportTest {
     @Test
     void snapshotsSavedFromCard() {
         // when
-        GuestBookReport report = createReport(card, user, reason);
+        GuestBookReport report = createReport(card, host, reason);
 
         // then
         assertAll(

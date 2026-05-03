@@ -28,7 +28,7 @@ import com.forgather.domain.guestbook.repository.dto.GuestBookCardListDto;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.domain.ContentsStorage;
-import com.forgather.global.auth.model.AppUser;
+import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.ForbiddenException;
@@ -77,10 +77,10 @@ public class GuestBookService {
     }
 
     @Transactional(readOnly = true)
-    public GuestBookResponse read(AppUser user, String spaceCode, Pageable pageable) {
+    public GuestBookResponse read(Host host, String spaceCode, Pageable pageable) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
-        validateCanRead(space, user);
-        boolean isHost = user != null && isSpaceHost(space, user);
+        validateCanRead(space, host);
+        boolean isHost = host != null && isSpaceHost(space, host);
         Page<GuestBookCardListDto> guestBookCardDtos = guestBookCardRepository.findAllDtoBySpaceAndDeletedAtIsNull(space, pageable);
         Page<GuestBookCardSimpleResponse> simpleResponses = guestBookCardDtos.map(
             guestBookCardDto -> new GuestBookCardSimpleResponse(
@@ -94,12 +94,12 @@ public class GuestBookService {
     }
 
     @Transactional
-    public GuestBookCardResponse readCard(AppUser user, String spaceCode, Long guestBookCardId) {
+    public GuestBookCardResponse readCard(Host host, String spaceCode, Long guestBookCardId) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
-        validateCanRead(space, user);
+        validateCanRead(space, host);
 
         GuestBookCard guestBookCard = getGuestBookCard(guestBookCardId, space);
-        if (user != null && isSpaceHost(space, user)) {
+        if (host != null && isSpaceHost(space, host)) {
             guestBookCard.read();
         }
 
@@ -107,28 +107,28 @@ public class GuestBookService {
         return new GuestBookCardResponse(guestBookCard, photos);
     }
 
-    private void validateCanRead(Space space, AppUser user) {
+    private void validateCanRead(Space space, Host host) {
         if (space.isPublic()) { // 공개 스페이스
             return;
         }
-        if (user != null && isSpaceHost(space, user)) { // 스페이스 호스트
+        if (host != null && isSpaceHost(space, host)) { // 스페이스 호스트
             return;
         }
         throw new ForbiddenException("방문자는 비공개 스페이스의 방명록을 조회할 수 없습니다. spaceCode: " + space.getCode());
     }
 
     @Transactional
-    public void deleteAllCardsBySpace(AppUser user, Space space) {
-        validateSpaceHost(user, space);
+    public void deleteAllCardsBySpace(Host host, Space space) {
+        validateSpaceHost(host, space);
         for (GuestBookCard guestBookCard : guestBookCardRepository.findAllBySpaceAndDeletedAtIsNull(space)) {
-            deleteCard(user, space.getCode(), guestBookCard.getId());
+            deleteCard(host, space.getCode(), guestBookCard.getId());
         }
     }
 
     @Transactional
-    public void deleteCard(AppUser user, String spaceCode, Long guestBookCardId) {
+    public void deleteCard(Host host, String spaceCode, Long guestBookCardId) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
-        validateSpaceHost(user, space);
+        validateSpaceHost(host, space);
         GuestBookCard guestBookCard = getGuestBookCard(guestBookCardId, space);
         deleteGuestBookCardPhotos(guestBookCard);
         guestBookCard.delete();
@@ -141,13 +141,13 @@ public class GuestBookService {
 
     @Transactional
     public void deleteCardPhotos(
-        AppUser user,
+        Host host,
         String spaceCode,
         Long guestBookCardId,
         DeleteGuestBookCardPhotosRequest request
     ) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
-        validateSpaceHost(user, space);
+        validateSpaceHost(host, space);
         GuestBookCardPhotos guestBookCardPhotos = getGuestBookCardPhotos(space, guestBookCardId);
         List<GuestBookCardPhoto> deletedPhotos = guestBookCardPhotos.deleteByIds(request.deletePhotoIds());
         deleteGuestBookCardPhotos(deletedPhotos);
@@ -169,20 +169,20 @@ public class GuestBookService {
         );
     }
 
-    private void validateSpaceHost(AppUser user, Space space) {
-        if (isSpaceHost(space, user)) {
+    private void validateSpaceHost(Host host, Space space) {
+        if (isSpaceHost(space, host)) {
             return;
         }
         throw new ForbiddenException(
-            "해당 스페이스에 대한 접근 권한이 없습니다. spaceCode: %s, hostId: %d".formatted(space.getCode(), user.getId())
+            "해당 스페이스에 대한 접근 권한이 없습니다. spaceCode: %s, hostId: %d".formatted(space.getCode(), host.getId())
         );
     }
 
-    private boolean isSpaceHost(Space space, AppUser user) {
-        if (space == null || user == null) {
-            throw new BaseNullPointerException("스페이스와 유저는 null일 수 없습니다.", INTERNAL_SERVER_ERROR);
+    private boolean isSpaceHost(Space space, Host host) {
+        if (space == null || host == null) {
+            throw new BaseNullPointerException("스페이스와 호스트는 null일 수 없습니다.", INTERNAL_SERVER_ERROR);
         }
-        return spaceHostRepository.findBySpaceAndAppUserAndDeletedAtIsNull(space, user).isPresent();
+        return spaceHostRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent();
     }
 
     private void deleteGuestBookCardPhotos(List<GuestBookCardPhoto> photos) {

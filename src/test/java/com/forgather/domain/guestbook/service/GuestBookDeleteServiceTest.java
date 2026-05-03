@@ -18,12 +18,12 @@ import com.forgather.domain.guestbook.model.GuestBookCardPhoto;
 import com.forgather.domain.guestbook.repository.GuestBookCardPhotoRepository;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
 import com.forgather.domain.space.model.Space;
-import com.forgather.domain.space.repository.AppUserRepository;
+import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fake.FakeContentStorage;
-import com.forgather.fixture.AppUserFixture;
+import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
-import com.forgather.global.auth.model.AppUser;
+import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHost;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 
@@ -41,7 +41,7 @@ public class GuestBookDeleteServiceTest {
     GuestBookCardPhotoRepository guestBookCardPhotoRepository;
 
     @Autowired
-    private AppUserRepository userRepository;
+    private HostRepository hostRepository;
 
     @Autowired
     private SpaceRepository spaceRepository;
@@ -49,7 +49,7 @@ public class GuestBookDeleteServiceTest {
     @Autowired
     private SpaceHostRepository spaceHostRepository;
 
-    private AppUser user;
+    private Host host;
     private Space space;
 
     @BeforeEach
@@ -57,10 +57,10 @@ public class GuestBookDeleteServiceTest {
         space = SpaceFixture.createSpace();
         spaceRepository.save(space);
 
-        user = AppUserFixture.createAppUser();
-        userRepository.save(user);
+        host = HostFixture.createHost();
+        hostRepository.save(host);
 
-        spaceHostRepository.save(new SpaceHost(space, user));
+        spaceHostRepository.save(new SpaceHost(space, host));
     }
 
     @DisplayName("지정한 방명록을 논리 삭제한다")
@@ -75,8 +75,8 @@ public class GuestBookDeleteServiceTest {
         guestBookCardPhotoRepository.saveAll(List.of(guestBookCardPhoto1, guestBookCardPhoto2));
 
         // when
-        guestBookService.deleteCard(user, space.getCode(), guestBookCard1.getId());
-        guestBookService.deleteCard(user, space.getCode(), guestBookCard3.getId());
+        guestBookService.deleteCard(host, space.getCode(), guestBookCard1.getId());
+        guestBookService.deleteCard(host, space.getCode(), guestBookCard3.getId());
 
         // then
         assertAll(
@@ -103,7 +103,7 @@ public class GuestBookDeleteServiceTest {
         GuestBookCard guestBookCard3 = guestBookCardRepository.save(new GuestBookCard(space, "nickname", "test3"));
 
         // when
-        guestBookService.deleteAllCardsBySpace(user, space);
+        guestBookService.deleteAllCardsBySpace(host, space);
 
         // then
         assertAll(

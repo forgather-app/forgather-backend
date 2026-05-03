@@ -19,11 +19,11 @@ import com.forgather.back_office.dto.SimpleSpaceResponse;
 import com.forgather.back_office.repository.AdminUserRepository;
 import com.forgather.container.TestOnContainer;
 import com.forgather.domain.space.model.Space;
-import com.forgather.domain.space.repository.AppUserRepository;
+import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
-import com.forgather.fixture.AppUserFixture;
+import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
-import com.forgather.global.auth.model.AppUser;
+import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHost;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.NotFoundException;
@@ -40,7 +40,7 @@ class AdminHostServiceTest extends TestOnContainer {
     private AdminUserRepository adminUserRepository;
 
     @Autowired
-    private AppUserRepository hostRepository;
+    private HostRepository hostRepository;
 
     @Autowired
     private SpaceRepository spaceRepository;
@@ -52,8 +52,8 @@ class AdminHostServiceTest extends TestOnContainer {
     @Test
     void getAllHosts() {
         // given
-        AppUser host1 = hostRepository.save(AppUserFixture.createAppUser());
-        AppUser host2 = hostRepository.save(AppUserFixture.createAppUser());
+        Host host1 = hostRepository.save(HostFixture.createHost());
+        Host host2 = hostRepository.save(HostFixture.createHost());
         Space space1 = spaceRepository.save(SpaceFixture.createSpaceWithCode("1111111111"));
         Space space2 = spaceRepository.save(SpaceFixture.createSpaceWithCode("2222222222"));
         spaceHostRepository.save(new SpaceHost(space1, host1));
@@ -79,7 +79,7 @@ class AdminHostServiceTest extends TestOnContainer {
     @Test
     void getHostSpaces() {
         // given
-        AppUser host = hostRepository.save(AppUserFixture.createAppUser());
+        Host host = hostRepository.save(HostFixture.createHost());
         Space space1 = spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", "첫번째 스페이스"));
         Space space2 = spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("2222222222", "두번째 스페이스"));
         spaceHostRepository.save(new SpaceHost(space1, host));
@@ -104,7 +104,7 @@ class AdminHostServiceTest extends TestOnContainer {
     @Test
     void getHostSpacesWithNoSpaces() {
         // given
-        AppUser host = hostRepository.save(AppUserFixture.createAppUser());
+        Host host = hostRepository.save(HostFixture.createHost());
 
         // when
         HostSpacesResponse result = adminHostService.getHostSpaces(host.getId());
@@ -133,7 +133,7 @@ class AdminHostServiceTest extends TestOnContainer {
     void searchHostsByName() {
         // given
         String name = "포스티";
-        hostRepository.save(AppUserFixture.createAppUserWithName(name));
+        hostRepository.save(HostFixture.createHostWithName(name));
         Pageable pageable = PageRequest.of(0, 10);
 
         // when
@@ -151,8 +151,8 @@ class AdminHostServiceTest extends TestOnContainer {
     void searchHostsByNameContaining() {
         // given
         String name = "포스";
-        hostRepository.save(AppUserFixture.createAppUserWithName("포스티"));
-        hostRepository.save(AppUserFixture.createAppUserWithName("1포스"));
+        hostRepository.save(HostFixture.createHostWithName("포스티"));
+        hostRepository.save(HostFixture.createHostWithName("1포스"));
         Pageable pageable = PageRequest.of(0, 10);
 
         // when
@@ -170,8 +170,8 @@ class AdminHostServiceTest extends TestOnContainer {
     @Test
     void searchHostsByNameNull() {
         // given
-        hostRepository.save(AppUserFixture.createAppUserWithName("포스티"));
-        hostRepository.save(AppUserFixture.createAppUserWithName("레오"));
+        hostRepository.save(HostFixture.createHostWithName("포스티"));
+        hostRepository.save(HostFixture.createHostWithName("레오"));
         Pageable pageable = PageRequest.of(0, 10);
 
         // when
@@ -186,8 +186,8 @@ class AdminHostServiceTest extends TestOnContainer {
     void searchHostsByNameWhitespaces() {
         // given
         String name = "   ";
-        hostRepository.save(AppUserFixture.createAppUserWithName("포스티"));
-        hostRepository.save(AppUserFixture.createAppUserWithName("레오"));
+        hostRepository.save(HostFixture.createHostWithName("포스티"));
+        hostRepository.save(HostFixture.createHostWithName("레오"));
         Pageable pageable = PageRequest.of(0, 10);
 
         // when
@@ -202,7 +202,7 @@ class AdminHostServiceTest extends TestOnContainer {
     void searchHostsByNameNonContaining() {
         // given
         String name = "포스티";
-        hostRepository.save(AppUserFixture.createAppUserWithName("포스"));
+        hostRepository.save(HostFixture.createHostWithName("포스"));
         Pageable pageable = PageRequest.of(0, 10);
 
         // when
@@ -216,8 +216,8 @@ class AdminHostServiceTest extends TestOnContainer {
     @Test
     void searchHostsByNameWithPercentWildcard() {
         // given
-        hostRepository.save(AppUserFixture.createAppUserWithName("포스티%"));
-        hostRepository.save(AppUserFixture.createAppUserWithName("포스티"));
+        hostRepository.save(HostFixture.createHostWithName("포스티%"));
+        hostRepository.save(HostFixture.createHostWithName("포스티"));
         Pageable pageable = PageRequest.of(0, 10);
 
         // when
@@ -234,8 +234,8 @@ class AdminHostServiceTest extends TestOnContainer {
     @Test
     void searchHostsByNameWithUnderscoreWildcard() {
         // given
-        hostRepository.save(AppUserFixture.createAppUserWithName("포스_티"));
-        hostRepository.save(AppUserFixture.createAppUserWithName("포스티"));
+        hostRepository.save(HostFixture.createHostWithName("포스_티"));
+        hostRepository.save(HostFixture.createHostWithName("포스티"));
         Pageable pageable = PageRequest.of(0, 10);
 
         // when
@@ -252,8 +252,8 @@ class AdminHostServiceTest extends TestOnContainer {
     @Test
     void searchHostsByNameWithBackslash() {
         // given
-        hostRepository.save(AppUserFixture.createAppUserWithName("포스\\티"));
-        hostRepository.save(AppUserFixture.createAppUserWithName("포스티"));
+        hostRepository.save(HostFixture.createHostWithName("포스\\티"));
+        hostRepository.save(HostFixture.createHostWithName("포스티"));
         Pageable pageable = PageRequest.of(0, 10);
 
         // when

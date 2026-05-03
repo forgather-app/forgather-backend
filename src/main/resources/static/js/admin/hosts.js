@@ -690,7 +690,7 @@ document.addEventListener('DOMContentLoaded', function() {
             activeElement.isContentEditable
         );
 
-        if (isInputFocused || UserSpacesModal.classList.contains('show')) {
+        if (isInputFocused || hostSpacesModal.classList.contains('show')) {
             return;
         }
 
@@ -713,16 +713,16 @@ document.addEventListener('DOMContentLoaded', function() {
     /**
      * 모달 관련 DOM 요소 참조
      */
-    const userSpacesModal = document.getElementById('userSpacesModal');
-    const userSpacesModalTitle = document.getElementById('userSpacesModalTitle');
-    const userSpacesLoading = document.getElementById('userSpacesLoading');
-    const userSpacesError = document.getElementById('userSpacesError');
-    const userSpacesContent = document.getElementById('userSpacesContent');
-    const userSpacesScrollArea = document.getElementById('userSpacesScrollArea');
-    const userSpacesScrollFade = document.getElementById('userSpacesScrollFade');
-    const userSpacesCountInfo = document.getElementById('userSpacesCountInfo');
-    const closeUserSpacesModalBtn = document.getElementById('closeUserSpacesModalBtn');
-    const closeUserSpacesFooterBtn = document.getElementById('closeUserSpacesFooterBtn');
+    const hostSpacesModal = document.getElementById('hostSpacesModal');
+    const hostSpacesModalTitle = document.getElementById('hostSpacesModalTitle');
+    const hostSpacesLoading = document.getElementById('hostSpacesLoading');
+    const hostSpacesError = document.getElementById('hostSpacesError');
+    const hostSpacesContent = document.getElementById('hostSpacesContent');
+    const hostSpacesScrollArea = document.getElementById('hostSpacesScrollArea');
+    const hostSpacesScrollFade = document.getElementById('hostSpacesScrollFade');
+    const hostSpacesCountInfo = document.getElementById('hostSpacesCountInfo');
+    const closeHostSpacesModalBtn = document.getElementById('closeHostSpacesModalBtn');
+    const closeHostSpacesFooterBtn = document.getElementById('closeHostSpacesFooterBtn');
 
     // 슬라이드 전환 관련 DOM 요소
     const backToSpaceListBtn = document.getElementById('backToSpaceListBtn');
@@ -760,10 +760,10 @@ document.addEventListener('DOMContentLoaded', function() {
      * - display: flex로 변경 후 다음 프레임에서 .show 추가 (CSS 애니메이션)
      * - body에 modal-open 추가하여 배경 스크롤 방지
      */
-    function openUserSpacesModal() {
-        userSpacesModal.style.display = 'flex';
+    function openHostSpacesModal() {
+        hostSpacesModal.style.display = 'flex';
         requestAnimationFrame(() => {
-            userSpacesModal.classList.add('show');
+            hostSpacesModal.classList.add('show');
         });
         document.body.classList.add('modal-open');
     }
@@ -773,13 +773,13 @@ document.addEventListener('DOMContentLoaded', function() {
      * - .show 제거 후 300ms 대기 (CSS transition과 동일) → display: none
      * - 모달 내용 초기화
      */
-    function closeUserSpacesModal() {
-        userSpacesModal.classList.remove('show');
+    function closeHostSpacesModal() {
+        hostSpacesModal.classList.remove('show');
         document.body.classList.remove('modal-open');
 
         setTimeout(() => {
-            userSpacesModal.style.display = 'none';
-            resetUserSpacesModal();
+            hostSpacesModal.style.display = 'none';
+            resetHostSpacesModal();
             // 슬라이드 상태 즉시 초기화 (재열기 시 항상 목록부터)
             modalPanelContainer.style.transform = 'translateX(0%)';
             backToSpaceListBtn.style.display = 'none';
@@ -794,13 +794,13 @@ document.addEventListener('DOMContentLoaded', function() {
     /**
      * 모달 내용 초기화
      */
-    function resetUserSpacesModal() {
-        userSpacesLoading.style.display = 'none';
-        userSpacesError.style.display = 'none';
-        userSpacesContent.style.display = 'none';
-        userSpacesContent.innerHTML = '';
-        userSpacesScrollFade.style.display = 'none';
-        userSpacesCountInfo.textContent = '';
+    function resetHostSpacesModal() {
+        hostSpacesLoading.style.display = 'none';
+        hostSpacesError.style.display = 'none';
+        hostSpacesContent.style.display = 'none';
+        hostSpacesContent.innerHTML = '';
+        hostSpacesScrollFade.style.display = 'none';
+        hostSpacesCountInfo.textContent = '';
     }
 
     // ==================================================================
@@ -829,13 +829,13 @@ document.addEventListener('DOMContentLoaded', function() {
      * @param {string} spaceName - 모달 제목에 표시할 스페이스 이름
      */
     function slideToDetail(spaceName) {
-        savedModalTitle = userSpacesModalTitle.textContent;
-        userSpacesModalTitle.textContent = spaceName;
+        savedModalTitle = hostSpacesModalTitle.textContent;
+        hostSpacesModalTitle.textContent = spaceName;
         modalPanelContainer.style.transform = 'translateX(-50%)';
         backToSpaceListBtn.style.display = 'flex';
         hostModalVisitSpaceBtn.style.display = 'inline-flex';
-        userSpacesScrollFade.style.display = 'none';
-        userSpacesCountInfo.textContent = '';
+        hostSpacesScrollFade.style.display = 'none';
+        hostSpacesCountInfo.textContent = '';
         currentModalView = 'detail';
     }
 
@@ -843,7 +843,7 @@ document.addEventListener('DOMContentLoaded', function() {
      * 상세 → 목록 슬라이드 복귀
      */
     function slideToList() {
-        userSpacesModalTitle.textContent = savedModalTitle;
+        hostSpacesModalTitle.textContent = savedModalTitle;
         modalPanelContainer.style.transform = 'translateX(0%)';
         backToSpaceListBtn.style.display = 'none';
         hostModalVisitSpaceBtn.style.display = 'none';
@@ -949,19 +949,19 @@ document.addEventListener('DOMContentLoaded', function() {
     /**
      * 모달 로딩 상태 표시
      */
-    function showUserSpacesLoading() {
-        resetUserSpacesModal();
-        userSpacesLoading.style.display = 'flex';
+    function showHostSpacesLoading() {
+        resetHostSpacesModal();
+        hostSpacesLoading.style.display = 'flex';
     }
 
     /**
      * 모달 에러 상태 표시
      * @param {string} message - 에러 메시지
      */
-    function showUserSpacesError(message) {
-        resetUserSpacesModal();
-        userSpacesError.textContent = message;
-        userSpacesError.style.display = 'block';
+    function showHostSpacesError(message) {
+        resetHostSpacesModal();
+        hostSpacesError.textContent = message;
+        hostSpacesError.style.display = 'block';
     }
 
     /**
@@ -970,17 +970,17 @@ document.addEventListener('DOMContentLoaded', function() {
      * - 스크롤이 끝에 도달하면 페이드 숨김
      */
     function updateScrollFade() {
-        if (!userSpacesScrollArea || !userSpacesScrollFade) return;
+        if (!hostSpacesScrollArea || !hostSpacesScrollFade) return;
 
-        const { scrollTop, scrollHeight, clientHeight } = userSpacesScrollArea;
+        const { scrollTop, scrollHeight, clientHeight } = hostSpacesScrollArea;
         const isScrollable = scrollHeight > clientHeight + 4;
         const isAtBottom = scrollTop + clientHeight >= scrollHeight - 4;
 
-        userSpacesScrollFade.style.display = (isScrollable && !isAtBottom) ? 'block' : 'none';
+        hostSpacesScrollFade.style.display = (isScrollable && !isAtBottom) ? 'block' : 'none';
     }
 
-    if (userSpacesScrollArea) {
-        userSpacesScrollArea.addEventListener('scroll', updateScrollFade);
+    if (hostSpacesScrollArea) {
+        hostSpacesScrollArea.addEventListener('scroll', updateScrollFade);
     }
 
     /**
@@ -989,11 +989,11 @@ document.addEventListener('DOMContentLoaded', function() {
      *
      * 각 아이템: 카드 형태, 라벨 표기 (이름, 코드, 생성일, 공개 여부)
      */
-    function renderUserSpaces(spaces) {
-        resetUserSpacesModal();
+    function renderHostSpaces(spaces) {
+        resetHostSpacesModal();
 
         if (!spaces || spaces.length === 0) {
-            userSpacesContent.innerHTML = `
+            hostSpacesContent.innerHTML = `
                 <div class="flex flex-col items-center justify-center py-2xl text-text-secondary">
                     <svg class="w-12 h-12 mb-md text-text-muted opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
@@ -1001,8 +1001,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p class="text-sm">스페이스가 없습니다.</p>
                 </div>
             `;
-            userSpacesContent.style.display = 'block';
-            userSpacesCountInfo.textContent = '';
+            hostSpacesContent.style.display = 'block';
+            hostSpacesCountInfo.textContent = '';
             return;
         }
 
@@ -1039,9 +1039,9 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         }).join('');
 
-        userSpacesContent.innerHTML = items;
-        userSpacesContent.style.display = 'block';
-        userSpacesCountInfo.textContent = `총 ${spaces.length}개 스페이스`;
+        hostSpacesContent.innerHTML = items;
+        hostSpacesContent.style.display = 'block';
+        hostSpacesCountInfo.textContent = `총 ${spaces.length}개 스페이스`;
 
         // 렌더링 후 스크롤 인디케이터 업데이트
         requestAnimationFrame(() => updateScrollFade());
@@ -1056,20 +1056,20 @@ document.addEventListener('DOMContentLoaded', function() {
      * 동작 흐름:
      * 1. 모달 제목에 호스트명 설정
      * 2. 모달 열기 + 로딩 표시
-     * 3. API 호출 (API.getUserSpaces)
+     * 3. API 호출 (API.getHostSpaces)
      * 4. 성공: 스페이스 목록 렌더링 / 실패: 에러 메시지 표시
      */
-    async function loadUserSpaces(hostId, hostName) {
-        userSpacesModalTitle.textContent = `${hostName}의 스페이스`;
-        openUserSpacesModal();
-        showUserSpacesLoading();
+    async function loadHostSpaces(hostId, hostName) {
+        hostSpacesModalTitle.textContent = `${hostName}의 스페이스`;
+        openHostSpacesModal();
+        showHostSpacesLoading();
 
         try {
-            const data = await API.getUserSpaces(hostId);
-            renderUserSpaces(data.spaces);
+            const data = await API.getHostSpaces(hostId);
+            renderHostSpaces(data.spaces);
         } catch (error) {
             console.error('Failed to load host spaces:', error);
-            showUserSpacesError(error.message || '스페이스 목록을 불러오는데 실패했습니다.');
+            showHostSpacesError(error.message || '스페이스 목록을 불러오는데 실패했습니다.');
         }
     }
 
@@ -1084,7 +1084,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const hostId = td.getAttribute('data-host-id');
             const hostName = td.getAttribute('data-host-name');
             if (hostId) {
-                loadUserSpaces(parseInt(hostId, 10), hostName);
+                loadHostSpaces(parseInt(hostId, 10), hostName);
             }
         }
     }
@@ -1118,24 +1118,24 @@ document.addEventListener('DOMContentLoaded', function() {
     /**
      * 모달 닫기: 헤더 X 버튼
      */
-    closeUserSpacesModalBtn.addEventListener('click', function() {
-        closeUserSpacesModal();
+    closeHostSpacesModalBtn.addEventListener('click', function() {
+        closeHostSpacesModal();
     });
 
     /**
      * 모달 닫기: 푸터 닫기 버튼
      */
-    closeUserSpacesFooterBtn.addEventListener('click', function() {
-        closeUserSpacesModal();
+    closeHostSpacesFooterBtn.addEventListener('click', function() {
+        closeHostSpacesModal();
     });
 
     /**
      * 모달 닫기: 오버레이(배경) 클릭
-     * - event.target === userSpacesModal이면 오버레이 직접 클릭
+     * - event.target === hostSpacesModal이면 오버레이 직접 클릭
      */
-    userSpacesModal.addEventListener('click', function(event) {
-        if (event.target === userSpacesModal) {
-            closeUserSpacesModal();
+    hostSpacesModal.addEventListener('click', function(event) {
+        if (event.target === hostSpacesModal) {
+            closeHostSpacesModal();
         }
     });
 
@@ -1145,11 +1145,11 @@ document.addEventListener('DOMContentLoaded', function() {
      * - 목록 화면: 모달 닫기
      */
     document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape' && userSpacesModal.classList.contains('show')) {
+        if (event.key === 'Escape' && hostSpacesModal.classList.contains('show')) {
             if (currentModalView === 'detail') {
                 slideToList();
             } else {
-                closeUserSpacesModal();
+                closeHostSpacesModal();
             }
         }
     });
@@ -1177,7 +1177,7 @@ document.addEventListener('DOMContentLoaded', function() {
     /**
      * 스페이스 카드 클릭 → 상세 슬라이드 전환 (이벤트 위임)
      */
-    userSpacesContent.addEventListener('click', function(event) {
+    hostSpacesContent.addEventListener('click', function(event) {
         const card = event.target.closest('[data-space-code]');
         if (card) {
             const spaceCode = card.getAttribute('data-space-code');
@@ -1191,7 +1191,7 @@ document.addEventListener('DOMContentLoaded', function() {
     /**
      * 스페이스 카드 키보드 접근성 (Enter/Space)
      */
-    userSpacesContent.addEventListener('keydown', function(event) {
+    hostSpacesContent.addEventListener('keydown', function(event) {
         if (event.key === 'Enter' || event.key === ' ') {
             const card = event.target.closest('[data-space-code]');
             if (card) {

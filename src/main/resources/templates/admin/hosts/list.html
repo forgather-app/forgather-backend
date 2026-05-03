@@ -176,10 +176,10 @@
         - ESC 키 또는 오버레이 클릭 시 닫힘
         - 모달이 열렸을 때 body의 스크롤 방지
     -->
-    <div id="userSpacesModal"
+    <div id="hostSpacesModal"
          class="modal-overlay fixed inset-0 bg-black/60 flex justify-center items-center z-[10000]"
          style="display: none;"
-         role="dialog" aria-labelledby="userSpacesModalTitle" aria-modal="true">
+         role="dialog" aria-labelledby="hostSpacesModalTitle" aria-modal="true">
         <div class="modal-container bg-surface rounded-xl shadow-xl max-w-[960px] w-[90%] h-[85vh] flex flex-col">
             <!-- 모달 헤더 -->
             <div class="flex justify-between items-center p-lg border-b border-border-color">
@@ -193,9 +193,9 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                         </svg>
                     </button>
-                    <h3 id="userSpacesModalTitle" class="text-xl font-bold text-text-primary m-0">스페이스 목록</h3>
+                    <h3 id="hostSpacesModalTitle" class="text-xl font-bold text-text-primary m-0">스페이스 목록</h3>
                 </div>
-                <button id="closeUserSpacesModalBtn"
+                <button id="closeHostSpacesModalBtn"
                         class="w-11 h-11 flex items-center justify-center text-2xl text-text-secondary bg-transparent border-none rounded-lg cursor-pointer
                                hover:bg-bg-color hover:text-text-primary transition-all duration-200"
                         aria-label="모달 닫기">
@@ -209,21 +209,21 @@
                      style="transform: translateX(0%);">
 
                     <!-- [패널 1: 스페이스 목록] - 기존 콘텐츠 유지 -->
-                    <div class="w-1/2 h-full overflow-y-auto relative p-lg" id="userSpacesScrollArea">
+                    <div class="w-1/2 h-full overflow-y-auto relative p-lg" id="hostSpacesScrollArea">
                         <!-- 로딩 상태 -->
-                        <div id="userSpacesLoading" class="flex flex-col items-center justify-center py-2xl text-text-secondary" style="display: none;">
+                        <div id="hostSpacesLoading" class="flex flex-col items-center justify-center py-2xl text-text-secondary" style="display: none;">
                             <div class="w-10 h-10 border-[3px] border-border-color border-t-primary rounded-full animate-spin"></div>
                             <p class="mt-md text-sm">스페이스 목록 로딩 중...</p>
                         </div>
 
                         <!-- 에러 상태 -->
-                        <div id="userSpacesError"
+                        <div id="hostSpacesError"
                              class="p-md bg-red-50 border border-red-200 rounded-lg text-danger text-sm text-center"
                              style="display: none;">
                         </div>
 
                         <!-- 스페이스 목록 (JavaScript로 동적 렌더링) -->
-                        <div id="userSpacesContent" style="display: none;">
+                        <div id="hostSpacesContent" style="display: none;">
                         </div>
                     </div>
 
@@ -288,14 +288,14 @@
             </div>
 
             <!-- 스크롤 하단 페이드 인디케이터 (스크롤 영역 바로 아래, 푸터 위에 겹침) -->
-            <div id="userSpacesScrollFade"
+            <div id="hostSpacesScrollFade"
                  class="h-12 -mt-12 pointer-events-none relative z-10 transition-opacity duration-200"
                  style="background: linear-gradient(to top, rgba(255,255,255,0.95), transparent); display: none;">
             </div>
 
             <!-- 모달 푸터 -->
             <div class="p-lg border-t border-border-color flex items-center justify-between">
-                <span id="userSpacesCountInfo" class="text-xs text-text-muted"></span>
+                <span id="hostSpacesCountInfo" class="text-xs text-text-muted"></span>
                 <div class="flex items-center gap-sm">
                     <button id="hostModalVisitSpaceBtn"
                             class="min-h-[44px] px-lg py-2.5 text-sm font-semibold text-white
@@ -307,7 +307,7 @@
                             aria-label="게스트 페이지로 이동">
                         게스트 페이지로 이동
                     </button>
-                    <button id="closeUserSpacesFooterBtn"
+                    <button id="closeHostSpacesFooterBtn"
                             class="min-h-[44px] px-lg py-2.5 text-sm font-medium text-text-secondary
                                    bg-surface border border-border-color rounded-lg
                                    hover:bg-bg-color hover:text-text-primary

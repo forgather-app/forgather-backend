@@ -7,13 +7,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.forgather.global.auth.annotation.LoginAppUser;
-import com.forgather.global.auth.dto.AppUserResponse;
+import com.forgather.global.auth.annotation.LoginHost;
+import com.forgather.global.auth.dto.HostResponse;
 import com.forgather.global.auth.dto.KakaoLoginConfirmRequest;
 import com.forgather.global.auth.dto.KakaoLoginTokenResponse;
 import com.forgather.global.auth.dto.LoginResponse;
 import com.forgather.global.auth.dto.RefreshRequest;
-import com.forgather.global.auth.model.AppUser;
+import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.service.AuthService;
 import com.forgather.global.response.ApiResponse;
 
@@ -33,8 +33,8 @@ public class AuthController {
     @Operation(summary = "내 정보 확인",
         description = "현재 로그인된 사용자의 정보를 확인합니다. " +
             "로그인된 사용자가 없으면 401 Unauthorized를 반환합니다.")
-    public ResponseEntity<ApiResponse<AppUserResponse>> getCurrentUser(@LoginAppUser AppUser appUser) {
-        var response = authService.getCurrentUser(appUser);
+    public ResponseEntity<ApiResponse<HostResponse>> getCurrentUser(@LoginHost Host host) {
+        var response = authService.getCurrentUser(host);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -71,8 +71,8 @@ public class AuthController {
     @PostMapping("/terms")
     @Operation(summary = "서비스 이용 약관 동의",
         description = "서비스 이용 약관에 동의합니다. ")
-    public ResponseEntity<ApiResponse<Void>> agreeTerms(@LoginAppUser AppUser appUser) {
-        authService.agreeTerms(appUser);
+    public ResponseEntity<ApiResponse<Void>> agreeTerms(@LoginHost Host host) {
+        authService.agreeTerms(host);
         return ResponseEntity.ok(ApiResponse.success());
     }
 }

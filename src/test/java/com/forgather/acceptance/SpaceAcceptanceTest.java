@@ -1,6 +1,6 @@
 package com.forgather.acceptance;
 
-import static com.forgather.fixture.AppUserFixture.createAppUser;
+import static com.forgather.fixture.HostFixture.createHost;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,12 +31,12 @@ import com.forgather.domain.product.repository.ProductPhotoRepository;
 import com.forgather.domain.product.repository.ProductRepository;
 import com.forgather.domain.space.dto.CreateSpaceRequest;
 import com.forgather.domain.space.dto.CreateSpaceResponse;
-import com.forgather.domain.space.dto.UserSpaceResponse;
+import com.forgather.domain.space.dto.HostSpaceResponse;
 import com.forgather.domain.space.dto.SpaceResponse;
 import com.forgather.domain.space.dto.UpdateSpaceRequest;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.model.SpacePhoto;
-import com.forgather.domain.space.repository.AppUserRepository;
+import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpacePhotoRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.domain.ContentsStorage;
@@ -46,7 +46,7 @@ import com.forgather.fixture.ProductFixture;
 import com.forgather.fixture.ProductPhotoFixture;
 import com.forgather.fixture.SpaceFixture;
 import com.forgather.fixture.SpacePhotoFixture;
-import com.forgather.global.auth.model.AppUser;
+import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHost;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.auth.util.JwtTokenProvider;
@@ -64,7 +64,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private AppUserRepository userRepository;
+    private HostRepository hostRepository;
 
     @Autowired
     private SpaceRepository spaceRepository;
@@ -96,7 +96,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
     @MockitoBean
     private ContentsStorage contentsStorage;
 
-    private AppUser user;
+    private Host host;
     private String token;
 
     @BeforeEach
@@ -105,9 +105,9 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         Mockito.when(contentsStorage.upload(any(), any()))
             .thenReturn("forgather/temp.png");
 
-        user = createAppUser();
-        userRepository.save(user);
-        token = jwtTokenProvider.generateAccessToken(user.getId());
+        host = createHost();
+        hostRepository.save(host);
+        token = jwtTokenProvider.generateAccessToken(host.getId());
     }
 
     @DisplayName("스페이스를 생성한다.")
@@ -204,7 +204,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         SpacePhoto spacePhoto = spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
-        spaceHostRepository.save(new SpaceHost(space, user));
+        spaceHostRepository.save(new SpaceHost(space, host));
         guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "nickname1", "카드1"));
         guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "nickname2", "카드2"));
 
@@ -236,7 +236,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
-        spaceHostRepository.save(new SpaceHost(space, user));
+        spaceHostRepository.save(new SpaceHost(space, host));
 
         // when
         var response = RestAssuredMockMvc.given()
@@ -260,7 +260,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
-        spaceHostRepository.save(new SpaceHost(space, user));
+        spaceHostRepository.save(new SpaceHost(space, host));
         Product product = productRepository.save(ProductFixture.createProductWithSpace(space));
         productPhotoRepository.save(ProductPhotoFixture.createProductPhotoWithProduct(product));
         GuestBookCard guestBookCard = guestBookCardRepository.save(
@@ -294,7 +294,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
-        spaceHostRepository.save(new SpaceHost(space, user));
+        spaceHostRepository.save(new SpaceHost(space, host));
 
         // when
         var response = RestAssuredMockMvc.given()
@@ -313,8 +313,8 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
-        spaceHostRepository.save(new SpaceHost(space, user));
-        AppUser otherHost = userRepository.save(createAppUser());
+        spaceHostRepository.save(new SpaceHost(space, host));
+        Host otherHost = hostRepository.save(createHost());
         String otherToken = jwtTokenProvider.generateAccessToken(otherHost.getId());
 
         // when
@@ -335,7 +335,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         spacePhotoRepository.save(new SpacePhoto(space, "original.png", "forgather/uuid.png", 1024L));
-        spaceHostRepository.save(new SpaceHost(space, user));
+        spaceHostRepository.save(new SpaceHost(space, host));
 
         MockMultipartFile newFile = new MockMultipartFile(
             "file",
@@ -381,7 +381,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
-        spaceHostRepository.save(new SpaceHost(space, user));
+        spaceHostRepository.save(new SpaceHost(space, host));
 
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
             "새로운 스페이스", null, null, null, null, false)
@@ -421,7 +421,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
-        spaceHostRepository.save(new SpaceHost(space, user));
+        spaceHostRepository.save(new SpaceHost(space, host));
 
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
             "새로운 스페이스", null, null, null, null, false)
@@ -445,8 +445,8 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
-        spaceHostRepository.save(new SpaceHost(space, user));
-        AppUser otherHost = userRepository.save(createAppUser());
+        spaceHostRepository.save(new SpaceHost(space, host));
+        Host otherHost = hostRepository.save(createHost());
         String otherToken = jwtTokenProvider.generateAccessToken(otherHost.getId());
 
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
@@ -475,12 +475,12 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         Thread.sleep(1000);
         Space space2 = spaceRepository.save(SpaceFixture.createPrivateSpace());
         spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space2));
-        spaceHostRepository.save(new SpaceHost(space1, user));
-        spaceHostRepository.save(new SpaceHost(space2, user));
+        spaceHostRepository.save(new SpaceHost(space1, host));
+        spaceHostRepository.save(new SpaceHost(space2, host));
         guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space1, "nickname", "방명록1"));
 
         // when
-        ApiResponse<UserSpaceResponse> result = RestAssuredMockMvc.given()
+        ApiResponse<HostSpaceResponse> result = RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
             .when()
             .get("/spaces/me")

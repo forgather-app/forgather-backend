@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.forgather.domain.guestbook.dto.ReportHistoryResponse;
 import com.forgather.domain.guestbook.service.GuestbookReportService;
-import com.forgather.global.auth.annotation.LoginAppUser;
-import com.forgather.global.auth.model.AppUser;
+import com.forgather.global.auth.annotation.LoginHost;
+import com.forgather.global.auth.model.Host;
 import com.forgather.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -56,7 +56,7 @@ public class GuestbookController {
     )
     @GetMapping("/me/reports")
     public ResponseEntity<ApiResponse<ReportHistoryResponse>> retrieveReportHistory(
-        @LoginAppUser(required = true) AppUser loginUser,
+        @LoginHost(required = true) Host loginUser,
         @PageableDefault(size = 15, sort = {"createdAt", "id"}, direction = Sort.Direction.DESC)
         Pageable pageable
     ) {

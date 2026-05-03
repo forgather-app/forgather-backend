@@ -4,7 +4,7 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-public record UserSpaceResponse(
+public record HostSpaceResponse(
 
     @Schema(description = "호스트 스페이스 목록", example = """
         [

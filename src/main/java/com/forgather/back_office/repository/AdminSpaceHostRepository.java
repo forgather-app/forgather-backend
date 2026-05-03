@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.forgather.back_office.dto.HostDetailResponse;
-import com.forgather.global.auth.model.AppUser;
+import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHost;
 
 public interface AdminSpaceHostRepository {
@@ -19,12 +19,12 @@ public interface AdminSpaceHostRepository {
                 h.id, h.name, h.createdAt,
                 (SELECT COUNT(sh.id)
                  FROM SpaceHost sh JOIN sh.space s
-                 WHERE sh.appUser = h AND s.deletedAt IS NULL
+                 WHERE sh.host = h AND s.deletedAt IS NULL
                 )
             )
-            FROM AppUser h
+            FROM Host h
             """,
-        countQuery = "SELECT COUNT(h) FROM AppUser h"
+        countQuery = "SELECT COUNT(h) FROM Host h"
     )
     Page<HostDetailResponse> findAllHostsWithSpaceCount(Pageable pageable);
 
@@ -32,10 +32,10 @@ public interface AdminSpaceHostRepository {
         SELECT sh
         FROM SpaceHost sh
             JOIN FETCH sh.space s
-        WHERE sh.appUser = :host
+        WHERE sh.host = :host
             AND s.deletedAt IS NULL
             AND sh.deletedAt IS NULL
         ORDER BY s.createdAt DESC
         """)
-    List<SpaceHost> findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(@Param("host") AppUser host);
+    List<SpaceHost> findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(@Param("host") Host host);
 }

@@ -24,12 +24,12 @@ import com.forgather.domain.guestbook.dto.WriteGuestBookCardPhotoRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardResponse;
 import com.forgather.domain.space.model.Space;
-import com.forgather.domain.space.repository.AppUserRepository;
+import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.AwsS3Cloud;
-import com.forgather.fixture.AppUserFixture;
+import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
-import com.forgather.global.auth.model.AppUser;
+import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHost;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.auth.util.JwtTokenProvider;
@@ -50,7 +50,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
     private SpaceRepository spaceRepository;
 
     @Autowired
-    private AppUserRepository userRepository;
+    private HostRepository hostRepository;
 
     @Autowired
     private SpaceHostRepository spaceHostRepository;
@@ -82,15 +82,15 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
         spaceRepository.save(publicSpace);
         spaceRepository.save(privateSpace);
 
-        AppUser user = AppUserFixture.createAppUser();
-        AppUser anotherHost = AppUserFixture.createAppUser();
-        userRepository.save(user);
-        userRepository.save(anotherHost);
-        accessToken = jwtTokenProvider.generateAccessToken(user.getId());
+        Host host = HostFixture.createHost();
+        Host anotherHost = HostFixture.createHost();
+        hostRepository.save(host);
+        hostRepository.save(anotherHost);
+        accessToken = jwtTokenProvider.generateAccessToken(host.getId());
         anotherAccessToken = jwtTokenProvider.generateAccessToken(anotherHost.getId());
 
-        spaceHostRepository.save(new SpaceHost(publicSpace, user));
-        spaceHostRepository.save(new SpaceHost(privateSpace, user));
+        spaceHostRepository.save(new SpaceHost(publicSpace, host));
+        spaceHostRepository.save(new SpaceHost(privateSpace, host));
 
         RestAssuredMockMvc.mockMvc(mockMvc);
     }

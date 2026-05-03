@@ -19,12 +19,12 @@ import com.forgather.domain.product.model.ProductPhoto;
 import com.forgather.domain.product.repository.ProductPhotoRepository;
 import com.forgather.domain.product.repository.ProductRepository;
 import com.forgather.domain.space.model.Space;
-import com.forgather.domain.space.repository.AppUserRepository;
+import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fake.FakeContentStorage;
-import com.forgather.fixture.AppUserFixture;
+import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
-import com.forgather.global.auth.model.AppUser;
+import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHost;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 
@@ -42,7 +42,7 @@ public class ProductDeleteServiceTest {
     private ProductPhotoRepository productPhotoRepository;
 
     @Autowired
-    private AppUserRepository userRepository;
+    private HostRepository hostRepository;
 
     @Autowired
     private SpaceRepository spaceRepository;
@@ -50,7 +50,7 @@ public class ProductDeleteServiceTest {
     @Autowired
     private SpaceHostRepository spaceHostRepository;
 
-    private AppUser user;
+    private Host host;
     private Space space;
 
     @BeforeEach
@@ -58,10 +58,10 @@ public class ProductDeleteServiceTest {
         space = SpaceFixture.createSpace();
         spaceRepository.save(space);
 
-        user = AppUserFixture.createAppUser();
-        userRepository.save(user);
+        host = HostFixture.createHost();
+        hostRepository.save(host);
 
-        spaceHostRepository.save(new SpaceHost(space, user));
+        spaceHostRepository.save(new SpaceHost(space, host));
     }
 
     @DisplayName("특정 작품을 논리 삭제한다")
@@ -76,7 +76,7 @@ public class ProductDeleteServiceTest {
         productPhotoRepository.saveAll(List.of(productPhoto1, productPhoto2));
 
         // when
-        productService.delete(user, space.getCode(), product2.getId());
+        productService.delete(host, space.getCode(), product2.getId());
 
         // then
         assertAll(
@@ -102,7 +102,7 @@ public class ProductDeleteServiceTest {
         productPhotoRepository.saveAll(List.of(productPhoto1, productPhoto2));
 
         // when
-        productService.deleteIfExists(user, space);
+        productService.deleteIfExists(host, space);
 
         // then
         assertAll(

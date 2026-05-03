@@ -31,10 +31,10 @@ public class SpaceHost extends SoftDeleteEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "host_id", nullable = false)
-    private AppUser appUser;
+    private Host host;
 
-    public SpaceHost(Space space, AppUser appUser) {
+    public SpaceHost(Space space, Host host) {
         this.space = space;
-        this.appUser = appUser;
+        this.host = host;
     }
 }

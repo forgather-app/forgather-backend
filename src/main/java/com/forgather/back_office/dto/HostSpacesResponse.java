@@ -3,7 +3,7 @@ package com.forgather.back_office.dto;
 import java.util.List;
 
 import com.forgather.domain.space.model.Space;
-import com.forgather.global.auth.model.AppUser;
+import com.forgather.global.auth.model.Host;
 
 public record HostSpacesResponse(
     Long hostId,
@@ -11,7 +11,7 @@ public record HostSpacesResponse(
     List<SimpleSpaceResponse> spaces
 ) {
 
-    public static HostSpacesResponse of(AppUser host, List<Space> spaces) {
+    public static HostSpacesResponse of(Host host, List<Space> spaces) {
         return new HostSpacesResponse(
             host.getId(),
             host.getName(),

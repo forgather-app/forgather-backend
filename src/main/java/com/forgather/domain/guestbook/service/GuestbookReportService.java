@@ -17,7 +17,7 @@ import com.forgather.domain.guestbook.repository.GuestBookReportReasonRepository
 import com.forgather.domain.guestbook.repository.GuestBookReportRepository;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.SpaceRepository;
-import com.forgather.global.auth.model.AppUser;
+import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.ConflictException;
 import com.forgather.global.exception.ForbiddenException;
@@ -36,7 +36,7 @@ public class GuestbookReportService {
     private final GuestBookReportReasonRepository guestBookReportReasonRepository;
 
     @Transactional(readOnly = true)
-    public ReportHistoryResponse retrieveReportHistory(AppUser loginUser, Pageable pageable) {
+    public ReportHistoryResponse retrieveReportHistory(Host loginUser, Pageable pageable) {
         Page<GuestBookReport> reports = guestBookReportRepository.findAllByReporterUser(
             loginUser,
             pageable
@@ -46,20 +46,20 @@ public class GuestbookReportService {
 
     @Transactional
     public CreateGuestBookReportResponse report(
-        AppUser user,
+        Host host,
         String spaceCode,
         Long guestBookCardId,
         CreateGuestBookReportRequest request
     ) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
-        validateSpaceHost(user, space);  // 스페이스의 호스트만 신고 가능
+        validateSpaceHost(host, space);  // 스페이스의 호스트만 신고 가능
 
         GuestBookCard card = getCardBySpace(guestBookCardId, space);
-        validateAlreadyReported(user, card);  // 동일 사용자의 중복 신고 불가능
+        validateAlreadyReported(host, card);  // 동일 사용자의 중복 신고 불가능
 
         GuestBookReportReason reason = guestBookReportReasonRepository.getByIdAndIsHiddenFalseOrThrow(request.reasonId());
         GuestBookReport report = guestBookReportRepository.save(
-            new GuestBookReport(card, user, user, ReporterType.HOST, reason, request.detail())
+            new GuestBookReport(card, host, host, ReporterType.HOST, reason, request.detail())
         );
         card.hideByAdmin();
         return CreateGuestBookReportResponse.from(report);
@@ -76,20 +76,20 @@ public class GuestbookReportService {
         return card;
     }
 
-    private void validateAlreadyReported(AppUser user, GuestBookCard card) {
-        if (guestBookReportRepository.existsByGuestBookCardAndReporterUser(card, user)) {
+    private void validateAlreadyReported(Host host, GuestBookCard card) {
+        if (guestBookReportRepository.existsByGuestBookCardAndReporterUser(card, host)) {
             throw new ConflictException("이미 신고 접수된 방명록입니다. guestBookCardId: %d, reporterUserId: %d"
-                .formatted(card.getId(), user.getId()));
+                .formatted(card.getId(), host.getId()));
         }
     }
 
-    private void validateSpaceHost(AppUser user, Space space) {
-        if (spaceHostRepository.findBySpaceAndAppUserAndDeletedAtIsNull(space, user).isPresent()) {
+    private void validateSpaceHost(Host host, Space space) {
+        if (spaceHostRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent()) {
             return;
         }
         throw new ForbiddenException(
-            "해당 스페이스에 대한 접근 권한이 없습니다. spaceCode: %s, userId: %d"
-                .formatted(space.getCode(), user.getId())
+            "해당 스페이스에 대한 접근 권한이 없습니다. spaceCode: %s, hostId: %d"
+                .formatted(space.getCode(), host.getId())
         );
     }
 }

@@ -19,12 +19,12 @@ import com.forgather.back_office.model.AdminSession;
 import com.forgather.back_office.model.AdminUser;
 import com.forgather.back_office.repository.AdminUserRepository;
 import com.forgather.domain.space.model.Space;
-import com.forgather.domain.space.repository.AppUserRepository;
+import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fixture.AdminUserFixture;
-import com.forgather.fixture.AppUserFixture;
+import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
-import com.forgather.global.auth.model.AppUser;
+import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHost;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 
@@ -42,7 +42,7 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
     private AdminUserRepository adminUserRepository;
 
     @Autowired
-    private AppUserRepository hostRepository;
+    private HostRepository hostRepository;
 
     @Autowired
     private SpaceRepository spaceRepository;
@@ -77,7 +77,7 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
     @Test
     void getAllHosts() {
         // given
-        createAppUser(16);
+        createHost(16);
 
         // when
         AdminHostResponse result = givenWithSession()
@@ -117,7 +117,7 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
     @Test
     void getHostSpaces() {
         // given
-        AppUser host = hostRepository.save(AppUserFixture.createAppUser());
+        Host host = hostRepository.save(HostFixture.createHost());
         Space space1 = spaceRepository.save(SpaceFixture.createSpaceWithCode("1111111111"));
         Space space2 = spaceRepository.save(SpaceFixture.createSpaceWithCode("2222222222"));
         spaceHostRepository.save(new SpaceHost(space1, host));
@@ -145,7 +145,7 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
     @Test
     void getHostSpacesWithoutSession() {
         // given
-        AppUser host = hostRepository.save(AppUserFixture.createAppUser());
+        Host host = hostRepository.save(HostFixture.createHost());
 
         // when
         var result = RestAssuredMockMvc.given()
@@ -162,8 +162,8 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
     @Test
     void searchHostsByNameExactMatch() {
         // given
-        hostRepository.save(AppUserFixture.createAppUserWithName("포스티"));
-        hostRepository.save(AppUserFixture.createAppUserWithName("레오"));
+        hostRepository.save(HostFixture.createHostWithName("포스티"));
+        hostRepository.save(HostFixture.createHostWithName("레오"));
 
         // when
         AdminHostResponse result = givenWithSession()
@@ -188,9 +188,9 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
     @Test
     void searchHostsByNameContaining() {
         // given
-        hostRepository.save(AppUserFixture.createAppUserWithName("포스티"));
-        hostRepository.save(AppUserFixture.createAppUserWithName("포스트맨"));
-        hostRepository.save(AppUserFixture.createAppUserWithName("레오"));
+        hostRepository.save(HostFixture.createHostWithName("포스티"));
+        hostRepository.save(HostFixture.createHostWithName("포스트맨"));
+        hostRepository.save(HostFixture.createHostWithName("레오"));
 
         // when
         AdminHostResponse result = givenWithSession()
@@ -215,8 +215,8 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
     @Test
     void searchHostsByNameNoResult() {
         // given
-        hostRepository.save(AppUserFixture.createAppUserWithName("포스티"));
-        hostRepository.save(AppUserFixture.createAppUserWithName("레오"));
+        hostRepository.save(HostFixture.createHostWithName("포스티"));
+        hostRepository.save(HostFixture.createHostWithName("레오"));
 
         // when
         AdminHostResponse result = givenWithSession()
@@ -237,9 +237,9 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
     @Test
     void searchHostsByNameWithEmptyKeyword() {
         // given
-        hostRepository.save(AppUserFixture.createAppUserWithName("포스티"));
-        hostRepository.save(AppUserFixture.createAppUserWithName("클로버"));
-        hostRepository.save(AppUserFixture.createAppUserWithName("레오"));
+        hostRepository.save(HostFixture.createHostWithName("포스티"));
+        hostRepository.save(HostFixture.createHostWithName("클로버"));
+        hostRepository.save(HostFixture.createHostWithName("레오"));
 
         // when
         AdminHostResponse result = givenWithSession()
@@ -263,8 +263,8 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
     @Test
     void searchHostsByNameWithoutParameter() {
         // given
-        hostRepository.save(AppUserFixture.createAppUserWithName("포스티"));
-        hostRepository.save(AppUserFixture.createAppUserWithName("레오"));
+        hostRepository.save(HostFixture.createHostWithName("포스티"));
+        hostRepository.save(HostFixture.createHostWithName("레오"));
 
         // when
         AdminHostResponse result = givenWithSession()
@@ -288,7 +288,7 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
     void searchHostsByNameWithPagination() {
         // given
         for (int i = 0; i < 20; i++) {
-            hostRepository.save(AppUserFixture.createAppUserWithName("포스티 " + i));
+            hostRepository.save(HostFixture.createHostWithName("포스티 " + i));
         }
 
         // when
@@ -327,9 +327,9 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
         assertThat(result.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
     }
 
-    private void createAppUser(int count) {
+    private void createHost(int count) {
         for (int i = 0; i < count; i++) {
-            hostRepository.save(AppUserFixture.createAppUser());
+            hostRepository.save(HostFixture.createHost());
         }
     }
 }

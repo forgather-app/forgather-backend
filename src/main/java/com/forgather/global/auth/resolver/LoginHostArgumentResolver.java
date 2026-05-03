@@ -9,9 +9,9 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import com.forgather.domain.space.repository.AppUserRepository;
-import com.forgather.global.auth.annotation.LoginAppUser;
-import com.forgather.global.auth.model.AppUser;
+import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.global.auth.annotation.LoginHost;
+import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.exception.UnauthorizedException;
 
@@ -21,24 +21,24 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class LoginAppUserArgumentResolver implements HandlerMethodArgumentResolver {
+public class LoginHostArgumentResolver implements HandlerMethodArgumentResolver {
 
     private static final String BEARER = "Bearer ";
     private static final String AUTHORIZATION_HEADER_NAME = "Authorization";
     private static final String HOST = "HOST";
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final AppUserRepository appUserRepository;
+    private final HostRepository hostRepository;
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        return parameter.hasParameterAnnotation(LoginAppUser.class);
+        return parameter.hasParameterAnnotation(LoginHost.class);
     }
 
     @Override
-    public AppUser resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
+    public Host resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
         NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
-        LoginAppUser annotation = parameter.getParameterAnnotation(LoginAppUser.class);
+        LoginHost annotation = parameter.getParameterAnnotation(LoginHost.class);
         boolean required = Objects.requireNonNull(annotation).required();
         HttpServletRequest request = (HttpServletRequest)webRequest.getNativeRequest();
 
@@ -54,11 +54,11 @@ public class LoginAppUserArgumentResolver implements HandlerMethodArgumentResolv
         jwtToken = jwtToken.substring(BEARER.length());
         jwtTokenProvider.validateToken(jwtToken);
         if (!jwtTokenProvider.getRole(jwtToken).equals(HOST)) {
-            throw new UnauthorizedException("사용자 로그인이 필요합니다.");
+            throw new UnauthorizedException("호스트 로그인이 필요합니다.");
         }
 
-        Long appUserId = jwtTokenProvider.getId(jwtToken);
-        return appUserRepository.getByIdOrThrow(appUserId);
+        Long hostId = jwtTokenProvider.getId(jwtToken);
+        return hostRepository.getByIdOrThrow(hostId);
     }
 
     private void throwExceptionIfRequired(boolean required) {

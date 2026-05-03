@@ -187,7 +187,7 @@ Service 레이어를 Repository와 함께 실제 DB로 테스트합니다.
 @Test
 void shouldThrowExceptionWhenQuerySoftDeletedSpace() {
     // given
-    Host host = userRepository.save(HostFixture.createHost());
+    Host host = hostRepository.save(HostFixture.createHost());
     Space space = spaceRepository.save(SpaceFixture.createSpaceWithCode("abcdefghij"));
     SpaceHostRepository.save(SpaceHostFixture.createSpaceHostWithSpaceAndHost(space, host));
     spaceService.delete(space.getCode(), host);

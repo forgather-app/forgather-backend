@@ -16,7 +16,7 @@ import com.forgather.domain.product.service.ProductService;
 import com.forgather.domain.space.dto.CheckSpaceHostResponse;
 import com.forgather.domain.space.dto.CreateSpaceRequest;
 import com.forgather.domain.space.dto.CreateSpaceResponse;
-import com.forgather.domain.space.dto.UserSpaceResponse;
+import com.forgather.domain.space.dto.HostSpaceResponse;
 import com.forgather.domain.space.dto.SpaceResponse;
 import com.forgather.domain.space.dto.UpdateSpaceRequest;
 import com.forgather.domain.space.model.Space;
@@ -24,7 +24,7 @@ import com.forgather.domain.space.model.SpacePhoto;
 import com.forgather.domain.space.repository.SpacePhotoRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.service.UploadService;
-import com.forgather.global.auth.model.AppUser;
+import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHost;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.BaseException;
@@ -51,11 +51,11 @@ public class SpaceService {
     private final RandomCodeGenerator codeGenerator;
 
     @Transactional
-    public CreateSpaceResponse create(CreateSpaceRequest request, MultipartFile file, AppUser user) {
-        validateUserNull(user);
+    public CreateSpaceResponse create(CreateSpaceRequest request, MultipartFile file, Host host) {
+        validateHostNull(host);
         String spaceCode = codeGenerator.generate(10);
         Space space = spaceRepository.save(request.toEntity(spaceCode));
-        spaceHostRepository.save(new SpaceHost(space, user));
+        spaceHostRepository.save(new SpaceHost(space, host));
         if (file == null || file.isEmpty()) {
             return CreateSpaceResponse.from(space);
         }
@@ -71,9 +71,9 @@ public class SpaceService {
     }
 
     @Transactional
-    public SpaceResponse update(String spaceCode, UpdateSpaceRequest request, MultipartFile file, AppUser user) {
+    public SpaceResponse update(String spaceCode, UpdateSpaceRequest request, MultipartFile file, Host host) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
-        validateSpaceHost(space, user);
+        validateSpaceHost(space, host);
 
         space.update(request.name(), request.description(), request.isPublic(), request.instagramUsername(),
             request.email());
@@ -129,33 +129,33 @@ public class SpaceService {
     }
 
     @Transactional
-    public void delete(String spaceCode, AppUser user) {
+    public void delete(String spaceCode, Host host) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
-        validateSpaceHost(space, user);
-        deleteGuestBookAndProduct(user, space);
-        deleteSpaceHost(user, space);
+        validateSpaceHost(space, host);
+        deleteGuestBookAndProduct(host, space);
+        deleteSpaceHost(host, space);
         deleteSpacePhoto(space);
         space.delete();
     }
 
-    private void validateSpaceHost(Space space, AppUser user) {
-        validateUserNull(user);
+    private void validateSpaceHost(Space space, Host host) {
+        validateHostNull(host);
         if (space == null) {
             throw new BaseNullPointerException("스페이스는 null일 수 없습니다.");
         }
-        if (spaceHostRepository.findBySpaceAndAppUserAndDeletedAtIsNull(space, user).isPresent()) {
+        if (spaceHostRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent()) {
             return;
         }
         throw new ForbiddenException("권한이 존재하지 않습니다.");
     }
 
-    private void deleteGuestBookAndProduct(AppUser user, Space space) {
-        guestBookService.deleteAllCardsBySpace(user, space);
-        productService.deleteIfExists(user, space);
+    private void deleteGuestBookAndProduct(Host host, Space space) {
+        guestBookService.deleteAllCardsBySpace(host, space);
+        productService.deleteIfExists(host, space);
     }
 
-    private void deleteSpaceHost(AppUser user, Space space) {
-        SpaceHost spaceHost = spaceHostRepository.getBySpaceAndAppUserAndDeletedAtIsNullOrThrow(space, user);
+    private void deleteSpaceHost(Host host, Space space) {
+        SpaceHost spaceHost = spaceHostRepository.getBySpaceAndHostAndDeletedAtIsNullOrThrow(space, host);
         spaceHost.delete();
     }
 
@@ -169,13 +169,13 @@ public class SpaceService {
     }
 
     @Transactional(readOnly = true)
-    public UserSpaceResponse getSpacesInformation(AppUser user) {
-        List<SpaceHost> spaceHosts = spaceHostRepository.findAllByAppUserAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(user);
+    public HostSpaceResponse getSpacesInformation(Host host) {
+        List<SpaceHost> spaceHosts = spaceHostRepository.findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host);
         if (spaceHosts.isEmpty()) {
-            return new UserSpaceResponse(Collections.emptyList());
+            return new HostSpaceResponse(Collections.emptyList());
         }
         List<SpaceResponse> spaceResponses = createSpaceResponses(spaceHosts);
-        return new UserSpaceResponse(spaceResponses);
+        return new HostSpaceResponse(spaceResponses);
     }
 
     private List<SpaceResponse> createSpaceResponses(List<SpaceHost> spaceHosts) {
@@ -208,14 +208,14 @@ public class SpaceService {
     }
 
     @Transactional(readOnly = true)
-    public CheckSpaceHostResponse checkSpaceHost(String spaceCode, AppUser user) {
+    public CheckSpaceHostResponse checkSpaceHost(String spaceCode, Host host) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
-        validateUserNull(user);
-        return new CheckSpaceHostResponse(spaceHostRepository.findBySpaceAndAppUserAndDeletedAtIsNull(space, user).isPresent());
+        validateHostNull(host);
+        return new CheckSpaceHostResponse(spaceHostRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent());
     }
 
-    private void validateUserNull(AppUser user) {
-        if (user == null) {
+    private void validateHostNull(Host host) {
+        if (host == null) {
             throw new UnauthorizedException("로그인이 필요합니다.");
         }
     }
