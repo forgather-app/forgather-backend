@@ -125,9 +125,7 @@ $workers_md
 
 $title
 
-$body
-
-## PR 본문 원문
+## PR 본문
 
 $body
 
