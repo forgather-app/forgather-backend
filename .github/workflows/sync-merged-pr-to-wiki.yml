@@ -58,4 +58,4 @@ jobs:
         env:
           GITHUB_EVENT_PATH: ${{ github.event_path }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: ./.github/scripts/sync-merged-pr-to-wiki.sh
+        run: bash ./.github/scripts/sync-merged-pr-to-wiki.sh
