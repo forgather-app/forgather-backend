@@ -144,7 +144,7 @@ if git diff --cached --quiet; then
   exit 0
 fi
 
-git commit -m "Add PR raw: $source_repo#$pr_number"
+git commit -m "docs: add PR raw for $source_repo#$pr_number"
 
 if ! git push; then
   echo "Push failed. Trying pull --rebase then push once..."
