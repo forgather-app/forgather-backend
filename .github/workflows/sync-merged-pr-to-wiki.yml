@@ -1,15 +1,10 @@
 name: Sync merged PR to wiki raw
 
-#on:
-#  pull_request:
-#    types: [closed]
-#    branches:
-#      - v2/develop
-
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
-      - v2/chore/#87-push-work-md-when-pr-merged
+      - v2/develop
 
 permissions:
   contents: read
@@ -18,7 +13,7 @@ permissions:
 jobs:
   sync:
     # closed 이벤트 중에서도 실제 merge된 PR만 처리한다.
-#    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     env:

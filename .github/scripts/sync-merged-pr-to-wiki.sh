@@ -40,10 +40,10 @@ merged_at="$(jq -r '.pull_request.merged_at // ""' "$GITHUB_EVENT_PATH")"
 body="$(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")"
 
 # workflow의 job if가 이미 merge PR만 통과시키지만, 스크립트를 잘못 호출했을 때 대비 안전장치
-#if [ "$(jq -r '.pull_request.merged // false' "$GITHUB_EVENT_PATH")" != "true" ]; then
-#  echo "Pull request was closed without merge. Skipping."
-#  exit 0
-#fi
+if [ "$(jq -r '.pull_request.merged // false' "$GITHUB_EVENT_PATH")" != "true" ]; then
+  echo "Pull request was closed without merge. Skipping."
+  exit 0
+fi
 
 if [ -z "$(printf '%s' "$body" | tr -d '[:space:]')" ]; then
   body="내용 없음"
