@@ -1,0 +1,48 @@
+name: Sync merged PR to wiki raw
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - v2/develop
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  sync:
+    # closed 이벤트 중에서도 실제 merge된 PR만 처리한다.
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    env:
+      # PR raw 파일을 저장할 wiki 레포.
+      WIKI_REPOSITORY: forgather-app/forgather-wiki
+
+      # wiki 레포 안에서 raw PR 파일이 쌓일 위치.
+      RAW_REL: raw/status/pr
+
+      # 자동 커밋 작성자.
+      GIT_AUTHOR_NAME: forgather-pr-sync
+      GIT_AUTHOR_EMAIL: forgather48@gmail.com
+
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+
+      - name: Checkout wiki repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.WIKI_REPOSITORY }}
+
+          # forgather-wiki에 contents: write 권한이 있는 별도 토큰을 secret으로 넣는다.
+          token: ${{ secrets.WIKI_PUSH_TOKEN }}
+          path: wiki
+
+      - name: Sync merged PR to wiki raw
+        shell: bash
+        env:
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: ./.github/scripts/sync-merged-pr-to-wiki.sh
