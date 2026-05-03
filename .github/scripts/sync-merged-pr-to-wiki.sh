@@ -131,7 +131,7 @@ $body
 
 $body
 
-_last synced: $synced_at_
+_last synced: ${synced_at}_
 EOF
 
 git config user.name "$GIT_AUTHOR_NAME"
