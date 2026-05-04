@@ -24,8 +24,8 @@ import com.forgather.fake.FakeContentStorage;
 import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
 import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.SpaceHostMap;
-import com.forgather.global.auth.repository.SpaceHostMapRepository;
+import com.forgather.global.auth.model.SpaceHost;
+import com.forgather.global.auth.repository.SpaceHostRepository;
 
 @Import({GuestBookService.class, FakeContentStorage.class})
 @DataJpaTest
@@ -47,7 +47,7 @@ public class GuestBookDeleteServiceTest {
     private SpaceRepository spaceRepository;
 
     @Autowired
-    private SpaceHostMapRepository spaceHostMapRepository;
+    private SpaceHostRepository spaceHostRepository;
 
     private Host host;
     private Space space;
@@ -60,7 +60,7 @@ public class GuestBookDeleteServiceTest {
         host = HostFixture.createHost();
         hostRepository.save(host);
 
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
     }
 
     @DisplayName("지정한 방명록을 논리 삭제한다")

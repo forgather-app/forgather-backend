@@ -21,9 +21,9 @@ import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
-import com.forgather.fixture.SpaceHostMapFixture;
+import com.forgather.fixture.SpaceHostFixture;
 import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.repository.SpaceHostMapRepository;
+import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.NotFoundException;
 import com.forgather.container.TestOnContainer;
 
@@ -35,16 +35,16 @@ class SpaceServiceTest extends TestOnContainer {
     private final SpaceService spaceService;
     private final SpaceRepository spaceRepository;
     private final HostRepository hostRepository;
-    private final SpaceHostMapRepository spaceHostMapRepository;
+    private final SpaceHostRepository spaceHostRepository;
 
     @Autowired
     public SpaceServiceTest(SpaceService spaceService, SpaceRepository spaceRepository, HostRepository hostRepository,
-        SpaceHostMapRepository spaceHostMapRepository
+        SpaceHostRepository spaceHostRepository
     ) {
         this.spaceService = spaceService;
         this.spaceRepository = spaceRepository;
         this.hostRepository = hostRepository;
-        this.spaceHostMapRepository = spaceHostMapRepository;
+        this.spaceHostRepository = spaceHostRepository;
     }
 
     @DisplayName("스페이스 생성 시, 검증에 실패하면 스페이스가 DB에 저장되지 않는다.")
@@ -76,8 +76,8 @@ class SpaceServiceTest extends TestOnContainer {
         Host host = hostRepository.save(HostFixture.createHost());
         Space space1 = spaceRepository.save(SpaceFixture.createSpaceWithCode("abcdefghij"));
         Space space2 = spaceRepository.save(SpaceFixture.createSpaceWithCode("1234567890"));
-        spaceHostMapRepository.save(SpaceHostMapFixture.createSpaceHostMapWithSpaceAndHost(space1, host));
-        spaceHostMapRepository.save(SpaceHostMapFixture.createSpaceHostMapWithSpaceAndHost(space2, host));
+        spaceHostRepository.save(SpaceHostFixture.createSpaceHostWithSpaceAndHost(space1, host));
+        spaceHostRepository.save(SpaceHostFixture.createSpaceHostWithSpaceAndHost(space2, host));
         spaceService.delete(space1.getCode(), host);
 
         // when
@@ -93,7 +93,7 @@ class SpaceServiceTest extends TestOnContainer {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         Space space = spaceRepository.save(SpaceFixture.createSpaceWithCode("abcdefghij"));
-        spaceHostMapRepository.save(SpaceHostMapFixture.createSpaceHostMapWithSpaceAndHost(space, host));
+        spaceHostRepository.save(SpaceHostFixture.createSpaceHostWithSpaceAndHost(space, host));
         spaceService.delete(space.getCode(), host);
 
         // when & then

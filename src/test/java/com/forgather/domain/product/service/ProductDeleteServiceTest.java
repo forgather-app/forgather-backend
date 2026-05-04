@@ -25,8 +25,8 @@ import com.forgather.fake.FakeContentStorage;
 import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
 import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.SpaceHostMap;
-import com.forgather.global.auth.repository.SpaceHostMapRepository;
+import com.forgather.global.auth.model.SpaceHost;
+import com.forgather.global.auth.repository.SpaceHostRepository;
 
 @Import({ProductService.class, FakeContentStorage.class})
 @DataJpaTest
@@ -48,7 +48,7 @@ public class ProductDeleteServiceTest {
     private SpaceRepository spaceRepository;
 
     @Autowired
-    private SpaceHostMapRepository spaceHostMapRepository;
+    private SpaceHostRepository spaceHostRepository;
 
     private Host host;
     private Space space;
@@ -61,7 +61,7 @@ public class ProductDeleteServiceTest {
         host = HostFixture.createHost();
         hostRepository.save(host);
 
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
     }
 
     @DisplayName("특정 작품을 논리 삭제한다")

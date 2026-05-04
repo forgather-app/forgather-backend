@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "space_host_map")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class SpaceHostMap extends SoftDeleteEntity {
+public class SpaceHost extends SoftDeleteEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,7 +33,7 @@ public class SpaceHostMap extends SoftDeleteEntity {
     @JoinColumn(name = "host_id", nullable = false)
     private Host host;
 
-    public SpaceHostMap(Space space, Host host) {
+    public SpaceHost(Space space, Host host) {
         this.space = space;
         this.host = host;
     }

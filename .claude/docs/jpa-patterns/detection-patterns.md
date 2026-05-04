@@ -73,17 +73,17 @@ for (Order order : orders) {
 
 연관 엔티티를 함께 조회해야 하는데 Fetch Join 없이 쿼리가 작성된 경우.
 
-**좋은 예시 (Forgather 실제 코드 — `SpaceHostMapRepository.java:20-28`)**
+**좋은 예시 (Forgather 실제 코드 — `SpaceHostRepository.java:20-28`)**
 
 ```java
 @Query("""
-    SELECT shm
-    FROM SpaceHostMap shm
-    JOIN FETCH shm.space s
-    WHERE shm.host = :host
+    SELECT sh
+    FROM SpaceHost sh
+    JOIN FETCH sh.space s
+    WHERE sh.host = :host
     AND s.deletedAt IS NULL
     """)
-List<SpaceHostMap> findAllByHostWithSpace(@Param("host") Host host);
+List<SpaceHost> findAllByHostWithSpace(@Param("host") Host host);
 ```
 
 **해결** → [Fetch Join](./01-fetch-join.md)
@@ -123,9 +123,9 @@ Page<GuestBookCardListDto> findAllDtoBySpace(@Param("space") Space space, Pageab
 **좋은 예시 (`SpaceService.java:181-208`)**
 
 ```java
-private List<SpaceResponse> createSpaceResponses(List<SpaceHostMap> spaceHostMaps) {
-    List<Long> spaceIds = spaceHostMaps.stream()
-        .map(shm -> shm.getSpace().getId())
+private List<SpaceResponse> createSpaceResponses(List<SpaceHost> SpaceHosts) {
+    List<Long> spaceIds = SpaceHosts.stream()
+        .map(sh -> sh.getSpace().getId())
         .toList();
 
     // 배치 쿼리로 한 번에 조회
@@ -143,9 +143,9 @@ private List<SpaceResponse> createSpaceResponses(List<SpaceHostMap> spaceHostMap
             photo -> photo.getSpace().getId(),
             photo -> photo));
 
-    return spaceHostMaps.stream()
-        .map(shm -> {
-            Space space = shm.getSpace();
+    return SpaceHosts.stream()
+        .map(sh -> {
+            Space space = sh.getSpace();
             Long count = guestBookCardCounts.getOrDefault(space.getId(), 0L);
             SpacePhoto photo = spacePhotos.getOrDefault(space.getId(), SpacePhoto.empty(space));
             return SpaceResponse.from(space, photo, count);

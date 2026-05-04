@@ -18,7 +18,7 @@ import com.forgather.domain.guestbook.repository.GuestBookReportRepository;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.repository.SpaceHostMapRepository;
+import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.ConflictException;
 import com.forgather.global.exception.ForbiddenException;
 import com.forgather.global.exception.NotFoundException;
@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class GuestbookReportService {
 
     private final SpaceRepository spaceRepository;
-    private final SpaceHostMapRepository spaceHostMapRepository;
+    private final SpaceHostRepository spaceHostRepository;
     private final GuestBookCardRepository guestBookCardRepository;
     private final GuestBookReportRepository guestBookReportRepository;
     private final GuestBookReportReasonRepository guestBookReportReasonRepository;
@@ -84,7 +84,7 @@ public class GuestbookReportService {
     }
 
     private void validateSpaceHost(Host host, Space space) {
-        if (spaceHostMapRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent()) {
+        if (spaceHostRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent()) {
             return;
         }
         throw new ForbiddenException(
