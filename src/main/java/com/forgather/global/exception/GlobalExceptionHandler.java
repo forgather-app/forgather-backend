@@ -89,8 +89,8 @@ public class GlobalExceptionHandler {
     // 컨트롤러 요청 파라미터의 타입 불일치
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiResponse<Void>> handleMethodArgumentTypeMismatchException(
-        MethodArgumentTypeMismatchException e) {
-
+        MethodArgumentTypeMismatchException e
+    ) {
         logClientWarning(e);
         String parameterName = e.getParameter().getParameterName();
         String requiredType = e.getRequiredType().getSimpleName();
@@ -173,14 +173,12 @@ public class GlobalExceptionHandler {
             logServerError(e);
         }
 
-        ResponseCode code = resolveCode(e);
-        String message = e.getStatusCode() >= INTERNAL_SERVER_ERROR.value()
-            ? maskServerMessage(code)
-            : e.getMessage();
+        ResponseCode responseCode = resolveCode(e);
+        String message = getResponseMessage(e, responseCode);
 
         return ResponseEntity.status(e.getStatusCode())
             .contentType(APPLICATION_JSON)
-            .body(ApiResponse.error(code, message));
+            .body(ApiResponse.error(responseCode, message));
     }
 
     private ResponseCode resolveCode(BaseException e) {
@@ -201,6 +199,14 @@ public class GlobalExceptionHandler {
             return ResponseCode.INTERNAL_ERROR;
         }
         return ResponseCode.BAD_REQUEST;
+    }
+
+    private String getResponseMessage(BaseException exception, ResponseCode responseCode) {
+        // 서버 에러의 경우 API 응답 메시지 마스킹
+        if (exception.getStatusCode() >= INTERNAL_SERVER_ERROR.value()) {
+            return maskServerMessage(responseCode);
+        }
+        return exception.getMessage();
     }
 
     private String maskServerMessage(ResponseCode code) {
