@@ -1,12 +1,12 @@
 package com.forgather.global.exception;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import org.springframework.data.mapping.PropertyReferenceException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -192,13 +192,27 @@ public class GlobalExceptionHandler {
             return ResponseCode.FILE_DOWNLOAD_FAILED;
         }
         int status = e.getStatusCode();
-        if (status == CONFLICT.value()) {
-            return ResponseCode.CONFLICT;
-        }
         if (status >= INTERNAL_SERVER_ERROR.value()) {
             return ResponseCode.INTERNAL_ERROR;
         }
-        return ResponseCode.BAD_REQUEST;
+        return resolveClientErrorCode(status);
+    }
+
+    /**
+     * BaseException(message, HttpStatus) 형태로 4xx status를 직접 받은 경로에서
+     * isSecurityError() 등 status 기반 판단과 응답 code가 어긋나지 않도록 분기
+     */
+    private ResponseCode resolveClientErrorCode(int status) {
+        return switch (HttpStatus.valueOf(status)) {
+            case UNAUTHORIZED -> ResponseCode.UNAUTHORIZED;
+            case FORBIDDEN -> ResponseCode.FORBIDDEN;
+            case NOT_FOUND -> ResponseCode.NOT_FOUND;
+            case METHOD_NOT_ALLOWED -> ResponseCode.METHOD_NOT_ALLOWED;
+            case CONFLICT -> ResponseCode.CONFLICT;
+            case PAYLOAD_TOO_LARGE -> ResponseCode.PAYLOAD_TOO_LARGE;
+            case UNSUPPORTED_MEDIA_TYPE -> ResponseCode.UNSUPPORTED_MEDIA_TYPE;
+            default -> ResponseCode.BAD_REQUEST;
+        };
     }
 
     private String getResponseMessage(BaseException exception, ResponseCode responseCode) {

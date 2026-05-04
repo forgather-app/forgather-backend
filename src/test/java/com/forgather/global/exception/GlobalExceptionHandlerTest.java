@@ -262,6 +262,54 @@ class GlobalExceptionHandlerTest {
 
             assertEnvelope(res, 400, "BAD_REQUEST", "작품은 3개까지만 등록 가능합니다.");
         }
+
+        @DisplayName("BaseException(401) 직접 throw -> 401 / UNAUTHORIZED (status와 code 일치)")
+        @Test
+        void baseException_401() throws Exception {
+            Snapshot res = perform(new BaseException("인증이 필요합니다.", HttpStatus.UNAUTHORIZED));
+
+            assertEnvelope(res, 401, "UNAUTHORIZED", "인증이 필요합니다.");
+        }
+
+        @DisplayName("BaseException(403) 직접 throw -> 403 / FORBIDDEN (status와 code 일치)")
+        @Test
+        void baseException_403() throws Exception {
+            Snapshot res = perform(new BaseException("접근 권한이 없습니다.", HttpStatus.FORBIDDEN));
+
+            assertEnvelope(res, 403, "FORBIDDEN", "접근 권한이 없습니다.");
+        }
+
+        @DisplayName("BaseException(404) 직접 throw -> 404 / NOT_FOUND (status와 code 일치)")
+        @Test
+        void baseException_404() throws Exception {
+            Snapshot res = perform(new BaseException("리소스를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+            assertEnvelope(res, 404, "NOT_FOUND", "리소스를 찾을 수 없습니다.");
+        }
+
+        @DisplayName("BaseException(405) 직접 throw -> 405 / METHOD_NOT_ALLOWED")
+        @Test
+        void baseException_405() throws Exception {
+            Snapshot res = perform(new BaseException("허용되지 않은 메서드입니다.", HttpStatus.METHOD_NOT_ALLOWED));
+
+            assertEnvelope(res, 405, "METHOD_NOT_ALLOWED", "허용되지 않은 메서드입니다.");
+        }
+
+        @DisplayName("BaseException(413) 직접 throw -> 413 / PAYLOAD_TOO_LARGE")
+        @Test
+        void baseException_413() throws Exception {
+            Snapshot res = perform(new BaseException("요청 본문이 너무 큽니다.", HttpStatus.PAYLOAD_TOO_LARGE));
+
+            assertEnvelope(res, 413, "PAYLOAD_TOO_LARGE", "요청 본문이 너무 큽니다.");
+        }
+
+        @DisplayName("BaseException(415) 직접 throw -> 415 / UNSUPPORTED_MEDIA_TYPE")
+        @Test
+        void baseException_415() throws Exception {
+            Snapshot res = perform(new BaseException("지원하지 않는 미디어 타입입니다.", HttpStatus.UNSUPPORTED_MEDIA_TYPE));
+
+            assertEnvelope(res, 415, "UNSUPPORTED_MEDIA_TYPE", "지원하지 않는 미디어 타입입니다.");
+        }
     }
 
     @Nested
