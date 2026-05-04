@@ -89,6 +89,7 @@ workers_md="$(
 )"
 
 synced_at="$(now_iso)"
+markdown_fence='````'
 
 cat > "$raw_file" <<EOF
 ---
@@ -127,9 +128,9 @@ $title
 
 ## PR 본문
 
-````markdown
+${markdown_fence}markdown
 $body
-````
+${markdown_fence}
 
 _last synced: ${synced_at}_
 EOF
