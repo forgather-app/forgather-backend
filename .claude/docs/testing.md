@@ -189,7 +189,7 @@ void shouldThrowExceptionWhenQuerySoftDeletedSpace() {
     // given
     Host host = hostRepository.save(HostFixture.createHost());
     Space space = spaceRepository.save(SpaceFixture.createSpaceWithCode("abcdefghij"));
-    SpaceHostRepository.save(SpaceHostFixture.createSpaceHostWithSpaceAndHost(space, host));
+    spaceHostRepository.save(SpaceHostFixture.createSpaceHostWithSpaceAndHost(space, host));
     spaceService.delete(space.getCode(), host);
 
     // when & then
