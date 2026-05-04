@@ -23,7 +23,7 @@ import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.domain.ContentsStorage;
 import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.repository.SpaceHostMapRepository;
+import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.ForbiddenException;
@@ -39,7 +39,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductPhotoRepository productPhotoRepository;
     private final SpaceRepository spaceRepository;
-    private final SpaceHostMapRepository spaceHostMapRepository;
+    private final SpaceHostRepository spaceHostRepository;
     private final ContentsStorage contentsStorage;
 
     /**
@@ -177,6 +177,6 @@ public class ProductService {
         if (space == null || host == null) {
             throw new BaseNullPointerException("스페이스와 호스트는 null일 수 없습니다.");
         }
-        return spaceHostMapRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent();
+        return spaceHostRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent();
     }
 }

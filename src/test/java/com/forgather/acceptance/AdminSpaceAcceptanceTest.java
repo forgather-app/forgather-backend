@@ -29,8 +29,8 @@ import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.ProductFixture;
 import com.forgather.fixture.SpaceFixture;
 import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.SpaceHostMap;
-import com.forgather.global.auth.repository.SpaceHostMapRepository;
+import com.forgather.global.auth.model.SpaceHost;
+import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.util.RandomCodeGenerator;
 
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
@@ -53,7 +53,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
     private HostRepository hostRepository;
 
     @Autowired
-    private SpaceHostMapRepository spaceHostMapRepository;
+    private SpaceHostRepository spaceHostRepository;
 
     @Autowired
     private GuestBookCardRepository guestBookCardRepository;
@@ -138,7 +138,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
     void getSpaceDetail() {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpaceWithCode("1234567890"));
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
         productRepository.save(ProductFixture.createProductWithSpace(space));
         guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpaceAndNickname(space, "1"));
         guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpaceAndNickname(space, "2"));
@@ -166,7 +166,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
     void getSpaceDetailWithoutProduct() {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpaceWithCode("1234567890"));
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
         guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpaceAndNickname(space, "1"));
         guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCardWithSpaceAndNickname(space, "2"));
 
@@ -193,7 +193,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
     void getSpaceDetailWithoutProductAndGuestBookCard() {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpaceWithCode("1234567890"));
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
 
         // when
         SpaceDetailResponse result = givenWithSession()
@@ -218,7 +218,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
     void getSpaceDetailWithoutSession() {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpaceWithCode("1234567890"));
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
 
         // when
         var result = RestAssuredMockMvc.given()
@@ -571,7 +571,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
         for (int i = 0; i < count; i++) {
             String spaceCode = randomCodeGenerator.generate(10);
             Space space = spaceRepository.save(SpaceFixture.createSpaceWithCode(spaceCode));
-            spaceHostMapRepository.save(new SpaceHostMap(space, host));
+            spaceHostRepository.save(new SpaceHost(space, host));
         }
     }
 
@@ -579,7 +579,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
         for (int i = 0; i < count; i++) {
             String spaceCode = randomCodeGenerator.generate(10);
             Space space = spaceRepository.save(SpaceFixture.createSpaceWithCode(spaceCode));
-            spaceHostMapRepository.save(new SpaceHostMap(space, host));
+            spaceHostRepository.save(new SpaceHost(space, host));
             productRepository.save(ProductFixture.createProductWithSpace(space));
         }
     }
@@ -587,7 +587,7 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
     private Space createSpaceWithName(String name) {
         String spaceCode = randomCodeGenerator.generate(10);
         Space space = spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName(spaceCode, name));
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
         return space;
     }
 }

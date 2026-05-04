@@ -75,7 +75,7 @@ void getSpaceInformation() {
     // given
     Space space = spaceRepository.save(SpaceFixture.createSpace());
     SpacePhoto spacePhoto = spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
-    spaceHostMapRepository.save(new SpaceHostMap(space, host));
+    SpaceHostRepository.save(new SpaceHost(space, host));
 
     // when
     SpaceResponse result = RestAssuredMockMvc.given()
@@ -189,7 +189,7 @@ void shouldThrowExceptionWhenQuerySoftDeletedSpace() {
     // given
     Host host = hostRepository.save(HostFixture.createHost());
     Space space = spaceRepository.save(SpaceFixture.createSpaceWithCode("abcdefghij"));
-    spaceHostMapRepository.save(SpaceHostMapFixture.createSpaceHostMapWithSpaceAndHost(space, host));
+    spaceHostRepository.save(SpaceHostFixture.createSpaceHostWithSpaceAndHost(space, host));
     spaceService.delete(space.getCode(), host);
 
     // when & then

@@ -20,9 +20,9 @@ public interface AdminHostRepository {
         value = """
             SELECT new com.forgather.back_office.dto.HostDetailResponse(
                 h.id, h.name, h.createdAt,
-                (SELECT COUNT(shm.id)
-                 FROM SpaceHostMap shm JOIN shm.space s
-                 WHERE shm.host = h AND s.deletedAt IS NULL AND shm.deletedAt IS NULL
+                (SELECT COUNT(sh.id)
+                 FROM SpaceHost sh JOIN sh.space s
+                 WHERE sh.host = h AND s.deletedAt IS NULL AND sh.deletedAt IS NULL
                 )
             )
             FROM Host h
@@ -35,9 +35,9 @@ public interface AdminHostRepository {
         value = """
             SELECT new com.forgather.back_office.dto.HostDetailResponse(
                 h.id, h.name, h.createdAt,
-                (SELECT COUNT(shm.id)
-                 FROM SpaceHostMap shm JOIN shm.space s
-                 WHERE shm.host = h AND s.deletedAt IS NULL AND shm.deletedAt IS NULL
+                (SELECT COUNT(sh.id)
+                 FROM SpaceHost sh JOIN sh.space s
+                 WHERE sh.host = h AND s.deletedAt IS NULL AND sh.deletedAt IS NULL
                 )
             )
             FROM Host h

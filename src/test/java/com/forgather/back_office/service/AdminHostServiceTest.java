@@ -24,8 +24,8 @@ import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
 import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.SpaceHostMap;
-import com.forgather.global.auth.repository.SpaceHostMapRepository;
+import com.forgather.global.auth.model.SpaceHost;
+import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.NotFoundException;
 
 @Transactional
@@ -46,7 +46,7 @@ class AdminHostServiceTest extends TestOnContainer {
     private SpaceRepository spaceRepository;
 
     @Autowired
-    private SpaceHostMapRepository spaceHostMapRepository;
+    private SpaceHostRepository spaceHostRepository;
 
     @DisplayName("전체 호스트 목록을 조회한다.")
     @Test
@@ -56,8 +56,8 @@ class AdminHostServiceTest extends TestOnContainer {
         Host host2 = hostRepository.save(HostFixture.createHost());
         Space space1 = spaceRepository.save(SpaceFixture.createSpaceWithCode("1111111111"));
         Space space2 = spaceRepository.save(SpaceFixture.createSpaceWithCode("2222222222"));
-        spaceHostMapRepository.save(new SpaceHostMap(space1, host1));
-        spaceHostMapRepository.save(new SpaceHostMap(space2, host1));
+        spaceHostRepository.save(new SpaceHost(space1, host1));
+        spaceHostRepository.save(new SpaceHost(space2, host1));
         Pageable pageable = PageRequest.of(0, 10);
 
         // when
@@ -82,8 +82,8 @@ class AdminHostServiceTest extends TestOnContainer {
         Host host = hostRepository.save(HostFixture.createHost());
         Space space1 = spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", "첫번째 스페이스"));
         Space space2 = spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("2222222222", "두번째 스페이스"));
-        spaceHostMapRepository.save(new SpaceHostMap(space1, host));
-        spaceHostMapRepository.save(new SpaceHostMap(space2, host));
+        spaceHostRepository.save(new SpaceHost(space1, host));
+        spaceHostRepository.save(new SpaceHost(space2, host));
 
         // when
         HostSpacesResponse result = adminHostService.getHostSpaces(host.getId());

@@ -47,8 +47,8 @@ import com.forgather.fixture.ProductPhotoFixture;
 import com.forgather.fixture.SpaceFixture;
 import com.forgather.fixture.SpacePhotoFixture;
 import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.SpaceHostMap;
-import com.forgather.global.auth.repository.SpaceHostMapRepository;
+import com.forgather.global.auth.model.SpaceHost;
+import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.response.ApiResponse;
 import com.forgather.global.response.ResponseCode;
@@ -73,7 +73,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
     private SpacePhotoRepository spacePhotoRepository;
 
     @Autowired
-    private SpaceHostMapRepository spaceHostMapRepository;
+    private SpaceHostRepository spaceHostRepository;
 
     @Autowired
     private GuestBookCardRepository guestBookCardRepository;
@@ -204,7 +204,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         SpacePhoto spacePhoto = spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
         guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "nickname1", "카드1"));
         guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "nickname2", "카드2"));
 
@@ -236,7 +236,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
 
         // when
         var response = RestAssuredMockMvc.given()
@@ -260,7 +260,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
         Product product = productRepository.save(ProductFixture.createProductWithSpace(space));
         productPhotoRepository.save(ProductPhotoFixture.createProductPhotoWithProduct(product));
         GuestBookCard guestBookCard = guestBookCardRepository.save(
@@ -294,7 +294,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
 
         // when
         var response = RestAssuredMockMvc.given()
@@ -313,7 +313,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
         Host otherHost = hostRepository.save(createHost());
         String otherToken = jwtTokenProvider.generateAccessToken(otherHost.getId());
 
@@ -335,7 +335,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         spacePhotoRepository.save(new SpacePhoto(space, "original.png", "forgather/uuid.png", 1024L));
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
 
         MockMultipartFile newFile = new MockMultipartFile(
             "file",
@@ -381,7 +381,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
 
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
             "새로운 스페이스", null, null, null, null, false)
@@ -421,7 +421,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
 
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
             "새로운 스페이스", null, null, null, null, false)
@@ -445,7 +445,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
         Host otherHost = hostRepository.save(createHost());
         String otherToken = jwtTokenProvider.generateAccessToken(otherHost.getId());
 
@@ -475,8 +475,8 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         Thread.sleep(1000);
         Space space2 = spaceRepository.save(SpaceFixture.createPrivateSpace());
         spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space2));
-        spaceHostMapRepository.save(new SpaceHostMap(space1, host));
-        spaceHostMapRepository.save(new SpaceHostMap(space2, host));
+        spaceHostRepository.save(new SpaceHost(space1, host));
+        spaceHostRepository.save(new SpaceHost(space2, host));
         guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space1, "nickname", "방명록1"));
 
         // when

@@ -28,8 +28,8 @@ import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fixture.SpaceFixture;
 import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.SpaceHostMap;
-import com.forgather.global.auth.repository.SpaceHostMapRepository;
+import com.forgather.global.auth.model.SpaceHost;
+import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.response.ApiResponse;
 import com.forgather.global.response.ResponseCode;
@@ -52,7 +52,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
     private HostRepository hostRepository;
 
     @Autowired
-    private SpaceHostMapRepository spaceHostMapRepository;
+    private SpaceHostRepository spaceHostRepository;
 
     @Autowired
     private GuestBookCardRepository guestBookCardRepository;
@@ -79,7 +79,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
         accessToken = jwtTokenProvider.generateAccessToken(host.getId());
         anotherAccessToken = jwtTokenProvider.generateAccessToken(anotherHost.getId());
 
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
 
         card = guestBookCardRepository.save(new GuestBookCard(space, "닉네임", "방명록 메시지"));
         reason = reportReasonRepository.save(createReason());
@@ -183,7 +183,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
         void throwExceptionWhenCardNotBelongToSpace() {
             // given
             Space anotherSpace = spaceRepository.save(SpaceFixture.createSpaceWithCode("ANOTHER123"));
-            spaceHostMapRepository.save(new SpaceHostMap(anotherSpace, host));
+            spaceHostRepository.save(new SpaceHost(anotherSpace, host));
             GuestBookCard anotherCard = guestBookCardRepository.save(new GuestBookCard(anotherSpace, "nick", "msg"));
             CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason.getId(), null);
 
