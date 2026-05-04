@@ -2,6 +2,7 @@ package com.forgather.acceptance;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.util.List;
@@ -222,6 +223,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 .get("/spaces/%s/products/%d".formatted(space.getCode(), 1L))
                 .then()
                 .statusCode(404)
+                .body("code", equalTo("NOT_FOUND"))
                 .body("message", containsString("해당 스페이스에 존재하지 않는 작품입니다"));
         }
     }
@@ -313,6 +315,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 .post("/spaces/%s/products".formatted(space.getCode()))
                 .then()
                 .statusCode(400)
+                .body("code", equalTo("BAD_REQUEST"))
                 .body("message", containsString("작품은 3개까지만 등록 가능"));
         }
 
@@ -355,6 +358,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 .post("/spaces/%s/products".formatted(space.getCode()))
                 .then()
                 .statusCode(401)
+                .body("code", equalTo("UNAUTHORIZED"))
                 .body("message", containsString("로그인이 필요합니다."));
         }
 
@@ -372,6 +376,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 .post("/spaces/%s/products".formatted(space.getCode()))
                 .then()
                 .statusCode(403)
+                .body("code", equalTo("FORBIDDEN"))
                 .body("message", containsString("해당 스페이스에 대한 접근 권한이 없습니다."));
         }
     }
@@ -468,6 +473,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 .patch("/spaces/%s/products/%d".formatted(space.getCode(), registerResponse.id()))
                 .then()
                 .statusCode(400)
+                .body("code", equalTo("BAD_REQUEST"))
                 .body("message", containsString("작품에 존재하지 않는 사진입니다."));
         }
 
@@ -501,6 +507,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 .patch("/spaces/%s/products/%d".formatted(space.getCode(), registerResponse.id()))
                 .then()
                 .statusCode(401)
+                .body("code", equalTo("UNAUTHORIZED"))
                 .body("message", containsString("로그인이 필요합니다."));
         }
 
@@ -535,6 +542,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 .patch("/spaces/%s/products/%d".formatted(space.getCode(), registerResponse.id()))
                 .then()
                 .statusCode(403)
+                .body("code", equalTo("FORBIDDEN"))
                 .body("message", containsString("해당 스페이스에 대한 접근 권한이 없습니다."));
         }
     }
@@ -577,6 +585,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 .delete("/spaces/%s/products/%d".formatted(space.getCode(), registerResponse.id()))
                 .then()
                 .statusCode(401)
+                .body("code", equalTo("UNAUTHORIZED"))
                 .body("message", containsString("로그인이 필요합니다."));
         }
 
@@ -596,6 +605,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 .delete("/spaces/%s/products/%d".formatted(space.getCode(), registerResponse.id()))
                 .then()
                 .statusCode(403)
+                .body("code", equalTo("FORBIDDEN"))
                 .body("message", containsString("해당 스페이스에 대한 접근 권한이 없습니다."));
         }
     }
