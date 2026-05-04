@@ -121,13 +121,15 @@ url: $(json_string "$url")
 
 $workers_md
 
-## 작업내용
+## PR 제목
 
 $title
 
 ## PR 본문
 
+````markdown
 $body
+````
 
 _last synced: ${synced_at}_
 EOF
