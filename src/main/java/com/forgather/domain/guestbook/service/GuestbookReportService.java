@@ -37,9 +37,9 @@ public class GuestbookReportService {
     private final GuestBookReportReasonRepository guestBookReportReasonRepository;
 
     @Transactional(readOnly = true)
-    public ReportHistoryResponse retrieveReportHistory(Host loginUser, Pageable pageable) {
-        Page<GuestBookReport> reports = guestBookReportRepository.findAllByReporterUser(
-            loginUser,
+    public ReportHistoryResponse retrieveReportHistory(Host host, Pageable pageable) {
+        Page<GuestBookReport> reports = guestBookReportRepository.findAllByReporter(
+            host,
             pageable
         );
         return ReportHistoryResponse.from(reports);
@@ -47,7 +47,7 @@ public class GuestbookReportService {
 
     @Transactional(readOnly = true)
     public ReportDetailResponse retrieveReportDetail(Host loginHost, Long reportId) {
-        GuestBookReport report = guestBookReportRepository.getByIdAndReporterUserOrThrow(reportId, loginHost);
+        GuestBookReport report = guestBookReportRepository.getByIdAndReporterOrThrow(reportId, loginHost);
         return ReportDetailResponse.from(report);
     }
 
@@ -84,7 +84,7 @@ public class GuestbookReportService {
     }
 
     private void validateAlreadyReported(Host host, GuestBookCard card) {
-        if (guestBookReportRepository.existsByGuestBookCardAndReporterUser(card, host)) {
+        if (guestBookReportRepository.existsByGuestBookCardAndReporter(card, host)) {
             throw new ConflictException("이미 신고 접수된 방명록입니다. guestBookCardId: %d, reporterUserId: %d"
                 .formatted(card.getId(), host.getId()));
         }

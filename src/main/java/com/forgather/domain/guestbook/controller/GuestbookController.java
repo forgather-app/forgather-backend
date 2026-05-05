@@ -58,11 +58,11 @@ public class GuestbookController {
     )
     @GetMapping("/me/reports")
     public ResponseEntity<ApiResponse<ReportHistoryResponse>> retrieveReportHistory(
-        @LoginHost(required = true) Host loginUser,
+        @LoginHost(required = true) Host loginHost,
         @PageableDefault(size = 15, sort = {"createdAt", "id"}, direction = Sort.Direction.DESC)
         Pageable pageable
     ) {
-        var response = guestBookReportService.retrieveReportHistory(loginUser, pageable);
+        var response = guestBookReportService.retrieveReportHistory(loginHost, pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

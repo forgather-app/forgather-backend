@@ -37,11 +37,11 @@ public class GuestBookReport extends BaseTimeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "host_user_id", nullable = false)
-    private Host hostUser;
+    private Host spaceHost;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reporter_user_id", nullable = false)
-    private Host reporterUser;
+    private Host reporter;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reason_id", nullable = false)
@@ -65,17 +65,17 @@ public class GuestBookReport extends BaseTimeEntity {
 
     public GuestBookReport(
         GuestBookCard guestBookCard,
-        Host hostUser,
-        Host reporterUser,
+        Host spaceHost,
+        Host reporter,
         ReporterType reporterType,
         GuestBookReportReason reason,
         String detail
     ) {
-        validateRequiredFields(guestBookCard, hostUser, reporterUser, reporterType, reason);
+        validateRequiredFields(guestBookCard, spaceHost, reporter, reporterType, reason);
         validateDetail(detail);
         this.guestBookCard = guestBookCard;
-        this.hostUser = hostUser;
-        this.reporterUser = reporterUser;
+        this.spaceHost = spaceHost;
+        this.reporter = reporter;
         this.reason = reason;
         this.reporterType = reporterType;
         this.detail = detail;
@@ -86,18 +86,18 @@ public class GuestBookReport extends BaseTimeEntity {
 
     private void validateRequiredFields(
         GuestBookCard guestBookCard,
-        Host hostUser,
-        Host reporterUser,
+        Host spaceHost,
+        Host reporter,
         ReporterType reporterType,
         GuestBookReportReason reason
     ) {
         if (guestBookCard == null) {
             throw new BaseNullPointerException("방명록 카드는 null일 수 없습니다.");
         }
-        if (hostUser == null) {
-            throw new BaseNullPointerException("호스트는 null일 수 없습니다.");
+        if (spaceHost == null) {
+            throw new BaseNullPointerException("스페이스 호스트는 null일 수 없습니다.");
         }
-        if (reporterUser == null) {
+        if (reporter == null) {
             throw new BaseNullPointerException("신고자는 null일 수 없습니다.");
         }
         if (reporterType == null) {
