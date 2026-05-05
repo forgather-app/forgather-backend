@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportRequest;
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportResponse;
+import com.forgather.domain.guestbook.dto.ReportDetailResponse;
 import com.forgather.domain.guestbook.dto.ReportHistoryResponse;
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookReportReason;
@@ -334,5 +335,110 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
                 space.getCode(), card.getId())
             .then()
             .statusCode(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @DisplayName("신고 내역 상세 조회")
+    @Nested
+    class retrieveReportDetail {
+
+        @DisplayName("신고 내역이 있으면 200과 상세 정보를 반환한다")
+        @Test
+        void retrieveReportDetail() {
+            // given
+            String detail = "상세 신고 사유입니다";
+            ApiResponse<CreateGuestBookReportResponse> reportResult = RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(ContentType.JSON)
+                .body(new CreateGuestBookReportRequest(reason.getId(), detail))
+                .when()
+                .post("/spaces/{spaceCode}/guestbook/{cardId}/reports",
+                    space.getCode(), card.getId())
+                .then()
+                .statusCode(HttpStatus.CREATED.value())
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+            // when
+            ApiResponse<ReportDetailResponse> result = RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + accessToken)
+                .accept(ContentType.JSON)
+                .when()
+                .get("/guestbook/me/reports/{reportId}", reportResult.data().id())
+                .then()
+                .statusCode(HttpStatus.OK.value())
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+            // then
+            assertAll(
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().id()).isEqualTo(reportResult.data().id()),
+                () -> assertThat(result.data().space().spaceCode()).isEqualTo(space.getCode()),
+                () -> assertThat(result.data().space().name()).isEqualTo(space.getName()),
+                () -> assertThat(result.data().reason().id()).isEqualTo(reason.getId()),
+                () -> assertThat(result.data().reason().label()).isEqualTo(reason.getLabel()),
+                () -> assertThat(result.data().detail()).isEqualTo(detail),
+                () -> assertThat(result.data().nicknameSnapshot()).isEqualTo("닉네임"),
+                () -> assertThat(result.data().messageSnapshot()).isEqualTo("방명록 메시지"),
+                () -> assertThat(result.data().createdAtSnapshot()).isNotNull(),
+                () -> assertThat(result.data().createdAt()).isNotNull()
+            );
+        }
+
+        @DisplayName("존재하지 않는 신고 내역은 조회할 수 없다")
+        @Test
+        void throwExceptionWhenReportNotFound() {
+            RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + accessToken)
+                .accept(ContentType.JSON)
+                .when()
+                .get("/guestbook/me/reports/{reportId}", 999L)
+                .then()
+                .statusCode(HttpStatus.NOT_FOUND.value());
+        }
+
+        @DisplayName("다른 사용자의 신고 내역은 조회할 수 없다")
+        @Test
+        void throwExceptionWhenOtherHostReport() {
+            // given
+            ApiResponse<CreateGuestBookReportResponse> reportResult = RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(ContentType.JSON)
+                .body(new CreateGuestBookReportRequest(reason.getId(), null))
+                .when()
+                .post("/spaces/{spaceCode}/guestbook/{cardId}/reports",
+                    space.getCode(), card.getId())
+                .then()
+                .statusCode(HttpStatus.CREATED.value())
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+            // when & then
+            RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + anotherAccessToken)
+                .accept(ContentType.JSON)
+                .when()
+                .get("/guestbook/me/reports/{reportId}", reportResult.data().id())
+                .then()
+                .statusCode(HttpStatus.NOT_FOUND.value());
+        }
+
+        @DisplayName("비로그인 사용자는 상세 조회할 수 없다")
+        @Test
+        void throwExceptionWhenNotLoggedIn() {
+            RestAssuredMockMvc.given()
+                .accept(ContentType.JSON)
+                .when()
+                .get("/guestbook/me/reports/{reportId}", 1L)
+                .then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value());
+        }
     }
 }
