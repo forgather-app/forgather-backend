@@ -1,5 +1,7 @@
 package com.forgather.global.auth.model;
 
+import java.util.Objects;
+
 import com.forgather.domain.model.BaseTimeEntity;
 
 import jakarta.persistence.Column;
@@ -39,5 +41,18 @@ public class Host extends BaseTimeEntity {
 
     public void agreeTerms() {
         this.agreedTerms = true;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass())
+            return false;
+        Host host = (Host)o;
+        return Objects.equals(id, host.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
     }
 }

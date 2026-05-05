@@ -427,7 +427,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
                 .when()
                 .get("/guestbook/me/reports/{reportId}", reportResult.data().id())
                 .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+                .statusCode(HttpStatus.FORBIDDEN.value());
         }
 
         @DisplayName("비로그인 사용자는 상세 조회할 수 없다")

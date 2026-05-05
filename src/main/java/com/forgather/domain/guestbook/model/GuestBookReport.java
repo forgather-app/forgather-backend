@@ -117,4 +117,8 @@ public class GuestBookReport extends BaseTimeEntity {
             throw new BaseException("상세 사유는 최소 5자, 최대 200자까지 입력 가능합니다.");
         }
     }
+
+    public boolean equalsReporter(Host other) {
+        return reporter.equals(other);
+    }
 }

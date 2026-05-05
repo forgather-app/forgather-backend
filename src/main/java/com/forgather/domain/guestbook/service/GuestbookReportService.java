@@ -37,17 +37,20 @@ public class GuestbookReportService {
     private final GuestBookReportReasonRepository guestBookReportReasonRepository;
 
     @Transactional(readOnly = true)
-    public ReportHistoryResponse retrieveReportHistory(Host host, Pageable pageable) {
+    public ReportHistoryResponse retrieveReportHistory(Host reporter, Pageable pageable) {
         Page<GuestBookReport> reports = guestBookReportRepository.findAllByReporter(
-            host,
+            reporter,
             pageable
         );
         return ReportHistoryResponse.from(reports);
     }
 
     @Transactional(readOnly = true)
-    public ReportDetailResponse retrieveReportDetail(Host loginHost, Long reportId) {
-        GuestBookReport report = guestBookReportRepository.getByIdAndReporterOrThrow(reportId, loginHost);
+    public ReportDetailResponse retrieveReportDetail(Host reporter, Long reportId) {
+        GuestBookReport report = guestBookReportRepository.getByIdOrThrow(reportId);
+        if (!report.equalsReporter(reporter)) {
+            throw new ForbiddenException("해당 신고 내역에 대한 접근 권한이 없습니다. reportId: " + report.getId());
+        }
         return ReportDetailResponse.from(report);
     }
 
@@ -64,7 +67,8 @@ public class GuestbookReportService {
         GuestBookCard card = getCardBySpace(guestBookCardId, space);
         validateAlreadyReported(host, card);  // 동일 사용자의 중복 신고 불가능
 
-        GuestBookReportReason reason = guestBookReportReasonRepository.getByIdAndIsHiddenFalseOrThrow(request.reasonId());
+        GuestBookReportReason reason = guestBookReportReasonRepository.getByIdAndIsHiddenFalseOrThrow(
+            request.reasonId());
         GuestBookReport report = guestBookReportRepository.save(
             new GuestBookReport(card, host, host, ReporterType.HOST, reason, request.detail())
         );
