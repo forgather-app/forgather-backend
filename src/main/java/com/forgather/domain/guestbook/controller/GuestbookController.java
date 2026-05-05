@@ -5,9 +5,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.forgather.domain.guestbook.dto.ReportDetailResponse;
 import com.forgather.domain.guestbook.dto.ReportHistoryResponse;
 import com.forgather.domain.guestbook.service.GuestbookReportService;
 import com.forgather.global.auth.annotation.LoginHost;
@@ -61,6 +63,18 @@ public class GuestbookController {
         Pageable pageable
     ) {
         var response = guestBookReportService.retrieveReportHistory(loginUser, pageable);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "방명록 신고내역 상세 조회",
+        description = "로그인 사용자의 특정 방명록 신고 내역 상세 조회")
+    @GetMapping("/me/reports/{reportId}")
+    public ResponseEntity<ApiResponse<ReportDetailResponse>> retrieveReportDetail(
+        @LoginHost(required = true) Host loginHost,
+        @PathVariable Long reportId
+    ) {
+        var response = guestBookReportService.retrieveReportDetail(loginHost, reportId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

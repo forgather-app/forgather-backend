@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportRequest;
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportResponse;
+import com.forgather.domain.guestbook.dto.ReportDetailResponse;
 import com.forgather.domain.guestbook.dto.ReportHistoryResponse;
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookReport;
@@ -42,6 +43,12 @@ public class GuestbookReportService {
             pageable
         );
         return ReportHistoryResponse.from(reports);
+    }
+
+    @Transactional(readOnly = true)
+    public ReportDetailResponse retrieveReportDetail(Host loginHost, Long reportId) {
+        GuestBookReport report = guestBookReportRepository.getByIdAndReporterUserOrThrow(reportId, loginHost);
+        return ReportDetailResponse.from(report);
     }
 
     @Transactional
