@@ -2,6 +2,7 @@ package com.forgather.acceptance;
 
 import static com.forgather.back_office.auth.session.SessionConstants.SESSION_COOKIE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -122,15 +123,13 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
         // given
         createSpaces(16);
 
-        // when
-        var result = RestAssuredMockMvc.given()
+        // when & then
+        RestAssuredMockMvc.given()
             .when()
             .get("/admin/spaces")
             .then()
-            .extract();
-
-        // then
-        assertThat(result.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+            .statusCode(HttpStatus.UNAUTHORIZED.value())
+            .body("code", equalTo("UNAUTHORIZED"));
     }
 
     @DisplayName("스페이스를 상세 조회한다.")
@@ -220,15 +219,13 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
         Space space = spaceRepository.save(SpaceFixture.createSpaceWithCode("1234567890"));
         spaceHostRepository.save(new SpaceHost(space, host));
 
-        // when
-        var result = RestAssuredMockMvc.given()
+        // when & then
+        RestAssuredMockMvc.given()
             .when()
             .get("/admin/spaces/{spaceCode}", space.getCode())
             .then()
-            .extract();
-
-        // then
-        assertThat(result.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+            .statusCode(HttpStatus.UNAUTHORIZED.value())
+            .body("code", equalTo("UNAUTHORIZED"));
     }
 
     @DisplayName("작품 소개가 등록된 모든 스페이스를 조회한다.")
@@ -290,16 +287,14 @@ class AdminSpaceAcceptanceTest extends AcceptanceTest {
     @DisplayName("세션이 없으면 필터링된 스페이스 목록을 조회할 수 없다.")
     @Test
     void getSpacesByFilterWithoutSession() {
-        // when
-        var result = RestAssuredMockMvc.given()
+        // when & then
+        RestAssuredMockMvc.given()
             .queryParam("hasProduct", true)
             .when()
             .get("/admin/spaces/search")
             .then()
-            .extract();
-
-        // then
-        assertThat(result.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+            .statusCode(HttpStatus.UNAUTHORIZED.value())
+            .body("code", equalTo("UNAUTHORIZED"));
     }
 
     @DisplayName("스페이스 이름으로 검색한다. (완전 일치)")

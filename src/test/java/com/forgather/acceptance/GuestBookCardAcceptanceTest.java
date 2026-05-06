@@ -2,6 +2,7 @@ package com.forgather.acceptance;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.time.LocalDateTime;
@@ -216,6 +217,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .get("/spaces/%s/guestbook".formatted(privateSpace.getCode()))
                 .then()
                 .statusCode(403)
+                .body("code", equalTo("FORBIDDEN"))
                 .body("message", containsString("방문자는 비공개 스페이스의 방명록을 조회할 수 없습니다."));
         }
 
@@ -251,6 +253,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .get("/spaces/%s/guestbook".formatted(privateSpace.getCode()))
                 .then()
                 .statusCode(403)
+                .body("code", equalTo("FORBIDDEN"))
                 .body("message", containsString("방문자는 비공개 스페이스의 방명록을 조회할 수 없습니다."));
         }
 
@@ -337,6 +340,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .get("/spaces/%s/guestbook/%d".formatted(privateSpace.getCode(), writeResponse.id()))
                 .then()
                 .statusCode(403)
+                .body("code", equalTo("FORBIDDEN"))
                 .body("message", containsString("방문자는 비공개 스페이스의 방명록을 조회할 수 없습니다."));
         }
 
@@ -354,6 +358,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .get("/spaces/%s/guestbook/%d".formatted(privateSpace.getCode(), writeResponse.id()))
                 .then()
                 .statusCode(403)
+                .body("code", equalTo("FORBIDDEN"))
                 .body("message", containsString("방문자는 비공개 스페이스의 방명록을 조회할 수 없습니다."));
         }
 
@@ -468,6 +473,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .post("/spaces/%s/guestbook".formatted(publicSpace.getCode()))
                 .then()
                 .statusCode(400)
+                .body("code", equalTo("BAD_REQUEST"))
                 .body("message", containsString("방문자 닉네임은 최대 10자까지 입력 가능합니다."));
         }
 
@@ -493,6 +499,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .post("/spaces/%s/guestbook".formatted(publicSpace.getCode()))
                 .then()
                 .statusCode(400)
+                .body("code", equalTo("BAD_REQUEST"))
                 .body("message", containsString("방명록 카드 사진은 최대"));
         }
     }
@@ -520,7 +527,8 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .when()
                 .get("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), writeResponse.id()))
                 .then()
-                .statusCode(404);
+                .statusCode(404)
+                .body("code", equalTo("NOT_FOUND"));
         }
 
         @DisplayName("방문자는 방명록 카드를 삭제하지 못한다")
@@ -535,6 +543,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .delete("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), writeResponse.id()))
                 .then()
                 .statusCode(401)
+                .body("code", equalTo("UNAUTHORIZED"))
                 .body("message", containsString("로그인이 필요합니다."));
         }
 
@@ -551,6 +560,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .delete("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), writeResponse.id()))
                 .then()
                 .statusCode(403)
+                .body("code", equalTo("FORBIDDEN"))
                 .body("message", containsString("해당 스페이스에 대한 접근 권한이 없습니다."));
         }
 
@@ -567,6 +577,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .delete("/spaces/%s/guestbook/%d".formatted(privateSpace.getCode(), writeResponse.id()))
                 .then()
                 .statusCode(404)
+                .body("code", equalTo("NOT_FOUND"))
                 .body("message", containsString("해당 스페이스에 존재하지 않는 방명록 카드입니다."));
         }
     }
@@ -635,6 +646,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .delete("/spaces/%s/guestbook/%d/photos".formatted(publicSpace.getCode(), writeResponse.id()))
                 .then()
                 .statusCode(401)
+                .body("code", equalTo("UNAUTHORIZED"))
                 .body("message", containsString("로그인이 필요합니다."));
         }
 
@@ -659,6 +671,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .delete("/spaces/%s/guestbook/%d/photos".formatted(publicSpace.getCode(), writeResponse.id()))
                 .then()
                 .statusCode(403)
+                .body("code", equalTo("FORBIDDEN"))
                 .body("message", containsString("해당 스페이스에 대한 접근 권한이 없습니다."));
         }
 
@@ -682,6 +695,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .delete("/spaces/%s/guestbook/%d/photos".formatted(publicSpace.getCode(), writeResponse.id()))
                 .then()
                 .statusCode(400)
+                .body("code", equalTo("BAD_REQUEST"))
                 .body("message", containsString("해당 방명록 카드에 존재하지 않는 사진입니다."));
         }
     }

@@ -4,6 +4,7 @@ import static com.forgather.fixture.GuestBookReportReasonFixture.createReason;
 import static com.forgather.fixture.HostFixture.createHost;
 import static com.forgather.fixture.SpaceFixture.createSpace;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -157,7 +158,8 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
                 .post("/spaces/{spaceCode}/guestbook/{cardId}/reports",
                     space.getCode(), card.getId())
                 .then()
-                .statusCode(HttpStatus.UNAUTHORIZED.value());
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .body("code", equalTo("UNAUTHORIZED"));
         }
 
         @DisplayName("스페이스 소유자가 아니면 신고할 수 없다")
@@ -175,7 +177,8 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
                 .post("/spaces/{spaceCode}/guestbook/{cardId}/reports",
                     space.getCode(), card.getId())
                 .then()
-                .statusCode(HttpStatus.FORBIDDEN.value());
+                .statusCode(HttpStatus.FORBIDDEN.value())
+                .body("code", equalTo("FORBIDDEN"));
         }
 
         @DisplayName("해당 스페이스의 방명록이 아니면 신고할 수 없다")
@@ -196,7 +199,8 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
                 .post("/spaces/{spaceCode}/guestbook/{cardId}/reports",
                     space.getCode(), anotherCard.getId())
                 .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+                .statusCode(HttpStatus.NOT_FOUND.value())
+                .body("code", equalTo("NOT_FOUND"));
         }
 
         @DisplayName("이미 신고된 방명록은 재신고할 수 없다")
@@ -221,7 +225,8 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
                 .post("/spaces/{spaceCode}/guestbook/{cardId}/reports",
                     space.getCode(), card.getId())
                 .then()
-                .statusCode(HttpStatus.CONFLICT.value());
+                .statusCode(HttpStatus.CONFLICT.value())
+                .body("code", equalTo("CONFLICT"));
         }
 
         @DisplayName("존재하지 않는 신고 사유로는 신고할 수 없다")
@@ -239,7 +244,8 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
                 .post("/spaces/{spaceCode}/guestbook/{cardId}/reports",
                     space.getCode(), card.getId())
                 .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+                .statusCode(HttpStatus.NOT_FOUND.value())
+                .body("code", equalTo("NOT_FOUND"));
         }
     }
 
@@ -314,7 +320,8 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
                 .when()
                 .get("/guestbook/me/reports")
                 .then()
-                .statusCode(HttpStatus.UNAUTHORIZED.value());
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .body("code", equalTo("UNAUTHORIZED"));
         }
     }
 
@@ -333,6 +340,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
             .post("/spaces/{spaceCode}/guestbook/{cardId}/reports",
                 space.getCode(), card.getId())
             .then()
-            .statusCode(HttpStatus.BAD_REQUEST.value());
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("VALIDATION_FAILED"));
     }
 }

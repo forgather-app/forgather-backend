@@ -2,6 +2,7 @@ package com.forgather.acceptance;
 
 import static com.forgather.fixture.HostFixture.createHost;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -186,16 +187,14 @@ class SpaceAcceptanceTest extends AcceptanceTest {
                 "forgather@forgather.me")
         );
 
-        // when
-        var response = RestAssuredMockMvc.given()
+        // when & then
+        RestAssuredMockMvc.given()
             .multiPart("request", request, "application/json")
             .when()
             .post("/spaces")
             .then()
-            .extract();
-
-        // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+            .statusCode(HttpStatus.UNAUTHORIZED.value())
+            .body("code", equalTo("UNAUTHORIZED"));
     }
 
     @DisplayName("스페이스를 상세 조회한다.")
@@ -296,15 +295,13 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
         spaceHostRepository.save(new SpaceHost(space, host));
 
-        // when
-        var response = RestAssuredMockMvc.given()
+        // when & then
+        RestAssuredMockMvc.given()
             .when()
             .delete("/spaces/{spaceCode}", space.getCode())
             .then()
-            .extract();
-
-        // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+            .statusCode(HttpStatus.UNAUTHORIZED.value())
+            .body("code", equalTo("UNAUTHORIZED"));
     }
 
     @DisplayName("스페이스의 호스트가 아니면 삭제할 수 없다.")
@@ -317,16 +314,14 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         Host otherHost = hostRepository.save(createHost());
         String otherToken = jwtTokenProvider.generateAccessToken(otherHost.getId());
 
-        // when
-        var response = RestAssuredMockMvc.given()
+        // when & then
+        RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + otherToken)
             .when()
             .delete("/spaces/{spaceCode}", space.getCode())
             .then()
-            .extract();
-
-        // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
+            .statusCode(HttpStatus.FORBIDDEN.value())
+            .body("code", equalTo("FORBIDDEN"));
     }
 
     @DisplayName("스페이스를 수정한다.")
@@ -427,16 +422,14 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             "새로운 스페이스", null, null, null, null, false)
         );
 
-        // when
-        var response = RestAssuredMockMvc.given()
+        // when & then
+        RestAssuredMockMvc.given()
             .multiPart("request", request, "application/json")
             .when()
             .patch("/spaces/{spaceCode}", space.getCode())
             .then()
-            .extract();
-
-        // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+            .statusCode(HttpStatus.UNAUTHORIZED.value())
+            .body("code", equalTo("UNAUTHORIZED"));
     }
 
     @DisplayName("스페이스의 호스트가 아니면 수정할 수 없다.")
@@ -453,17 +446,15 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             "새로운 스페이스", null, null, null, null, false)
         );
 
-        // when
-        var response = RestAssuredMockMvc.given()
+        // when & then
+        RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + otherToken)
             .multiPart("request", request, "application/json")
             .when()
             .patch("/spaces/{spaceCode}", space.getCode())
             .then()
-            .extract();
-
-        // then
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
+            .statusCode(HttpStatus.FORBIDDEN.value())
+            .body("code", equalTo("FORBIDDEN"));
     }
 
     @DisplayName("나의 스페이스 목록을 조회한다.")

@@ -2,6 +2,7 @@ package com.forgather.acceptance;
 
 import static com.forgather.back_office.auth.session.SessionConstants.SESSION_COOKIE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -102,15 +103,13 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
     @DisplayName("세션이 없으면 모든 호스트 정보를 조회할 수 없다.")
     @Test
     void getAllHostsWithoutSession() {
-        // when
-        var result = RestAssuredMockMvc.given()
+        // when & then
+        RestAssuredMockMvc.given()
             .when()
             .get("/admin/hosts")
             .then()
-            .extract();
-
-        // then
-        assertThat(result.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+            .statusCode(HttpStatus.UNAUTHORIZED.value())
+            .body("code", equalTo("UNAUTHORIZED"));
     }
 
     @DisplayName("호스트가 소유한 스페이스 목록을 조회한다.")
@@ -147,15 +146,13 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
 
-        // when
-        var result = RestAssuredMockMvc.given()
+        // when & then
+        RestAssuredMockMvc.given()
             .when()
             .get("/admin/hosts/{hostId}/spaces", host.getId())
             .then()
-            .extract();
-
-        // then
-        assertThat(result.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+            .statusCode(HttpStatus.UNAUTHORIZED.value())
+            .body("code", equalTo("UNAUTHORIZED"));
     }
 
     @DisplayName("호스트 이름으로 검색한다. (완전 일치)")
@@ -315,16 +312,14 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
     @DisplayName("세션이 없으면 호스트 이름으로 검색할 수 없다.")
     @Test
     void searchHostsByNameWithoutSession() {
-        // when
-        var result = RestAssuredMockMvc.given()
+        // when & then
+        RestAssuredMockMvc.given()
             .queryParam("name", "포스티")
             .when()
             .get("/admin/hosts/search/by-name")
             .then()
-            .extract();
-
-        // then
-        assertThat(result.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+            .statusCode(HttpStatus.UNAUTHORIZED.value())
+            .body("code", equalTo("UNAUTHORIZED"));
     }
 
     private void createHost(int count) {
