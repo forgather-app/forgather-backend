@@ -169,15 +169,16 @@ public class Space extends SoftDeleteEntity {
     }
 
     @Override
-    public boolean equals(Object object) {
-        if (object == null || getClass() != object.getClass())
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof Space)) {
             return false;
-        Space space = (Space)object;
-        return Objects.equals(id, space.id);
+        }
+        Space space = (Space)o;
+        return id != null && Objects.equals(id, space.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return Space.class.hashCode();
     }
 }

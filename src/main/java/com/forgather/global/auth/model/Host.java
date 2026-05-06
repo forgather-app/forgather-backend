@@ -45,14 +45,14 @@ public class Host extends BaseTimeEntity {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass())
+        if (o == null || !(o instanceof Host))
             return false;
         Host host = (Host)o;
-        return Objects.equals(id, host.id);
+        return id != null && Objects.equals(id, host.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return Host.class.hashCode();
     }
 }
