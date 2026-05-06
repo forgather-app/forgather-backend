@@ -89,7 +89,7 @@ class GuestbookReportServiceTest {
         assertAll(
             () -> assertThat(response.id()).isNotNull(),
             () -> assertThat(response.guestBookCardId()).isEqualTo(card.getId()),
-            () -> assertThat(guestBookReportRepository.existsByGuestBookCardAndReporterUser(card, host)).isTrue(),
+            () -> assertThat(guestBookReportRepository.existsByGuestBookCardAndReporter(card, host)).isTrue(),
             () -> assertThat(card.getVisibilityStatus()).isEqualTo(VisibilityStatus.HIDDEN_BY_ADMIN)
         );
     }

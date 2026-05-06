@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportRequest;
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportResponse;
+import com.forgather.domain.guestbook.dto.ReportDetailResponse;
 import com.forgather.domain.guestbook.dto.ReportHistoryResponse;
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookReport;
@@ -36,12 +37,21 @@ public class GuestbookReportService {
     private final GuestBookReportReasonRepository guestBookReportReasonRepository;
 
     @Transactional(readOnly = true)
-    public ReportHistoryResponse retrieveReportHistory(Host loginUser, Pageable pageable) {
-        Page<GuestBookReport> reports = guestBookReportRepository.findAllByReporterUser(
-            loginUser,
+    public ReportHistoryResponse retrieveReportHistory(Host reporter, Pageable pageable) {
+        Page<GuestBookReport> reports = guestBookReportRepository.findAllByReporter(
+            reporter,
             pageable
         );
         return ReportHistoryResponse.from(reports);
+    }
+
+    @Transactional(readOnly = true)
+    public ReportDetailResponse retrieveReportDetail(Host reporter, Long reportId) {
+        GuestBookReport report = guestBookReportRepository.getByIdOrThrow(reportId);
+        if (!report.equalsReporter(reporter)) {
+            throw new ForbiddenException("해당 신고 내역에 대한 접근 권한이 없습니다. reportId: " + report.getId());
+        }
+        return ReportDetailResponse.from(report);
     }
 
     @Transactional
@@ -57,7 +67,8 @@ public class GuestbookReportService {
         GuestBookCard card = getCardBySpace(guestBookCardId, space);
         validateAlreadyReported(host, card);  // 동일 사용자의 중복 신고 불가능
 
-        GuestBookReportReason reason = guestBookReportReasonRepository.getByIdAndIsHiddenFalseOrThrow(request.reasonId());
+        GuestBookReportReason reason = guestBookReportReasonRepository.getByIdAndIsHiddenFalseOrThrow(
+            request.reasonId());
         GuestBookReport report = guestBookReportRepository.save(
             new GuestBookReport(card, host, host, ReporterType.HOST, reason, request.detail())
         );
@@ -77,7 +88,7 @@ public class GuestbookReportService {
     }
 
     private void validateAlreadyReported(Host host, GuestBookCard card) {
-        if (guestBookReportRepository.existsByGuestBookCardAndReporterUser(card, host)) {
+        if (guestBookReportRepository.existsByGuestBookCardAndReporter(card, host)) {
             throw new ConflictException("이미 신고 접수된 방명록입니다. guestBookCardId: %d, reporterUserId: %d"
                 .formatted(card.getId(), host.getId()));
         }
