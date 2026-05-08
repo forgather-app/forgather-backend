@@ -2,7 +2,11 @@ package com.forgather.domain.exhibition.model;
 
 import java.time.LocalTime;
 
+import org.springframework.http.HttpStatus;
+
 import com.forgather.domain.model.SoftDeleteEntity;
+import com.forgather.global.exception.BaseException;
+import com.forgather.global.exception.BaseNullPointerException;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -40,4 +44,35 @@ public class ExhibitionTime extends SoftDeleteEntity {
 
     @Column(name = "end_time", nullable = false)
     private LocalTime endTime;
+
+    public ExhibitionTime(Exhibition exhibition, DayType dayType, LocalTime startTime, LocalTime endTime) {
+        validateRequiredFields(exhibition, dayType, startTime, endTime);
+        validateTime(startTime, endTime);
+        this.exhibition = exhibition;
+        this.dayType = dayType;
+        this.startTime = startTime;
+        this.endTime = endTime;
+    }
+
+    private void validateRequiredFields(Exhibition exhibition, DayType dayType, LocalTime startTime,
+        LocalTime endTime) {
+        if (exhibition == null) {
+            throw new BaseNullPointerException("전시는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+        if (dayType == null) {
+            throw new BaseNullPointerException("날짜 타입은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+        if (startTime == null) {
+            throw new BaseNullPointerException("시작 시간은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+        if (endTime == null) {
+            throw new BaseNullPointerException("종료 시간은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private void validateTime(LocalTime startTime, LocalTime endTime) {
+        if (startTime.isAfter(endTime)) {
+            throw new BaseException("시작 시간이 종료 시간보다 늦을 수 없습니다.");
+        }
+    }
 }
