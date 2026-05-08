@@ -2,7 +2,12 @@ package com.forgather.domain.exhibition.model;
 
 import java.time.LocalDate;
 
+import org.springframework.http.HttpStatus;
+
 import com.forgather.domain.model.SoftDeleteEntity;
+import com.forgather.global.exception.BaseException;
+import com.forgather.global.exception.BaseNullPointerException;
+import com.forgather.global.util.TextLengthCounter;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,6 +24,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 public class Exhibition extends SoftDeleteEntity {
+
+    private static final int MAX_TITLE_LENGTH = 100;
+    private static final int MAX_DESCRIPTION_LENGTH = 200;
+    private static final int MAX_OPERATION_NOTICE_LENGTH = 200;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,4 +60,93 @@ public class Exhibition extends SoftDeleteEntity {
 
     @Column(name = "detail_address")
     private String detailAddress;
+
+    public Exhibition(
+        String title,
+        LocalDate startDate,
+        LocalDate endDate,
+        String description,
+        String operationNotice,
+        LocationType locationType,
+        String onlineUrl,
+        String baseAddress,
+        String detailAddress
+    ) {
+        validateRequiredFields(title, startDate, endDate);
+        validateTitle(title);
+        validateOperationDate(startDate, endDate);
+        validateDescription(description);
+        validateOperationNotice(operationNotice);
+        validateLocationType(locationType, onlineUrl, baseAddress);
+        this.title = title;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.description = description;
+        this.operationNotice = operationNotice;
+        this.locationType = locationType;
+        this.onlineUrl = onlineUrl;
+        this.baseAddress = baseAddress;
+        this.detailAddress = detailAddress;
+    }
+
+    private void validateRequiredFields(String title, LocalDate startDate, LocalDate endDate) {
+        if (title == null) {
+            throw new BaseNullPointerException("전시 이름은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+        if (startDate == null) {
+            throw new BaseNullPointerException("전시 시작 날짜는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+        if (endDate == null) {
+            throw new BaseNullPointerException("전시 종료 날짜는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private void validateTitle(String title) {
+        if (title.isBlank()) {
+            throw new BaseException("전시 이름은 공백일 수 없습니다.");
+        }
+        if (TextLengthCounter.count(title) > MAX_TITLE_LENGTH) {
+            throw new BaseException("전시 이름은 %d자를 초과할 수 없습니다.".formatted(MAX_TITLE_LENGTH));
+        }
+    }
+
+    private void validateOperationDate(LocalDate startDate, LocalDate endDate) {
+        if (startDate.isAfter(endDate)) {
+            throw new BaseException("전시 시작 날짜는 종료 날짜 이후일 수 없습니다.");
+        }
+    }
+
+    private void validateDescription(String description) {
+        if (description.isBlank()) {
+            throw new BaseException("전시 설명은 공백일 수 없습니다.");
+        }
+        if (TextLengthCounter.count(description) > MAX_DESCRIPTION_LENGTH) {
+            throw new BaseException("전시 설명은 %d자를 초과할 수 없습니다.".formatted(MAX_DESCRIPTION_LENGTH));
+        }
+    }
+
+    private void validateOperationNotice(String operationNotice) {
+        if (operationNotice == null) {
+            return;
+        }
+        if (operationNotice.isBlank()) {
+            throw new BaseException("전시 운영 공지사항은 공백일 수 없습니다.");
+        }
+        if (TextLengthCounter.count(operationNotice) > MAX_OPERATION_NOTICE_LENGTH) {
+            throw new BaseException("전시 운영 공지사항은 %d자를 초과할 수 없습니다.".formatted(MAX_OPERATION_NOTICE_LENGTH));
+        }
+    }
+
+    private void validateLocationType(LocationType locationType, String onlineUrl, String baseAddress) {
+        if (locationType == null) {
+            return;
+        }
+        if (locationType == LocationType.ONLINE && onlineUrl == null) {
+            throw new BaseException("온라인 전시의 경우 온라인 URL은 필수입니다.");
+        }
+        // 상세 주소의 경우는 선택사항?
+        if (locationType == LocationType.OFFLINE && baseAddress == null) {
+            throw new BaseException("오프라인 전시의 경우 기본 주소는 필수입니다.");
+        }
+    }
 }
