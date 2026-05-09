@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.forgather.domain.guestbook.dto.ReportDetailResponse;
 import com.forgather.domain.guestbook.dto.ReportHistoryResponse;
+import com.forgather.domain.guestbook.dto.ReportReasonsResponse;
 import com.forgather.domain.guestbook.service.GuestbookReportService;
 import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.auth.model.Host;
@@ -75,6 +76,14 @@ public class GuestbookController {
         @PathVariable Long reportId
     ) {
         var response = guestBookReportService.retrieveReportDetail(loginHost, reportId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @Operation(summary = "방명록 신고 사유 목록 조회",
+        description = "방명록 신고 시 선택 가능한 신고 사유 목록 조회")
+    @GetMapping("/reports/reasons")
+    public ResponseEntity<ApiResponse<ReportReasonsResponse>> retrieveReportReasons() {
+        var response = guestBookReportService.retrieveReportReasons();
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

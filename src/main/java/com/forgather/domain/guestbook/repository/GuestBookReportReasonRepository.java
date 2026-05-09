@@ -1,5 +1,6 @@
 package com.forgather.domain.guestbook.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.forgather.domain.guestbook.model.GuestBookReportReason;
@@ -9,6 +10,8 @@ import com.forgather.global.exception.NotFoundException;
 public interface GuestBookReportReasonRepository {
 
     Optional<GuestBookReportReason> findByIdAndIsHiddenFalse(Long id);
+
+    List<GuestBookReportReason> findAllByIsHiddenFalse();
 
     default GuestBookReportReason getByIdAndIsHiddenFalseOrThrow(Long id) {
         if (id == null) {

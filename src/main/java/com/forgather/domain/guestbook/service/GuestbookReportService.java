@@ -1,5 +1,7 @@
 package com.forgather.domain.guestbook.service;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -9,6 +11,7 @@ import com.forgather.domain.guestbook.dto.CreateGuestBookReportRequest;
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportResponse;
 import com.forgather.domain.guestbook.dto.ReportDetailResponse;
 import com.forgather.domain.guestbook.dto.ReportHistoryResponse;
+import com.forgather.domain.guestbook.dto.ReportReasonsResponse;
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookReport;
 import com.forgather.domain.guestbook.model.GuestBookReportReason;
@@ -27,6 +30,7 @@ import com.forgather.global.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class GuestbookReportService {
 
@@ -36,7 +40,6 @@ public class GuestbookReportService {
     private final GuestBookReportRepository guestBookReportRepository;
     private final GuestBookReportReasonRepository guestBookReportReasonRepository;
 
-    @Transactional(readOnly = true)
     public ReportHistoryResponse retrieveReportHistory(Host reporter, Pageable pageable) {
         Page<GuestBookReport> reports = guestBookReportRepository.findAllByReporter(
             reporter,
@@ -45,7 +48,6 @@ public class GuestbookReportService {
         return ReportHistoryResponse.from(reports);
     }
 
-    @Transactional(readOnly = true)
     public ReportDetailResponse retrieveReportDetail(Host reporter, Long reportId) {
         GuestBookReport report = guestBookReportRepository.getByIdOrThrow(reportId);
         if (!report.equalsReporter(reporter)) {
@@ -102,5 +104,10 @@ public class GuestbookReportService {
             "해당 스페이스에 대한 접근 권한이 없습니다. spaceCode: %s, hostId: %d"
                 .formatted(space.getCode(), host.getId())
         );
+    }
+
+    public ReportReasonsResponse retrieveReportReasons() {
+        List<GuestBookReportReason> reasons = guestBookReportReasonRepository.findAllByIsHiddenFalse();
+        return ReportReasonsResponse.from(reasons);
     }
 }
