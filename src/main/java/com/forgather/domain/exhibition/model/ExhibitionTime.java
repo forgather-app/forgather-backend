@@ -1,5 +1,6 @@
 package com.forgather.domain.exhibition.model;
 
+import java.time.DayOfWeek;
 import java.time.LocalTime;
 
 import org.springframework.http.HttpStatus;
@@ -36,8 +37,8 @@ public class ExhibitionTime extends SoftDeleteEntity {
     private Exhibition exhibition;
 
     @Enumerated(value = EnumType.STRING)
-    @Column(name = "day_type", nullable = false)
-    private DayType dayType;
+    @Column(name = "day_of_week", nullable = false)
+    private DayOfWeek dayOfWeek;
 
     @Column(name = "start_time", nullable = false)
     private LocalTime startTime;
@@ -45,22 +46,22 @@ public class ExhibitionTime extends SoftDeleteEntity {
     @Column(name = "end_time", nullable = false)
     private LocalTime endTime;
 
-    public ExhibitionTime(Exhibition exhibition, DayType dayType, LocalTime startTime, LocalTime endTime) {
-        validateRequiredFields(exhibition, dayType, startTime, endTime);
+    public ExhibitionTime(Exhibition exhibition, DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime) {
+        validateRequiredFields(exhibition, dayOfWeek, startTime, endTime);
         validateTime(startTime, endTime);
         this.exhibition = exhibition;
-        this.dayType = dayType;
+        this.dayOfWeek = dayOfWeek;
         this.startTime = startTime;
         this.endTime = endTime;
     }
 
-    private void validateRequiredFields(Exhibition exhibition, DayType dayType, LocalTime startTime,
+    private void validateRequiredFields(Exhibition exhibition, DayOfWeek dayOfWeek, LocalTime startTime,
         LocalTime endTime) {
         if (exhibition == null) {
             throw new BaseNullPointerException("전시는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
         }
-        if (dayType == null) {
-            throw new BaseNullPointerException("날짜 타입은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        if (dayOfWeek == null) {
+            throw new BaseNullPointerException("운영 요일은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
         }
         if (startTime == null) {
             throw new BaseNullPointerException("시작 시간은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);

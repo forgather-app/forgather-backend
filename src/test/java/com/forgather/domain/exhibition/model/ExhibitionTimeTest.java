@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import java.time.DayOfWeek;
 import java.time.LocalTime;
 
 import org.junit.jupiter.api.DisplayName;
@@ -27,15 +28,14 @@ class ExhibitionTimeTest {
         @Test
         void createWithNullExhibition() {
             // when & then
-            assertThatThrownBy(() -> new ExhibitionTime(
-                null, DayType.ALL, DEFAULT_START_TIME, DEFAULT_END_TIME))
+            assertThatThrownBy(() -> new ExhibitionTime(null, DayOfWeek.MONDAY, DEFAULT_START_TIME, DEFAULT_END_TIME))
                 .isInstanceOf(BaseNullPointerException.class)
                 .hasMessageContaining("전시");
         }
 
-        @DisplayName("날짜 타입이 null이면 생성할 수 없다.")
+        @DisplayName("운영 요일이 null이면 생성할 수 없다.")
         @Test
-        void createWithNullDayType() {
+        void createWithNullDayOfWeek() {
             // given
             Exhibition exhibition = ExhibitionFixture.createOnlineExhibition();
 
@@ -43,7 +43,7 @@ class ExhibitionTimeTest {
             assertThatThrownBy(() -> new ExhibitionTime(
                 exhibition, null, DEFAULT_START_TIME, DEFAULT_END_TIME))
                 .isInstanceOf(BaseNullPointerException.class)
-                .hasMessageContaining("날짜 타입");
+                .hasMessageContaining("운영 요일");
         }
 
         @DisplayName("시작 시간이 null이면 생성할 수 없다.")
@@ -53,8 +53,7 @@ class ExhibitionTimeTest {
             Exhibition exhibition = ExhibitionFixture.createOnlineExhibition();
 
             // when & then
-            assertThatThrownBy(() -> new ExhibitionTime(
-                exhibition, DayType.ALL, null, DEFAULT_END_TIME))
+            assertThatThrownBy(() -> new ExhibitionTime(exhibition, DayOfWeek.MONDAY, null, DEFAULT_END_TIME))
                 .isInstanceOf(BaseNullPointerException.class)
                 .hasMessageContaining("시작 시간");
         }
@@ -66,8 +65,7 @@ class ExhibitionTimeTest {
             Exhibition exhibition = ExhibitionFixture.createOnlineExhibition();
 
             // when & then
-            assertThatThrownBy(() -> new ExhibitionTime(
-                exhibition, DayType.ALL, DEFAULT_START_TIME, null))
+            assertThatThrownBy(() -> new ExhibitionTime(exhibition, DayOfWeek.MONDAY, DEFAULT_START_TIME, null))
                 .isInstanceOf(BaseNullPointerException.class)
                 .hasMessageContaining("종료 시간");
         }
@@ -86,7 +84,7 @@ class ExhibitionTimeTest {
             LocalTime endTime = LocalTime.of(10, 0);
 
             // when & then
-            assertThatThrownBy(() -> new ExhibitionTime(exhibition, DayType.ALL, startTime, endTime))
+            assertThatThrownBy(() -> new ExhibitionTime(exhibition, DayOfWeek.MONDAY, startTime, endTime))
                 .isInstanceOf(BaseException.class)
                 .hasMessageContaining("시작 시간");
         }
@@ -99,7 +97,7 @@ class ExhibitionTimeTest {
             LocalTime sameTime = LocalTime.of(12, 0);
 
             // when
-            ExhibitionTime exhibitionTime = new ExhibitionTime(exhibition, DayType.ALL, sameTime, sameTime);
+            ExhibitionTime exhibitionTime = new ExhibitionTime(exhibition, DayOfWeek.MONDAY, sameTime, sameTime);
 
             // then
             assertThat(exhibitionTime.getStartTime()).isEqualTo(exhibitionTime.getEndTime());
@@ -114,12 +112,12 @@ class ExhibitionTimeTest {
 
         // when
         ExhibitionTime exhibitionTime = new ExhibitionTime(
-            exhibition, DayType.WEEKDAY, DEFAULT_START_TIME, DEFAULT_END_TIME);
+            exhibition, DayOfWeek.WEDNESDAY, DEFAULT_START_TIME, DEFAULT_END_TIME);
 
         // then
         assertAll(
             () -> assertThat(exhibitionTime.getExhibition()).isEqualTo(exhibition),
-            () -> assertThat(exhibitionTime.getDayType()).isEqualTo(DayType.WEEKDAY),
+            () -> assertThat(exhibitionTime.getDayOfWeek()).isEqualTo(DayOfWeek.WEDNESDAY),
             () -> assertThat(exhibitionTime.getStartTime()).isEqualTo(DEFAULT_START_TIME),
             () -> assertThat(exhibitionTime.getEndTime()).isEqualTo(DEFAULT_END_TIME)
         );

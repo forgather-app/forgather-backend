@@ -3,13 +3,12 @@ package com.forgather.global.exception;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
-
-import org.springframework.http.HttpStatus;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -21,6 +20,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.forgather.global.response.ApiResponse;
 import com.forgather.global.response.ResponseCode;
 
@@ -100,6 +100,25 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(BAD_REQUEST)
             .contentType(APPLICATION_JSON)
             .body(ApiResponse.error(ResponseCode.BAD_REQUEST, message));
+    }
+
+    // 요청 본문 역직렬화 실패 (잘못된 enum 값, 타입 불일치, JSON 구문 오류 등)
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
+        logClientWarning(e);
+        String message = resolveNotReadableMessage(e);
+        return ResponseEntity.status(BAD_REQUEST)
+            .contentType(APPLICATION_JSON)
+            .body(ApiResponse.error(ResponseCode.BAD_REQUEST, message));
+    }
+
+    private String resolveNotReadableMessage(HttpMessageNotReadableException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof InvalidFormatException ife && ife.getTargetType() != null && ife.getTargetType().isEnum()) {
+            String typeName = ife.getTargetType().getSimpleName();
+            return "'%s' 형식이 올바르지 않습니다.".formatted(typeName);
+        }
+        return "요청 본문 형식이 올바르지 않습니다.";
     }
 
     // 클라이언트가 요청에 기재한 속성 존재하지 않을 경우 ex) 페이지네이션 sort 조건 속성
