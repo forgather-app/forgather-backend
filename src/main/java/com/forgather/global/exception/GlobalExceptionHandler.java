@@ -163,14 +163,6 @@ public class GlobalExceptionHandler {
             .body(ApiResponse.error(ResponseCode.JWT_INVALID, e.getMessage()));
     }
 
-    @ExceptionHandler(S3ServiceUnavailableException.class)
-    public ResponseEntity<ApiResponse<Void>> handleS3ServiceUnavailableException(S3ServiceUnavailableException e) {
-        logClientWarning(e);
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-            .contentType(APPLICATION_JSON)
-            .body(ApiResponse.error(ResponseCode.S3_UNAVAILABLE, e.getMessage()));
-    }
-
     @ExceptionHandler(ForbiddenException.class)
     public ResponseEntity<ApiResponse<Void>> handleForbiddenException(ForbiddenException e) {
         logClientWarning(e);
