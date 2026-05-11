@@ -3,6 +3,8 @@ package com.forgather.global.exception;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+
+import org.springframework.http.HttpStatus;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import org.springframework.data.mapping.PropertyReferenceException;
@@ -140,6 +142,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(UNAUTHORIZED)
             .contentType(APPLICATION_JSON)
             .body(ApiResponse.error(ResponseCode.JWT_INVALID, e.getMessage()));
+    }
+
+    @ExceptionHandler(S3ServiceUnavailableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleS3ServiceUnavailableException(S3ServiceUnavailableException e) {
+        logClientWarning(e);
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+            .contentType(APPLICATION_JSON)
+            .body(ApiResponse.error(ResponseCode.S3_UNAVAILABLE, e.getMessage()));
     }
 
     @ExceptionHandler(ForbiddenException.class)
