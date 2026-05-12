@@ -2,7 +2,9 @@ package com.forgather.acceptance;
 
 import static com.forgather.fixture.HostFixture.createHost;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.time.DayOfWeek;
@@ -36,9 +38,6 @@ import io.restassured.module.mockmvc.RestAssuredMockMvc;
 @DisplayName("인수 테스트: Exhibition")
 @AutoConfigureMockMvc
 class ExhibitionAcceptanceTest extends AcceptanceTest {
-
-    private static final String API_VERSION_HEADER = "X-API-Version";
-    private static final String API_VERSION_V1 = "1";
 
     @Autowired
     private MockMvc mockMvc;
@@ -82,7 +81,6 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
         // when
         ApiResponse<ExhibitionResponse> response = RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
-            .header(API_VERSION_HEADER, API_VERSION_V1)
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(request)
@@ -129,7 +127,6 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
         // when
         ApiResponse<ExhibitionResponse> response = RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
-            .header(API_VERSION_HEADER, API_VERSION_V1)
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(request)
@@ -175,7 +172,6 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
         // when
         ApiResponse<ExhibitionResponse> response = RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
-            .header(API_VERSION_HEADER, API_VERSION_V1)
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(request)
@@ -202,7 +198,6 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header(API_VERSION_HEADER, API_VERSION_V1)
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -231,7 +226,6 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
         // when & then
         RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
-            .header(API_VERSION_HEADER, API_VERSION_V1)
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -259,7 +253,6 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
         // when & then
         RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
-            .header(API_VERSION_HEADER, API_VERSION_V1)
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -273,7 +266,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
     void createExhibitionWithDuplicateOperatingDay() {
         // given
         CreateExhibitionRequest request = new CreateExhibitionRequest(
-            "exhibitions/too-many.webp",
+            "exhibitions/dup.webp",
             1024L,
             "운영시간 요일 중복 전시",
             LocalDate.of(2026, 6, 1),
@@ -282,12 +275,6 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
             null,
             List.of(
                 new OperatingHourRequest(DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(18, 0)),
-                new OperatingHourRequest(DayOfWeek.TUESDAY, LocalTime.of(10, 0), LocalTime.of(18, 0)),
-                new OperatingHourRequest(DayOfWeek.WEDNESDAY, LocalTime.of(10, 0), LocalTime.of(18, 0)),
-                new OperatingHourRequest(DayOfWeek.THURSDAY, LocalTime.of(10, 0), LocalTime.of(18, 0)),
-                new OperatingHourRequest(DayOfWeek.FRIDAY, LocalTime.of(10, 0), LocalTime.of(18, 0)),
-                new OperatingHourRequest(DayOfWeek.SATURDAY, LocalTime.of(10, 0), LocalTime.of(18, 0)),
-                new OperatingHourRequest(DayOfWeek.SUNDAY, LocalTime.of(10, 0), LocalTime.of(18, 0)),
                 new OperatingHourRequest(DayOfWeek.MONDAY, LocalTime.of(19, 0), LocalTime.of(21, 0))
             ),
             new LocationRequest(LocationType.ONLINE, "https://forgather.app", null, null)
@@ -296,7 +283,6 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
         // when & then
         RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
-            .header(API_VERSION_HEADER, API_VERSION_V1)
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -325,7 +311,6 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
         // when & then
         RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
-            .header(API_VERSION_HEADER, API_VERSION_V1)
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -354,7 +339,6 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
         // when & then
         RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
-            .header(API_VERSION_HEADER, API_VERSION_V1)
             .contentType(ContentType.JSON)
             .body(request)
             .when()
