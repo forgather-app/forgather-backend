@@ -190,6 +190,32 @@ class ExhibitionServiceTest extends TestOnContainer {
             .containsExactly(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY);
     }
 
+    @DisplayName("같은 요일에 여러 시간대를 입력하면 예외가 발생한다")
+    @Test
+    void rejectsMultipleTimeRangesForSameDay() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        CreateExhibitionRequest request = new CreateExhibitionRequest(
+            "exhibitions/multi-range.webp",
+            1024L,
+            "다중 구간 전시",
+            LocalDate.of(2026, 6, 1),
+            LocalDate.of(2026, 6, 30),
+            "전시 설명",
+            "운영 공지",
+            List.of(
+                new OperatingHourRequest(DayOfWeek.MONDAY, LocalTime.of(11, 0), LocalTime.of(13, 0)),
+                new OperatingHourRequest(DayOfWeek.MONDAY, LocalTime.of(14, 0), LocalTime.of(18, 0))
+            ),
+            new LocationRequest(LocationType.ONLINE, "https://forgather.app", null, null)
+        );
+
+        // when & then
+        assertThatThrownBy(() -> exhibitionService.create(host, request))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("같은 요일");
+    }
+
     @DisplayName("운영 시간 빈 리스트로 생성하면 응답의 운영 시간은 null이다.")
     @Test
     void createWithEmptyOperatingHours() {
