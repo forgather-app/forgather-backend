@@ -52,6 +52,5 @@ public class ExhibitionHost extends SoftDeleteEntity {
         if (host == null) {
             throw new BaseNullPointerException("전시 호스트는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
         }
-        
     }
 }
