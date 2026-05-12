@@ -1,7 +1,6 @@
 package com.forgather.domain.exhibition.model;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
 
 import org.springframework.http.HttpStatus;
 
@@ -28,7 +27,6 @@ public class Exhibition extends SoftDeleteEntity {
     private static final int MAX_TITLE_LENGTH = 100;
     private static final int MAX_DESCRIPTION_LENGTH = 200;
     private static final int MAX_OPERATION_NOTICE_LENGTH = 200;
-    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

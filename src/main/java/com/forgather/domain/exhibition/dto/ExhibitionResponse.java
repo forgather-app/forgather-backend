@@ -2,6 +2,7 @@ package com.forgather.domain.exhibition.dto;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import com.forgather.domain.exhibition.model.Exhibition;
 import com.forgather.domain.exhibition.model.ExhibitionPhoto;
@@ -63,7 +64,7 @@ public record ExhibitionResponse(
             photo.getPath(),
             exhibition.getStartDate(),
             exhibition.getEndDate(),
-            exhibition.calculateProgressStatus(LocalDate.now()).name(),
+            exhibition.calculateProgressStatus(LocalDate.now(ZoneId.of("Asia/Seoul"))).name(),
             times.isEmpty() ? null : OperatingHoursResponse.from(times.getValues()),
             LocationResponse.from(exhibition.getLocation()),
             CreatorInfo.from(host),
