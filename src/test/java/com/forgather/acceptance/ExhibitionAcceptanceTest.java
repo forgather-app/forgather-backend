@@ -363,6 +363,44 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
             .statusCode(HttpStatus.BAD_REQUEST.value());
     }
 
+    @DisplayName("운영 시간 항목이 7개를 초과하면 전시를 생성할 수 없다.")
+    @Test
+    void createExhibitionWithTooManyOperatingHours() {
+        // given - 고유 요일 7개 + MONDAY 1개 추가로 8개 입력 (Bean Validation의 @Size 위반)
+        CreateExhibitionRequest request = new CreateExhibitionRequest(
+            "exhibitions/too-many.webp",
+            1024L,
+            "운영시간 초과 전시",
+            LocalDate.of(2026, 6, 1),
+            LocalDate.of(2026, 6, 30),
+            "전시 설명",
+            null,
+            List.of(
+                new OperatingHourRequest(DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(18, 0)),
+                new OperatingHourRequest(DayOfWeek.TUESDAY, LocalTime.of(10, 0), LocalTime.of(18, 0)),
+                new OperatingHourRequest(DayOfWeek.WEDNESDAY, LocalTime.of(10, 0), LocalTime.of(18, 0)),
+                new OperatingHourRequest(DayOfWeek.THURSDAY, LocalTime.of(10, 0), LocalTime.of(18, 0)),
+                new OperatingHourRequest(DayOfWeek.FRIDAY, LocalTime.of(10, 0), LocalTime.of(18, 0)),
+                new OperatingHourRequest(DayOfWeek.SATURDAY, LocalTime.of(10, 0), LocalTime.of(18, 0)),
+                new OperatingHourRequest(DayOfWeek.SUNDAY, LocalTime.of(10, 0), LocalTime.of(18, 0)),
+                new OperatingHourRequest(DayOfWeek.MONDAY, LocalTime.of(19, 0), LocalTime.of(21, 0))
+            ),
+            new LocationRequest(LocationType.ONLINE, "https://forgather.app", null, null)
+        );
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/exhibitions")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("VALIDATION_FAILED"))
+            .body("message", containsString("운영시간은 최대 7개"));
+    }
+
     private CreateExhibitionRequest createValidRequest() {
         return new CreateExhibitionRequest(
             "exhibitions/default.webp",
