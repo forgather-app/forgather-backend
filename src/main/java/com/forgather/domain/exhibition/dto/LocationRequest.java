@@ -1,5 +1,6 @@
 package com.forgather.domain.exhibition.dto;
 
+import com.forgather.domain.exhibition.model.Location;
 import com.forgather.domain.exhibition.model.LocationType;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -20,4 +21,8 @@ public record LocationRequest(
     @Schema(description = "상세 주소 (OFFLINE 타입)")
     String detailAddress
 ) {
+
+    public Location toDomain() {
+        return new Location(locationType, url, baseAddress, detailAddress);
+    }
 }

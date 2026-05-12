@@ -10,9 +10,8 @@ import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.util.TextLengthCounter;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -48,18 +47,8 @@ public class Exhibition extends SoftDeleteEntity {
     @Column(name = "operation_notice")
     private String operationNotice;
 
-    @Enumerated(value = EnumType.STRING)
-    @Column(name = "location_type")
-    private LocationType locationType;
-
-    @Column(name = "online_url")
-    private String onlineUrl;
-
-    @Column(name = "base_address")
-    private String baseAddress;
-
-    @Column(name = "detail_address")
-    private String detailAddress;
+    @Embedded
+    private Location location;
 
     public Exhibition(
         String title,
@@ -67,26 +56,19 @@ public class Exhibition extends SoftDeleteEntity {
         LocalDate endDate,
         String description,
         String operationNotice,
-        LocationType locationType,
-        String onlineUrl,
-        String baseAddress,
-        String detailAddress
+        Location location
     ) {
         validateRequiredFields(title, startDate, endDate);
         validateTitle(title);
         validateOperationDate(startDate, endDate);
         validateDescription(description);
         validateOperationNotice(operationNotice);
-        validateLocationType(locationType, onlineUrl, baseAddress);
         this.title = title;
         this.startDate = startDate;
         this.endDate = endDate;
         this.description = description;
         this.operationNotice = operationNotice;
-        this.locationType = locationType;
-        this.onlineUrl = onlineUrl;
-        this.baseAddress = baseAddress;
-        this.detailAddress = detailAddress;
+        this.location = location;
     }
 
     private void validateRequiredFields(String title, LocalDate startDate, LocalDate endDate) {
@@ -117,6 +99,9 @@ public class Exhibition extends SoftDeleteEntity {
     }
 
     private void validateDescription(String description) {
+        if (description == null) {
+            return;
+        }
         if (description.isBlank()) {
             throw new BaseException("전시 설명은 공백일 수 없습니다.");
         }
@@ -134,19 +119,6 @@ public class Exhibition extends SoftDeleteEntity {
         }
         if (TextLengthCounter.count(operationNotice) > MAX_OPERATION_NOTICE_LENGTH) {
             throw new BaseException("전시 운영 공지사항은 %d자를 초과할 수 없습니다.".formatted(MAX_OPERATION_NOTICE_LENGTH));
-        }
-    }
-
-    private void validateLocationType(LocationType locationType, String onlineUrl, String baseAddress) {
-        if (locationType == null) {
-            return;
-        }
-        if (locationType == LocationType.ONLINE && onlineUrl == null) {
-            throw new BaseException("온라인 전시의 경우 온라인 URL은 필수입니다.");
-        }
-        // 상세 주소의 경우는 선택사항?
-        if (locationType == LocationType.OFFLINE && baseAddress == null) {
-            throw new BaseException("오프라인 전시의 경우 기본 주소는 필수입니다.");
         }
     }
 }

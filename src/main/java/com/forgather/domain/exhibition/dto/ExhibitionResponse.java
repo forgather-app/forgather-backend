@@ -68,7 +68,7 @@ public record ExhibitionResponse(
             exhibition.getEndDate(),
             ExhibitionStatus.from(exhibition.getStartDate(), exhibition.getEndDate()),
             times.isEmpty() ? null : OperatingHoursResponse.from(times.getValues()),
-            LocationResponse.from(exhibition),
+            LocationResponse.from(exhibition.getLocation()),
             CreatorInfo.from(host),
             exhibition.getCreatedAt()
         );

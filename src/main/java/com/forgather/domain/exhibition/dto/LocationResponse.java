@@ -1,6 +1,6 @@
 package com.forgather.domain.exhibition.dto;
 
-import com.forgather.domain.exhibition.model.Exhibition;
+import com.forgather.domain.exhibition.model.Location;
 import com.forgather.domain.exhibition.model.LocationType;
 
 public record LocationResponse(
@@ -10,15 +10,15 @@ public record LocationResponse(
     String detailAddress
 ) {
 
-    public static LocationResponse from(Exhibition exhibition) {
-        if (exhibition.getLocationType() == null) {
+    public static LocationResponse from(Location location) {
+        if (location == null) {
             return null;
         }
         return new LocationResponse(
-            exhibition.getLocationType(),
-            exhibition.getOnlineUrl(),
-            exhibition.getBaseAddress(),
-            exhibition.getDetailAddress()
+            location.getType(),
+            location.getOnlineUrl(),
+            location.getBaseAddress(),
+            location.getDetailAddress()
         );
     }
 }

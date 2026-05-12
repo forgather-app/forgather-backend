@@ -13,7 +13,7 @@ import com.forgather.domain.exhibition.model.ExhibitionHost;
 import com.forgather.domain.exhibition.model.ExhibitionPhoto;
 import com.forgather.domain.exhibition.model.ExhibitionTime;
 import com.forgather.domain.exhibition.model.ExhibitionTimes;
-import com.forgather.domain.exhibition.model.LocationType;
+import com.forgather.domain.exhibition.model.Location;
 import com.forgather.domain.exhibition.repository.ExhibitionHostRepository;
 import com.forgather.domain.exhibition.repository.ExhibitionPhotoRepository;
 import com.forgather.domain.exhibition.repository.ExhibitionRepository;
@@ -35,7 +35,7 @@ public class ExhibitionService {
     public ExhibitionResponse create(Host host, CreateExhibitionRequest request) {
         Exhibition exhibition = exhibitionRepository.save(buildExhibition(request));
 
-        // TODO: photo path 검증(정말 s3에 존재하는 객체인가?)
+        // TODO: photo path 검증(정말 s3에 존재하는 객체인가?
         ExhibitionPhoto photo = exhibitionPhotoRepository.save(
             new ExhibitionPhoto(request.imagePath(), request.imageCapacity(), exhibition)
         );
@@ -49,16 +49,18 @@ public class ExhibitionService {
     }
 
     private Exhibition buildExhibition(CreateExhibitionRequest request) {
-        LocationRequest location = request.location();
-        LocationType locationType = location != null ? location.locationType() : null;
-        String url = location != null ? location.url() : null;
-        String baseAddress = location != null ? location.baseAddress() : null;
-        String detailAddress = location != null ? location.detailAddress() : null;
         return new Exhibition(
             request.title(), request.startDate(), request.endDate(),
             request.description(), request.operationNotice(),
-            locationType, url, baseAddress, detailAddress
+            buildLocation(request.location())
         );
+    }
+
+    private Location buildLocation(LocationRequest request) {
+        if (request == null) {
+            return null;
+        }
+        return new Location(request.locationType(), request.url(), request.baseAddress(), request.detailAddress());
     }
 
     private List<ExhibitionTime> buildExhibitionTimes(CreateExhibitionRequest request, Exhibition exhibition) {

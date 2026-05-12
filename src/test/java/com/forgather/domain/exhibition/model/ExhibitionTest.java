@@ -226,7 +226,7 @@ class ExhibitionTest {
             Exhibition exhibition = ExhibitionFixture.createExhibitionWithoutLocationType();
 
             // then
-            assertThat(exhibition.getLocationType()).isNull();
+            assertThat(exhibition.getLocation()).isNull();
         }
 
         @DisplayName("온라인 전시는 온라인 URL이 없으면 생성할 수 없다.")
@@ -246,8 +246,9 @@ class ExhibitionTest {
 
             // then
             assertAll(
-                () -> assertThat(exhibition.getLocationType()).isEqualTo(LocationType.ONLINE),
-                () -> assertThat(exhibition.getOnlineUrl()).isEqualTo(ExhibitionFixture.DEFAULT_ONLINE_URL)
+                () -> assertThat(exhibition.getLocation().getType()).isEqualTo(LocationType.ONLINE),
+                () -> assertThat(exhibition.getLocation().getOnlineUrl())
+                    .isEqualTo(ExhibitionFixture.DEFAULT_ONLINE_URL)
             );
         }
 
@@ -268,8 +269,9 @@ class ExhibitionTest {
 
             // then
             assertAll(
-                () -> assertThat(exhibition.getLocationType()).isEqualTo(LocationType.OFFLINE),
-                () -> assertThat(exhibition.getBaseAddress()).isEqualTo(ExhibitionFixture.DEFAULT_BASE_ADDRESS)
+                () -> assertThat(exhibition.getLocation().getType()).isEqualTo(LocationType.OFFLINE),
+                () -> assertThat(exhibition.getLocation().getBaseAddress())
+                    .isEqualTo(ExhibitionFixture.DEFAULT_BASE_ADDRESS)
             );
         }
 
@@ -282,7 +284,7 @@ class ExhibitionTest {
             );
 
             // then
-            assertThat(exhibition.getDetailAddress()).isNull();
+            assertThat(exhibition.getLocation().getDetailAddress()).isNull();
         }
     }
 }
