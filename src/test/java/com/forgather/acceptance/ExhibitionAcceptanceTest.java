@@ -270,7 +270,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
 
     @DisplayName("운영 시간 요일이 중복되면 전시를 생성할 수 없다.")
     @Test
-    void createExhibitionWithTooManyOperatingHours() {
+    void createExhibitionWithDuplicateOperatingDay() {
         // given
         CreateExhibitionRequest request = new CreateExhibitionRequest(
             "exhibitions/too-many.webp",
