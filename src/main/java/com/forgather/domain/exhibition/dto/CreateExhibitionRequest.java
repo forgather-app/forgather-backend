@@ -53,7 +53,7 @@ public record CreateExhibitionRequest(
     )
     @Valid
     @Size(max = 7, message = "운영시간은 최대 7개입니다.")
-    List<OperatingHourRequest> operatingHours,
+    List<@NotNull(message = "운영시간 항목은 null일 수 없습니다.") OperatingHourRequest> operatingHours,
 
     @Schema(description = "장소 정보 (null 가능)")
     @Valid

@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -382,6 +383,38 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
             .statusCode(HttpStatus.BAD_REQUEST.value())
             .body("code", equalTo("VALIDATION_FAILED"))
             .body("message", containsString("운영시간은 최대 7개"));
+    }
+
+    @DisplayName("운영 시간 리스트에 null 원소가 포함되면 전시를 생성할 수 없다.")
+    @Test
+    void createExhibitionWithNullOperatingHourElement() {
+        // given
+        CreateExhibitionRequest request = new CreateExhibitionRequest(
+            "exhibitions/null-element.webp",
+            1024L,
+            "null 원소 포함 전시",
+            LocalDate.of(2026, 6, 1),
+            LocalDate.of(2026, 6, 30),
+            "전시 설명",
+            null,
+            Arrays.asList(
+                new OperatingHourRequest(DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(18, 0)),
+                null
+            ),
+            new LocationRequest(LocationType.ONLINE, "https://forgather.app", null, null)
+        );
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/exhibitions")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("VALIDATION_FAILED"))
+            .body("message", containsString("운영시간 항목은 null일 수 없습니다"));
     }
 
     private CreateExhibitionRequest createValidRequest() {
