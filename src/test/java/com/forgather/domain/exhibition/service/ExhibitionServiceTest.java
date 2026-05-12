@@ -71,7 +71,7 @@ class ExhibitionServiceTest extends TestOnContainer {
             () -> assertThat(response.representativeImagePath()).isEqualTo("exhibitions/abc.webp"),
             () -> assertThat(response.location().locationType()).isEqualTo(LocationType.ONLINE),
             () -> assertThat(response.location().url()).isEqualTo("https://forgather.app"),
-            () -> assertThat(response.operatingHours().timeRanges()).hasSize(2),
+            () -> assertThat(response.operatingHours()).hasSize(2),
             () -> assertThat(response.creator().id()).isEqualTo(host.getId())
         );
     }
@@ -157,7 +157,7 @@ class ExhibitionServiceTest extends TestOnContainer {
         ExhibitionResponse response = exhibitionService.create(host, request);
 
         // then
-        assertThat(response.operatingHours().timeRanges()).hasSize(3);
+        assertThat(response.operatingHours()).hasSize(3);
     }
 
     @DisplayName("운영 시간 응답은 MONDAY..SUNDAY 순으로 정렬된다.")
@@ -185,7 +185,7 @@ class ExhibitionServiceTest extends TestOnContainer {
         ExhibitionResponse response = exhibitionService.create(host, request);
 
         // then
-        assertThat(response.operatingHours().timeRanges())
+        assertThat(response.operatingHours())
             .extracting("dayOfWeek")
             .containsExactly(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY);
     }

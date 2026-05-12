@@ -3,12 +3,14 @@ package com.forgather.domain.exhibition.dto;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 
 import com.forgather.domain.exhibition.model.Exhibition;
 import com.forgather.domain.exhibition.model.ExhibitionPhoto;
 import com.forgather.domain.exhibition.model.ExhibitionTimes;
 import com.forgather.global.auth.model.Host;
 
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record ExhibitionResponse(
@@ -41,8 +43,18 @@ public record ExhibitionResponse(
     )
     String progressStatus,
 
-    @Schema(description = "운영 시간 (미설정 시 null, 운영 요일만 MONDAY~SUNDAY 순으로 포함)")
-    OperatingHoursResponse operatingHours,
+    @ArraySchema(
+        schema = @Schema(implementation = TimeRangeResponse.class),
+        arraySchema = @Schema(
+            description = "운영 시간 (미설정 시 null, 운영 요일만 MONDAY~SUNDAY 순으로 포함)",
+            example = """
+                [
+                  {"dayOfWeek": "MONDAY", "startTime": "10:00", "endTime": "18:00"},
+                  {"dayOfWeek": "TUESDAY", "startTime": "10:00", "endTime": "18:00"}
+                ]"""
+        )
+    )
+    List<TimeRangeResponse> operatingHours,
 
     @Schema(description = "장소 (미설정 시 null)")
     LocationResponse location,
@@ -69,7 +81,10 @@ public record ExhibitionResponse(
             exhibition.getStartDate(),
             exhibition.getEndDate(),
             exhibition.calculateProgressStatus(LocalDate.now(ZoneId.of("Asia/Seoul"))).name(),
-            times.isEmpty() ? null : OperatingHoursResponse.from(times.getValues()),
+            times.isEmpty() ? null : times.getValues()
+                .stream()
+                .map(TimeRangeResponse::from)
+                .toList(),
             LocationResponse.from(exhibition.getLocation()),
             CreatorInfo.from(host),
             exhibition.getCreatedAt()

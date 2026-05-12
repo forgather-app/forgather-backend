@@ -104,7 +104,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
             () -> assertThat(response.data().representativeImagePath()).isEqualTo("exhibitions/spring.webp"),
             () -> assertThat(response.data().location().locationType()).isEqualTo(LocationType.ONLINE),
             () -> assertThat(response.data().location().url()).isEqualTo("https://forgather.app"),
-            () -> assertThat(response.data().operatingHours().timeRanges()).hasSize(2),
+            () -> assertThat(response.data().operatingHours()).hasSize(2),
             () -> assertThat(response.data().creator().id()).isEqualTo(host.getId()),
             () -> assertThat(response.data().creator().name()).isEqualTo(host.getName())
         );
@@ -189,7 +189,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
             });
 
         // then
-        assertThat(response.data().operatingHours().timeRanges())
+        assertThat(response.data().operatingHours())
             .extracting("dayOfWeek")
             .containsExactly(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY);
     }
