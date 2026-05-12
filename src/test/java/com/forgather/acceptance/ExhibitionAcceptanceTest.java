@@ -305,6 +305,64 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
             .statusCode(HttpStatus.BAD_REQUEST.value());
     }
 
+    @DisplayName("이모지로 구성된 100자 제목은 grapheme 기준으로 100자이므로 정상 생성된다.")
+    @Test
+    void createExhibitionWithEmojiTitleWithinGraphemeLimit() {
+        String emoji = "🙂";
+        String title = emoji.repeat(100);
+        CreateExhibitionRequest request = new CreateExhibitionRequest(
+            "exhibitions/emoji.webp",
+            1024L,
+            title,
+            LocalDate.of(2026, 6, 1),
+            LocalDate.of(2026, 6, 30),
+            "전시 설명",
+            null,
+            null,
+            new LocationRequest(LocationType.ONLINE, "https://forgather.app", null, null)
+        );
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .header(API_VERSION_HEADER, API_VERSION_V1)
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/exhibitions")
+            .then()
+            .statusCode(HttpStatus.CREATED.value());
+    }
+
+    @DisplayName("이모지로 구성된 101자 제목은 grapheme 기준 100자를 초과하므로 거부된다.")
+    @Test
+    void rejectsEmojiTitleExceedingGraphemeLimit() {
+        String emoji = "🙂";
+        String title = emoji.repeat(101);
+        CreateExhibitionRequest request = new CreateExhibitionRequest(
+            "exhibitions/emoji.webp",
+            1024L,
+            title,
+            LocalDate.of(2026, 6, 1),
+            LocalDate.of(2026, 6, 30),
+            "전시 설명",
+            null,
+            null,
+            new LocationRequest(LocationType.ONLINE, "https://forgather.app", null, null)
+        );
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .header(API_VERSION_HEADER, API_VERSION_V1)
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/exhibitions")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value());
+    }
+
     private CreateExhibitionRequest createValidRequest() {
         return new CreateExhibitionRequest(
             "exhibitions/default.webp",

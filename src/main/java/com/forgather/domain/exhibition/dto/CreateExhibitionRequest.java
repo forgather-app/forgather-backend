@@ -19,9 +19,8 @@ public record CreateExhibitionRequest(
     @NotNull
     Long imageCapacity,
 
-    @Schema(description = "전시 제목", example = "봄 전시", maxLength = 100)
+    @Schema(description = "전시 제목 (최대 100자)", example = "봄 전시")
     @NotBlank
-    @Size(max = 100)
     String title,
 
     @Schema(description = "시작일", example = "2026-06-01")
