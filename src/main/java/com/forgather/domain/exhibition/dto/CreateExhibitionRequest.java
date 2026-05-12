@@ -31,13 +31,26 @@ public record CreateExhibitionRequest(
     @NotNull
     LocalDate endDate,
 
-    @Schema(description = "전시 소개 (최대 200자, null 가능)")
+    @Schema(description = "전시 소개 (최대 200자, null 가능)", example = "졸업 전시입니다.")
     String description,
 
-    @Schema(description = "운영 공지 (최대 200자, null 가능)")
+    @Schema(description = "운영 공지 (최대 200자, null 가능)", example = "첫번째 주 일요일은 휴관합니다.")
     String operationNotice,
 
-    @Schema(description = "운영하는 요일별 시간. 같은 요일 중복 금지. 최대 7개. (null 가능)")
+    @Schema(description = "운영하는 요일별 시간. 같은 요일 중복 금지. 최대 7개. (null 가능)",
+        example = """
+            [
+                {
+                    dayOfWeek: MONDAY,
+                    startTime: "10:00",
+                    endTime: "18:00"
+                },
+                {
+                    dayOfWeek: TUESDAY,
+                    startTime: "10:00",
+                    endTime: "18:00"
+                }
+            ]""")
     @Valid
     @Size(max = 7, message = "운영시간은 최대 7개입니다.")
     List<OperatingHourRequest> operatingHours,
