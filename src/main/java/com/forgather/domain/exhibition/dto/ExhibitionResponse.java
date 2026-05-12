@@ -33,7 +33,7 @@ public record ExhibitionResponse(
     @Schema(description = "종료일")
     LocalDate endDate,
 
-    @Schema(description = "진행 상태")
+    @Schema(description = "진행 상태", example = "UPCOMING", allowableValues = "UPCOMING, IN_PROGRESS, ENDED")
     String progressStatus,
 
     @Schema(description = "운영 시간 (미설정 시 null, 운영 요일만 MONDAY~SUNDAY 순으로 포함)")
