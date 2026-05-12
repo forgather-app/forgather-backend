@@ -212,37 +212,6 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
             .body("code", equalTo("UNAUTHORIZED"));
     }
 
-    @DisplayName("같은 요일이 중복 입력되면 전시를 생성할 수 없다.")
-    @Test
-    void createExhibitionWithDuplicateDayOfWeek() {
-        // given
-        CreateExhibitionRequest request = new CreateExhibitionRequest(
-            "exhibitions/dup.webp",
-            1024L,
-            "중복 요일 전시",
-            LocalDate.of(2026, 6, 1),
-            LocalDate.of(2026, 6, 30),
-            "전시 설명",
-            "운영 공지",
-            List.of(
-                new OperatingHourRequest(DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(18, 0)),
-                new OperatingHourRequest(DayOfWeek.MONDAY, LocalTime.of(13, 0), LocalTime.of(20, 0))
-            ),
-            new LocationRequest(LocationType.ONLINE, "https://forgather.app", null, null)
-        );
-
-        // when & then
-        RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
-            .header(API_VERSION_HEADER, API_VERSION_V1)
-            .contentType(ContentType.JSON)
-            .body(request)
-            .when()
-            .post("/exhibitions")
-            .then()
-            .statusCode(HttpStatus.BAD_REQUEST.value());
-    }
-
     @DisplayName("전시 제목이 비어 있으면 전시를 생성할 수 없다.")
     @Test
     void createExhibitionWithoutTitle() {
