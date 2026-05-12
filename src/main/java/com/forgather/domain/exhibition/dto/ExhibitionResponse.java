@@ -4,12 +4,11 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Comparator;
-import java.util.List;
 
 import com.forgather.domain.exhibition.model.Exhibition;
 import com.forgather.domain.exhibition.model.ExhibitionPhoto;
 import com.forgather.domain.exhibition.model.ExhibitionTime;
+import com.forgather.domain.exhibition.model.ExhibitionTimes;
 import com.forgather.global.auth.model.Host;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -56,7 +55,7 @@ public record ExhibitionResponse(
     public static ExhibitionResponse of(
         Exhibition exhibition,
         ExhibitionPhoto photo,
-        List<ExhibitionTime> times,
+        ExhibitionTimes times,
         Host host
     ) {
         return new ExhibitionResponse(
@@ -68,30 +67,11 @@ public record ExhibitionResponse(
             exhibition.getStartDate(),
             exhibition.getEndDate(),
             ExhibitionStatus.from(exhibition.getStartDate(), exhibition.getEndDate()),
-            times == null || times.isEmpty() ? null : OperatingHoursResponse.from(times),
+            times.isEmpty() ? null : OperatingHoursResponse.from(times.getValues()),
             LocationResponse.from(exhibition),
             CreatorInfo.from(host),
             exhibition.getCreatedAt()
         );
-    }
-
-    public record OperatingHoursResponse(List<TimeRangeResponse> timeRanges) {
-
-        public static OperatingHoursResponse from(List<ExhibitionTime> times) {
-            return new OperatingHoursResponse(
-                times.stream()
-                    .sorted(Comparator.comparing(ExhibitionTime::getDayOfWeek))
-                    .map(TimeRangeResponse::from)
-                    .toList()
-            );
-        }
-    }
-
-    public record TimeRangeResponse(DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime) {
-
-        public static TimeRangeResponse from(ExhibitionTime time) {
-            return new TimeRangeResponse(time.getDayOfWeek(), time.getStartTime(), time.getEndTime());
-        }
     }
 
 }

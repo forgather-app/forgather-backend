@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-public class ExhibitionTime extends SoftDeleteEntity {
+public class ExhibitionTime extends SoftDeleteEntity implements Comparable<ExhibitionTime> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -75,5 +75,10 @@ public class ExhibitionTime extends SoftDeleteEntity {
         if (startTime.isAfter(endTime)) {
             throw new BaseException("시작 시간이 종료 시간보다 늦을 수 없습니다.");
         }
+    }
+
+    @Override
+    public int compareTo(ExhibitionTime o) {
+        return this.dayOfWeek.compareTo(o.dayOfWeek);
     }
 }

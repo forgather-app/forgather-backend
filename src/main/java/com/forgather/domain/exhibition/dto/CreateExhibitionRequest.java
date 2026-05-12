@@ -47,4 +47,8 @@ public record CreateExhibitionRequest(
     @Valid
     LocationRequest location
 ) {
+
+    public CreateExhibitionRequest {
+        operatingHours = operatingHours == null ? List.of() : operatingHours;
+    }
 }

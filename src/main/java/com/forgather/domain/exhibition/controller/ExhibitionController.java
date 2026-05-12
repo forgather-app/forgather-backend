@@ -30,8 +30,8 @@ public class ExhibitionController {
     private final ExhibitionService exhibitionService;
 
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "전시 생성")
-    @PostMapping(headers = "X-API-Version=1")
+    @Operation(summary = "전시 생성", description = "새로운 전시를 생성합니다.")
+    @PostMapping
     public ResponseEntity<ApiResponse<ExhibitionResponse>> create(
         @LoginHost(required = true) Host host,
         @Valid @RequestBody CreateExhibitionRequest request
