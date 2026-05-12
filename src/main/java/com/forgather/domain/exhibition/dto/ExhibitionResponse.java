@@ -1,13 +1,10 @@
 package com.forgather.domain.exhibition.dto;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 import com.forgather.domain.exhibition.model.Exhibition;
 import com.forgather.domain.exhibition.model.ExhibitionPhoto;
-import com.forgather.domain.exhibition.model.ExhibitionTime;
 import com.forgather.domain.exhibition.model.ExhibitionTimes;
 import com.forgather.global.auth.model.Host;
 
@@ -37,7 +34,7 @@ public record ExhibitionResponse(
     LocalDate endDate,
 
     @Schema(description = "진행 상태")
-    ExhibitionStatus status,
+    String progressStatus,
 
     @Schema(description = "운영 시간 (미설정 시 null, 운영 요일만 MONDAY~SUNDAY 순으로 포함)")
     OperatingHoursResponse operatingHours,
@@ -66,7 +63,7 @@ public record ExhibitionResponse(
             photo.getPath(),
             exhibition.getStartDate(),
             exhibition.getEndDate(),
-            ExhibitionStatus.from(exhibition.getStartDate(), exhibition.getEndDate()),
+            exhibition.calculateProgressStatus(LocalDate.now()).name(),
             times.isEmpty() ? null : OperatingHoursResponse.from(times.getValues()),
             LocationResponse.from(exhibition.getLocation()),
             CreatorInfo.from(host),

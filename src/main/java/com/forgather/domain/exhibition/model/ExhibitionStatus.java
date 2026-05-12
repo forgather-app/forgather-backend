@@ -1,15 +1,13 @@
-package com.forgather.domain.exhibition.dto;
+package com.forgather.domain.exhibition.model;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
 
 public enum ExhibitionStatus {
     UPCOMING,
     IN_PROGRESS,
     ENDED;
 
-    public static ExhibitionStatus from(LocalDate startDate, LocalDate endDate) {
-        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
+    static ExhibitionStatus of(LocalDate startDate, LocalDate endDate, LocalDate today) {
         if (today.isBefore(startDate)) {
             return UPCOMING;
         }
