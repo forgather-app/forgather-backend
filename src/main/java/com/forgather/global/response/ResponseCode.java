@@ -25,6 +25,7 @@ public enum ResponseCode {
     // 파일 처리 응답
     FILE_UPLOAD_FAILED,
     FILE_DOWNLOAD_FAILED,
+    S3_UNAVAILABLE,
 
     // 서버 오류 응답
     INTERNAL_ERROR,
