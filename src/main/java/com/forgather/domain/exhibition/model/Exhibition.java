@@ -69,10 +69,6 @@ public class Exhibition extends SoftDeleteEntity {
         this.location = location;
     }
 
-    public ExhibitionStatus calculateProgressStatus(LocalDate standardDate) {
-        return ExhibitionStatus.of(startDate, endDate, standardDate);
-    }
-
     private void validateRequiredFields(String title, LocalDate startDate, LocalDate endDate) {
         if (title == null) {
             throw new BaseNullPointerException("전시 이름은 null일 수 없습니다.");
@@ -122,5 +118,9 @@ public class Exhibition extends SoftDeleteEntity {
         if (TextLengthCounter.count(operationNotice) > MAX_OPERATION_NOTICE_LENGTH) {
             throw new BaseException("전시 운영 공지사항은 %d자를 초과할 수 없습니다.".formatted(MAX_OPERATION_NOTICE_LENGTH));
         }
+    }
+
+    public ExhibitionStatus calculateProgressStatus(LocalDate standardDate) {
+        return ExhibitionStatus.of(startDate, endDate, standardDate);
     }
 }
