@@ -36,7 +36,7 @@ public class ExhibitionController {
         @LoginHost(required = true) Host host,
         @Valid @RequestBody CreateExhibitionRequest request
     ) {
-        ExhibitionResponse response = exhibitionService.create(host, request);
+        var response = exhibitionService.create(host, request);
         return ResponseEntity.status(CREATED).body(ApiResponse.success(response));
     }
 }
