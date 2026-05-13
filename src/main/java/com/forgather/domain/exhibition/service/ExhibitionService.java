@@ -40,7 +40,7 @@ public class ExhibitionService {
             new ExhibitionPhoto(request.imagePath(), request.imageCapacity(), exhibition)
         );
 
-        ExhibitionTimes exhibitionTimes = new ExhibitionTimes(buildExhibitionTimes(request, exhibition));
+        ExhibitionTimes exhibitionTimes = buildExhibitionTimes(request, exhibition);
         exhibitionTimeRepository.saveAll(exhibitionTimes.getValues());
 
         exhibitionHostRepository.save(new ExhibitionHost(exhibition, host, true));
@@ -63,9 +63,10 @@ public class ExhibitionService {
         return new Location(request.locationType(), request.url(), request.baseAddress(), request.detailAddress());
     }
 
-    private List<ExhibitionTime> buildExhibitionTimes(CreateExhibitionRequest request, Exhibition exhibition) {
-        return request.operatingHours().stream()
+    private ExhibitionTimes buildExhibitionTimes(CreateExhibitionRequest request, Exhibition exhibition) {
+        List<ExhibitionTime> exhibitionTimes = request.operatingHours().stream()
             .map(req -> new ExhibitionTime(exhibition, req.dayOfWeek(), req.startTime(), req.endTime()))
             .toList();
+        return new ExhibitionTimes(exhibitionTimes);
     }
 }
