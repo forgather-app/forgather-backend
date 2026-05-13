@@ -90,5 +90,4 @@ public record ExhibitionResponse(
             exhibition.getCreatedAt()
         );
     }
-
 }
