@@ -7,7 +7,7 @@ import com.forgather.domain.exhibition.model.ExhibitionTime;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-public record TimeRangeResponse(
+public record OperatingHourResponse(
 
     @Schema(
         description = "운영 요일",
@@ -22,7 +22,7 @@ public record TimeRangeResponse(
     @Schema(description = "운영 종료 시간", example = "18:00")
     LocalTime endTime
 ) {
-    public static TimeRangeResponse from(ExhibitionTime time) {
-        return new TimeRangeResponse(time.getDayOfWeek(), time.getStartTime(), time.getEndTime());
+    public static OperatingHourResponse from(ExhibitionTime time) {
+        return new OperatingHourResponse(time.getDayOfWeek(), time.getStartTime(), time.getEndTime());
     }
 }

@@ -44,7 +44,7 @@ public record ExhibitionResponse(
     String progressStatus,
 
     @ArraySchema(
-        schema = @Schema(implementation = TimeRangeResponse.class),
+        schema = @Schema(implementation = OperatingHourResponse.class),
         arraySchema = @Schema(
             description = "운영 시간 (미설정 시 null, 운영 요일만 MONDAY~SUNDAY 순으로 포함)",
             example = """
@@ -54,7 +54,7 @@ public record ExhibitionResponse(
                 ]"""
         )
     )
-    List<TimeRangeResponse> operatingHours,
+    List<OperatingHourResponse> operatingHours,
 
     @Schema(description = "장소 (미설정 시 null)")
     LocationResponse location,
@@ -83,7 +83,7 @@ public record ExhibitionResponse(
             exhibition.calculateProgressStatus(LocalDate.now(ZoneId.of("Asia/Seoul"))).name(),
             times.isEmpty() ? null : times.getValues()
                 .stream()
-                .map(TimeRangeResponse::from)
+                .map(OperatingHourResponse::from)
                 .toList(),
             LocationResponse.from(exhibition.getLocation()),
             CreatorInfo.from(host),
