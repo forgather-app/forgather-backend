@@ -1,7 +1,5 @@
 package com.forgather.domain.exhibition.model;
 
-import org.springframework.http.HttpStatus;
-
 import com.forgather.domain.model.Photo;
 import com.forgather.global.exception.BaseNullPointerException;
 
@@ -32,7 +30,7 @@ public class ExhibitionPhoto extends Photo {
 
     private void validateRequiredFields(Exhibition exhibition) {
         if (exhibition == null) {
-            throw new BaseNullPointerException("전시는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+            throw new BaseNullPointerException("전시는 null일 수 없습니다.");
         }
     }
 }

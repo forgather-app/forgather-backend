@@ -2,8 +2,6 @@ package com.forgather.domain.exhibition.model;
 
 import java.time.LocalDate;
 
-import org.springframework.http.HttpStatus;
-
 import com.forgather.domain.model.SoftDeleteEntity;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
@@ -77,13 +75,13 @@ public class Exhibition extends SoftDeleteEntity {
 
     private void validateRequiredFields(String title, LocalDate startDate, LocalDate endDate) {
         if (title == null) {
-            throw new BaseNullPointerException("전시 이름은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+            throw new BaseNullPointerException("전시 이름은 null일 수 없습니다.");
         }
         if (startDate == null) {
-            throw new BaseNullPointerException("전시 시작 날짜는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+            throw new BaseNullPointerException("전시 시작 날짜는 null일 수 없습니다.");
         }
         if (endDate == null) {
-            throw new BaseNullPointerException("전시 종료 날짜는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+            throw new BaseNullPointerException("전시 종료 날짜는 null일 수 없습니다.");
         }
     }
 

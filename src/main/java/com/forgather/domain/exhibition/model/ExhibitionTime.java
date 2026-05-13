@@ -3,8 +3,6 @@ package com.forgather.domain.exhibition.model;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 
-import org.springframework.http.HttpStatus;
-
 import com.forgather.domain.model.SoftDeleteEntity;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
@@ -58,16 +56,16 @@ public class ExhibitionTime extends SoftDeleteEntity implements Comparable<Exhib
     private void validateRequiredFields(Exhibition exhibition, DayOfWeek dayOfWeek, LocalTime startTime,
         LocalTime endTime) {
         if (exhibition == null) {
-            throw new BaseNullPointerException("전시는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+            throw new BaseNullPointerException("전시는 null일 수 없습니다.");
         }
         if (dayOfWeek == null) {
-            throw new BaseNullPointerException("운영 요일은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+            throw new BaseNullPointerException("운영 요일은 null일 수 없습니다.");
         }
         if (startTime == null) {
-            throw new BaseNullPointerException("시작 시간은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+            throw new BaseNullPointerException("시작 시간은 null일 수 없습니다.");
         }
         if (endTime == null) {
-            throw new BaseNullPointerException("종료 시간은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+            throw new BaseNullPointerException("종료 시간은 null일 수 없습니다.");
         }
     }
 

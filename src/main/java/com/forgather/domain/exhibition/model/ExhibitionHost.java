@@ -1,7 +1,5 @@
 package com.forgather.domain.exhibition.model;
 
-import org.springframework.http.HttpStatus;
-
 import com.forgather.domain.model.SoftDeleteEntity;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.exception.BaseNullPointerException;
@@ -47,10 +45,10 @@ public class ExhibitionHost extends SoftDeleteEntity {
 
     private void validateRequiredFields(Exhibition exhibition, Host host) {
         if (exhibition == null) {
-            throw new BaseNullPointerException("전시는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+            throw new BaseNullPointerException("전시는 null일 수 없습니다.");
         }
         if (host == null) {
-            throw new BaseNullPointerException("전시 호스트는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+            throw new BaseNullPointerException("전시 호스트는 null일 수 없습니다.");
         }
     }
 }
