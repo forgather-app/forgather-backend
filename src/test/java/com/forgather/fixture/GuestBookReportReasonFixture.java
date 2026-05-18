@@ -11,4 +11,8 @@ public class GuestBookReportReasonFixture {
     public static GuestBookReportReason createHiddenReason() {
         return new GuestBookReportReason("OTHER", "기타", 1, true);
     }
+
+    public static GuestBookReportReason createReasonWithCode(String code, String label, int displayOrder) {
+        return new GuestBookReportReason(code, label, displayOrder, false);
+    }
 }

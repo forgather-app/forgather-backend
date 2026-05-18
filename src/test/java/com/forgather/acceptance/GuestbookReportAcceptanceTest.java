@@ -1,6 +1,7 @@
 package com.forgather.acceptance;
 
 import static com.forgather.fixture.GuestBookReportReasonFixture.createReason;
+import static com.forgather.fixture.GuestBookReportReasonFixture.createReasonWithCode;
 import static com.forgather.fixture.HostFixture.createHost;
 import static com.forgather.fixture.SpaceFixture.createSpace;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportRequest;
+import com.forgather.domain.guestbook.dto.ReportReasonsResponse;
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportResponse;
 import com.forgather.domain.guestbook.dto.ReportDetailResponse;
 import com.forgather.domain.guestbook.dto.ReportHistoryResponse;
@@ -323,6 +325,41 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
                 .then()
                 .statusCode(HttpStatus.UNAUTHORIZED.value())
                 .body("code", equalTo("UNAUTHORIZED"));
+        }
+    }
+
+    @DisplayName("신고 사유 조회")
+    @Nested
+    class retrieveReportReasons {
+
+        @DisplayName("공개 신고 사유 목록을 반환한다")
+        @Test
+        void retrieveThreeReportReasons() {
+            // given
+            reportReasonRepository.save(createReasonWithCode("HATE", "혐오 발언", 2));
+            reportReasonRepository.save(createReasonWithCode("ADULT", "성인 콘텐츠", 3));
+
+            // when
+            ApiResponse<ReportReasonsResponse> result = RestAssuredMockMvc.given()
+                .accept(ContentType.JSON)
+                .when()
+                .get("/guestbook/reports/reasons")
+                .then()
+                .statusCode(HttpStatus.OK.value())
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+            // then
+            assertAll(
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().reasons()).hasSize(3),
+                () -> assertThat(result.data().reasons())
+                    .extracting(ReportReasonsResponse.ReasonInfo::label)
+                    .containsExactlyInAnyOrder("스팸", "혐오 발언", "성인 콘텐츠")
+            );
         }
     }
 
