@@ -86,7 +86,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
         spaceHostRepository.save(new SpaceHost(space, host));
 
         card = guestBookCardRepository.save(new GuestBookCard(space, "닉네임", "방명록 메시지"));
-        reason = reportReasonRepository.save(createReason());
+        reason = reportReasonRepository.save(createReason());  // 스팸, 1
 
         RestAssuredMockMvc.mockMvc(mockMvc);
     }
@@ -332,12 +332,13 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
     @Nested
     class retrieveReportReasons {
 
-        @DisplayName("공개 신고 사유 목록을 반환한다")
+        @DisplayName("공개 신고 사유 목록을 노출 순서에 맞게 반환한다")
         @Test
         void retrieveThreeReportReasons() {
-            // given
-            reportReasonRepository.save(createReasonWithCode("HATE", "혐오 발언", 2));
-            reportReasonRepository.save(createReasonWithCode("ADULT", "성인 콘텐츠", 3));
+            // given (setUp의 spam이 order:1)
+            reportReasonRepository.save(createReasonWithCode("HATE", "혐오 발언", 4));
+            reportReasonRepository.save(createReasonWithCode("ADULT", "성인 콘텐츠", 2));
+            reportReasonRepository.save(createReasonWithCode("ETC", "기타", 3));
 
             // when
             ApiResponse<ReportReasonsResponse> result = RestAssuredMockMvc.given()
@@ -355,10 +356,9 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
             assertAll(
                 () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
                 () -> assertThat(result.message()).isNull(),
-                () -> assertThat(result.data().reasons()).hasSize(3),
                 () -> assertThat(result.data().reasons())
                     .extracting(ReportReasonsResponse.ReasonInfo::label)
-                    .containsExactlyInAnyOrder("스팸", "혐오 발언", "성인 콘텐츠")
+                    .containsExactly("스팸", "성인 콘텐츠", "기타", "혐오 발언")
             );
         }
     }
