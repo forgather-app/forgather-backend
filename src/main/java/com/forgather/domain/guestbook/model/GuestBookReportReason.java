@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-public class GuestBookReportReason extends BaseTimeEntity {
+public class GuestBookReportReason extends BaseTimeEntity implements Comparable<GuestBookReportReason> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,5 +37,10 @@ public class GuestBookReportReason extends BaseTimeEntity {
         this.label = label;
         this.displayOrder = displayOrder;
         this.isHidden = isHidden;
+    }
+
+    @Override
+    public int compareTo(GuestBookReportReason other) {
+        return Integer.compare(this.displayOrder, other.displayOrder);
     }
 }
