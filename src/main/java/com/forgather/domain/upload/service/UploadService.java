@@ -6,11 +6,12 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.forgather.domain.upload.dto.IssueSignedUrlRequest;
-import com.forgather.domain.upload.dto.IssueSignedUrlResponse;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.domain.ContentsStorage;
 import com.forgather.domain.upload.domain.SignedUrlIssuer;
+import com.forgather.domain.upload.dto.IssueSignedUrlRequest;
+import com.forgather.domain.upload.dto.IssueSignedUrlResponse;
+import com.forgather.global.auth.model.Host;
 import com.forgather.global.exception.FileUploadException;
 
 import lombok.RequiredArgsConstructor;
@@ -51,6 +52,15 @@ public class UploadService {
             request.uploadFileNames(),
             spaceCode,
             request.category()
+        );
+        return new IssueSignedUrlResponse(signedUrls);
+    }
+
+    public IssueSignedUrlResponse issueExhibitionSignedUrls(Host host, IssueSignedUrlRequest request) {
+        Map<String, String> signedUrls = signedUrlIssuer.issueSignedUrls(
+            request.uploadFileNames(),
+            request.category(),
+            host.getId()
         );
         return new IssueSignedUrlResponse(signedUrls);
     }

@@ -1,6 +1,7 @@
 package com.forgather.domain.upload.domain;
 
 import static com.forgather.domain.upload.domain.FilePathGenerator.generateContentsFilePath;
+import static com.forgather.domain.upload.domain.FilePathGenerator.generateExhibitionContentsFilePath;
 
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +39,28 @@ public class SignedUrlIssuer {
         Map<String, String> signedUrls = new HashMap<>();
         for (String uploadFileName : uploadFileNames) {
             String filePath = getFilePath(spaceCode, category, uploadFileName);
+            String signedUrl = contentsStorage.issueSignedUrl(filePath);
+            signedUrls.put(uploadFileName, signedUrl);
+        }
+        return signedUrls;
+    }
+
+    public Map<String, String> issueSignedUrls(List<String> uploadFileNames, UploadCategory category, long hostId) {
+        if (uploadFileNames == null || uploadFileNames.isEmpty()) {
+            throw new BaseException("업로드 파일명 목록은 null이거나 비어있을 수 없습니다.");
+        }
+        if (category == null) {
+            throw new BaseException("업로드 카테고리는 필수입니다.");
+        }
+        validateSize(uploadFileNames);
+
+        Map<String, String> signedUrls = new HashMap<>();
+        for (String uploadFileName : uploadFileNames) {
+            String filePath = generateExhibitionContentsFilePath(
+                contentsStorage.getRootDirectory(),
+                hostId,
+                uploadFileName
+            );
             String signedUrl = contentsStorage.issueSignedUrl(filePath);
             signedUrls.put(uploadFileName, signedUrl);
         }

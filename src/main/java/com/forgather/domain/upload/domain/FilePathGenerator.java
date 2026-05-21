@@ -39,4 +39,8 @@ public class FilePathGenerator {
         String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
         return "%s.%s".formatted(uploadFileName, extension);
     }
+
+    public static String generateExhibitionContentsFilePath(String rootDirectory, long hostId, String fileName) {
+        return "%s/exhibitions/host-%d/%s".formatted(rootDirectory, hostId, fileName);
+    }
 }

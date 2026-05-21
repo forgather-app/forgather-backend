@@ -1,5 +1,6 @@
 package com.forgather.domain.upload.domain;
 
+import static com.forgather.domain.upload.domain.UploadCategory.EXHIBITION;
 import static com.forgather.domain.upload.domain.UploadCategory.PRODUCT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -70,5 +71,52 @@ class SignedUrlIssuerTest {
             () -> assertThat(result.get("hij.png"))
                 .isEqualTo("test-prefix-photogather/v2/spaces/1234567890/product/hij.png-test-suffix")
         );
+    }
+
+    @DisplayName("전시 사진의 서명된 url을 발급한다")
+    @Test
+    void issueExhibitionSignedUrls() {
+        // given
+        SignedUrlIssuer signedUrlIssuer = new SignedUrlIssuer(new FakeContentStorage());
+        List<String> fileNames = List.of("abc.jpg", "def.jpg");
+        long hostId = 1L;
+
+        // when
+        Map<String, String> result = signedUrlIssuer.issueSignedUrls(fileNames, EXHIBITION, hostId);
+
+        // then
+        assertAll(
+            () -> assertThat(result.get("abc.jpg"))
+                .isEqualTo("test-prefix-photogather/v2/exhibitions/host-1/abc.jpg-test-suffix"),
+            () -> assertThat(result.get("def.jpg"))
+                .isEqualTo("test-prefix-photogather/v2/exhibitions/host-1/def.jpg-test-suffix")
+        );
+    }
+
+    @DisplayName("전시 사진 서명 url 발급 시 한 번에 발급 가능한 개수를 초과하면 예외를 던진다")
+    @Test
+    void throwExceptionWhenExhibitionExceedMaxCount() {
+        // given
+        SignedUrlIssuer signedUrlIssuer = new SignedUrlIssuer(new FakeContentStorage());
+        List<String> fileNames = IntStream.range(0, 101)
+            .mapToObj(number -> number + ".jpg")
+            .toList();
+
+        // when, then
+        assertThatThrownBy(() -> signedUrlIssuer.issueSignedUrls(fileNames, EXHIBITION, 1L))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("한번에 발급 가능한 업로드 url 개수");
+    }
+
+    @DisplayName("전시 사진 서명 url 발급 시 파일명 목록이 비어있으면 예외를 던진다")
+    @Test
+    void throwExceptionWhenExhibitionFileNamesEmpty() {
+        // given
+        SignedUrlIssuer signedUrlIssuer = new SignedUrlIssuer(new FakeContentStorage());
+
+        // when, then
+        assertThatThrownBy(() -> signedUrlIssuer.issueSignedUrls(List.of(), EXHIBITION, 1L))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("업로드 파일명 목록은 null이거나 비어있을 수 없습니다");
     }
 }
