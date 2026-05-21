@@ -1,6 +1,5 @@
 package com.forgather.domain.guestbook.service;
 
-import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -109,7 +108,7 @@ public class GuestbookReportService {
 
     public ReportReasonsResponse retrieveReportReasons() {
         List<GuestBookReportReason> reasons = guestBookReportReasonRepository.findAllByIsHiddenFalse();
-        reasons.sort(Comparator.comparingInt(GuestBookReportReason::getDisplayOrder));
+        reasons.sort(GuestBookReportReason::compareTo);
         return ReportReasonsResponse.from(reasons);
     }
 }
