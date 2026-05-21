@@ -17,6 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.forgather.container.TestOnContainer;
+import com.forgather.domain.exhibition.dto.CreateExhibitionPhotoRequest;
 import com.forgather.domain.exhibition.dto.CreateExhibitionRequest;
 import com.forgather.domain.exhibition.dto.ExhibitionResponse;
 import com.forgather.domain.exhibition.dto.LocationRequest;
@@ -47,8 +48,7 @@ class ExhibitionServiceTest extends TestOnContainer {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         CreateExhibitionRequest request = new CreateExhibitionRequest(
-            "exhibitions/abc.webp",
-            1024L,
+            new CreateExhibitionPhotoRequest("abc.webp", 1024L),
             "봄 전시",
             LocalDate.of(2026, 6, 1),
             LocalDate.of(2026, 6, 30),
@@ -68,7 +68,8 @@ class ExhibitionServiceTest extends TestOnContainer {
         assertAll(
             () -> assertThat(response.id()).isNotNull(),
             () -> assertThat(response.title()).isEqualTo("봄 전시"),
-            () -> assertThat(response.representativeImagePath()).isEqualTo("exhibitions/abc.webp"),
+            () -> assertThat(response.representativeImagePath())
+                .isEqualTo("ROOT_DIRECTORY_PLACEHOLDER/exhibitions/host-%d/abc.webp".formatted(host.getId())),
             () -> assertThat(response.location().locationType()).isEqualTo(LocationType.ONLINE),
             () -> assertThat(response.location().url()).isEqualTo("https://forgather.app"),
             () -> assertThat(response.operatingHours()).hasSize(2),
@@ -82,8 +83,7 @@ class ExhibitionServiceTest extends TestOnContainer {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         CreateExhibitionRequest request = new CreateExhibitionRequest(
-            "exhibitions/offline.webp",
-            2048L,
+            new CreateExhibitionPhotoRequest("offline.webp", 2048L),
             "여름 전시",
             LocalDate.of(2026, 7, 1),
             LocalDate.of(2026, 7, 31),
@@ -112,8 +112,7 @@ class ExhibitionServiceTest extends TestOnContainer {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         CreateExhibitionRequest request = new CreateExhibitionRequest(
-            "exhibitions/dup.webp",
-            1024L,
+            new CreateExhibitionPhotoRequest("dup.webp", 1024L),
             "중복 요일 전시",
             LocalDate.of(2026, 6, 1),
             LocalDate.of(2026, 6, 30),
@@ -138,8 +137,7 @@ class ExhibitionServiceTest extends TestOnContainer {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         CreateExhibitionRequest request = new CreateExhibitionRequest(
-            "exhibitions/partial.webp",
-            1024L,
+            new CreateExhibitionPhotoRequest("partial.webp", 1024L),
             "월수금 전시",
             LocalDate.of(2026, 6, 1),
             LocalDate.of(2026, 6, 30),
@@ -166,8 +164,7 @@ class ExhibitionServiceTest extends TestOnContainer {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         CreateExhibitionRequest request = new CreateExhibitionRequest(
-            "exhibitions/sort.webp",
-            1024L,
+            new CreateExhibitionPhotoRequest("sort.webp", 1024L),
             "정렬 검증 전시",
             LocalDate.of(2026, 6, 1),
             LocalDate.of(2026, 6, 30),
@@ -196,8 +193,7 @@ class ExhibitionServiceTest extends TestOnContainer {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         CreateExhibitionRequest request = new CreateExhibitionRequest(
-            "exhibitions/multi-range.webp",
-            1024L,
+            new CreateExhibitionPhotoRequest("multi-range.webp", 1024L),
             "다중 구간 전시",
             LocalDate.of(2026, 6, 1),
             LocalDate.of(2026, 6, 30),
@@ -222,8 +218,7 @@ class ExhibitionServiceTest extends TestOnContainer {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         CreateExhibitionRequest request = new CreateExhibitionRequest(
-            "exhibitions/empty.webp",
-            1024L,
+            new CreateExhibitionPhotoRequest("empty.webp", 1024L),
             "빈 운영시간 전시",
             LocalDate.of(2026, 6, 1),
             LocalDate.of(2026, 6, 30),

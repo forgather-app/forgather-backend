@@ -20,6 +20,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.forgather.domain.exhibition.dto.CreateExhibitionPhotoRequest;
 import com.forgather.domain.exhibition.dto.CreateExhibitionRequest;
 import com.forgather.domain.exhibition.dto.ExhibitionResponse;
 import com.forgather.domain.exhibition.dto.LocationRequest;
@@ -64,8 +65,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
     void createOnlineExhibition() {
         // given
         CreateExhibitionRequest request = new CreateExhibitionRequest(
-            "exhibitions/spring.webp",
-            1024L,
+            new CreateExhibitionPhotoRequest("spring.webp", 1024L),
             "봄 전시",
             LocalDate.of(2026, 6, 1),
             LocalDate.of(2026, 6, 30),
@@ -99,7 +99,8 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
             () -> assertThat(response.message()).isNull(),
             () -> assertThat(response.data().id()).isNotNull(),
             () -> assertThat(response.data().title()).isEqualTo("봄 전시"),
-            () -> assertThat(response.data().representativeImagePath()).isEqualTo("exhibitions/spring.webp"),
+            () -> assertThat(response.data().representativeImagePath())
+                .isEqualTo("ROOT_DIRECTORY_PLACEHOLDER/exhibitions/host-%d/spring.webp".formatted(host.getId())),
             () -> assertThat(response.data().location().locationType()).isEqualTo(LocationType.ONLINE),
             () -> assertThat(response.data().location().url()).isEqualTo("https://forgather.app"),
             () -> assertThat(response.data().operatingHours()).hasSize(2),
@@ -113,8 +114,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
     void createOfflineExhibitionWithoutOperatingHours() {
         // given
         CreateExhibitionRequest request = new CreateExhibitionRequest(
-            "exhibitions/summer.webp",
-            2048L,
+            new CreateExhibitionPhotoRequest("summer.webp", 2048L),
             "여름 전시",
             LocalDate.of(2026, 7, 1),
             LocalDate.of(2026, 7, 31),
@@ -154,8 +154,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
     void operatingHoursSortedByDayOfWeek() {
         // given
         CreateExhibitionRequest request = new CreateExhibitionRequest(
-            "exhibitions/sort.webp",
-            1024L,
+            new CreateExhibitionPhotoRequest("sort.webp", 1024L),
             "정렬 검증 전시",
             LocalDate.of(2026, 6, 1),
             LocalDate.of(2026, 6, 30),
@@ -212,8 +211,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
     void createExhibitionWithoutTitle() {
         // given
         CreateExhibitionRequest request = new CreateExhibitionRequest(
-            "exhibitions/empty-title.webp",
-            1024L,
+            new CreateExhibitionPhotoRequest("empty-title.webp", 1024L),
             "",
             LocalDate.of(2026, 6, 1),
             LocalDate.of(2026, 6, 30),
@@ -234,14 +232,13 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
             .statusCode(HttpStatus.BAD_REQUEST.value());
     }
 
-    @DisplayName("이미지 경로가 비어 있으면 전시를 생성할 수 없다.")
+    @DisplayName("업로드 파일명이 비어 있으면 전시를 생성할 수 없다.")
     @Test
-    void createExhibitionWithoutImagePath() {
+    void createExhibitionWithoutUploadFileName() {
         // given
         CreateExhibitionRequest request = new CreateExhibitionRequest(
-            "",
-            1024L,
-            "빈 이미지 경로 전시",
+            new CreateExhibitionPhotoRequest("", 1024L),
+            "빈 업로드 파일명 전시",
             LocalDate.of(2026, 6, 1),
             LocalDate.of(2026, 6, 30),
             "전시 설명",
@@ -266,8 +263,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
     void createExhibitionWithDuplicateOperatingDay() {
         // given
         CreateExhibitionRequest request = new CreateExhibitionRequest(
-            "exhibitions/dup.webp",
-            1024L,
+            new CreateExhibitionPhotoRequest("dup.webp", 1024L),
             "운영시간 요일 중복 전시",
             LocalDate.of(2026, 6, 1),
             LocalDate.of(2026, 6, 30),
@@ -297,8 +293,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
         String emoji = "🙂";
         String title = emoji.repeat(100);
         CreateExhibitionRequest request = new CreateExhibitionRequest(
-            "exhibitions/emoji.webp",
-            1024L,
+            new CreateExhibitionPhotoRequest("emoji.webp", 1024L),
             title,
             LocalDate.of(2026, 6, 1),
             LocalDate.of(2026, 6, 30),
@@ -325,8 +320,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
         String emoji = "🙂";
         String title = emoji.repeat(101);
         CreateExhibitionRequest request = new CreateExhibitionRequest(
-            "exhibitions/emoji.webp",
-            1024L,
+            new CreateExhibitionPhotoRequest("emoji.webp", 1024L),
             title,
             LocalDate.of(2026, 6, 1),
             LocalDate.of(2026, 6, 30),
@@ -352,8 +346,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
     void createExhibitionWithTooManyOperatingHours() {
         // given - 고유 요일 7개 + MONDAY 1개 추가로 8개 입력 (Bean Validation의 @Size 위반)
         CreateExhibitionRequest request = new CreateExhibitionRequest(
-            "exhibitions/too-many.webp",
-            1024L,
+            new CreateExhibitionPhotoRequest("too-many.webp", 1024L),
             "운영시간 초과 전시",
             LocalDate.of(2026, 6, 1),
             LocalDate.of(2026, 6, 30),
@@ -390,8 +383,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
     void createExhibitionWithNullOperatingHourElement() {
         // given
         CreateExhibitionRequest request = new CreateExhibitionRequest(
-            "exhibitions/null-element.webp",
-            1024L,
+            new CreateExhibitionPhotoRequest("null-element.webp", 1024L),
             "null 원소 포함 전시",
             LocalDate.of(2026, 6, 1),
             LocalDate.of(2026, 6, 30),
@@ -419,8 +411,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
 
     private CreateExhibitionRequest createValidRequest() {
         return new CreateExhibitionRequest(
-            "exhibitions/default.webp",
-            1024L,
+            new CreateExhibitionPhotoRequest("default.webp", 1024L),
             "기본 전시",
             LocalDate.of(2026, 6, 1),
             LocalDate.of(2026, 6, 30),

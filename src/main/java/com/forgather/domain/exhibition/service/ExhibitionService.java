@@ -18,6 +18,8 @@ import com.forgather.domain.exhibition.repository.ExhibitionHostRepository;
 import com.forgather.domain.exhibition.repository.ExhibitionPhotoRepository;
 import com.forgather.domain.exhibition.repository.ExhibitionRepository;
 import com.forgather.domain.exhibition.repository.ExhibitionTimeRepository;
+import com.forgather.domain.upload.domain.ContentsStorage;
+import com.forgather.domain.upload.domain.FilePathGenerator;
 import com.forgather.global.auth.model.Host;
 
 import lombok.RequiredArgsConstructor;
@@ -30,14 +32,15 @@ public class ExhibitionService {
     private final ExhibitionHostRepository exhibitionHostRepository;
     private final ExhibitionPhotoRepository exhibitionPhotoRepository;
     private final ExhibitionTimeRepository exhibitionTimeRepository;
+    private final ContentsStorage contentsStorage;
 
     @Transactional
     public ExhibitionResponse create(Host host, CreateExhibitionRequest request) {
         Exhibition exhibition = exhibitionRepository.save(buildExhibition(request));
 
-        // TODO: photo path 검증(정말 s3에 존재하는 객체인가?
+        String photoPath = buildPhotoPath(host, request.photo().uploadFileName());
         ExhibitionPhoto photo = exhibitionPhotoRepository.save(
-            new ExhibitionPhoto(request.imagePath(), request.imageCapacity(), exhibition)
+            request.photo().toEntity(photoPath, exhibition)
         );
 
         ExhibitionTimes exhibitionTimes = buildExhibitionTimes(request, exhibition);
@@ -46,6 +49,12 @@ public class ExhibitionService {
         exhibitionHostRepository.save(new ExhibitionHost(exhibition, host, true));
 
         return ExhibitionResponse.of(exhibition, photo, exhibitionTimes, host);
+    }
+
+    private String buildPhotoPath(Host host, String uploadFileName) {
+        return FilePathGenerator.generateExhibitionContentsFilePath(
+            contentsStorage.getRootDirectory(), host.getId(), uploadFileName
+        );
     }
 
     private Exhibition buildExhibition(CreateExhibitionRequest request) {
