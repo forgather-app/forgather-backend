@@ -2,6 +2,7 @@ package com.forgather.domain.guestbook.service;
 
 import static com.forgather.fixture.GuestBookReportReasonFixture.createHiddenReason;
 import static com.forgather.fixture.GuestBookReportReasonFixture.createReason;
+import static com.forgather.fixture.GuestBookReportReasonFixture.createReasonWithCode;
 import static com.forgather.fixture.HostFixture.createHost;
 import static com.forgather.fixture.SpaceFixture.createSpace;
 import static com.forgather.fixture.SpaceFixture.createSpaceWithCode;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Sort;
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportRequest;
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportResponse;
 import com.forgather.domain.guestbook.dto.ReportHistoryResponse;
+import com.forgather.domain.guestbook.dto.ReportReasonsResponse;
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookReportReason;
 import com.forgather.domain.guestbook.model.VisibilityStatus;
@@ -230,5 +232,23 @@ class GuestbookReportServiceTest {
 
         // then
         assertThat(result.reportHistory()).isEmpty();
+    }
+
+    @DisplayName("공개 신고 사유 목록을 노출 순서에 맞게 반환한다")
+    @Test
+    void retrieveReportReasonsSortsByDisplayOrder() {
+        // given
+        reportReasonRepository.save(createReasonWithCode("HATE", "혐오 발언", 4));
+        reportReasonRepository.save(createReasonWithCode("ADULT", "성인 콘텐츠", 2));
+        reportReasonRepository.save(createReasonWithCode("ETC", "기타", 3));
+        reportReasonRepository.save(createHiddenReason());
+
+        // when
+        ReportReasonsResponse result = guestBookReportService.retrieveReportReasons();
+
+        // then
+        assertThat(result.reasons())
+            .extracting(ReportReasonsResponse.ReasonInfo::label)
+            .containsExactly("스팸", "성인 콘텐츠", "기타", "혐오 발언");
     }
 }
