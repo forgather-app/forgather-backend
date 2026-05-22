@@ -57,6 +57,10 @@ public class UploadService {
     }
 
     public IssueSignedUrlResponse issueExhibitionSignedUrls(Host host, IssueSignedUrlRequest request) {
+        if (request.category() != UploadCategory.EXHIBITION) {
+            throw new BaseException("전시 업로드는 EXHIBITION 카테고리만 지원합니다.");
+        }
+
         Map<String, String> signedUrls = signedUrlIssuer.issueSignedUrls(
             request.uploadFileNames(),
             request.category(),
