@@ -46,7 +46,17 @@ public class UploadController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    // TODO: 기존 Space 관련(Product, Guestbook) 사진 업로드 presigned-url 발급 API URL 변경
+    @PostMapping(path = "/spaces/{spaceCode}/guestbooks/upload/signed-urls")
+    @Operation(summary = "스페이스 방명록 사진 업로드 URL 발급",
+        description = "스페이스 방명록 사진 업로드용 presigned URL을 발급받습니다.")
+    public ResponseEntity<ApiResponse<IssueSignedUrlResponse>> issueGuestbookPreSignedUrls(
+        @PathVariable(name = "spaceCode") String spaceCode,
+        @RequestBody IssueSignedUrlRequest request
+    ) {
+        var response = uploadService.issueGuestbookSignedUrls(spaceCode, request);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping(path = "/spaces/{spaceCode}/products/upload/signed-urls")
     @Operation(summary = "스페이스 작품 사진 업로드 URL 발급",

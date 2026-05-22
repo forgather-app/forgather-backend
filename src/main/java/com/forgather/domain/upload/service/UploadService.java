@@ -52,8 +52,23 @@ public class UploadService {
         }
     }
 
+    // TODO: 추후 제거
     public IssueSignedUrlResponse issueSignedUrls(String spaceCode, IssueSignedUrlRequest request) {
         spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
+        Map<String, String> signedUrls = signedUrlIssuer.issueSignedUrls(
+            request.uploadFileNames(),
+            spaceCode,
+            request.category()
+        );
+        return new IssueSignedUrlResponse(signedUrls);
+    }
+
+    public IssueSignedUrlResponse issueGuestbookSignedUrls(String spaceCode, IssueSignedUrlRequest request) {
+        if (request.category() != UploadCategory.GUESTBOOK) {
+            throw new BaseException("게스트북 업로드는 GUESTBOOK 카테고리만 지원합니다.");
+        }
+        spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
+
         Map<String, String> signedUrls = signedUrlIssuer.issueSignedUrls(
             request.uploadFileNames(),
             spaceCode,
