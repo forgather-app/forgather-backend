@@ -46,6 +46,20 @@ public class UploadController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    // TODO: 기존 Space 관련(Product, Guestbook) 사진 업로드 presigned-url 발급 API URL 변경
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping(path = "/spaces/{spaceCode}/products/upload/signed-urls")
+    @Operation(summary = "스페이스 작품 사진 업로드 URL 발급",
+        description = "로그인한 호스트가 자신의 스페이스 작품 사진 업로드용 presigned URL을 발급받습니다.")
+    public ResponseEntity<ApiResponse<IssueSignedUrlResponse>> issueProductSignedUrls(
+        @LoginHost(required = true) Host host,
+        @PathVariable(name = "spaceCode") String spaceCode,
+        @RequestBody IssueSignedUrlRequest request
+    ) {
+        var response = uploadService.issueProductSignedUrls(spaceCode, host, request);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping(path = "/exhibitions/upload/signed-urls")
     @Operation(summary = "전시 사진 업로드 URL 발급",
@@ -57,6 +71,4 @@ public class UploadController {
         var response = uploadService.issueExhibitionSignedUrls(host, request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
-
-    // TODO: 기존 Space 관련(Product, Guestbook) 사진 업로드 presigned-url 발급 API URL 변경
 }
