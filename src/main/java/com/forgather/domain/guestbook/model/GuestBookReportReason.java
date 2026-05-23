@@ -1,41 +1,23 @@
 package com.forgather.domain.guestbook.model;
 
-import com.forgather.domain.model.BaseTimeEntity;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Entity
-public class GuestBookReportReason extends BaseTimeEntity {
+public enum GuestBookReportReason {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    ADVERTISEMENT_SPAM("광고/홍보/스팸"),
+    ABUSE_HARASSMENT("욕설/비방/괴롭힘"),
+    HATE_DISCRIMINATION("차별/혐오 표현"),
+    SEXUAL_CONTENT("음란/선정적 내용"),
+    REPETITIVE_CONTENT("도배/반복 게시"),
+    PERSONAL_INFORMATION_EXPOSURE("개인정보/민감정보 노출"),
+    ILLEGAL_DANGEROUS_CONTENT("불법/위험 행위 또는 악성 링크"),
+    OTHER("기타"),
+    ;
 
-    @Column(name = "code", length = 30, unique = true, nullable = false)
-    private String code;
+    private final String label;
 
-    @Column(name = "label", length = 30, nullable = false)
-    private String label;
-
-    @Column(name = "display_order", nullable = false)
-    private int displayOrder;
-
-    @Column(name = "is_hidden", nullable = false)
-    private boolean isHidden;
-
-    public GuestBookReportReason(String code, String label, int displayOrder, boolean isHidden) {
-        this.code = code;
+    GuestBookReportReason(String label) {
         this.label = label;
-        this.displayOrder = displayOrder;
-        this.isHidden = isHidden;
     }
 }
