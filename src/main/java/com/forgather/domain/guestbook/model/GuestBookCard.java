@@ -1,5 +1,9 @@
 package com.forgather.domain.guestbook.model;
 
+import static com.forgather.domain.guestbook.model.VisibilityStatus.HIDDEN_BY_ADMIN;
+import static com.forgather.domain.guestbook.model.VisibilityStatus.HIDDEN_BY_HOST;
+import static com.forgather.domain.guestbook.model.VisibilityStatus.VISIBLE;
+
 import org.springframework.http.HttpStatus;
 
 import com.forgather.domain.model.SoftDeleteEntity;
@@ -46,7 +50,7 @@ public class GuestBookCard extends SoftDeleteEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "visibility_status", nullable = false)
-    private VisibilityStatus visibilityStatus = VisibilityStatus.VISIBLE;
+    private VisibilityStatus visibilityStatus = VISIBLE;
 
     public GuestBookCard(Space space, String nickname, String message) {
         validateRequiredFields(space, nickname, message);
@@ -56,7 +60,7 @@ public class GuestBookCard extends SoftDeleteEntity {
         this.nickname = nickname;
         this.message = message;
         this.isRead = false;
-        this.visibilityStatus = VisibilityStatus.VISIBLE;
+        this.visibilityStatus = VISIBLE;
     }
 
     private void validateRequiredFields(Space space, String nickname, String message) {
@@ -97,6 +101,14 @@ public class GuestBookCard extends SoftDeleteEntity {
     }
 
     public void hideByAdmin() {
-        visibilityStatus = VisibilityStatus.HIDDEN_BY_ADMIN;
+        visibilityStatus = HIDDEN_BY_ADMIN;
+    }
+
+    public void validateCanReadByVisibilityStatus(boolean isSpaceHost) {
+        if (visibilityStatus == HIDDEN_BY_ADMIN ||
+            visibilityStatus == HIDDEN_BY_HOST && !isSpaceHost
+        ) {
+            throw new BaseException("숨김 처리된 방명록은 조회할 수 없습니다.");
+        }
     }
 }

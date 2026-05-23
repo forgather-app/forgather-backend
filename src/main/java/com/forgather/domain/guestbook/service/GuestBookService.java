@@ -80,8 +80,8 @@ public class GuestBookService {
     @Transactional(readOnly = true)
     public GuestBookResponse read(Host host, String spaceCode, Pageable pageable) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
-        validateCanRead(space, host);
-        boolean isHost = host != null && isSpaceHost(space, host);
+        boolean isSpaceHost = host != null && isSpaceHost(space, host);
+        validateCanRead(space, isSpaceHost);
         Page<GuestBookCardListDto> guestBookCardDtos =
             guestBookCardRepository.findAllDtoBySpaceAndVisibilityStatusAndDeletedAtIsNull(
                 space,
@@ -93,7 +93,7 @@ public class GuestBookService {
                 guestBookCardDto.id(),
                 guestBookCardDto.nickname(),
                 guestBookCardDto.isPhotoExists(),
-                isHost ? guestBookCardDto.isRead() : null
+                isSpaceHost ? guestBookCardDto.isRead() : null
             )
         );
         return new GuestBookResponse(simpleResponses);
@@ -102,10 +102,13 @@ public class GuestBookService {
     @Transactional
     public GuestBookCardResponse readCard(Host host, String spaceCode, Long guestBookCardId) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
-        validateCanRead(space, host);
+        boolean isSpaceHost = host != null && isSpaceHost(space, host);
+        validateCanRead(space, isSpaceHost);
 
         GuestBookCard guestBookCard = getGuestBookCard(guestBookCardId, space);
-        if (host != null && isSpaceHost(space, host)) {
+        guestBookCard.validateCanReadByVisibilityStatus(isSpaceHost);
+
+        if (isSpaceHost) {
             guestBookCard.read();
         }
 
@@ -113,11 +116,11 @@ public class GuestBookService {
         return new GuestBookCardResponse(guestBookCard, photos);
     }
 
-    private void validateCanRead(Space space, Host host) {
+    private void validateCanRead(Space space, boolean isSpaceHost) {
         if (space.isPublic()) { // 공개 스페이스
             return;
         }
-        if (host != null && isSpaceHost(space, host)) { // 스페이스 호스트
+        if (isSpaceHost) { // 스페이스 호스트
             return;
         }
         throw new ForbiddenException("방문자는 비공개 스페이스의 방명록을 조회할 수 없습니다. spaceCode: " + space.getCode());
