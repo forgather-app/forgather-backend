@@ -43,8 +43,8 @@ public class GuestBookReport extends BaseTimeEntity {
     @JoinColumn(name = "reporter_user_id", nullable = false)
     private Host reporter;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reason_id", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "reason", length = 50, nullable = false)
     private GuestBookReportReason reason;
 
     @Enumerated(EnumType.STRING)
