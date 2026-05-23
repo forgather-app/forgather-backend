@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.forgather.domain.guestbook.model.GuestBookCard;
+import com.forgather.domain.guestbook.model.VisibilityStatus;
 import com.forgather.domain.guestbook.repository.dto.GuestBookCardListDto;
 import com.forgather.domain.guestbook.repository.dto.SpaceGuestBookCountDto;
 import com.forgather.domain.space.model.Space;
@@ -44,9 +45,15 @@ public interface GuestBookCardRepository {
                 ) > 0 THEN true ELSE false END
             )
             FROM GuestBookCard g
-            WHERE g.space = :space AND g.deletedAt IS NULL
+            WHERE g.space = :space
+                AND g.visibilityStatus = :visibilityStatus
+                AND g.deletedAt IS NULL
         """)
-    Page<GuestBookCardListDto> findAllDtoBySpaceAndDeletedAtIsNull(@Param("space") Space space, Pageable pageable);
+    Page<GuestBookCardListDto> findAllDtoBySpaceAndVisibilityStatusAndDeletedAtIsNull(
+        @Param("space") Space space,
+        @Param("visibilityStatus") VisibilityStatus visibilityStatus,
+        Pageable pageable
+    );
 
     List<GuestBookCard> findAllBySpaceAndDeletedAtIsNull(Space space);
 

@@ -22,6 +22,7 @@ import com.forgather.domain.guestbook.dto.WriteGuestBookCardResponse;
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookCardPhoto;
 import com.forgather.domain.guestbook.model.GuestBookCardPhotos;
+import com.forgather.domain.guestbook.model.VisibilityStatus;
 import com.forgather.domain.guestbook.repository.GuestBookCardPhotoRepository;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
 import com.forgather.domain.guestbook.repository.dto.GuestBookCardListDto;
@@ -81,7 +82,12 @@ public class GuestBookService {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateCanRead(space, host);
         boolean isHost = host != null && isSpaceHost(space, host);
-        Page<GuestBookCardListDto> guestBookCardDtos = guestBookCardRepository.findAllDtoBySpaceAndDeletedAtIsNull(space, pageable);
+        Page<GuestBookCardListDto> guestBookCardDtos =
+            guestBookCardRepository.findAllDtoBySpaceAndVisibilityStatusAndDeletedAtIsNull(
+                space,
+                VisibilityStatus.VISIBLE,
+                pageable
+            );
         Page<GuestBookCardSimpleResponse> simpleResponses = guestBookCardDtos.map(
             guestBookCardDto -> new GuestBookCardSimpleResponse(
                 guestBookCardDto.id(),
