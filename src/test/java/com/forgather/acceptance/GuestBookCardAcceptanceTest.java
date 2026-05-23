@@ -1,5 +1,8 @@
 package com.forgather.acceptance;
 
+import static com.forgather.domain.guestbook.model.VisibilityStatus.HIDDEN_BY_ADMIN;
+import static com.forgather.domain.guestbook.model.VisibilityStatus.HIDDEN_BY_HOST;
+import static com.forgather.fixture.GuestBookCardFixture.createWithSpaceAndVisibilityStatus;
 import static com.forgather.fixture.GuestBookReportReasonFixture.createReason;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -26,7 +29,9 @@ import com.forgather.domain.guestbook.dto.GuestBookResponse;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardPhotoRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardResponse;
+import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookReportReason;
+import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
 import com.forgather.domain.guestbook.repository.jpa.GuestBookReportReasonJpaRepository;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.HostRepository;
@@ -62,6 +67,9 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
     @Autowired
     private GuestBookReportReasonJpaRepository reportReasonRepository;
+
+    @Autowired
+    private GuestBookCardRepository guestBookCardRepository;
 
     @MockitoBean
     private AwsS3Cloud awsS3Cloud;
@@ -418,6 +426,71 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .get("/spaces/%s/guestbook/%d".formatted(privateSpace.getCode(), writeResponse.id()))
                 .then()
                 .statusCode(200);
+        }
+
+        @DisplayName("스페이스 호스트가 숨김 처리한 방명록 카드는 스페이스 호스트가 조회할 수 있다")
+        @Test
+        void hostCanReadHiddenByHostCard() {
+            // given
+            GuestBookCard guestBookCard = createWithSpaceAndVisibilityStatus(publicSpace, HIDDEN_BY_HOST);
+            guestBookCardRepository.save(guestBookCard);
+
+            // when
+            ApiResponse<GuestBookCardResponse> result = RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + accessToken)
+                .accept(ContentType.JSON)
+                .when()
+                .get("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), guestBookCard.getId()))
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+            // then
+            assertAll(
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().id()).isEqualTo(guestBookCard.getId())
+            );
+        }
+
+        @DisplayName("스페이스 호스트가 숨김 처리한 방명록 카드는 방문자가 조회할 수 없다")
+        @Test
+        void guestCannotReadHiddenByHostCard() {
+            // given
+            GuestBookCard guestBookCard = createWithSpaceAndVisibilityStatus(publicSpace, HIDDEN_BY_HOST);
+            guestBookCardRepository.save(guestBookCard);
+
+            // when, then
+            RestAssuredMockMvc.given()
+                .accept(ContentType.JSON)
+                .when()
+                .get("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), guestBookCard.getId()))
+                .then()
+                .statusCode(400)
+                .body("code", equalTo("BAD_REQUEST"))
+                .body("message", containsString("숨김 처리된 방명록은 조회할 수 없습니다."));
+        }
+
+        @DisplayName("관리자가 숨김 처리한 방명록 카드는 스페이스 호스트도 조회할 수 없다")
+        @Test
+        void hostCannotReadHiddenByAdminCard() {
+            // given
+            GuestBookCard guestBookCard = createWithSpaceAndVisibilityStatus(publicSpace, HIDDEN_BY_ADMIN);
+            guestBookCardRepository.save(guestBookCard);
+
+            // when, then
+            RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + accessToken)
+                .accept(ContentType.JSON)
+                .when()
+                .get("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), guestBookCard.getId()))
+                .then()
+                .statusCode(400)
+                .body("code", equalTo("BAD_REQUEST"))
+                .body("message", containsString("숨김 처리된 방명록은 조회할 수 없습니다."));
         }
 
         @DisplayName("호스트가 방명록 카드를 조회하면 읽음 처리된다")
