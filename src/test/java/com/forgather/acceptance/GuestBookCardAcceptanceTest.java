@@ -1,5 +1,6 @@
 package com.forgather.acceptance;
 
+import static com.forgather.fixture.GuestBookReportReasonFixture.createReason;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -18,12 +19,15 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.forgather.domain.guestbook.dto.CreateGuestBookReportRequest;
 import com.forgather.domain.guestbook.dto.DeleteGuestBookCardPhotosRequest;
 import com.forgather.domain.guestbook.dto.GuestBookCardResponse;
 import com.forgather.domain.guestbook.dto.GuestBookResponse;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardPhotoRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardResponse;
+import com.forgather.domain.guestbook.model.GuestBookReportReason;
+import com.forgather.domain.guestbook.repository.jpa.GuestBookReportReasonJpaRepository;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
@@ -55,6 +59,9 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
     @Autowired
     private SpaceHostRepository spaceHostRepository;
+
+    @Autowired
+    private GuestBookReportReasonJpaRepository reportReasonRepository;
 
     @MockitoBean
     private AwsS3Cloud awsS3Cloud;
@@ -199,6 +206,41 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.data().currentPage()).isEqualTo(1),
                 () -> assertThat(result.data().pageSize()).isEqualTo(15),
                 () -> assertThat(result.data().totalCount()).isEqualTo(2),
+                () -> assertThat(result.data().totalPages()).isEqualTo(1)
+            );
+        }
+
+        @DisplayName("방명록 목록 조회 시 숨김 처리된 방명록은 제외된다")
+        @Test
+        void readGuestBookExcludesHiddenCards() {
+            // given
+            WriteGuestBookCardResponse hiddenCard = writeGuestBookCard(publicSpace);
+            WriteGuestBookCardResponse visibleCard = writeGuestBookCardWithNoPhoto(publicSpace);
+            reportGuestBookCard(publicSpace, hiddenCard.id());
+
+            // when
+            ApiResponse<GuestBookResponse> result = RestAssuredMockMvc.given()
+                .accept(ContentType.JSON)
+                .queryParam("page", 1)
+                .queryParam("size", 15)
+                .queryParam("sort", "createdAt,desc")
+                .queryParam("sort", "id,desc")
+                .when()
+                .get("/spaces/%s/guestbook".formatted(publicSpace.getCode()))
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+            // then
+            assertAll(
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().guestBookCards()).size().isEqualTo(1),
+                () -> assertThat(result.data().guestBookCards().getFirst().id()).isEqualTo(visibleCard.id()),
+                () -> assertThat(result.data().totalCount()).isEqualTo(1),
                 () -> assertThat(result.data().totalPages()).isEqualTo(1)
             );
         }
@@ -735,5 +777,19 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
             .as(new TypeRef<>() {
             });
         return response.data();
+    }
+
+    private void reportGuestBookCard(Space space, Long guestBookCardId) {
+        GuestBookReportReason reason = reportReasonRepository.save(createReason());
+        CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason.getId(), null);
+
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + accessToken)
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/spaces/{spaceCode}/guestbook/{guestBookCardId}/reports", space.getCode(), guestBookCardId)
+            .then()
+            .statusCode(201);
     }
 }
