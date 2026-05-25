@@ -11,10 +11,8 @@ import com.forgather.domain.guestbook.dto.ReportDetailResponse;
 import com.forgather.domain.guestbook.dto.ReportHistoryResponse;
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookReport;
-import com.forgather.domain.guestbook.model.GuestBookReportReason;
 import com.forgather.domain.guestbook.model.ReporterType;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
-import com.forgather.domain.guestbook.repository.GuestBookReportReasonRepository;
 import com.forgather.domain.guestbook.repository.GuestBookReportRepository;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.SpaceRepository;
@@ -34,7 +32,6 @@ public class GuestbookReportService {
     private final SpaceHostRepository spaceHostRepository;
     private final GuestBookCardRepository guestBookCardRepository;
     private final GuestBookReportRepository guestBookReportRepository;
-    private final GuestBookReportReasonRepository guestBookReportReasonRepository;
 
     @Transactional(readOnly = true)
     public ReportHistoryResponse retrieveReportHistory(Host reporter, Pageable pageable) {
@@ -67,10 +64,8 @@ public class GuestbookReportService {
         GuestBookCard card = getCardBySpace(guestBookCardId, space);
         validateAlreadyReported(host, card);  // 동일 사용자의 중복 신고 불가능
 
-        GuestBookReportReason reason = guestBookReportReasonRepository.getByIdAndIsHiddenFalseOrThrow(
-            request.reasonId());
         GuestBookReport report = guestBookReportRepository.save(
-            new GuestBookReport(card, host, host, ReporterType.HOST, reason, request.detail())
+            new GuestBookReport(card, host, host, ReporterType.HOST, request.reason(), request.detail())
         );
         card.hideByAdmin();
         return CreateGuestBookReportResponse.from(report);
