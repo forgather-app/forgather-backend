@@ -1,6 +1,5 @@
 package com.forgather.acceptance;
 
-import static com.forgather.domain.upload.domain.UploadCategory.EXHIBITION;
 import static com.forgather.domain.upload.domain.UploadCategory.GUESTBOOK;
 import static com.forgather.fixture.HostFixture.createHost;
 import static com.forgather.fixture.SpaceFixture.createSpace;
@@ -25,6 +24,7 @@ import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.AwsS3Cloud;
+import com.forgather.domain.upload.dto.IssuePreSignedUrlRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlResponse;
 import com.forgather.global.auth.model.Host;
@@ -110,7 +110,7 @@ class UploadAcceptanceTest extends AcceptanceTest {
     @Test
     void issueExhibitionSignedUrls() {
         // given
-        IssueSignedUrlRequest request = new IssueSignedUrlRequest(EXHIBITION, List.of("abc.jpg", "def.jpg"));
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of("abc.jpg", "def.jpg"));
         when(awsS3Cloud.getRootDirectory()).thenReturn("photogather/v2");
         when(awsS3Cloud.issueSignedUrl(anyString())).thenAnswer(invocation -> {
             String path = invocation.getArgument(0);
@@ -149,7 +149,7 @@ class UploadAcceptanceTest extends AcceptanceTest {
     @Test
     void issueExhibitionSignedUrlsRequiresAuth() {
         // given
-        IssueSignedUrlRequest request = new IssueSignedUrlRequest(EXHIBITION, List.of("abc.jpg"));
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of("abc.jpg"));
 
         // when, then
         RestAssuredMockMvc.given()
@@ -160,5 +160,55 @@ class UploadAcceptanceTest extends AcceptanceTest {
             .post("/exhibitions/upload/signed-urls")
             .then()
             .statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @DisplayName("전시 사진 서명된 url 발급 시 업로드 파일 이름 목록이 비어있으면 400을 반환한다")
+    @Test
+    void issueExhibitionSignedUrlsWithEmptyFileNames() {
+        // given
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of());
+
+        // when
+        ApiResponse<Void> result = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/exhibitions/upload/signed-urls")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+
+        // then
+        assertThat(result.code()).isEqualTo(ResponseCode.VALIDATION_FAILED);
+    }
+
+    @DisplayName("전시 사진 서명된 url 발급 시 업로드 파일 이름 목록이 null이면 400을 반환한다")
+    @Test
+    void issueExhibitionSignedUrlsWithNullFileNames() {
+        // given
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(null);
+
+        // when
+        ApiResponse<Void> result = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/exhibitions/upload/signed-urls")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+
+        // then
+        assertThat(result.code()).isEqualTo(ResponseCode.VALIDATION_FAILED);
     }
 }

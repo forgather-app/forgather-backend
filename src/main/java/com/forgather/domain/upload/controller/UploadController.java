@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.forgather.domain.upload.dto.IssuePreSignedUrlRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlResponse;
 import com.forgather.domain.upload.service.UploadService;
@@ -16,6 +17,7 @@ import com.forgather.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,6 +32,7 @@ public class UploadController {
     /**
      * TODO
      * 아무런 검증이 없어도 되는가?
+     * 추후 제거
      */
     @PostMapping(path = "/spaces/{spaceCode}/upload/signed-urls")
     @Operation(summary = "업로드 URL 발급", description = """
@@ -51,7 +54,7 @@ public class UploadController {
         description = "스페이스 방명록 사진 업로드용 presigned URL을 발급받습니다.")
     public ResponseEntity<ApiResponse<IssueSignedUrlResponse>> issueGuestbookPreSignedUrls(
         @PathVariable(name = "spaceCode") String spaceCode,
-        @RequestBody IssueSignedUrlRequest request
+        @Valid @RequestBody IssuePreSignedUrlRequest request
     ) {
         var response = uploadService.issueGuestbookSignedUrls(spaceCode, request);
         return ResponseEntity.ok(ApiResponse.success(response));
@@ -64,7 +67,7 @@ public class UploadController {
     public ResponseEntity<ApiResponse<IssueSignedUrlResponse>> issueProductSignedUrls(
         @LoginHost(required = true) Host host,
         @PathVariable(name = "spaceCode") String spaceCode,
-        @RequestBody IssueSignedUrlRequest request
+        @Valid @RequestBody IssuePreSignedUrlRequest request
     ) {
         var response = uploadService.issueProductSignedUrls(spaceCode, host, request);
         return ResponseEntity.ok(ApiResponse.success(response));
@@ -76,7 +79,7 @@ public class UploadController {
         description = "로그인한 호스트가 전시 사진 업로드용 presigned URL을 발급받습니다.")
     public ResponseEntity<ApiResponse<IssueSignedUrlResponse>> issueExhibitionSignedUrls(
         @LoginHost(required = true) Host host,
-        @RequestBody IssueSignedUrlRequest request
+        @Valid @RequestBody IssuePreSignedUrlRequest request
     ) {
         var response = uploadService.issueExhibitionSignedUrls(host, request);
         return ResponseEntity.ok(ApiResponse.success(response));

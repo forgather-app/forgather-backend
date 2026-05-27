@@ -45,7 +45,11 @@ public class SignedUrlIssuer {
         return signedUrls;
     }
 
-    public Map<String, String> issueSignedUrls(List<String> uploadFileNames, UploadCategory category, long hostId) {
+    public Map<String, String> issueSignedUrls(
+        List<String> uploadFileNames,
+        UploadCategory category,
+        Long hostId
+    ) {
         if (uploadFileNames == null || uploadFileNames.isEmpty()) {
             throw new BaseException("업로드 파일명 목록은 null이거나 비어있을 수 없습니다.");
         }

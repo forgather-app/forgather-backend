@@ -11,11 +11,11 @@ import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.domain.ContentsStorage;
 import com.forgather.domain.upload.domain.SignedUrlIssuer;
 import com.forgather.domain.upload.domain.UploadCategory;
+import com.forgather.domain.upload.dto.IssuePreSignedUrlRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlResponse;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.repository.SpaceHostRepository;
-import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.FileUploadException;
 import com.forgather.global.exception.ForbiddenException;
 
@@ -63,31 +63,29 @@ public class UploadService {
         return new IssueSignedUrlResponse(signedUrls);
     }
 
-    public IssueSignedUrlResponse issueGuestbookSignedUrls(String spaceCode, IssueSignedUrlRequest request) {
-        if (request.category() != UploadCategory.GUESTBOOK) {
-            throw new BaseException("게스트북 업로드는 GUESTBOOK 카테고리만 지원합니다.");
-        }
+    public IssueSignedUrlResponse issueGuestbookSignedUrls(String spaceCode, IssuePreSignedUrlRequest request) {
         spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
 
         Map<String, String> signedUrls = signedUrlIssuer.issueSignedUrls(
             request.uploadFileNames(),
             spaceCode,
-            request.category()
+            UploadCategory.GUESTBOOK
         );
         return new IssueSignedUrlResponse(signedUrls);
     }
 
-    public IssueSignedUrlResponse issueProductSignedUrls(String spaceCode, Host host, IssueSignedUrlRequest request) {
-        if (request.category() != UploadCategory.PRODUCT) {
-            throw new BaseException("작품 업로드는 PRODUCT 카테고리만 지원합니다.");
-        }
+    public IssueSignedUrlResponse issueProductSignedUrls(
+        String spaceCode,
+        Host host,
+        IssuePreSignedUrlRequest request
+    ) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(space, host);
 
         Map<String, String> signedUrls = signedUrlIssuer.issueSignedUrls(
             request.uploadFileNames(),
             spaceCode,
-            request.category()
+            UploadCategory.PRODUCT
         );
         return new IssueSignedUrlResponse(signedUrls);
     }
@@ -99,14 +97,10 @@ public class UploadService {
         throw new ForbiddenException("권한이 존재하지 않습니다.");
     }
 
-    public IssueSignedUrlResponse issueExhibitionSignedUrls(Host host, IssueSignedUrlRequest request) {
-        if (request.category() != UploadCategory.EXHIBITION) {
-            throw new BaseException("전시 업로드는 EXHIBITION 카테고리만 지원합니다.");
-        }
-
+    public IssueSignedUrlResponse issueExhibitionSignedUrls(Host host, IssuePreSignedUrlRequest request) {
         Map<String, String> signedUrls = signedUrlIssuer.issueSignedUrls(
             request.uploadFileNames(),
-            request.category(),
+            UploadCategory.EXHIBITION,
             host.getId()
         );
         return new IssueSignedUrlResponse(signedUrls);
