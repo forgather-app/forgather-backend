@@ -15,11 +15,11 @@ public class GuestBookCardFixture {
     private static final Space space = createSpace();
 
     public static GuestBookCard createGuestBookCard() {
-        return new GuestBookCard(space, "nickname", "message");
+        return new GuestBookCard(space, NICKNAME, MESSAGE);
     }
 
     public static GuestBookCard createWithVisibilityStatus(VisibilityStatus visibilityStatus) {
-        GuestBookCard guestBookCard = new GuestBookCard(space, "nickname", "message");
+        GuestBookCard guestBookCard = new GuestBookCard(space, NICKNAME, MESSAGE);
         setVisibiliyStatus(visibilityStatus, guestBookCard);
         return guestBookCard;
     }
@@ -29,19 +29,19 @@ public class GuestBookCardFixture {
     }
 
     public static GuestBookCard createGuestBookCardWithSpace(Space space) {
-        return createGuestBookCard(space, "nickname", "message");
+        return createGuestBookCard(space, NICKNAME, MESSAGE);
     }
 
     public static GuestBookCard createGuestBookCardWithNickname(String nickname) {
-        return createGuestBookCard(space, nickname, "message");
+        return createGuestBookCard(space, nickname, MESSAGE);
     }
 
     public static GuestBookCard createGuestBookCardWithMessage(String message) {
-        return createGuestBookCard(space, "nickname", message);
+        return createGuestBookCard(space, NICKNAME, message);
     }
 
     public static GuestBookCard createGuestBookCardWithSpaceAndNickname(Space space, String nickname) {
-        return createGuestBookCard(space, nickname, "message");
+        return createGuestBookCard(space, nickname, MESSAGE);
     }
 
     public static GuestBookCard createWithSpaceAndVisibilityStatus(
