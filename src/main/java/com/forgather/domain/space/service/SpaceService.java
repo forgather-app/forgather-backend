@@ -1,5 +1,7 @@
 package com.forgather.domain.space.service;
 
+import static com.forgather.domain.guestbook.model.VisibilityStatus.VISIBLE;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -123,7 +125,7 @@ public class SpaceService {
     }
 
     private SpaceResponse createSpaceResponse(Space space) {
-        Long guestBookCardCount = guestBookCardRepository.countBySpaceAndDeletedAtIsNull(space);
+        Long guestBookCardCount = guestBookCardRepository.countBySpaceAndVisibilityStatusAndDeletedAtIsNull(space, VISIBLE);
         SpacePhoto spacePhoto = spacePhotoRepository.getBySpaceAndDeletedAtIsNullOrEmpty(space);
         return SpaceResponse.from(space, spacePhoto, guestBookCardCount);
     }
@@ -183,7 +185,8 @@ public class SpaceService {
             .map(spaceHost -> spaceHost.getSpace().getId())
             .toList();
 
-        Map<Long, Long> guestBookCardCounts = guestBookCardRepository.countBySpaceIdAndDeletedAtIsNullIn(spaceIds)
+        Map<Long, Long> guestBookCardCounts = guestBookCardRepository
+            .countBySpaceIdInAndVisibilityStatusAndDeletedAtIsNull(spaceIds, VISIBLE)
             .stream()
             .collect(Collectors.toMap(
                 SpaceGuestBookCountDto::spaceId,
