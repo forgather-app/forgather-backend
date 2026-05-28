@@ -3,7 +3,6 @@ package com.forgather.acceptance;
 import static com.forgather.domain.guestbook.model.VisibilityStatus.HIDDEN_BY_ADMIN;
 import static com.forgather.domain.guestbook.model.VisibilityStatus.HIDDEN_BY_HOST;
 import static com.forgather.fixture.GuestBookCardFixture.createWithSpaceAndVisibilityStatus;
-import static com.forgather.fixture.GuestBookReportReasonFixture.createReason;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -32,7 +31,6 @@ import com.forgather.domain.guestbook.dto.WriteGuestBookCardResponse;
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookReportReason;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
-import com.forgather.domain.guestbook.repository.jpa.GuestBookReportReasonJpaRepository;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
@@ -64,9 +62,6 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
     @Autowired
     private SpaceHostRepository spaceHostRepository;
-
-    @Autowired
-    private GuestBookReportReasonJpaRepository reportReasonRepository;
 
     @Autowired
     private GuestBookCardRepository guestBookCardRepository;
@@ -853,8 +848,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
     }
 
     private void reportGuestBookCard(Space space, Long guestBookCardId) {
-        GuestBookReportReason reason = reportReasonRepository.save(createReason());
-        CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason.getId(), null);
+        CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(GuestBookReportReason.ADVERTISEMENT_SPAM, null);
 
         RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + accessToken)
