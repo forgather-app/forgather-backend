@@ -1,6 +1,5 @@
 package com.forgather.acceptance;
 
-import static com.forgather.fixture.GuestBookReportReasonFixture.createReason;
 import static com.forgather.fixture.HostFixture.createHost;
 import static com.forgather.fixture.SpaceFixture.createSpace;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,7 +23,6 @@ import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookReportReason;
 import com.forgather.domain.guestbook.model.VisibilityStatus;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
-import com.forgather.domain.guestbook.repository.jpa.GuestBookReportReasonJpaRepository;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
@@ -60,15 +58,12 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
     private GuestBookCardRepository guestBookCardRepository;
 
     @Autowired
-    private GuestBookReportReasonJpaRepository reportReasonRepository;
-
-    @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
     private Space space;
     private Host host;
     private GuestBookCard card;
-    private GuestBookReportReason reason;
+    private final GuestBookReportReason reason = GuestBookReportReason.ADVERTISEMENT_SPAM;
     private String accessToken;
     private String anotherAccessToken;
 
@@ -84,7 +79,6 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
         spaceHostRepository.save(new SpaceHost(space, host));
 
         card = guestBookCardRepository.save(new GuestBookCard(space, "닉네임", "방명록 메시지"));
-        reason = reportReasonRepository.save(createReason());
 
         RestAssuredMockMvc.mockMvc(mockMvc);
     }
@@ -97,7 +91,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
         @Test
         void report() {
             // given
-            CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason.getId(), null);
+            CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason, null);
 
             // when
             ApiResponse<CreateGuestBookReportResponse> result = RestAssuredMockMvc.given()
@@ -127,7 +121,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
         @Test
         void cardIsHiddenAfterReport() {
             // given
-            CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason.getId(), null);
+            CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason, null);
 
             // when
             RestAssuredMockMvc.given()
@@ -149,7 +143,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
         @Test
         void throwExceptionWhenNotLoggedIn() {
             // given
-            CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason.getId(), null);
+            CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason, null);
 
             // when & then
             RestAssuredMockMvc.given()
@@ -167,7 +161,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
         @Test
         void throwExceptionWhenNotSpaceHost() {
             // given
-            CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason.getId(), null);
+            CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason, null);
 
             // when & then
             RestAssuredMockMvc.given()
@@ -189,7 +183,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
             Space anotherSpace = spaceRepository.save(SpaceFixture.createSpaceWithCode("ANOTHER123"));
             spaceHostRepository.save(new SpaceHost(anotherSpace, host));
             GuestBookCard anotherCard = guestBookCardRepository.save(new GuestBookCard(anotherSpace, "nick", "msg"));
-            CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason.getId(), null);
+            CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason, null);
 
             // when & then
             RestAssuredMockMvc.given()
@@ -208,7 +202,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
         @Test
         void throwExceptionWhenAlreadyReported() {
             // given
-            CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason.getId(), null);
+            CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason, null);
             RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
                 .contentType(ContentType.JSON)
@@ -230,11 +224,16 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
                 .body("code", equalTo("CONFLICT"));
         }
 
-        @DisplayName("존재하지 않는 신고 사유로는 신고할 수 없다")
+        @DisplayName("잘못된 신고 사유로는 신고할 수 없다")
         @Test
-        void throwExceptionWhenReasonNotFound() {
+        void throwExceptionWhenReasonIsInvalid() {
             // given
-            CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(999L, null);
+            String request = """
+                {
+                    "reason": "UNKNOWN_REASON",
+                    "detail": null
+                }
+                """;
 
             // when & then
             RestAssuredMockMvc.given()
@@ -245,8 +244,8 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
                 .post("/spaces/{spaceCode}/guestbook/{cardId}/reports",
                     space.getCode(), card.getId())
                 .then()
-                .statusCode(HttpStatus.NOT_FOUND.value())
-                .body("code", equalTo("NOT_FOUND"));
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("code", equalTo("BAD_REQUEST"));
         }
     }
 
@@ -261,7 +260,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
             RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
                 .contentType(ContentType.JSON)
-                .body(new CreateGuestBookReportRequest(reason.getId(), null))
+                .body(new CreateGuestBookReportRequest(reason, null))
                 .when()
                 .post("/spaces/{spaceCode}/guestbook/{cardId}/reports",
                     space.getCode(), card.getId());
@@ -326,9 +325,9 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
         }
     }
 
-    @DisplayName("신고 사유 id가 null이면 400 예외를 발생한다")
+    @DisplayName("신고 사유가 null이면 400 예외를 발생한다")
     @Test
-    void throwExceptionWhenReasonIdNull() {
+    void throwExceptionWhenReasonNull() {
         // given
         CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(null, null);
 
@@ -357,7 +356,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
             ApiResponse<CreateGuestBookReportResponse> reportResult = RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
                 .contentType(ContentType.JSON)
-                .body(new CreateGuestBookReportRequest(reason.getId(), detail))
+                .body(new CreateGuestBookReportRequest(reason, detail))
                 .when()
                 .post("/spaces/{spaceCode}/guestbook/{cardId}/reports",
                     space.getCode(), card.getId())
@@ -388,8 +387,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.data().id()).isEqualTo(reportResult.data().id()),
                 () -> assertThat(result.data().space().spaceCode()).isEqualTo(space.getCode()),
                 () -> assertThat(result.data().space().name()).isEqualTo(space.getName()),
-                () -> assertThat(result.data().reason().id()).isEqualTo(reason.getId()),
-                () -> assertThat(result.data().reason().label()).isEqualTo(reason.getLabel()),
+                () -> assertThat(result.data().reason()).isEqualTo(reason.getLabel()),
                 () -> assertThat(result.data().detail()).isEqualTo(detail),
                 () -> assertThat(result.data().nicknameSnapshot()).isEqualTo("닉네임"),
                 () -> assertThat(result.data().messageSnapshot()).isEqualTo("방명록 메시지"),
@@ -417,7 +415,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
             ApiResponse<CreateGuestBookReportResponse> reportResult = RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
                 .contentType(ContentType.JSON)
-                .body(new CreateGuestBookReportRequest(reason.getId(), null))
+                .body(new CreateGuestBookReportRequest(reason, null))
                 .when()
                 .post("/spaces/{spaceCode}/guestbook/{cardId}/reports",
                     space.getCode(), card.getId())
