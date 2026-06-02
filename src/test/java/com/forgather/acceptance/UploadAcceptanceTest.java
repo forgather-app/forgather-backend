@@ -14,6 +14,8 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
@@ -192,6 +194,32 @@ class UploadAcceptanceTest extends AcceptanceTest {
     void issueExhibitionSignedUrlsWithNullFileNames() {
         // given
         IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(null);
+
+        // when
+        ApiResponse<Void> result = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/exhibitions/upload/signed-urls")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+
+        // then
+        assertThat(result.code()).isEqualTo(ResponseCode.VALIDATION_FAILED);
+    }
+
+    @DisplayName("전시 사진 업로드 url 발급 시 파일명 형식이 올바르지 않으면 400을 반환한다")
+    @ParameterizedTest
+    @ValueSource(strings = {"../../../etc/passwd", "a/b.png", "a\\b.png", "noext", "x.gif"})
+    void issueExhibitionSignedUrlsWithInvalidFileName(String invalidFileName) {
+        // given
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(invalidFileName));
 
         // when
         ApiResponse<Void> result = RestAssuredMockMvc.given()

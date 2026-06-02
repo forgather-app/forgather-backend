@@ -11,6 +11,7 @@ import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.domain.ContentsStorage;
 import com.forgather.domain.upload.domain.SignedUrlIssuer;
 import com.forgather.domain.upload.domain.UploadCategory;
+import com.forgather.domain.upload.domain.UploadFileNamePolicy;
 import com.forgather.domain.upload.dto.IssuePreSignedUrlRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlResponse;
@@ -64,6 +65,7 @@ public class UploadService {
     }
 
     public IssueSignedUrlResponse issueGuestbookSignedUrls(String spaceCode, IssuePreSignedUrlRequest request) {
+        UploadFileNamePolicy.validateAll(request.uploadFileNames());
         spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
 
         Map<String, String> signedUrls = signedUrlIssuer.issueSignedUrls(
@@ -79,6 +81,7 @@ public class UploadService {
         Host host,
         IssuePreSignedUrlRequest request
     ) {
+        UploadFileNamePolicy.validateAll(request.uploadFileNames());
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(space, host);
 
@@ -98,6 +101,7 @@ public class UploadService {
     }
 
     public IssueSignedUrlResponse issueExhibitionSignedUrls(Host host, IssuePreSignedUrlRequest request) {
+        UploadFileNamePolicy.validateAll(request.uploadFileNames());
         Map<String, String> signedUrls = signedUrlIssuer.issueSignedUrls(
             request.uploadFileNames(),
             UploadCategory.EXHIBITION,
