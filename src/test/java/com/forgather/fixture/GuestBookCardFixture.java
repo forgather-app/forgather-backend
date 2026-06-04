@@ -20,7 +20,7 @@ public class GuestBookCardFixture {
 
     public static GuestBookCard createWithVisibilityStatus(VisibilityStatus visibilityStatus) {
         GuestBookCard guestBookCard = new GuestBookCard(space, NICKNAME, MESSAGE);
-        setVisibiliyStatus(visibilityStatus, guestBookCard);
+        setVisibilityStatus(visibilityStatus, guestBookCard);
         return guestBookCard;
     }
 
@@ -49,11 +49,11 @@ public class GuestBookCardFixture {
         VisibilityStatus visibilityStatus
     ) {
         GuestBookCard guestBookCard = createGuestBookCard(space, NICKNAME, MESSAGE);
-        setVisibiliyStatus(visibilityStatus, guestBookCard);
+        setVisibilityStatus(visibilityStatus, guestBookCard);
         return guestBookCard;
     }
 
-    private static void setVisibiliyStatus(VisibilityStatus visibilityStatus, GuestBookCard guestBookCard) {
+    private static void setVisibilityStatus(VisibilityStatus visibilityStatus, GuestBookCard guestBookCard) {
         ReflectionTestUtils.setField(guestBookCard, "visibilityStatus", visibilityStatus);
     }
 }
