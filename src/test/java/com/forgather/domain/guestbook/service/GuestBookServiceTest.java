@@ -112,7 +112,7 @@ class GuestBookServiceTest {
 
         // when, then
         assertThatThrownBy(() -> guestBookService.readCard(null, space.getCode(), guestBookCard.getId()))
-            .isInstanceOf(BaseException.class)
+            .isInstanceOf(NotFoundException.class)
             .hasMessageContaining("존재하지 않는 방명록 카드입니다.");
     }
 
