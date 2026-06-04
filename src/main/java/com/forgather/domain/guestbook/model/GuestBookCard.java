@@ -6,10 +6,12 @@ import static com.forgather.domain.guestbook.model.VisibilityStatus.VISIBLE;
 
 import org.springframework.http.HttpStatus;
 
+import com.forgather.domain.guestbook.exception.GuestbookCardNotReadableException;
 import com.forgather.domain.model.SoftDeleteEntity;
 import com.forgather.domain.space.model.Space;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
+import com.forgather.global.exception.NotFoundException;
 import com.forgather.global.util.TextLengthCounter;
 
 import jakarta.persistence.Column;
@@ -96,19 +98,22 @@ public class GuestBookCard extends SoftDeleteEntity {
         return space.equals(other);
     }
 
-    public void read() {
-        isRead = true;
+    public void read(boolean isSpaceHost) {
+        validateCanReadByVisibilityStatus(isSpaceHost);
+        if (isSpaceHost) {
+            isRead = true;
+        }
+    }
+
+    private void validateCanReadByVisibilityStatus(boolean isSpaceHost) {
+        if (visibilityStatus == HIDDEN_BY_ADMIN ||
+            visibilityStatus == HIDDEN_BY_HOST && !isSpaceHost
+        ) {
+            throw new GuestbookCardNotReadableException();
+        }
     }
 
     public void hideByAdmin() {
         visibilityStatus = HIDDEN_BY_ADMIN;
-    }
-
-    public void validateCanReadByVisibilityStatus(boolean isSpaceHost) {
-        if (visibilityStatus == HIDDEN_BY_ADMIN ||
-            visibilityStatus == HIDDEN_BY_HOST && !isSpaceHost
-        ) {
-            throw new BaseException("숨김 처리된 방명록은 조회할 수 없습니다.");
-        }
     }
 }

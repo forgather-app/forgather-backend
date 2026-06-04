@@ -19,6 +19,7 @@ import com.forgather.domain.guestbook.dto.GuestBookResponse;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardPhotoRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardResponse;
+import com.forgather.domain.guestbook.exception.GuestbookCardNotReadableException;
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookCardPhoto;
 import com.forgather.domain.guestbook.model.GuestBookCardPhotos;
@@ -31,6 +32,7 @@ import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.domain.ContentsStorage;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.repository.SpaceHostRepository;
+import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.ForbiddenException;
 import com.forgather.global.exception.NotFoundException;
@@ -106,13 +108,15 @@ public class GuestBookService {
         validateCanRead(space, isSpaceHost);
 
         GuestBookCard guestBookCard = getGuestBookCard(guestBookCardId, space);
-        guestBookCard.validateCanReadByVisibilityStatus(isSpaceHost);
-
-        if (isSpaceHost) {
-            guestBookCard.read();
+        try {
+            guestBookCard.read(isSpaceHost);
+        } catch (GuestbookCardNotReadableException e) {
+            throw new NotFoundException("존재하지 않는 방명록 카드입니다. guestBookCardId: %d".formatted(guestBookCardId));
         }
 
-        List<GuestBookCardPhoto> photos = guestBookCardPhotoRepository.findAllByGuestBookCardAndDeletedAtIsNull(guestBookCard);
+        List<GuestBookCardPhoto> photos = guestBookCardPhotoRepository.findAllByGuestBookCardAndDeletedAtIsNull(
+            guestBookCard
+        );
         return new GuestBookCardResponse(guestBookCard, photos);
     }
 
@@ -144,7 +148,8 @@ public class GuestBookService {
     }
 
     private void deleteGuestBookCardPhotos(GuestBookCard guestBookCard) {
-        List<GuestBookCardPhoto> photos = guestBookCardPhotoRepository.findAllByGuestBookCardAndDeletedAtIsNull(guestBookCard);
+        List<GuestBookCardPhoto> photos = guestBookCardPhotoRepository.findAllByGuestBookCardAndDeletedAtIsNull(
+            guestBookCard);
         deleteGuestBookCardPhotos(photos);
     }
 
@@ -164,7 +169,8 @@ public class GuestBookService {
 
     private GuestBookCardPhotos getGuestBookCardPhotos(Space space, Long guestBookCardId) {
         GuestBookCard guestBookCard = getGuestBookCard(guestBookCardId, space);
-        return new GuestBookCardPhotos(guestBookCardPhotoRepository.findAllByGuestBookCardAndDeletedAtIsNull(guestBookCard));
+        return new GuestBookCardPhotos(
+            guestBookCardPhotoRepository.findAllByGuestBookCardAndDeletedAtIsNull(guestBookCard));
     }
 
     private GuestBookCard getGuestBookCard(Long guestBookCardId, Space space) {
@@ -172,10 +178,7 @@ public class GuestBookService {
         if (guestBookCard.equalsSpace(space)) {
             return guestBookCard;
         }
-        throw new NotFoundException(
-            "해당 스페이스에 존재하지 않는 방명록 카드입니다. spaceCode: %s, guestBookCardId: %d"
-                .formatted(space.getCode(), guestBookCardId)
-        );
+        throw new NotFoundException("존재하지 않는 방명록 카드입니다. guestBookCardId: %d".formatted(guestBookCardId));
     }
 
     private void validateSpaceHost(Host host, Space space) {
