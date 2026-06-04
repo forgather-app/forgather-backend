@@ -31,6 +31,7 @@ import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHost;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.BaseException;
+import com.forgather.global.exception.NotFoundException;
 
 @Import({GuestBookService.class, FakeContentStorage.class})
 @DataJpaTest
@@ -112,7 +113,7 @@ class GuestBookServiceTest {
         // when, then
         assertThatThrownBy(() -> guestBookService.readCard(null, space.getCode(), guestBookCard.getId()))
             .isInstanceOf(BaseException.class)
-            .hasMessageContaining("숨김 처리된 방명록은 조회할 수 없습니다.");
+            .hasMessageContaining("존재하지 않는 방명록 카드입니다.");
     }
 
     @DisplayName("관리자가 숨김 처리한 방명록 카드는 스페이스 호스트도 조회할 수 없다")
@@ -124,7 +125,7 @@ class GuestBookServiceTest {
 
         // when, then
         assertThatThrownBy(() -> guestBookService.readCard(host, space.getCode(), guestBookCard.getId()))
-            .isInstanceOf(BaseException.class)
-            .hasMessageContaining("숨김 처리된 방명록은 조회할 수 없습니다.");
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageContaining("존재하지 않는 방명록 카드입니다.");
     }
 }

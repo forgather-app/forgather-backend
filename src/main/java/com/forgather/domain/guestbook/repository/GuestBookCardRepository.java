@@ -71,6 +71,6 @@ public interface GuestBookCardRepository {
             throw new BaseNullPointerException("방명록 카드의 id는 null일 수 없습니다.");
         }
         return findByIdAndDeletedAtIsNull(id)
-            .orElseThrow(() -> new NotFoundException("존재하지 않는 방명록 카드입니다. id: " + id));
+            .orElseThrow(() -> new NotFoundException("존재하지 않는 방명록 카드입니다. guestBookCardId: %d: " + id));
     }
 }

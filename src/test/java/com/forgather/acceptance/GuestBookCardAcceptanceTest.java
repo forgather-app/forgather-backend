@@ -464,9 +464,9 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .when()
                 .get("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), guestBookCard.getId()))
                 .then()
-                .statusCode(400)
-                .body("code", equalTo("BAD_REQUEST"))
-                .body("message", containsString("숨김 처리된 방명록은 조회할 수 없습니다."));
+                .statusCode(404)
+                .body("code", equalTo("NOT_FOUND"))
+                .body("message", containsString("존재하지 않는 방명록 카드입니다."));
         }
 
         @DisplayName("관리자가 숨김 처리한 방명록 카드는 스페이스 호스트도 조회할 수 없다")
@@ -483,9 +483,9 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .when()
                 .get("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), guestBookCard.getId()))
                 .then()
-                .statusCode(400)
-                .body("code", equalTo("BAD_REQUEST"))
-                .body("message", containsString("숨김 처리된 방명록은 조회할 수 없습니다."));
+                .statusCode(404)
+                .body("code", equalTo("NOT_FOUND"))
+                .body("message", containsString("존재하지 않는 방명록 카드입니다."));
         }
 
         @DisplayName("호스트가 방명록 카드를 조회하면 읽음 처리된다")
@@ -688,7 +688,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .then()
                 .statusCode(404)
                 .body("code", equalTo("NOT_FOUND"))
-                .body("message", containsString("해당 스페이스에 존재하지 않는 방명록 카드입니다."));
+                .body("message", containsString("존재하지 않는 방명록 카드입니다."));
         }
     }
 
