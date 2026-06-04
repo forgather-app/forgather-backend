@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.forgather.domain.guestbook.model.GuestBookCard;
+import com.forgather.domain.guestbook.model.VisibilityStatus;
 import com.forgather.domain.guestbook.repository.dto.GuestBookCardListDto;
 import com.forgather.domain.guestbook.repository.dto.SpaceGuestBookCountDto;
 import com.forgather.domain.space.model.Space;
@@ -23,16 +24,23 @@ public interface GuestBookCardRepository {
 
     Long countBySpaceAndDeletedAtIsNull(Space space);
 
+    Long countBySpaceAndVisibilityStatusAndDeletedAtIsNull(Space space, VisibilityStatus visibilityStatus);
+
     @Query("""
         SELECT new com.forgather.domain.guestbook.repository.dto.SpaceGuestBookCountDto(
             g.space.id,
             COUNT(g.id)
         )
         FROM GuestBookCard g
-        WHERE g.space.id IN :spaceIds AND g.deletedAt IS NULL
+        WHERE g.space.id IN :spaceIds
+            AND g.visibilityStatus = :visibilityStatus
+            AND g.deletedAt IS NULL
         GROUP BY g.space.id
         """)
-    List<SpaceGuestBookCountDto> countBySpaceIdAndDeletedAtIsNullIn(@Param("spaceIds") List<Long> spaceIds);
+    List<SpaceGuestBookCountDto> countBySpaceIdInAndVisibilityStatusAndDeletedAtIsNull(
+        @Param("spaceIds") List<Long> spaceIds,
+        @Param("visibilityStatus") VisibilityStatus visibilityStatus
+    );
 
     @Query("""
             SELECT new com.forgather.domain.guestbook.repository.dto.GuestBookCardListDto(
@@ -44,9 +52,15 @@ public interface GuestBookCardRepository {
                 ) > 0 THEN true ELSE false END
             )
             FROM GuestBookCard g
-            WHERE g.space = :space AND g.deletedAt IS NULL
+            WHERE g.space = :space
+                AND g.visibilityStatus = :visibilityStatus
+                AND g.deletedAt IS NULL
         """)
-    Page<GuestBookCardListDto> findAllDtoBySpaceAndDeletedAtIsNull(@Param("space") Space space, Pageable pageable);
+    Page<GuestBookCardListDto> findAllDtoBySpaceAndVisibilityStatusAndDeletedAtIsNull(
+        @Param("space") Space space,
+        @Param("visibilityStatus") VisibilityStatus visibilityStatus,
+        Pageable pageable
+    );
 
     List<GuestBookCard> findAllBySpaceAndDeletedAtIsNull(Space space);
 
@@ -57,6 +71,6 @@ public interface GuestBookCardRepository {
             throw new BaseNullPointerException("방명록 카드의 id는 null일 수 없습니다.");
         }
         return findByIdAndDeletedAtIsNull(id)
-            .orElseThrow(() -> new NotFoundException("존재하지 않는 방명록 카드입니다. id: " + id));
+            .orElseThrow(() -> new NotFoundException("존재하지 않는 방명록 카드입니다. guestBookCardId: %d".formatted(id)));
     }
 }

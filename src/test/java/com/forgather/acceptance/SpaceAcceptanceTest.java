@@ -206,6 +206,9 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         spaceHostRepository.save(new SpaceHost(space, host));
         guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "nickname1", "카드1"));
         guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "nickname2", "카드2"));
+        GuestBookCard hiddenCard = GuestBookCardFixture.createGuestBookCard(space, "nickname3", "카드3");
+        hiddenCard.hideByAdmin();
+        guestBookCardRepository.save(hiddenCard);
 
         // when
         ApiResponse<SpaceResponse> result = RestAssuredMockMvc.given()
@@ -469,6 +472,9 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         spaceHostRepository.save(new SpaceHost(space1, host));
         spaceHostRepository.save(new SpaceHost(space2, host));
         guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space1, "nickname", "방명록1"));
+        GuestBookCard hiddenCard = GuestBookCardFixture.createGuestBookCard(space1, "hidden", "숨김 방명록");
+        hiddenCard.hideByAdmin();
+        guestBookCardRepository.save(hiddenCard);
 
         // when
         ApiResponse<HostSpaceResponse> result = RestAssuredMockMvc.given()

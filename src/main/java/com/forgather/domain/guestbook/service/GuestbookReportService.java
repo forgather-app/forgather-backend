@@ -74,10 +74,7 @@ public class GuestbookReportService {
     private GuestBookCard getCardBySpace(Long guestBookCardId, Space space) {
         GuestBookCard card = guestBookCardRepository.getByIdAndDeletedAtIsNullOrThrow(guestBookCardId);
         if (!card.equalsSpace(space)) {
-            throw new NotFoundException(
-                "해당 스페이스에 존재하지 않는 방명록 카드입니다. spaceCode: %s, guestBookCardId: %d"
-                    .formatted(space.getCode(), guestBookCardId)
-            );
+            throw new NotFoundException("존재하지 않는 방명록 카드입니다. guestBookCardId: %d".formatted(guestBookCardId));
         }
         return card;
     }
