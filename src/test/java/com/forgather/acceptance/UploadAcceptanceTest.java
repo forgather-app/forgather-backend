@@ -5,6 +5,7 @@ import static com.forgather.fixture.HostFixture.createHost;
 import static com.forgather.fixture.SpaceFixture.createSpace;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.when;
 
@@ -27,6 +28,7 @@ import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.AwsS3Cloud;
 import com.forgather.domain.upload.dto.IssuePreSignedUrlRequest;
+import com.forgather.domain.upload.dto.IssuePreSignedUrlRequest.UploadFileRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlResponse;
 import com.forgather.global.auth.model.Host;
@@ -112,9 +114,12 @@ class UploadAcceptanceTest extends AcceptanceTest {
     @Test
     void issueExhibitionSignedUrls() {
         // given
-        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of("abc.jpg", "def.jpg"));
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
+            new UploadFileRequest("abc.jpg", 1024L),
+            new UploadFileRequest("def.jpg", 2048L)
+        ));
         when(awsS3Cloud.getRootDirectory()).thenReturn("photogather/v2");
-        when(awsS3Cloud.issueSignedUrl(anyString())).thenAnswer(invocation -> {
+        when(awsS3Cloud.issueSignedUrl(anyString(), anyString(), anyLong())).thenAnswer(invocation -> {
             String path = invocation.getArgument(0);
             return "test-prefix-" + path + "-test-suffix";
         });
@@ -151,7 +156,9 @@ class UploadAcceptanceTest extends AcceptanceTest {
     @Test
     void issueExhibitionSignedUrlsRequiresAuth() {
         // given
-        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of("abc.jpg"));
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
+            new UploadFileRequest("abc.jpg", 1024L)
+        ));
 
         // when, then
         RestAssuredMockMvc.given()
@@ -219,7 +226,37 @@ class UploadAcceptanceTest extends AcceptanceTest {
     @ValueSource(strings = {"../../../etc/passwd", "a/b.png", "a\\b.png", "noext", "x.gif"})
     void issueExhibitionSignedUrlsWithInvalidFileName(String invalidFileName) {
         // given
-        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(invalidFileName));
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
+            new UploadFileRequest(invalidFileName, 1024L)
+        ));
+
+        // when
+        ApiResponse<Void> result = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/exhibitions/upload/signed-urls")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+
+        // then
+        assertThat(result.code()).isEqualTo(ResponseCode.VALIDATION_FAILED);
+    }
+
+    @DisplayName("전시 사진 업로드 url 발급 시 파일 크기가 20MB를 초과하면 400을 반환한다")
+    @Test
+    void issueExhibitionSignedUrlsWithOversizeFile() {
+        // given
+        long oversize = 20L * 1024 * 1024 + 1;
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
+            new UploadFileRequest("abc.jpg", oversize)
+        ));
 
         // when
         ApiResponse<Void> result = RestAssuredMockMvc.given()

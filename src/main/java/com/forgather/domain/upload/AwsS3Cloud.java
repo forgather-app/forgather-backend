@@ -146,7 +146,27 @@ public class AwsS3Cloud implements ContentsStorage {
             .key(path)
             .tagging(s3Properties.getTagging())
             .build();
+        return presign(objectRequest);
+    }
 
+    /**
+     * Content-Type과 Content-Length를 서명에 포함해 고정한다.
+     * 클라이언트는 PUT 시 동일한 Content-Type 헤더와 정확히 contentLength 바이트를 보내야만 업로드가 통과하므로,
+     * 임의 MIME 타입 업로드와 대용량 업로드를 모두 차단한다.
+     */
+    @Override
+    public String issueSignedUrl(String path, String contentType, long contentLength) {
+        PutObjectRequest objectRequest = PutObjectRequest.builder()
+            .bucket(s3Properties.getBucketName())
+            .key(path)
+            .tagging(s3Properties.getTagging())
+            .contentType(contentType)
+            .contentLength(contentLength)
+            .build();
+        return presign(objectRequest);
+    }
+
+    private String presign(PutObjectRequest objectRequest) {
         PutObjectPresignRequest preSignRequest = PutObjectPresignRequest.builder()
             .signatureDuration(Duration.ofMinutes(10L)) // 10MBps 에서 5MB 4초 -> 최대 100장 제한, 넉넉히 600초
             .putObjectRequest(objectRequest)

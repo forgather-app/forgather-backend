@@ -1,12 +1,12 @@
 package com.forgather.domain.upload.domain;
 
-import static com.forgather.domain.upload.domain.UploadCategory.EXHIBITION;
 import static com.forgather.domain.upload.domain.UploadCategory.PRODUCT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
@@ -19,48 +19,22 @@ import com.forgather.global.exception.BaseException;
 
 class SignedUrlIssuerTest {
 
-    @DisplayName("한 번에 발급 가능한 url 개수를 초과하면 예외를 던진다")
-    @Test
-    void throwExceptionWhenExceedMaxCount() {
-        // given
-        SignedUrlIssuer signedUrlIssuer = new SignedUrlIssuer(new FakeContentStorage());
-        List<String> fileNames = IntStream.range(0, 101)
-            .mapToObj(number -> number + ".jpg")
-            .toList();
+    private final SignedUrlIssuer signedUrlIssuer = new SignedUrlIssuer(new FakeContentStorage());
 
-        // when, then
-        assertThatThrownBy(() -> signedUrlIssuer.issueSignedUrls(fileNames, "1234567890", PRODUCT))
-            .isInstanceOf(BaseException.class)
-            .hasMessageContaining("한번에 발급 가능한 업로드 url 개수");
+    private List<UploadFile> uploadFiles(String... fileNames) {
+        return Arrays.stream(fileNames)
+            .map(fileName -> new UploadFile(fileName, 1024L))
+            .toList();
     }
 
-    @DisplayName("한 번에 발급 가능한 url 개수를 초과하지 않으면 예외를 던지지 않는다")
+    @DisplayName("스페이스 사진의 서명된 url을 발급한다")
     @Test
-    void notThrowExceptionWhenNotExceedMaxCount() {
+    void issueForSpace() {
         // given
-        SignedUrlIssuer signedUrlIssuer = new SignedUrlIssuer(new FakeContentStorage());
-        List<String> fileNames = IntStream.range(0, 100)
-            .mapToObj(number -> number + ".jpg")
-            .toList();
+        List<UploadFile> files = uploadFiles("abc.jpg", "def.jpg", "hij.png");
 
         // when
-        assertThatCode(() -> signedUrlIssuer.issueSignedUrls(fileNames, "1234567890", PRODUCT))
-            .doesNotThrowAnyException();
-    }
-
-    @DisplayName("서명된 url을 발급한다")
-    @Test
-    void issueSignedUrls() {
-        // given
-        SignedUrlIssuer signedUrlIssuer = new SignedUrlIssuer(new FakeContentStorage());
-        List<String> fileNames = List.of("abc.jpg", "def.jpg", "hij.png");
-
-        // when
-        Map<String, String> result = signedUrlIssuer.issueSignedUrls(
-            fileNames,
-            "1234567890",
-            PRODUCT
-        );
+        Map<String, String> result = signedUrlIssuer.issueForSpace(files, "1234567890", PRODUCT);
 
         // then
         assertAll(
@@ -73,16 +47,51 @@ class SignedUrlIssuerTest {
         );
     }
 
+    @DisplayName("한 번에 발급 가능한 url 개수를 초과하면 예외를 던진다")
+    @Test
+    void throwExceptionWhenExceedMaxCount() {
+        // given
+        List<UploadFile> files = IntStream.range(0, 101)
+            .mapToObj(number -> new UploadFile(number + ".jpg", 1024L))
+            .toList();
+
+        // when, then
+        assertThatThrownBy(() -> signedUrlIssuer.issueForSpace(files, "1234567890", PRODUCT))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("한번에 발급 가능한 업로드 url 개수");
+    }
+
+    @DisplayName("한 번에 발급 가능한 url 개수를 초과하지 않으면 예외를 던지지 않는다")
+    @Test
+    void notThrowExceptionWhenNotExceedMaxCount() {
+        // given
+        List<UploadFile> files = IntStream.range(0, 100)
+            .mapToObj(number -> new UploadFile(number + ".jpg", 1024L))
+            .toList();
+
+        // when, then
+        assertThatCode(() -> signedUrlIssuer.issueForSpace(files, "1234567890", PRODUCT))
+            .doesNotThrowAnyException();
+    }
+
+    @DisplayName("스페이스 사진 발급 시 파일 목록이 비어있으면 예외를 던진다")
+    @Test
+    void throwExceptionWhenSpaceFilesEmpty() {
+        // when, then
+        assertThatThrownBy(() -> signedUrlIssuer.issueForSpace(List.of(), "1234567890", PRODUCT))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("업로드 파일명 목록은 null이거나 비어있을 수 없습니다");
+    }
+
     @DisplayName("전시 사진의 서명된 url을 발급한다")
     @Test
-    void issueExhibitionSignedUrls() {
+    void issueForExhibition() {
         // given
-        SignedUrlIssuer signedUrlIssuer = new SignedUrlIssuer(new FakeContentStorage());
-        List<String> fileNames = List.of("abc.jpg", "def.jpg");
+        List<UploadFile> files = uploadFiles("abc.jpg", "def.jpg");
         long hostId = 1L;
 
         // when
-        Map<String, String> result = signedUrlIssuer.issueSignedUrls(fileNames, EXHIBITION, hostId);
+        Map<String, String> result = signedUrlIssuer.issueForExhibition(files, hostId);
 
         // then
         assertAll(
@@ -97,25 +106,21 @@ class SignedUrlIssuerTest {
     @Test
     void throwExceptionWhenExhibitionExceedMaxCount() {
         // given
-        SignedUrlIssuer signedUrlIssuer = new SignedUrlIssuer(new FakeContentStorage());
-        List<String> fileNames = IntStream.range(0, 101)
-            .mapToObj(number -> number + ".jpg")
+        List<UploadFile> files = IntStream.range(0, 101)
+            .mapToObj(number -> new UploadFile(number + ".jpg", 1024L))
             .toList();
 
         // when, then
-        assertThatThrownBy(() -> signedUrlIssuer.issueSignedUrls(fileNames, EXHIBITION, 1L))
+        assertThatThrownBy(() -> signedUrlIssuer.issueForExhibition(files, 1L))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("한번에 발급 가능한 업로드 url 개수");
     }
 
-    @DisplayName("전시 사진 서명 url 발급 시 파일명 목록이 비어있으면 예외를 던진다")
+    @DisplayName("전시 사진 서명 url 발급 시 파일 목록이 비어있으면 예외를 던진다")
     @Test
-    void throwExceptionWhenExhibitionFileNamesEmpty() {
-        // given
-        SignedUrlIssuer signedUrlIssuer = new SignedUrlIssuer(new FakeContentStorage());
-
+    void throwExceptionWhenExhibitionFilesEmpty() {
         // when, then
-        assertThatThrownBy(() -> signedUrlIssuer.issueSignedUrls(List.of(), EXHIBITION, 1L))
+        assertThatThrownBy(() -> signedUrlIssuer.issueForExhibition(List.of(), 1L))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("업로드 파일명 목록은 null이거나 비어있을 수 없습니다");
     }

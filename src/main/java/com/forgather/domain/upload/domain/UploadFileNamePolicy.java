@@ -8,7 +8,6 @@ import com.forgather.global.exception.BaseException;
 public class UploadFileNamePolicy {
 
     public static final String FILENAME_PATTERN = "^[^/\\\\]+\\.(jpg|jpeg|png|webp)$";
-
     private static final Pattern PATTERN = Pattern.compile(FILENAME_PATTERN);
 
     private UploadFileNamePolicy() {

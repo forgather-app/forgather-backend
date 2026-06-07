@@ -13,7 +13,10 @@ public interface ContentsStorage {
 
     void deleteContents(List<String> contentPaths);
 
+    // 추후 제거
     String issueSignedUrl(String path);
+
+    String issueSignedUrl(String path, String contentType, long contentLength);
 
     String getRootDirectory();
 

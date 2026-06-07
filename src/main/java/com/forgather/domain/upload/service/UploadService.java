@@ -1,6 +1,7 @@
 package com.forgather.domain.upload.service;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
@@ -11,7 +12,7 @@ import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.domain.ContentsStorage;
 import com.forgather.domain.upload.domain.SignedUrlIssuer;
 import com.forgather.domain.upload.domain.UploadCategory;
-import com.forgather.domain.upload.domain.UploadFileNamePolicy;
+import com.forgather.domain.upload.domain.UploadFile;
 import com.forgather.domain.upload.dto.IssuePreSignedUrlRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlResponse;
@@ -36,18 +37,18 @@ public class UploadService {
     public String upload(String spaceCode, MultipartFile file) {
         try {
             long startMillis = System.currentTimeMillis();
-            log.info("파일 업로드 시작 spaceCode: {}, originalName: {}, size: {}",
+            log.info("파일 업로드 시작 spaceCode: {}, originalName: {}, getSize: {}",
                 spaceCode, file.getOriginalFilename(), file.getSize());
 
             String path = contentsStorage.upload(spaceCode, file);
 
             long durationMillis = System.currentTimeMillis() - startMillis;
-            log.info("파일 업로드 완료 spaceCode: {}, originalName: {}, size: {}, path: {}, duration: {}",
+            log.info("파일 업로드 완료 spaceCode: {}, originalName: {}, getSize: {}, path: {}, duration: {}",
                 spaceCode, file.getOriginalFilename(), file.getSize(), path, durationMillis + "ms");
 
             return path;
         } catch (IOException e) {
-            throw new FileUploadException("파일 업로드 실패 spaceCode: %s, originalName: %s, size: %d".formatted(
+            throw new FileUploadException("파일 업로드 실패 spaceCode: %s, originalName: %s, getSize: %d".formatted(
                 spaceCode, file.getOriginalFilename(), file.getSize()
             ), e);
         }
@@ -65,11 +66,11 @@ public class UploadService {
     }
 
     public IssueSignedUrlResponse issueGuestbookSignedUrls(String spaceCode, IssuePreSignedUrlRequest request) {
-        UploadFileNamePolicy.validateAll(request.uploadFileNames());
+        List<UploadFile> uploadFiles = request.toUploadFiles();
         spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
 
-        Map<String, String> signedUrls = signedUrlIssuer.issueSignedUrls(
-            request.uploadFileNames(),
+        Map<String, String> signedUrls = signedUrlIssuer.issueForSpace(
+            uploadFiles,
             spaceCode,
             UploadCategory.GUESTBOOK
         );
@@ -81,12 +82,11 @@ public class UploadService {
         Host host,
         IssuePreSignedUrlRequest request
     ) {
-        UploadFileNamePolicy.validateAll(request.uploadFileNames());
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(space, host);
 
-        Map<String, String> signedUrls = signedUrlIssuer.issueSignedUrls(
-            request.uploadFileNames(),
+        Map<String, String> signedUrls = signedUrlIssuer.issueForSpace(
+            request.toUploadFiles(),
             spaceCode,
             UploadCategory.PRODUCT
         );
@@ -101,10 +101,8 @@ public class UploadService {
     }
 
     public IssueSignedUrlResponse issueExhibitionSignedUrls(Host host, IssuePreSignedUrlRequest request) {
-        UploadFileNamePolicy.validateAll(request.uploadFileNames());
-        Map<String, String> signedUrls = signedUrlIssuer.issueSignedUrls(
-            request.uploadFileNames(),
-            UploadCategory.EXHIBITION,
+        Map<String, String> signedUrls = signedUrlIssuer.issueForExhibition(
+            request.toUploadFiles(),
             host.getId()
         );
         return new IssueSignedUrlResponse(signedUrls);

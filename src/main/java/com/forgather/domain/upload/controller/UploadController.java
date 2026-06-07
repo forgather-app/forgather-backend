@@ -27,6 +27,24 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "Upload: 파일 업로드", description = "파일 업로드 관련 API")
 public class UploadController {
 
+    private static final String PRESIGN_USAGE_NOTE = """
+        
+        
+        ── 발급된 presigned URL 사용 시 주의사항 ──
+        업로드 파일은 이미지만 허용됩니다. (확장자: jpg, jpeg, png, webp)
+        
+        1. Content-Type 고정
+           각 URL에는 파일 확장자로부터 결정된 Content-Type이 서명에 포함됩니다.
+           PUT 요청 시 동일한 Content-Type 헤더를 보내야 합니다.
+           (jpg·jpeg → image/jpeg, png → image/png, webp → image/webp)
+        
+        2. Content-Length 고정
+           각 URL에는 요청 시 보낸 size(바이트)가 서명에 포함됩니다.
+           PUT 요청 본문은 정확히 그 바이트 수여야 합니다. (파일당 최대 20MB)
+        
+        3. Content-Type 또는 크기가 일치하지 않으면 S3가 403(SignatureDoesNotMatch)을 반환합니다.
+        """;
+
     private final UploadService uploadService;
 
     /**
@@ -51,7 +69,7 @@ public class UploadController {
 
     @PostMapping(path = "/spaces/{spaceCode}/guestbooks/upload/signed-urls")
     @Operation(summary = "스페이스 방명록 사진 업로드 URL 발급",
-        description = "스페이스 방명록 사진 업로드용 presigned URL을 발급받습니다.")
+        description = "스페이스 방명록 사진 업로드용 presigned URL을 발급받습니다." + PRESIGN_USAGE_NOTE)
     public ResponseEntity<ApiResponse<IssueSignedUrlResponse>> issueGuestbookPreSignedUrls(
         @PathVariable(name = "spaceCode") String spaceCode,
         @Valid @RequestBody IssuePreSignedUrlRequest request
@@ -63,7 +81,7 @@ public class UploadController {
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping(path = "/spaces/{spaceCode}/products/upload/signed-urls")
     @Operation(summary = "스페이스 작품 사진 업로드 URL 발급",
-        description = "로그인한 호스트가 자신의 스페이스 작품 사진 업로드용 presigned URL을 발급받습니다.")
+        description = "로그인한 호스트가 자신의 스페이스 작품 사진 업로드용 presigned URL을 발급받습니다." + PRESIGN_USAGE_NOTE)
     public ResponseEntity<ApiResponse<IssueSignedUrlResponse>> issueProductSignedUrls(
         @LoginHost(required = true) Host host,
         @PathVariable(name = "spaceCode") String spaceCode,
@@ -76,7 +94,7 @@ public class UploadController {
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping(path = "/exhibitions/upload/signed-urls")
     @Operation(summary = "전시 사진 업로드 URL 발급",
-        description = "로그인한 호스트가 전시 사진 업로드용 presigned URL을 발급받습니다.")
+        description = "로그인한 호스트가 전시 사진 업로드용 presigned URL을 발급받습니다." + PRESIGN_USAGE_NOTE)
     public ResponseEntity<ApiResponse<IssueSignedUrlResponse>> issueExhibitionSignedUrls(
         @LoginHost(required = true) Host host,
         @Valid @RequestBody IssuePreSignedUrlRequest request
