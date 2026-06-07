@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.forgather.domain.space.model.Space;
@@ -55,6 +56,7 @@ public class UploadService {
     }
 
     // TODO: 추후 제거
+    @Transactional(readOnly = true)
     public IssueSignedUrlResponse issueSignedUrls(String spaceCode, IssueSignedUrlRequest request) {
         spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         Map<String, String> signedUrls = signedUrlIssuer.issueSignedUrls(
@@ -65,6 +67,7 @@ public class UploadService {
         return new IssueSignedUrlResponse(signedUrls);
     }
 
+    @Transactional(readOnly = true)
     public IssueSignedUrlResponse issueGuestbookSignedUrls(String spaceCode, IssuePreSignedUrlRequest request) {
         List<UploadFile> uploadFiles = request.toUploadFiles();
         spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
@@ -77,6 +80,7 @@ public class UploadService {
         return new IssueSignedUrlResponse(signedUrls);
     }
 
+    @Transactional(readOnly = true)
     public IssueSignedUrlResponse issueProductSignedUrls(
         String spaceCode,
         Host host,
