@@ -31,12 +31,12 @@ public class UploadController {
         
         
         ── 발급된 presigned URL 사용 시 주의사항 ──
-        업로드 파일은 이미지만 허용됩니다. (확장자: jpg, jpeg, png, webp)
+        업로드 파일은 이미지만 허용됩니다. (확장자: webp)
         
         1. Content-Type 고정
            각 URL에는 파일 확장자로부터 결정된 Content-Type이 서명에 포함됩니다.
            PUT 요청 시 동일한 Content-Type 헤더를 보내야 합니다.
-           (jpg·jpeg → image/jpeg, png → image/png, webp → image/webp)
+           (webp → image/webp)
         
         2. Content-Length 고정
            각 URL에는 요청 시 보낸 size(바이트)가 서명에 포함됩니다.

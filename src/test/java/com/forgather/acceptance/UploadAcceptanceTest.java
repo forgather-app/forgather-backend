@@ -11,11 +11,14 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -42,6 +45,8 @@ import io.restassured.module.mockmvc.RestAssuredMockMvc;
 
 @AutoConfigureMockMvc
 class UploadAcceptanceTest extends AcceptanceTest {
+
+    private static final String EXHIBITION_SIGNED_URLS_PATH = "/exhibitions/upload/signed-urls";
 
     @Autowired
     private MockMvc mockMvc;
@@ -115,8 +120,8 @@ class UploadAcceptanceTest extends AcceptanceTest {
     void issueExhibitionSignedUrls() {
         // given
         IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
-            new UploadFileRequest("abc.jpg", 1024L),
-            new UploadFileRequest("def.jpg", 2048L)
+            new UploadFileRequest("abc.webp", 1024L),
+            new UploadFileRequest("def.webp", 2048L)
         ));
         when(awsS3Cloud.getRootDirectory()).thenReturn("photogather/v2");
         when(awsS3Cloud.issueSignedUrl(anyString(), anyString(), anyLong())).thenAnswer(invocation -> {
@@ -131,7 +136,7 @@ class UploadAcceptanceTest extends AcceptanceTest {
             .accept(ContentType.JSON)
             .body(request)
             .when()
-            .post("/exhibitions/upload/signed-urls")
+            .post(EXHIBITION_SIGNED_URLS_PATH)
             .then()
             .statusCode(200)
             .extract()
@@ -145,10 +150,10 @@ class UploadAcceptanceTest extends AcceptanceTest {
         assertAll(
             () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
             () -> assertThat(result.message()).isNull(),
-            () -> assertThat(signedUrls.get("abc.jpg"))
-                .isEqualTo(expectedPrefix + "abc.jpg-test-suffix"),
-            () -> assertThat(signedUrls.get("def.jpg"))
-                .isEqualTo(expectedPrefix + "def.jpg-test-suffix")
+            () -> assertThat(signedUrls.get("abc.webp"))
+                .isEqualTo(expectedPrefix + "abc.webp-test-suffix"),
+            () -> assertThat(signedUrls.get("def.webp"))
+                .isEqualTo(expectedPrefix + "def.webp-test-suffix")
         );
     }
 
@@ -157,7 +162,7 @@ class UploadAcceptanceTest extends AcceptanceTest {
     void issueExhibitionSignedUrlsRequiresAuth() {
         // given
         IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
-            new UploadFileRequest("abc.jpg", 1024L)
+            new UploadFileRequest("abc.webp", 1024L)
         ));
 
         // when, then
@@ -166,64 +171,25 @@ class UploadAcceptanceTest extends AcceptanceTest {
             .accept(ContentType.JSON)
             .body(request)
             .when()
-            .post("/exhibitions/upload/signed-urls")
+            .post(EXHIBITION_SIGNED_URLS_PATH)
             .then()
             .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 
-    @DisplayName("전시 사진 서명된 url 발급 시 업로드 파일 이름 목록이 비어있으면 400을 반환한다")
-    @Test
-    void issueExhibitionSignedUrlsWithEmptyFileNames() {
-        // given
-        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of());
-
-        // when
-        ApiResponse<Void> result = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
-            .body(request)
-            .when()
-            .post("/exhibitions/upload/signed-urls")
-            .then()
-            .statusCode(HttpStatus.BAD_REQUEST.value())
-            .extract()
-            .body()
-            .as(new TypeRef<>() {
-            });
-
-        // then
-        assertThat(result.code()).isEqualTo(ResponseCode.VALIDATION_FAILED);
-    }
-
-    @DisplayName("전시 사진 서명된 url 발급 시 업로드 파일 이름 목록이 null이면 400을 반환한다")
-    @Test
-    void issueExhibitionSignedUrlsWithNullFileNames() {
-        // given
-        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(null);
-
-        // when
-        ApiResponse<Void> result = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
-            .body(request)
-            .when()
-            .post("/exhibitions/upload/signed-urls")
-            .then()
-            .statusCode(HttpStatus.BAD_REQUEST.value())
-            .extract()
-            .body()
-            .as(new TypeRef<>() {
-            });
-
-        // then
-        assertThat(result.code()).isEqualTo(ResponseCode.VALIDATION_FAILED);
-    }
-
-    @DisplayName("전시 사진 업로드 url 발급 시 파일명 형식이 올바르지 않으면 400을 반환한다")
+    @DisplayName("전시 사진 서명된 url 발급 시 업로드 파일 목록이 비어있거나 null이면 400(VALIDATION_FAILED)을 반환한다")
     @ParameterizedTest
-    @ValueSource(strings = {"../../../etc/passwd", "a/b.png", "a\\b.png", "noext", "x.gif"})
+    @MethodSource("emptyOrNullFileRequests")
+    void issueExhibitionSignedUrlsWithEmptyOrNullFileNames(IssuePreSignedUrlRequest request) {
+        // when
+        ApiResponse<Void> result = postExhibitionSignedUrlsExpectingBadRequest(request);
+
+        // then
+        assertThat(result.code()).isEqualTo(ResponseCode.VALIDATION_FAILED);
+    }
+
+    @DisplayName("전시 사진 업로드 url 발급 시 파일명 형식이 올바르지 않으면 400(VALIDATION_FAILED)을 반환한다")
+    @ParameterizedTest
+    @ValueSource(strings = {"../../../etc/passwd", "a/b.webp", "a\\b.webp", "noext", "abc.WEBP"})
     void issueExhibitionSignedUrlsWithInvalidFileName(String invalidFileName) {
         // given
         IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
@@ -231,22 +197,26 @@ class UploadAcceptanceTest extends AcceptanceTest {
         ));
 
         // when
-        ApiResponse<Void> result = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
-            .body(request)
-            .when()
-            .post("/exhibitions/upload/signed-urls")
-            .then()
-            .statusCode(HttpStatus.BAD_REQUEST.value())
-            .extract()
-            .body()
-            .as(new TypeRef<>() {
-            });
+        ApiResponse<Void> result = postExhibitionSignedUrlsExpectingBadRequest(request);
 
         // then
         assertThat(result.code()).isEqualTo(ResponseCode.VALIDATION_FAILED);
+    }
+
+    @DisplayName("전시 사진 업로드 url 발급 시 형식은 맞지만 지원하지 않는 확장자면 BAD_REQUEST를 반환한다")
+    @ParameterizedTest
+    @ValueSource(strings = {"photo.png", "photo.jpg", "x.gif", "icon.svg", "document.pdf"})
+    void issueExhibitionSignedUrlsWithUnsupportedExtension(String unsupportedFileName) {
+        // given
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
+            new UploadFileRequest(unsupportedFileName, 1024L)
+        ));
+
+        // when
+        ApiResponse<Void> result = postExhibitionSignedUrlsExpectingBadRequest(request);
+
+        // then
+        assertThat(result.code()).isEqualTo(ResponseCode.BAD_REQUEST);
     }
 
     @DisplayName("전시 사진 업로드 url 발급 시 파일 크기가 20MB를 초과하면 400을 반환한다")
@@ -255,25 +225,36 @@ class UploadAcceptanceTest extends AcceptanceTest {
         // given
         long oversize = 20L * 1024 * 1024 + 1;
         IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
-            new UploadFileRequest("abc.jpg", oversize)
+            new UploadFileRequest("abc.webp", oversize)
         ));
 
         // when
-        ApiResponse<Void> result = RestAssuredMockMvc.given()
+        ApiResponse<Void> result = postExhibitionSignedUrlsExpectingBadRequest(request);
+
+        // then
+        assertThat(result.code()).isEqualTo(ResponseCode.VALIDATION_FAILED);
+    }
+
+    private static Stream<Named<IssuePreSignedUrlRequest>> emptyOrNullFileRequests() {
+        return Stream.of(
+            Named.of("빈 목록", new IssuePreSignedUrlRequest(List.of())),
+            Named.of("null", new IssuePreSignedUrlRequest(null))
+        );
+    }
+
+    private ApiResponse<Void> postExhibitionSignedUrlsExpectingBadRequest(IssuePreSignedUrlRequest request) {
+        return RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(request)
             .when()
-            .post("/exhibitions/upload/signed-urls")
+            .post(EXHIBITION_SIGNED_URLS_PATH)
             .then()
             .statusCode(HttpStatus.BAD_REQUEST.value())
             .extract()
             .body()
             .as(new TypeRef<>() {
             });
-
-        // then
-        assertThat(result.code()).isEqualTo(ResponseCode.VALIDATION_FAILED);
     }
 }

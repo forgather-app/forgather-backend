@@ -35,7 +35,7 @@ public record IssuePreSignedUrlRequest(
             regexp = UploadFileNamePolicy.FILENAME_PATTERN,
             message = "올바르지 않은 업로드 파일명 형식입니다."
         )
-        @Schema(description = "업로드 파일 이름 (UUID.확장자)", example = "UUID1.png")
+        @Schema(description = "업로드 파일 이름 (UUID.확장자)", example = "UUID1.webp")
         String fileName,
 
         @NotNull

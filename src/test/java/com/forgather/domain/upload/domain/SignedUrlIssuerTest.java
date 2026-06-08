@@ -31,19 +31,19 @@ class SignedUrlIssuerTest {
     @Test
     void issueForSpace() {
         // given
-        List<UploadFile> files = uploadFiles("abc.jpg", "def.jpg", "hij.png");
+        List<UploadFile> files = uploadFiles("abc.webp", "def.webp", "hij.webp");
 
         // when
         Map<String, String> result = signedUrlIssuer.issueForSpace(files, "1234567890", PRODUCT);
 
         // then
         assertAll(
-            () -> assertThat(result.get("abc.jpg"))
-                .isEqualTo("test-prefix-photogather/v2/spaces/1234567890/product/abc.jpg-test-suffix"),
-            () -> assertThat(result.get("def.jpg"))
-                .isEqualTo("test-prefix-photogather/v2/spaces/1234567890/product/def.jpg-test-suffix"),
-            () -> assertThat(result.get("hij.png"))
-                .isEqualTo("test-prefix-photogather/v2/spaces/1234567890/product/hij.png-test-suffix")
+            () -> assertThat(result.get("abc.webp"))
+                .isEqualTo("test-prefix-photogather/v2/spaces/1234567890/product/abc.webp-test-suffix"),
+            () -> assertThat(result.get("def.webp"))
+                .isEqualTo("test-prefix-photogather/v2/spaces/1234567890/product/def.webp-test-suffix"),
+            () -> assertThat(result.get("hij.webp"))
+                .isEqualTo("test-prefix-photogather/v2/spaces/1234567890/product/hij.webp-test-suffix")
         );
     }
 
@@ -52,7 +52,7 @@ class SignedUrlIssuerTest {
     void throwExceptionWhenExceedMaxCount() {
         // given
         List<UploadFile> files = IntStream.range(0, 101)
-            .mapToObj(number -> new UploadFile(number + ".jpg", 1024L))
+            .mapToObj(number -> new UploadFile(number + ".webp", 1024L))
             .toList();
 
         // when, then
@@ -66,7 +66,7 @@ class SignedUrlIssuerTest {
     void notThrowExceptionWhenNotExceedMaxCount() {
         // given
         List<UploadFile> files = IntStream.range(0, 100)
-            .mapToObj(number -> new UploadFile(number + ".jpg", 1024L))
+            .mapToObj(number -> new UploadFile(number + ".webp", 1024L))
             .toList();
 
         // when, then
@@ -87,7 +87,7 @@ class SignedUrlIssuerTest {
     @Test
     void issueForExhibition() {
         // given
-        List<UploadFile> files = uploadFiles("abc.jpg", "def.jpg");
+        List<UploadFile> files = uploadFiles("abc.webp", "def.webp");
         long hostId = 1L;
 
         // when
@@ -95,10 +95,10 @@ class SignedUrlIssuerTest {
 
         // then
         assertAll(
-            () -> assertThat(result.get("abc.jpg"))
-                .isEqualTo("test-prefix-photogather/v2/exhibitions/host-1/abc.jpg-test-suffix"),
-            () -> assertThat(result.get("def.jpg"))
-                .isEqualTo("test-prefix-photogather/v2/exhibitions/host-1/def.jpg-test-suffix")
+            () -> assertThat(result.get("abc.webp"))
+                .isEqualTo("test-prefix-photogather/v2/exhibitions/host-1/abc.webp-test-suffix"),
+            () -> assertThat(result.get("def.webp"))
+                .isEqualTo("test-prefix-photogather/v2/exhibitions/host-1/def.webp-test-suffix")
         );
     }
 
@@ -107,7 +107,7 @@ class SignedUrlIssuerTest {
     void throwExceptionWhenExhibitionExceedMaxCount() {
         // given
         List<UploadFile> files = IntStream.range(0, 101)
-            .mapToObj(number -> new UploadFile(number + ".jpg", 1024L))
+            .mapToObj(number -> new UploadFile(number + ".webp", 1024L))
             .toList();
 
         // when, then
