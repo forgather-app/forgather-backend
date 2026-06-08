@@ -7,7 +7,7 @@ import com.forgather.global.exception.BaseException;
 
 public class UploadFileNamePolicy {
 
-    public static final String FILENAME_PATTERN = "^[^/\\\\]+\\.(jpg|jpeg|png|webp)$";
+    public static final String FILENAME_PATTERN = "^[^/\\\\]+\\.[a-z0-9]+$";
     private static final Pattern PATTERN = Pattern.compile(FILENAME_PATTERN);
 
     private UploadFileNamePolicy() {
@@ -26,6 +26,9 @@ public class UploadFileNamePolicy {
         }
         if (!PATTERN.matcher(fileName).matches()) {
             throw new BaseException("올바르지 않은 업로드 파일명 형식입니다: " + fileName);
+        }
+        if (!ImageContentType.isSupportedFileName(fileName)) {
+            throw new BaseException("지원하지 않는 이미지 확장자입니다: " + fileName);
         }
     }
 }

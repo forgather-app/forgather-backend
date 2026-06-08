@@ -43,20 +43,28 @@ class UploadFileNamePolicyTest {
             .hasMessageContaining("null이거나 비어있을 수 없습니다");
     }
 
-    @DisplayName("경로 조작·허용되지 않은 형식의 파일명은 예외를 던진다")
+    @DisplayName("경로 조작, 확장자 없음, 대문자 확장자 등 형식에 어긋난 파일명은 예외를 던진다")
     @ParameterizedTest
     @ValueSource(strings = {
         "../../../etc/passwd",
         "a/b.png",
         "a\\b.png",
         "noext",
-        "x.gif",
         "abc.PNG"
     })
     void invalidFileName(String fileName) {
         assertThatThrownBy(() -> UploadFileNamePolicy.validate(fileName))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("올바르지 않은 업로드 파일명 형식");
+    }
+
+    @DisplayName("형식은 올바르지만 지원하지 않는 확장자는 예외를 던진다")
+    @ParameterizedTest
+    @ValueSource(strings = {"x.gif", "photo.bmp", "document.pdf", "clip.mp4", "icon.svg"})
+    void unsupportedExtension(String fileName) {
+        assertThatThrownBy(() -> UploadFileNamePolicy.validate(fileName))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("지원하지 않는 이미지 확장자");
     }
 
     @DisplayName("경로 구분자(/, \\)가 포함된 파일명은 예외를 던진다")
