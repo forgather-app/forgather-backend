@@ -30,6 +30,7 @@ import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.AwsS3Cloud;
+import com.forgather.domain.upload.domain.UploadFile;
 import com.forgather.domain.upload.dto.IssuePreSignedUrlRequest;
 import com.forgather.domain.upload.dto.IssuePreSignedUrlRequest.UploadFileRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlRequest;
@@ -126,7 +127,9 @@ class UploadAcceptanceTest extends AcceptanceTest {
         when(awsS3Cloud.getRootDirectory()).thenReturn("photogather/v2");
         when(awsS3Cloud.issueSignedUrl(anyString(), anyString(), anyLong())).thenAnswer(invocation -> {
             String path = invocation.getArgument(0);
-            return "test-prefix-" + path + "-test-suffix";
+            String contentType = invocation.getArgument(1);
+            long contentLength = invocation.getArgument(2);
+            return "test-prefix-" + path + "-" + contentType + "-" + contentLength + "-test-suffix";
         });
 
         // when
@@ -151,9 +154,9 @@ class UploadAcceptanceTest extends AcceptanceTest {
             () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
             () -> assertThat(result.message()).isNull(),
             () -> assertThat(signedUrls.get("abc.webp"))
-                .isEqualTo(expectedPrefix + "abc.webp-test-suffix"),
+                .isEqualTo(expectedPrefix + "abc.webp-image/webp-1024-test-suffix"),
             () -> assertThat(signedUrls.get("def.webp"))
-                .isEqualTo(expectedPrefix + "def.webp-test-suffix")
+                .isEqualTo(expectedPrefix + "def.webp-image/webp-2048-test-suffix")
         );
     }
 
@@ -223,9 +226,72 @@ class UploadAcceptanceTest extends AcceptanceTest {
     @Test
     void issueExhibitionSignedUrlsWithOversizeFile() {
         // given
-        long oversize = 20L * 1024 * 1024 + 1;
+        long oversize = UploadFile.MAX_FILE_SIZE_BYTES + 1;
         IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
             new UploadFileRequest("abc.webp", oversize)
+        ));
+
+        // when
+        ApiResponse<Void> result = postExhibitionSignedUrlsExpectingBadRequest(request);
+
+        // then
+        assertThat(result.code()).isEqualTo(ResponseCode.VALIDATION_FAILED);
+    }
+
+    @DisplayName("전시 사진 업로드 url 발급 시 파일 크기가 정확히 최대치(20MB)이면 발급에 성공한다")
+    @Test
+    void issueExhibitionSignedUrlsWithExactlyMaxSizeFile() {
+        // given
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
+            new UploadFileRequest("abc.webp", UploadFile.MAX_FILE_SIZE_BYTES)
+        ));
+        when(awsS3Cloud.getRootDirectory()).thenReturn("photogather/v2");
+        when(awsS3Cloud.issueSignedUrl(anyString(), anyString(), anyLong())).thenAnswer(invocation -> {
+            String path = invocation.getArgument(0);
+            return "test-prefix-" + path + "-test-suffix";
+        });
+
+        // when
+        ApiResponse<IssueSignedUrlResponse> result = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body(request)
+            .when()
+            .post(EXHIBITION_SIGNED_URLS_PATH)
+            .then()
+            .statusCode(200)
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+
+        // then
+        assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS);
+    }
+
+    @DisplayName("전시 사진 업로드 url 발급 시 파일 크기가 0 이하이면 400(VALIDATION_FAILED)을 반환한다")
+    @ParameterizedTest
+    @ValueSource(longs = {0L, -1L})
+    void issueExhibitionSignedUrlsWithNonPositiveSize(long nonPositiveSize) {
+        // given
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
+            new UploadFileRequest("abc.webp", nonPositiveSize)
+        ));
+
+        // when
+        ApiResponse<Void> result = postExhibitionSignedUrlsExpectingBadRequest(request);
+
+        // then
+        assertThat(result.code()).isEqualTo(ResponseCode.VALIDATION_FAILED);
+    }
+
+    @DisplayName("전시 사진 업로드 url 발급 시 파일명이 null이면 400(VALIDATION_FAILED)을 반환한다")
+    @Test
+    void issueExhibitionSignedUrlsWithNullFileName() {
+        // given
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
+            new UploadFileRequest(null, 1024L)
         ));
 
         // when
