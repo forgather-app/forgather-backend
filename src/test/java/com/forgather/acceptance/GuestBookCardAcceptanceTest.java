@@ -144,14 +144,14 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
             );
         }
 
-        @DisplayName("방문자가 공개 스페이스의 방명록을 조회할 경우 방명록 카드 읽음 여부는 알지 못한다")
+        @DisplayName("방문자가 공개 스페이스의 방명록을 조회할 경우 읽지 않은 방명록 개수는 알지 못한다")
         @Test
-        void guestCannotKnowIsCardRead() {
+        void guestCannotKnowUnreadCount() {
             // given
             writeGuestBookCard(publicSpace);
 
             // when
-            boolean result = RestAssuredMockMvc.given()
+            String response = RestAssuredMockMvc.given()
                 .accept(ContentType.JSON)
                 .queryParam("page", 1)
                 .queryParam("size", 15)
@@ -163,11 +163,10 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .asString()
-                .contains("\"isRead\"");
+                .asString();
 
             // then
-            assertThat(result).isFalse();
+            assertThat(response).doesNotContain("\"newCount\"");
         }
 
         @DisplayName("방문자 조회 시 방명록은 각 방명록 카드의 방문자 닉네임과 사진 여부를 포함한다")
@@ -201,11 +200,9 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.data().guestBookCards().getFirst().nickname()).isEqualTo(
                     writeResponseWithNoPhoto.nickname()),
                 () -> assertThat(result.data().guestBookCards().getFirst().containsPhoto()).isFalse(),
-                () -> assertThat(result.data().guestBookCards().getFirst().isRead()).isNull(),
                 () -> assertThat(result.data().guestBookCards().getLast().nickname()).isEqualTo(
                     writeResponse.nickname()),
                 () -> assertThat(result.data().guestBookCards().getLast().containsPhoto()).isTrue(),
-                () -> assertThat(result.data().guestBookCards().getLast().isRead()).isNull(),
                 () -> assertThat(result.data().currentPage()).isEqualTo(1),
                 () -> assertThat(result.data().pageSize()).isEqualTo(15),
                 () -> assertThat(result.data().totalCount()).isEqualTo(2),
@@ -302,14 +299,16 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .body("message", containsString("방문자는 비공개 스페이스의 방명록을 조회할 수 없습니다."));
         }
 
-        @DisplayName("호스트가 방명록을 조회할 경우 방명록 카드 읽음 여부를 알 수 있다")
+        @DisplayName("호스트가 방명록을 조회할 경우 읽은 방명록만 반환하고 읽지 않은 방명록 수를 응답한다")
         @Test
-        void hostCanKnowIsCardRead() {
+        void hostReadGuestBookReturnsOnlyReadCardsAndUnreadCount() {
             // given
-            writeGuestBookCard(publicSpace);
+            WriteGuestBookCardResponse readCard = writeGuestBookCard(publicSpace);
+            writeGuestBookCardWithNoPhoto(publicSpace);
+            readGuestBookCardAsHost(publicSpace, readCard.id());
 
-            // when
-            boolean result = RestAssuredMockMvc.given()
+            // when, then
+            ApiResponse<GuestBookResponse> result = RestAssuredMockMvc.given()
                 .header("Authorization", "Bearer " + accessToken)
                 .accept(ContentType.JSON)
                 .queryParam("page", 1)
@@ -322,12 +321,18 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .asString()
-                .contains("\"isRead\"");
+                .as(new TypeRef<>() {
+                });
 
             // then
-            assertThat(result).isTrue();
+            assertAll(
+                () -> assertThat(result.data().newCount()).isOne(),
+                () -> assertThat(result.data().guestBookCards()).hasSize(1),
+                () -> assertThat(result.data().guestBookCards().getFirst().id()).isEqualTo(readCard.id()),
+                () -> assertThat(result.data().totalCount()).isOne()
+            );
         }
+
     }
 
     @DisplayName("방명록 카드 조회")
@@ -523,7 +528,8 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
             assertAll(
                 () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
                 () -> assertThat(result.message()).isNull(),
-                () -> assertThat(result.data().guestBookCards().getFirst().isRead()).isTrue()
+                () -> assertThat(result.data().newCount()).isZero(),
+                () -> assertThat(result.data().guestBookCards().getFirst().id()).isEqualTo(writeResponse.id())
             );
         }
     }
@@ -858,5 +864,15 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
             .post("/spaces/{spaceCode}/guestbook/{guestBookCardId}/reports", space.getCode(), guestBookCardId)
             .then()
             .statusCode(201);
+    }
+
+    private void readGuestBookCardAsHost(Space space, Long guestBookCardId) {
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + accessToken)
+            .accept(ContentType.JSON)
+            .when()
+            .get("/spaces/%s/guestbook/%d".formatted(space.getCode(), guestBookCardId))
+            .then()
+            .statusCode(200);
     }
 }

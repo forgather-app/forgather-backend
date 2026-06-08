@@ -4,28 +4,31 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record GuestBookResponse(
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "읽지 않은 방명록 카드 개수", example = "3")
+    Long newCount,
+
     @Schema(description = "방명록 카드 목록", example = """
         [
             {
               "id": 1,
               "nickname": "밍퐁루블",
-              "containsPhoto": false,
-              "isRead": false
+              "containsPhoto": false
             },
             {
               "id": 2,
               "nickname": "레오",
-              "containsPhoto": true,
-              "isRead": false
+              "containsPhoto": true
             },
             {
               "id": 3,
               "nickname": "포스티",
-              "containsPhoto": true,
-              "isRead": true
+              "containsPhoto": true
             }
           ]
         """)
@@ -45,7 +48,12 @@ public record GuestBookResponse(
 ) {
 
     public GuestBookResponse(Page<GuestBookCardSimpleResponse> guestBookCards) {
-        this(guestBookCards.toList(),
+        this(guestBookCards, null);
+    }
+
+    public GuestBookResponse(Page<GuestBookCardSimpleResponse> guestBookCards, Long newCount) {
+        this(newCount,
+            guestBookCards.toList(),
             guestBookCards.getNumber() + 1,
             guestBookCards.getSize(),
             guestBookCards.getTotalElements(),
