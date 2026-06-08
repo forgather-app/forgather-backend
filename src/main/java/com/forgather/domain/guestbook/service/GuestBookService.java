@@ -117,6 +117,25 @@ public class GuestBookService {
         return new GuestBookResponse(simpleResponses);
     }
 
+    /**
+     * 스페이스 호스트인 경우에만 isRead=false인 방명록 조회
+     */
+    @Transactional(readOnly = true)
+    public GuestBookResponse readUnread(Host host, String spaceCode, Pageable pageable) {
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
+        validateSpaceHost(host, space);
+
+        Page<GuestBookCardSimpleResponse> unreadResponses =
+            guestBookCardRepository.findAllDtoBySpaceAndVisibilityStatusAndIsReadAndDeletedAtIsNull(
+                space,
+                VISIBLE,
+                false,
+                pageable
+            ).map(GuestBookCardSimpleResponse::from);
+
+        return new GuestBookResponse(unreadResponses);
+    }
+
     @Transactional
     public GuestBookCardResponse readCard(Host host, String spaceCode, Long guestBookCardId) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);

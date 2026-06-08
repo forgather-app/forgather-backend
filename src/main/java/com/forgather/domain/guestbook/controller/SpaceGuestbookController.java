@@ -84,6 +84,19 @@ public class SpaceGuestbookController {
     }
 
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "읽지 않은 방명록 조회", description = "스페이스 호스트가 읽지 않은 방명록 목록을 조회한다")
+    @GetMapping("/unread")
+    public ResponseEntity<ApiResponse<GuestBookResponse>> readUnreadGuestBook(
+        @PathVariable(value = "spaceCode") String spaceCode,
+        @PageableDefault(size = 15, sort = {"createdAt", "id"}, direction = Sort.Direction.DESC)
+        Pageable pageable,
+        @LoginHost(required = true) Host host
+    ) {
+        GuestBookResponse response = guestBookService.readUnread(host, spaceCode, pageable);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "방명록 카드 조회", description = "공개 스페이스가 아닌 경우 호스트만 조회 가능")
     @GetMapping("/{guestBookCardId}")
     public ResponseEntity<ApiResponse<GuestBookCardResponse>> readCard(
