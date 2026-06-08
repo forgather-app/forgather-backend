@@ -55,7 +55,8 @@ public class UploadService {
         }
     }
 
-    // TODO: 추후 제거
+    @Deprecated(forRemoval = true)
+    @SuppressWarnings("removal")
     @Transactional(readOnly = true)
     public IssueSignedUrlResponse issueSignedUrls(String spaceCode, IssueSignedUrlRequest request) {
         spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);

@@ -48,9 +48,6 @@ public class SignedUrlIssuer {
         return signedUrls;
     }
 
-    /**
-     * 전시 사진 presigned URL을 발급한다.
-     */
     public Map<String, String> issueForExhibition(List<UploadFile> uploadFiles, Long hostId) {
         validateNotEmpty(uploadFiles);
         validateCount(uploadFiles);
@@ -75,6 +72,8 @@ public class SignedUrlIssuer {
         );
     }
 
+    @Deprecated(forRemoval = true)
+    @SuppressWarnings("removal")
     public Map<String, String> issueSignedUrls(
         List<String> uploadFileNames,
         String spaceCode,

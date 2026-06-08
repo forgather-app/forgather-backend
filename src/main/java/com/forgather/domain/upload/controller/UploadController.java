@@ -47,11 +47,8 @@ public class UploadController {
 
     private final UploadService uploadService;
 
-    /**
-     * TODO
-     * 아무런 검증이 없어도 되는가?
-     * 추후 제거
-     */
+    @Deprecated(forRemoval = true)
+    @SuppressWarnings("removal")
     @PostMapping(path = "/spaces/{spaceCode}/upload/signed-urls")
     @Operation(summary = "업로드 URL 발급", description = """
             업로드 파일 별 서명된 URL을 발급합니다.
