@@ -1,5 +1,6 @@
 package com.forgather.acceptance;
 
+import static com.forgather.domain.guestbook.model.GuestBookReportReason.ADVERTISEMENT_SPAM;
 import static com.forgather.domain.guestbook.model.VisibilityStatus.HIDDEN_BY_ADMIN;
 import static com.forgather.domain.guestbook.model.VisibilityStatus.HIDDEN_BY_HOST;
 import static com.forgather.fixture.GuestBookCardFixture.createWithSpaceAndVisibilityStatus;
@@ -29,7 +30,6 @@ import com.forgather.domain.guestbook.dto.WriteGuestBookCardPhotoRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardResponse;
 import com.forgather.domain.guestbook.model.GuestBookCard;
-import com.forgather.domain.guestbook.model.GuestBookReportReason;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.HostRepository;
@@ -887,7 +887,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
     }
 
     private void reportGuestBookCard(Space space, Long guestBookCardId) {
-        CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(GuestBookReportReason.ADVERTISEMENT_SPAM, null);
+        CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(ADVERTISEMENT_SPAM, null);
 
         RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + accessToken)
