@@ -345,6 +345,25 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
             .body("code", equalTo("VALIDATION_FAILED"));
     }
 
+    @DisplayName("신고 상세 사유가 5자 미만이면 400 예외를 발생한다")
+    @Test
+    void throwExceptionWhenDetailTooShort() {
+        // given
+        CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason.getId(), "1234");
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + accessToken)
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/spaces/{spaceCode}/guestbook/{cardId}/reports",
+                space.getCode(), card.getId())
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("VALIDATION_FAILED"));
+    }
+
     @DisplayName("신고 내역 상세 조회")
     @Nested
     class retrieveReportDetail {

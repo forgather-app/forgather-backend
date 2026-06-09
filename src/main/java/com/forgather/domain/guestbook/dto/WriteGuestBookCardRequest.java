@@ -4,15 +4,20 @@ import java.util.List;
 
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.space.model.Space;
+import com.forgather.global.validation.TextSize;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 
 public record WriteGuestBookCardRequest(
 
     @Schema(description = "방문자 닉네임", example = "밍퐁루블", maxLength = 10)
+    @NotBlank
+    @TextSize(max = 10)
     String nickname,
 
     @Schema(description = "메세지", example = "전시 잘봤다~~ 너가 최고야 🤙", maxLength = 400)
+    @TextSize(max = 400)
     String message,
 
     @Schema(description = "방명록 카드 사진 목록", example = """
