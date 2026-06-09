@@ -25,13 +25,13 @@ public class TextSizeValidator implements ConstraintValidator<TextSize, CharSequ
 
     private void validateConstraintParameters() {
         if (min < 0) {
-            throw new IllegalArgumentException("min은 음수일 수 없습니다: " + min);
+            throw new IllegalArgumentException("최소 길이는 음수일 수 없습니다: " + min);
         }
         if (max < 0) {
-            throw new IllegalArgumentException("max는 음수일 수 없습니다: " + max);
+            throw new IllegalArgumentException("최대 길이는 음수일 수 없습니다: " + max);
         }
         if (min > max) {
-            throw new IllegalArgumentException("min은 max보다 클 수 없습니다: min=" + min + ", max=" + max);
+            throw new IllegalArgumentException("최소 길이는 최대 길이보다 클 수 없습니다: min=" + min + ", max=" + max);
         }
     }
 
