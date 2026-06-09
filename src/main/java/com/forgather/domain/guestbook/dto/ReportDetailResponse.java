@@ -10,7 +10,7 @@ import com.forgather.domain.space.model.Space;
 public record ReportDetailResponse(
     Long id,
     SpaceInfo space,
-    ReasonInfo reason,
+    String reason,
     String detail,
     String nicknameSnapshot,
     String messageSnapshot,
@@ -25,16 +25,13 @@ public record ReportDetailResponse(
     public record SpaceInfo(String spaceCode, String name) {
     }
 
-    public record ReasonInfo(Long id, String label) {
-    }
-
     public static ReportDetailResponse from(GuestBookReport report) {
         Space space = report.getGuestBookCard().getSpace();
         GuestBookReportReason reason = report.getReason();
         return new ReportDetailResponse(
             report.getId(),
             new SpaceInfo(space.getCode(), space.getName()),
-            new ReasonInfo(reason.getId(), reason.getLabel()),
+            reason.getLabel(),
             report.getDetail(),
             report.getNicknameSnapshot(),
             report.getMessageSnapshot(),

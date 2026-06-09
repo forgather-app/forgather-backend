@@ -1,11 +1,17 @@
 package com.forgather.domain.guestbook.model;
 
+import static com.forgather.domain.guestbook.model.VisibilityStatus.HIDDEN_BY_ADMIN;
+import static com.forgather.domain.guestbook.model.VisibilityStatus.HIDDEN_BY_HOST;
+import static com.forgather.domain.guestbook.model.VisibilityStatus.VISIBLE;
+
 import org.springframework.http.HttpStatus;
 
+import com.forgather.domain.guestbook.exception.GuestbookCardNotReadableException;
 import com.forgather.domain.model.SoftDeleteEntity;
 import com.forgather.domain.space.model.Space;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
+import com.forgather.global.exception.NotFoundException;
 import com.forgather.global.util.TextLengthCounter;
 
 import jakarta.persistence.Column;
@@ -46,7 +52,7 @@ public class GuestBookCard extends SoftDeleteEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "visibility_status", nullable = false)
-    private VisibilityStatus visibilityStatus = VisibilityStatus.VISIBLE;
+    private VisibilityStatus visibilityStatus = VISIBLE;
 
     public GuestBookCard(Space space, String nickname, String message) {
         validateRequiredFields(space, nickname, message);
@@ -56,7 +62,7 @@ public class GuestBookCard extends SoftDeleteEntity {
         this.nickname = nickname;
         this.message = message;
         this.isRead = false;
-        this.visibilityStatus = VisibilityStatus.VISIBLE;
+        this.visibilityStatus = VISIBLE;
     }
 
     private void validateRequiredFields(Space space, String nickname, String message) {
@@ -92,11 +98,22 @@ public class GuestBookCard extends SoftDeleteEntity {
         return space.equals(other);
     }
 
-    public void read() {
-        isRead = true;
+    public void read(boolean isSpaceHost) {
+        validateCanReadByVisibilityStatus(isSpaceHost);
+        if (isSpaceHost) {
+            isRead = true;
+        }
+    }
+
+    private void validateCanReadByVisibilityStatus(boolean isSpaceHost) {
+        if (visibilityStatus == HIDDEN_BY_ADMIN ||
+            visibilityStatus == HIDDEN_BY_HOST && !isSpaceHost
+        ) {
+            throw new GuestbookCardNotReadableException();
+        }
     }
 
     public void hideByAdmin() {
-        visibilityStatus = VisibilityStatus.HIDDEN_BY_ADMIN;
+        visibilityStatus = HIDDEN_BY_ADMIN;
     }
 }

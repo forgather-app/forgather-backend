@@ -3,7 +3,6 @@ package com.forgather.domain.guestbook.model;
 import static com.forgather.fixture.GuestBookCardFixture.createGuestBookCard;
 import static com.forgather.fixture.GuestBookReportFixture.createReport;
 import static com.forgather.fixture.GuestBookReportFixture.createReportWithDetail;
-import static com.forgather.fixture.GuestBookReportReasonFixture.createReason;
 import static com.forgather.fixture.HostFixture.createHost;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -21,7 +20,7 @@ class GuestBookReportTest {
 
     private final Host host = createHost();
     private final GuestBookCard card = createGuestBookCard();
-    private final GuestBookReportReason reason = createReason();
+    private final GuestBookReportReason reason = GuestBookReportReason.ADVERTISEMENT_SPAM;
 
     @DisplayName("방명록 카드가 null이면 예외를 던진다")
     @Test
