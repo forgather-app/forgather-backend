@@ -24,6 +24,7 @@ import com.forgather.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -58,7 +59,7 @@ public class ProductController {
     @PostMapping(headers = "X-API-Version=3")
     public ResponseEntity<ApiResponse<ProductResponse>> registerV3(
         @PathVariable(value = "spaceCode") String spaceCode,
-        @RequestBody RegisterProductRequest request,
+        @Valid @RequestBody RegisterProductRequest request,
         @LoginHost(required = true) Host host
     ) {
         var response = productService.register(host, spaceCode, request);
@@ -72,7 +73,7 @@ public class ProductController {
     public ResponseEntity<ApiResponse<ProductResponse>> updateV3(
         @PathVariable(value = "spaceCode") String spaceCode,
         @PathVariable(value = "productId") Long productId,
-        @RequestBody UpdateProductRequest request,
+        @Valid @RequestBody UpdateProductRequest request,
         @LoginHost(required = true) Host host
     ) {
         var response = productService.update(host, spaceCode, productId, request);
