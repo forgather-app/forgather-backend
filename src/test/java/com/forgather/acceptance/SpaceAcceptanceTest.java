@@ -197,6 +197,26 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             .body("code", equalTo("UNAUTHORIZED"));
     }
 
+    @DisplayName("스페이스 이름이 30자를 초과하면 검증에 실패한다.")
+    @Test
+    void createSpaceWithOverLengthName() throws Exception {
+        // given
+        String request = objectMapper.writeValueAsString(
+            new CreateSpaceRequest("1234567890".repeat(3) + "1", "description", false, "forgather_official",
+                "forgather@forgather.me")
+        );
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .multiPart("request", request, "application/json")
+            .when()
+            .post("/spaces")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("VALIDATION_FAILED"));
+    }
+
     @DisplayName("스페이스를 상세 조회한다.")
     @Test
     void getSpaceInformation() {
