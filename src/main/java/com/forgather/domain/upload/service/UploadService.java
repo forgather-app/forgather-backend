@@ -38,18 +38,18 @@ public class UploadService {
     public String upload(String spaceCode, MultipartFile file) {
         try {
             long startMillis = System.currentTimeMillis();
-            log.info("파일 업로드 시작 spaceCode: {}, originalName: {}, getSize: {}",
+            log.info("파일 업로드 시작 spaceCode: {}, originalName: {}, size: {}",
                 spaceCode, file.getOriginalFilename(), file.getSize());
 
             String path = contentsStorage.upload(spaceCode, file);
 
             long durationMillis = System.currentTimeMillis() - startMillis;
-            log.info("파일 업로드 완료 spaceCode: {}, originalName: {}, getSize: {}, path: {}, duration: {}",
+            log.info("파일 업로드 완료 spaceCode: {}, originalName: {}, size: {}, path: {}, duration: {}",
                 spaceCode, file.getOriginalFilename(), file.getSize(), path, durationMillis + "ms");
 
             return path;
         } catch (IOException e) {
-            throw new FileUploadException("파일 업로드 실패 spaceCode: %s, originalName: %s, getSize: %d".formatted(
+            throw new FileUploadException("파일 업로드 실패 spaceCode: %s, originalName: %s, size: %d".formatted(
                 spaceCode, file.getOriginalFilename(), file.getSize()
             ), e);
         }
