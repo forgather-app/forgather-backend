@@ -49,7 +49,7 @@ public class SpaceGuestbookController {
 
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "방명록 조회",
-        description = "공개 스페이스가 아닌 경우 호스트만 조회 가능, 방문자는 isRead 필드 누락",
+        description = "공개 스페이스가 아닌 경우 호스트만 조회 가능. 호스트일 경우 읽은 방명록은 조회하지 않는다.",
         parameters = {
             @Parameter(
                 name = "page",
