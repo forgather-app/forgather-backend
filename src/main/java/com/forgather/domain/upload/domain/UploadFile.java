@@ -2,11 +2,14 @@ package com.forgather.domain.upload.domain;
 
 import com.forgather.global.exception.BaseException;
 
+import lombok.Getter;
+
 /**
  * presigned URL을 발급할 업로드 파일 한 건의 도메인 값 객체.
  * 파일명 형식과 크기 상한(최대 {@link #MAX_FILE_SIZE_BYTES})을 스스로 보장하고,
  * 파일명 확장자로부터 고정할 Content-Type을 제공한다.
  */
+@Getter
 public class UploadFile {
 
     public static final long MAX_FILE_SIZE_BYTES = 20L * 1024 * 1024; // 20MB
@@ -34,13 +37,5 @@ public class UploadFile {
 
     public String getContentType() {
         return ImageContentType.resolveByFileName(fileName);
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public long getSize() {
-        return size;
     }
 }
