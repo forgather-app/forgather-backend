@@ -100,7 +100,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
             () -> assertThat(response.data().id()).isNotNull(),
             () -> assertThat(response.data().title()).isEqualTo("봄 전시"),
             () -> assertThat(response.data().representativeImagePath())
-                .isEqualTo("ROOT_DIRECTORY_PLACEHOLDER/exhibitions/host-%d/spring.webp".formatted(host.getId())),
+                .isEqualTo("ROOT_DIRECTORY_PLACEHOLDER/exhibitions/spring.webp"),
             () -> assertThat(response.data().location().locationType()).isEqualTo(LocationType.ONLINE),
             () -> assertThat(response.data().location().url()).isEqualTo("https://forgather.app"),
             () -> assertThat(response.data().operatingHours()).hasSize(2),

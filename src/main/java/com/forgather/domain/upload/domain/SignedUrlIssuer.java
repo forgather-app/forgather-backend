@@ -48,7 +48,7 @@ public class SignedUrlIssuer {
         return signedUrls;
     }
 
-    public Map<String, String> issueForExhibition(List<UploadFile> uploadFiles, Long hostId) {
+    public Map<String, String> issueForExhibition(List<UploadFile> uploadFiles) {
         validateNotEmpty(uploadFiles);
         validateCount(uploadFiles);
 
@@ -56,7 +56,6 @@ public class SignedUrlIssuer {
         for (UploadFile uploadFile : uploadFiles) {
             String filePath = generateExhibitionContentsFilePath(
                 contentsStorage.getRootDirectory(),
-                hostId,
                 uploadFile.getFileName()
             );
             signedUrls.put(uploadFile.getFileName(), issueUploadUrl(filePath, uploadFile));

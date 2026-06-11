@@ -149,7 +149,7 @@ class UploadAcceptanceTest extends AcceptanceTest {
         Map<String, String> signedUrls = result.data().signedUrls();
 
         // then
-        String expectedPrefix = "test-prefix-photogather/v2/exhibitions/host-%d/".formatted(host.getId());
+        String expectedPrefix = "test-prefix-photogather/v2/exhibitions/";
         assertAll(
             () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
             () -> assertThat(result.message()).isNull(),

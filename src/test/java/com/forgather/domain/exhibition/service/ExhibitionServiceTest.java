@@ -69,7 +69,7 @@ class ExhibitionServiceTest extends TestOnContainer {
             () -> assertThat(response.id()).isNotNull(),
             () -> assertThat(response.title()).isEqualTo("봄 전시"),
             () -> assertThat(response.representativeImagePath())
-                .isEqualTo("ROOT_DIRECTORY_PLACEHOLDER/exhibitions/host-%d/abc.webp".formatted(host.getId())),
+                .isEqualTo("ROOT_DIRECTORY_PLACEHOLDER/exhibitions/abc.webp"),
             () -> assertThat(response.location().locationType()).isEqualTo(LocationType.ONLINE),
             () -> assertThat(response.location().url()).isEqualTo("https://forgather.app"),
             () -> assertThat(response.operatingHours()).hasSize(2),

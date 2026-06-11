@@ -88,17 +88,16 @@ class SignedUrlIssuerTest {
     void issueForExhibition() {
         // given
         List<UploadFile> files = uploadFiles("abc.webp", "def.webp");
-        long hostId = 1L;
 
         // when
-        Map<String, String> result = signedUrlIssuer.issueForExhibition(files, hostId);
+        Map<String, String> result = signedUrlIssuer.issueForExhibition(files);
 
         // then
         assertAll(
             () -> assertThat(result.get("abc.webp"))
-                .isEqualTo("test-prefix-photogather/v2/exhibitions/host-1/abc.webp-test-suffix"),
+                .isEqualTo("test-prefix-photogather/v2/exhibitions/abc.webp-test-suffix"),
             () -> assertThat(result.get("def.webp"))
-                .isEqualTo("test-prefix-photogather/v2/exhibitions/host-1/def.webp-test-suffix")
+                .isEqualTo("test-prefix-photogather/v2/exhibitions/def.webp-test-suffix")
         );
     }
 
@@ -111,7 +110,7 @@ class SignedUrlIssuerTest {
             .toList();
 
         // when, then
-        assertThatThrownBy(() -> signedUrlIssuer.issueForExhibition(files, 1L))
+        assertThatThrownBy(() -> signedUrlIssuer.issueForExhibition(files))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("한번에 발급 가능한 업로드 url 개수");
     }
@@ -120,7 +119,7 @@ class SignedUrlIssuerTest {
     @Test
     void throwExceptionWhenExhibitionFilesEmpty() {
         // when, then
-        assertThatThrownBy(() -> signedUrlIssuer.issueForExhibition(List.of(), 1L))
+        assertThatThrownBy(() -> signedUrlIssuer.issueForExhibition(List.of()))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("업로드 파일명 목록은 null이거나 비어있을 수 없습니다");
     }

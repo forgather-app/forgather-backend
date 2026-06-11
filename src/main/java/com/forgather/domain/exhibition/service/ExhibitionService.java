@@ -38,7 +38,7 @@ public class ExhibitionService {
     public ExhibitionResponse create(Host host, CreateExhibitionRequest request) {
         Exhibition exhibition = exhibitionRepository.save(buildExhibition(request));
 
-        String photoPath = buildPhotoPath(host, request.photo().uploadFileName());
+        String photoPath = buildPhotoPath(request.photo().uploadFileName());
         ExhibitionPhoto photo = exhibitionPhotoRepository.save(
             request.photo().toEntity(photoPath, exhibition)
         );
@@ -51,9 +51,9 @@ public class ExhibitionService {
         return ExhibitionResponse.of(exhibition, photo, exhibitionTimes, host);
     }
 
-    private String buildPhotoPath(Host host, String uploadFileName) {
+    private String buildPhotoPath(String uploadFileName) {
         return FilePathGenerator.generateExhibitionContentsFilePath(
-            contentsStorage.getRootDirectory(), host.getId(), uploadFileName
+            contentsStorage.getRootDirectory(), uploadFileName
         );
     }
 

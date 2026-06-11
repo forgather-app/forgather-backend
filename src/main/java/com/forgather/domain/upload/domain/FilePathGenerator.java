@@ -42,12 +42,10 @@ public class FilePathGenerator {
 
     public static String generateExhibitionContentsFilePath(
         String rootDirectory,
-        Long hostId,
         String fileName
     ) {
-        return "%s/exhibitions/host-%d/%s".formatted(
+        return "%s/exhibitions/%s".formatted(
             rootDirectory,
-            hostId,
             fileName
         );
     }
