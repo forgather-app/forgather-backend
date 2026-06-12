@@ -35,7 +35,7 @@ public class Space extends SoftDeleteEntity {
         "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,63}$"
     );
     private static final Pattern LINK_URL_PATTERN = Pattern.compile(
-        "^https?://[^\\s]+$"
+        "^https?://[^\\s]+$", Pattern.CASE_INSENSITIVE
     );
 
     @Id

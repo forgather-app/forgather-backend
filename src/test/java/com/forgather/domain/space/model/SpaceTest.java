@@ -81,6 +81,18 @@ class SpaceTest {
         );
     }
 
+    @DisplayName("링크 URL의 scheme은 대소문자를 구분하지 않는다.")
+    @ValueSource(strings = {"HTTPS://forgather.me", "Http://forgather.me", "hTtPs://forgather.me"})
+    @ParameterizedTest
+    void createSpaceWithCaseInsensitiveSchemeLink(String linkUrl) {
+        // given & when
+        Space space = new Space("1234567890", "나의 졸업전시", "설명", false, "forgather_official",
+            "forgather@forgather.me", linkUrl, "포트폴리오");
+
+        // then
+        assertThat(space.getLinkUrl()).isEqualTo(linkUrl);
+    }
+
     @DisplayName("스페이스 코드가 존재하지 않으면 스페이스를 생성할 수 없다.")
     @Test
     void createSpaceWithoutCode() {
