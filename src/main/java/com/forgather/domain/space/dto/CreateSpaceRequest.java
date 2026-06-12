@@ -27,11 +27,21 @@ public record CreateSpaceRequest(
     @Email
     String email,
 
-    @Schema(description = "스페이스 소개 링크 URL (표시 이름과 함께 입력)", example = "https://forgather.me", maxLength = 2048, nullable = true)
+    @Schema(
+        description = "스페이스 소개 링크 URL (표시 이름과 함께 입력)",
+        example = "https://forgather.app",
+        maxLength = 2048,
+        nullable = true
+    )
     @URL
     String linkUrl,
 
-    @Schema(description = "스페이스 소개 링크 표시 이름 (URL과 함께 입력)", example = "포트폴리오", maxLength = 30, nullable = true)
+    @Schema(
+        description = "스페이스 소개 링크 표시 이름 (URL과 함께 입력)",
+        example = "포트폴리오",
+        maxLength = 30,
+        nullable = true
+    )
     String linkName
 ) {
 
