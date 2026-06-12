@@ -256,6 +256,44 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             .statusCode(HttpStatus.BAD_REQUEST.value());
     }
 
+    @DisplayName("255자를 초과하는 긴 링크 URL도 저장하고 조회할 수 있다.")
+    @Test
+    void createSpaceWithLongLinkUrl() throws Exception {
+        // given
+        String longLinkUrl = "https://forgather.me/" + "a".repeat(300); // 321자 (255 초과, 2048 이하)
+        String request = objectMapper.writeValueAsString(
+            new CreateSpaceRequest("test-space", "description", false, "forgather_official",
+                "forgather@forgather.me", longLinkUrl, "포트폴리오")
+        );
+
+        // when
+        ApiResponse<CreateSpaceResponse> created = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .multiPart("request", request, "application/json")
+            .when()
+            .post("/spaces")
+            .then()
+            .statusCode(HttpStatus.CREATED.value())
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+
+        ApiResponse<SpaceResponse> result = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .when()
+            .get("/spaces/{spaceCode}", created.data().spaceCode())
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+
+        // then
+        assertThat(result.data().linkUrl()).isEqualTo(longLinkUrl);
+    }
+
     @DisplayName("스페이스를 상세 조회한다.")
     @Test
     void getSpaceInformation() {

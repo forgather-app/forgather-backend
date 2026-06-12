@@ -60,7 +60,7 @@ public class Space extends SoftDeleteEntity {
     @Column(name = "email", nullable = false)
     private String email;
 
-    @Column(name = "link_url", nullable = false)
+    @Column(name = "link_url", nullable = false, length = 2048)
     private String linkUrl;
 
     @Column(name = "link_name", nullable = false)
