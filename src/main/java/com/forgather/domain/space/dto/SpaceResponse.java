@@ -28,7 +28,7 @@ public record SpaceResponse(
     @Schema(description = "스페이스 호스트 이메일", example = "forgather@forgather.me")
     String email,
 
-    @Schema(description = "스페이스 소개 링크 URL", example = "https://forgather.me")
+    @Schema(description = "스페이스 소개 링크 URL", example = "https://forgather.app")
     String linkUrl,
 
     @Schema(description = "스페이스 소개 링크 표시 이름", example = "포트폴리오")
