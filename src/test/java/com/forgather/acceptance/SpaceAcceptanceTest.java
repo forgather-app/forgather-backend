@@ -125,7 +125,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         );
         String request = objectMapper.writeValueAsString(
             new CreateSpaceRequest("test-space", "description", false, "forgather_official",
-                "forgather@forgather.me")
+                "forgather@forgather.me", null, null)
         );
 
         // when
@@ -151,7 +151,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         String request = objectMapper.writeValueAsString(
             new CreateSpaceRequest("test-space", "description", false, "forgather_official",
-                "forgather@forgather.me")
+                "forgather@forgather.me", null, null)
         );
 
         // when
@@ -176,7 +176,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         String request = objectMapper.writeValueAsString(
             new CreateSpaceRequest("test-space", "description", false, "forgather_official",
-                "forgather@forgather.me")
+                "forgather@forgather.me", null, null)
         );
 
         // when
@@ -189,6 +189,99 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // then
         assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @DisplayName("링크 URL과 표시 이름을 함께 입력해 스페이스를 생성한다.")
+    @Test
+    void createSpaceWithLink() throws Exception {
+        // given
+        String request = objectMapper.writeValueAsString(
+            new CreateSpaceRequest("test-space", "description", false, "forgather_official",
+                "forgather@forgather.me", "https://forgather.me", "포트폴리오")
+        );
+
+        // when
+        CreateSpaceResponse created = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .multiPart("request", request, "application/json")
+            .when()
+            .post("/spaces")
+            .then()
+            .statusCode(HttpStatus.CREATED.value())
+            .extract()
+            .body()
+            .as(CreateSpaceResponse.class);
+
+        SpaceResponse result = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .when()
+            .get("/spaces/{spaceCode}", created.spaceCode())
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(SpaceResponse.class);
+
+        // then
+        assertAll(
+            () -> assertThat(result.linkUrl()).isEqualTo("https://forgather.me"),
+            () -> assertThat(result.linkName()).isEqualTo("포트폴리오")
+        );
+    }
+
+    @DisplayName("링크 URL만 입력하고 표시 이름을 누락하면 스페이스를 생성할 수 없다.")
+    @Test
+    void createSpaceWithOnlyLinkUrl() throws Exception {
+        // given
+        String request = objectMapper.writeValueAsString(
+            new CreateSpaceRequest("test-space", "description", false, "forgather_official",
+                "forgather@forgather.me", "https://forgather.me", null)
+        );
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .multiPart("request", request, "application/json")
+            .when()
+            .post("/spaces")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @DisplayName("255자를 초과하는 긴 링크 URL도 저장하고 조회할 수 있다.")
+    @Test
+    void createSpaceWithLongLinkUrl() throws Exception {
+        // given
+        String longLinkUrl = "https://forgather.me/" + "a".repeat(300); // 321자 (255 초과, 2048 이하)
+        String request = objectMapper.writeValueAsString(
+            new CreateSpaceRequest("test-space", "description", false, "forgather_official",
+                "forgather@forgather.me", longLinkUrl, "포트폴리오")
+        );
+
+        // when
+        CreateSpaceResponse created = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .multiPart("request", request, "application/json")
+            .when()
+            .post("/spaces")
+            .then()
+            .statusCode(HttpStatus.CREATED.value())
+            .extract()
+            .body()
+            .as(CreateSpaceResponse.class);
+
+        SpaceResponse result = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .when()
+            .get("/spaces/{spaceCode}", created.spaceCode())
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(SpaceResponse.class);
+
+        // then
+        assertThat(result.linkUrl()).isEqualTo(longLinkUrl);
     }
 
     @DisplayName("스페이스를 상세 조회한다.")
@@ -337,7 +430,8 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             "new image content".getBytes()
         );
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
-            "새로운 스페이스", "새로운 설명", false, "forgather_official_new", "forgather_new@forgather.me", true)
+            "새로운 스페이스", "새로운 설명", false, "forgather_official_new", "forgather_new@forgather.me",
+            "https://forgather.me", "포트폴리오", true)
         );
 
         // when
@@ -360,6 +454,8 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(result.isPublic()).isFalse(),
             () -> assertThat(result.instagramUsername()).isEqualTo("forgather_official_new"),
             () -> assertThat(result.email()).isEqualTo("forgather_new@forgather.me"),
+            () -> assertThat(result.linkUrl()).isEqualTo("https://forgather.me"),
+            () -> assertThat(result.linkName()).isEqualTo("포트폴리오"),
             () -> assertThat(spacePhotoRepository.getBySpaceAndDeletedAtIsNullOrEmpty(space).getOriginalName()).isEqualTo("new.jpg"),
             () -> assertThat(result.guestBookCardCount()).isZero()
         );
@@ -374,7 +470,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         spaceHostMapRepository.save(new SpaceHostMap(space, host));
 
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
-            "새로운 스페이스", null, null, null, null, false)
+            "새로운 스페이스", null, null, null, null, null, null, false)
         );
 
         // when
@@ -411,7 +507,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         spaceHostMapRepository.save(new SpaceHostMap(space, host));
 
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
-            "새로운 스페이스", null, null, null, null, false)
+            "새로운 스페이스", null, null, null, null, null, null, false)
         );
 
         // when
@@ -437,7 +533,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         String otherToken = jwtTokenProvider.generateAccessToken(otherHost.getId());
 
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
-            "새로운 스페이스", null, null, null, null, false)
+            "새로운 스페이스", null, null, null, null, null, null, false)
         );
 
         // when

@@ -25,26 +25,59 @@ class SpaceTest {
 
         // when & then
         assertThatCode(
-            () -> new Space(spaceCode, name, "", false, "", "")
+            () -> new Space(spaceCode, name, "", false, "", "", "", "")
         ).doesNotThrowAnyException();
     }
 
-    @DisplayName("설명, 인스타그램 아이디, 이메일은 공백인 경우 빈 문자열로 저장한다.")
+    @DisplayName("설명, 인스타그램 아이디, 이메일, 링크는 공백인 경우 빈 문자열로 저장한다.")
     @Test
     void createSpaceWithBlank() {
         // given
         String description = "  ";
         String instagramUsername = "  ";
         String email = "  ";
+        String linkUrl = "  ";
+        String linkName = "  ";
 
         // when
-        Space space = new Space("1234567890", "나의 졸업전시", description, false, instagramUsername, email);
+        Space space = new Space("1234567890", "나의 졸업전시", description, false, instagramUsername, email, linkUrl,
+            linkName);
 
         // then
         assertAll(
             () -> assertThat(space.getDescription()).isEmpty(),
             () -> assertThat(space.getInstagramUsername()).isEmpty(),
-            () -> assertThat(space.getEmail()).isEmpty()
+            () -> assertThat(space.getEmail()).isEmpty(),
+            () -> assertThat(space.getLinkUrl()).isEmpty(),
+            () -> assertThat(space.getLinkName()).isEmpty()
+        );
+    }
+
+    @DisplayName("링크는 입력하지 않아도(null) 스페이스를 생성할 수 있고, 빈 문자열로 저장한다.")
+    @Test
+    void createSpaceWithoutLink() {
+        // given & when
+        Space space = new Space("1234567890", "나의 졸업전시", "설명", false, "forgather_official",
+            "forgather@forgather.me", null, null);
+
+        // then
+        assertAll(
+            () -> assertThat(space.getLinkUrl()).isEmpty(),
+            () -> assertThat(space.getLinkName()).isEmpty()
+        );
+    }
+
+    @DisplayName("링크 URL과 표시 이름을 함께 입력하면 스페이스를 생성할 수 있다.")
+    @Test
+    void createSpaceWithLink() {
+        // given & when
+        Space space = new Space("1234567890", "나의 졸업전시", "설명", false, "forgather_official",
+            "forgather@forgather.me", "https://forgather.me", "포트폴리오");
+
+        // then
+        assertAll(
+            () -> assertThat(space.getLinkUrl()).isEqualTo("https://forgather.me"),
+            () -> assertThat(space.getLinkName()).isEqualTo("포트폴리오")
         );
     }
 
@@ -56,7 +89,7 @@ class SpaceTest {
 
         // when & then
         assertThatThrownBy(
-            () -> new Space(null, name, null, false, null, null)
+            () -> new Space(null, name, null, false, null, null, null, null)
         ).isInstanceOf(BaseNullPointerException.class)
             .hasMessageContaining("스페이스 코드");
     }
@@ -69,7 +102,7 @@ class SpaceTest {
 
         // when & then
         assertThatThrownBy(
-            () -> new Space(code, null, null, false, null, null)
+            () -> new Space(code, null, null, false, null, null, null, null)
         ).isInstanceOf(BaseNullPointerException.class)
             .hasMessageContaining("스페이스 이름");
     }
@@ -80,14 +113,14 @@ class SpaceTest {
         // given
         String spaceCode = "1234567890";
         // 가족 이모지, length 11
-        String name = "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66".repeat(30);
+        String name = "👨‍👩‍👧‍👦".repeat(30);
         String description = "스페이스 설명";
         String instagramUsername = "forgather_official";
         String email = "forgather@forgather.me";
 
         // when & then
         assertThatCode(
-            () -> new Space(spaceCode, name, description, false, instagramUsername, email)
+            () -> new Space(spaceCode, name, description, false, instagramUsername, email, "", "")
         ).doesNotThrowAnyException();
     }
 
@@ -103,7 +136,7 @@ class SpaceTest {
 
         // when & then
         assertThatThrownBy(
-            () -> new Space("1234567890", invalidName, description, false, instagramUsername, email)
+            () -> new Space("1234567890", invalidName, description, false, instagramUsername, email, "", "")
         ).isInstanceOf(BaseException.class)
             .hasMessageContaining("스페이스 이름");
     }
@@ -119,7 +152,7 @@ class SpaceTest {
 
         // when & then
         assertThatThrownBy(
-            () -> new Space("123456789", name, description, false, instagramUsername, email)
+            () -> new Space("123456789", name, description, false, instagramUsername, email, "", "")
         ).isInstanceOf(BaseException.class)
             .hasMessageContaining("스페이스 코드");
     }
@@ -134,7 +167,7 @@ class SpaceTest {
         String email = "forgather@forgather.me";
 
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", name, description, false, instagramUsername, email))
+        assertThatThrownBy(() -> new Space("1234567890", name, description, false, instagramUsername, email, "", ""))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("스페이스 설명");
     }
@@ -149,7 +182,7 @@ class SpaceTest {
         String email = "forgather@forgather.me";
 
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", name, description, false, instagramUsername, email))
+        assertThatThrownBy(() -> new Space("1234567890", name, description, false, instagramUsername, email, "", ""))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("인스타그램 아이디");
     }
@@ -164,7 +197,7 @@ class SpaceTest {
         String email = getString(51);
 
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", name, description, false, instagramUsername, email))
+        assertThatThrownBy(() -> new Space("1234567890", name, description, false, instagramUsername, email, "", ""))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("이메일");
     }
@@ -179,9 +212,70 @@ class SpaceTest {
         String instagramUsername = "forgather_official";
 
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", name, description, false, instagramUsername, email))
+        assertThatThrownBy(() -> new Space("1234567890", name, description, false, instagramUsername, email, "", ""))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("이메일 형식");
+    }
+
+    @DisplayName("링크 URL만 입력하고 표시 이름이 없으면 예외를 던진다.")
+    @NullAndEmptySource
+    @ParameterizedTest
+    @ValueSource(strings = {" "})
+    void spaceLinkWithoutNameValidationTest(String blankName) {
+        // when & then
+        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, "forgather_official",
+            "forgather@forgather.me", "https://forgather.me", blankName))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("함께 입력");
+    }
+
+    @DisplayName("표시 이름만 입력하고 링크 URL이 없으면 예외를 던진다.")
+    @NullAndEmptySource
+    @ParameterizedTest
+    @ValueSource(strings = {" "})
+    void spaceLinkWithoutUrlValidationTest(String blankUrl) {
+        // when & then
+        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, "forgather_official",
+            "forgather@forgather.me", blankUrl, "포트폴리오"))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("함께 입력");
+    }
+
+    @DisplayName("링크 URL은 http/https 형식을 따라야한다.")
+    @ValueSource(strings = {"forgather.me", "ftp://forgather.me", "httpx://forgather.me", "javascript:alert(1)"})
+    @ParameterizedTest
+    void spaceLinkUrlPatternValidationTest(String invalidUrl) {
+        // when & then
+        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, "forgather_official",
+            "forgather@forgather.me", invalidUrl, "포트폴리오"))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("링크 URL 형식");
+    }
+
+    @DisplayName("링크 URL은 최대 2048자까지 가능하다.")
+    @Test
+    void spaceLinkUrlLengthValidationTest() {
+        // given
+        String tooLongUrl = "https://forgather.me/" + getString(2048);
+
+        // when & then
+        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, "forgather_official",
+            "forgather@forgather.me", tooLongUrl, "포트폴리오"))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("링크 URL은 최대");
+    }
+
+    @DisplayName("링크 표시 이름은 최대 30자까지 가능하다.")
+    @Test
+    void spaceLinkNameLengthValidationTest() {
+        // given
+        String tooLongName = getString(31);
+
+        // when & then
+        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, "forgather_official",
+            "forgather@forgather.me", "https://forgather.me", tooLongName))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("링크 표시 이름은 최대");
     }
 
     @DisplayName("스페이스 이름을 수정할 수 있다.")
@@ -189,10 +283,10 @@ class SpaceTest {
     void updateSpaceName() {
         // given
         Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me");
+            "forgather@forgather.me", "", "");
 
         // when
-        space.update("새로운 스페이스", null, null, null, null);
+        space.update("새로운 스페이스", null, null, null, null, null, null);
 
         // then
         assertAll(
@@ -209,10 +303,10 @@ class SpaceTest {
     void updateSpaceDescription() {
         // given
         Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me");
+            "forgather@forgather.me", "", "");
 
         // when
-        space.update(null, "새로운 스페이스 설명", null, null, null);
+        space.update(null, "새로운 스페이스 설명", null, null, null, null, null);
 
         // then
         assertAll(
@@ -229,10 +323,10 @@ class SpaceTest {
     void updateSpaceIsPublic() {
         // given
         Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me");
+            "forgather@forgather.me", "", "");
 
         // when
-        space.update(null, null, true, null, null);
+        space.update(null, null, true, null, null, null, null);
 
         // then
         assertAll(
@@ -249,10 +343,10 @@ class SpaceTest {
     void updateSpaceInstagramUsername() {
         // given
         Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me");
+            "forgather@forgather.me", "", "");
 
         // when
-        space.update(null, null, null, "forgather_official_new", null);
+        space.update(null, null, null, "forgather_official_new", null, null, null);
 
         // then
         assertAll(
@@ -269,10 +363,10 @@ class SpaceTest {
     void updateSpaceEmail() {
         // given
         Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me");
+            "forgather@forgather.me", "", "");
 
         // when
-        space.update(null, null, null, null, "forgather_new@forgather.me");
+        space.update(null, null, null, null, "forgather_new@forgather.me", null, null);
 
         // then
         assertAll(
@@ -282,6 +376,53 @@ class SpaceTest {
             () -> assertThat(space.getInstagramUsername()).isEqualTo("forgather_official"),
             () -> assertThat(space.getEmail()).isEqualTo("forgather_new@forgather.me")
         );
+    }
+
+    @DisplayName("링크 URL과 표시 이름을 함께 추가할 수 있다.")
+    @Test
+    void updateSpaceLink() {
+        // given
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
+            "forgather@forgather.me", "", "");
+
+        // when
+        space.update(null, null, null, null, null, "https://forgather.me", "포트폴리오");
+
+        // then
+        assertAll(
+            () -> assertThat(space.getLinkUrl()).isEqualTo("https://forgather.me"),
+            () -> assertThat(space.getLinkName()).isEqualTo("포트폴리오")
+        );
+    }
+
+    @DisplayName("기존 링크를 빈 쌍으로 수정하면 링크를 삭제할 수 있다.")
+    @Test
+    void updateSpaceLinkToEmpty() {
+        // given
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
+            "forgather@forgather.me", "https://forgather.me", "포트폴리오");
+
+        // when
+        space.update(null, null, null, null, null, "", "");
+
+        // then
+        assertAll(
+            () -> assertThat(space.getLinkUrl()).isEmpty(),
+            () -> assertThat(space.getLinkName()).isEmpty()
+        );
+    }
+
+    @DisplayName("링크 URL만 수정하고 표시 이름을 누락하면 예외를 던진다.")
+    @Test
+    void updateSpaceLinkUrlOnly() {
+        // given
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
+            "forgather@forgather.me", "", "");
+
+        // when & then
+        assertThatThrownBy(() -> space.update(null, null, null, null, null, "https://forgather.me", null))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("함께 입력");
     }
 
     private String getString(int length) {
