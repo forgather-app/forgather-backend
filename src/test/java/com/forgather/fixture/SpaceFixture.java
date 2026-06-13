@@ -5,18 +5,23 @@ import com.forgather.domain.space.model.Space;
 public class SpaceFixture {
 
     public static Space createSpace() {
-        return new Space("1234567890", "name", "description", true, "instagramUsername", "email@forgather.me");
+        return new Space("1234567890", "name", "description", true, "instagramUsername", "email@forgather.me", "", "");
     }
 
     public static Space createPrivateSpace() {
-        return new Space("0987654321", "name", "description", false, "instagramUsername", "email@forgather.me");
+        return new Space("0987654321", "name", "description", false, "instagramUsername", "email@forgather.me", "", "");
     }
 
     public static Space createSpaceWithCode(String code) {
-        return new Space(code, "name", "description", true, "instagramUsername", "email@forgather.me");
+        return new Space(code, "name", "description", true, "instagramUsername", "email@forgather.me", "", "");
     }
 
     public static Space createSpaceWithCodeAndName(String code, String name) {
-        return new Space(code, name, "description", true, "instagramUsername", "email@forgather.me");
+        return new Space(code, name, "description", true, "instagramUsername", "email@forgather.me", "", "");
+    }
+
+    public static Space createSpaceWithLink(String linkUrl, String linkName) {
+        return new Space("1234567890", "name", "description", true, "instagramUsername", "email@forgather.me",
+            linkUrl, linkName);
     }
 }

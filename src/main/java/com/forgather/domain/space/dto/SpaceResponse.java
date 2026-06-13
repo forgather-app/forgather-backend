@@ -28,6 +28,12 @@ public record SpaceResponse(
     @Schema(description = "스페이스 호스트 이메일", example = "forgather@forgather.me")
     String email,
 
+    @Schema(description = "스페이스 소개 링크 URL", example = "https://forgather.app")
+    String linkUrl,
+
+    @Schema(description = "스페이스 소개 링크 표시 이름", example = "포트폴리오")
+    String linkName,
+
     @Schema(description = "스페이스 프로필 사진", example = """
         {
             "isExists": true,
@@ -49,6 +55,8 @@ public record SpaceResponse(
             space.isPublic(),
             space.getInstagramUsername(),
             space.getEmail(),
+            space.getLinkUrl(),
+            space.getLinkName(),
             SpacePhotoResponse.from(spacePhoto),
             guestBookCardCount
         );
