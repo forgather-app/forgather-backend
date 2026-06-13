@@ -1,5 +1,7 @@
 package com.forgather.domain.space.dto;
 
+import org.hibernate.validator.constraints.URL;
+
 import com.forgather.domain.space.model.Space;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -23,10 +25,27 @@ public record CreateSpaceRequest(
 
     @Schema(description = "스페이스 호스트 이메일", example = "forgather@forgather.me", maxLength = 50, nullable = true)
     @Email
-    String email
+    String email,
+
+    @Schema(
+        description = "스페이스 소개 링크 URL (표시 이름과 함께 입력)",
+        example = "https://forgather.app",
+        maxLength = 2048,
+        nullable = true
+    )
+    @URL
+    String linkUrl,
+
+    @Schema(
+        description = "스페이스 소개 링크 표시 이름 (URL과 함께 입력)",
+        example = "포트폴리오",
+        maxLength = 30,
+        nullable = true
+    )
+    String linkName
 ) {
 
     public Space toEntity(String spaceCode) {
-        return new Space(spaceCode, name, description, isPublic, instagramUsername, email);
+        return new Space(spaceCode, name, description, isPublic, instagramUsername, email, linkUrl, linkName);
     }
 }

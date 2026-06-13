@@ -58,7 +58,9 @@ class SpaceServiceTest extends TestOnContainer {
             "description",
             true,
             "forgather_official",
-            "forgather@forgather.me"
+            "forgather@forgather.me",
+            null,
+            null
         );
         MultipartFile file = new MockMultipartFile("temp.png", new byte[] {});
 
