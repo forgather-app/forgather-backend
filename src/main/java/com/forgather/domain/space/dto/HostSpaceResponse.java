@@ -32,6 +32,8 @@ public record HostSpaceResponse(
               "isPublic": true,
               "instagramUsername": "forgather_official2",
               "email": "forgather2@forgather.me",
+              "linkUrl": "",
+              "linkName": "",
               "spacePhoto": {
                 "isExists": false,
                 "path": ""
