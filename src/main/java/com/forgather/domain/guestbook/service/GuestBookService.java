@@ -77,13 +77,36 @@ public class GuestBookService {
         return new GuestBookCardPhotos(photos);
     }
 
+    @Deprecated(since = "2026-06-11", forRemoval = true)
+    @Transactional(readOnly = true)
+    @SuppressWarnings("removal")
+    public GuestBookResponse read(Host host, String spaceCode, Pageable pageable) {
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
+        boolean isSpaceHost = host != null && isSpaceHost(space, host);
+        validateCanRead(space, isSpaceHost);
+
+        Page<GuestBookCardSimpleResponse> simpleResponses =
+            guestBookCardRepository.findAllDtoBySpaceAndVisibilityStatusAndDeletedAtIsNull(
+                space,
+                VISIBLE,
+                pageable
+            ).map(guestBookCardDto -> {
+                if (isSpaceHost) {
+                    return GuestBookCardSimpleResponse.fromWithReadStatus(guestBookCardDto);
+                }
+                return GuestBookCardSimpleResponse.from(guestBookCardDto);
+            });
+
+        return new GuestBookResponse(simpleResponses);
+    }
+
     /**
-     *  VISIBLE 상태인 방명록 조회
+     * VISIBLE 상태인 방명록 조회
      * - 스페이스 호스트: isRead=true인 방명록만 조회, isRead=false인 방명록 개수 응답
      * - 게스트: 모든 방명록 조회, 안읽은 방명록 개수 응답x
      */
     @Transactional(readOnly = true)
-    public GuestBookResponse read(Host host, String spaceCode, Pageable pageable) {
+    public GuestBookResponse readV2(Host host, String spaceCode, Pageable pageable) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         boolean isSpaceHost = host != null && isSpaceHost(space, host);
         validateCanRead(space, isSpaceHost);

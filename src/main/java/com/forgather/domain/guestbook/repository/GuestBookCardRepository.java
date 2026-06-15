@@ -46,6 +46,7 @@ public interface GuestBookCardRepository {
             SELECT new com.forgather.domain.guestbook.repository.dto.GuestBookCardListDto(
                 g.id,
                 g.nickname,
+                g.isRead,
                 CASE WHEN (
                     SELECT COUNT(p) FROM GuestBookCardPhoto p WHERE p.guestBookCard = g
                 ) > 0 THEN true ELSE false END
@@ -65,6 +66,7 @@ public interface GuestBookCardRepository {
             SELECT new com.forgather.domain.guestbook.repository.dto.GuestBookCardListDto(
                 g.id,
                 g.nickname,
+                g.isRead,
                 CASE WHEN (
                     SELECT COUNT(p) FROM GuestBookCardPhoto p WHERE p.guestBookCard = g
                 ) > 0 THEN true ELSE false END

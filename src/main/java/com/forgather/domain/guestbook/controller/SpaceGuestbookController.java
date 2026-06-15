@@ -27,6 +27,7 @@ import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.response.ApiResponse;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -47,9 +48,12 @@ public class SpaceGuestbookController {
     private final GuestBookService guestBookService;
     private final GuestbookReportService guestBookReportService;
 
+    @Deprecated(since = "2026-06-11", forRemoval = true)
+    @Hidden
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "방명록 조회",
-        description = "공개 스페이스가 아닌 경우 호스트만 조회 가능. 호스트일 경우 읽은 방명록은 조회하지 않는다.",
+        description = "공개 스페이스가 아닌 경우 호스트만 조회 가능. 하위 호환을 위한 기존 API이며 신규 클라이언트는 X-API-Version=2로 호출한다.",
+        deprecated = true,
         parameters = {
             @Parameter(
                 name = "page",
@@ -72,6 +76,7 @@ public class SpaceGuestbookController {
         }
     )
     @GetMapping
+    @SuppressWarnings("removal")
     public ResponseEntity<ApiResponse<GuestBookResponse>> readGuestBook(
         @PathVariable(value = "spaceCode") String spaceCode,
         @Parameter(hidden = true)
@@ -84,10 +89,26 @@ public class SpaceGuestbookController {
     }
 
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "방명록 조회 v2",
+        description = "공개 스페이스가 아닌 경우 호스트만 조회 가능. 호스트일 경우 읽은 방명록만 조회하고 읽지 않은 방명록 수를 응답한다.")
+    @GetMapping(headers = "X-API-Version=2")
+    public ResponseEntity<ApiResponse<GuestBookResponse>> readGuestBookV2(
+        @PathVariable(value = "spaceCode") String spaceCode,
+        @Parameter(hidden = true)
+        @PageableDefault(size = 15, sort = {"createdAt", "id"}, direction = Sort.Direction.DESC)
+        Pageable pageable,
+        @LoginHost(required = false) Host host
+    ) {
+        GuestBookResponse response = guestBookService.readV2(host, spaceCode, pageable);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "읽지 않은 방명록 조회", description = "스페이스 호스트가 읽지 않은 방명록 목록을 조회한다")
     @GetMapping("/unread")
     public ResponseEntity<ApiResponse<GuestBookResponse>> readUnreadGuestBook(
         @PathVariable(value = "spaceCode") String spaceCode,
+        @Parameter(hidden = true)
         @PageableDefault(size = 15, sort = {"createdAt", "id"}, direction = Sort.Direction.DESC)
         Pageable pageable,
         @LoginHost(required = true) Host host

@@ -299,12 +299,12 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .body("message", containsString("방문자는 비공개 스페이스의 방명록을 조회할 수 없습니다."));
         }
 
-        @DisplayName("호스트가 방명록을 조회할 경우 읽은 방명록만 반환하고 읽지 않은 방명록 수를 응답한다")
+        @DisplayName("호스트가 기본 버전 방명록을 조회할 경우 전체 방명록을 반환하고 읽지 않은 방명록 수를 응답하지 않는다")
         @Test
-        void hostReadGuestBookReturnsOnlyReadCardsAndUnreadCount() {
+        void hostReadGuestBookWithDefaultVersionKeepsLegacyResponse() {
             // given
             WriteGuestBookCardResponse readCard = writeGuestBookCard(publicSpace);
-            writeGuestBookCardWithNoPhoto(publicSpace);
+            WriteGuestBookCardResponse unreadCard = writeGuestBookCardWithNoPhoto(publicSpace);
             readGuestBookCardAsHost(publicSpace, readCard.id());
 
             // when, then
@@ -326,10 +326,12 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // then
             assertAll(
-                () -> assertThat(result.data().newCount()).isOne(),
-                () -> assertThat(result.data().guestBookCards()).hasSize(1),
-                () -> assertThat(result.data().guestBookCards().getFirst().id()).isEqualTo(readCard.id()),
-                () -> assertThat(result.data().totalCount()).isOne()
+                () -> assertThat(result.data().guestBookCards()).hasSize(2),
+                () -> assertThat(result.data().guestBookCards().getFirst().id()).isEqualTo(unreadCard.id()),
+                () -> assertThat(result.data().guestBookCards().getFirst().isRead()).isFalse(),
+                () -> assertThat(result.data().guestBookCards().getLast().id()).isEqualTo(readCard.id()),
+                () -> assertThat(result.data().guestBookCards().getLast().isRead()).isTrue(),
+                () -> assertThat(result.data().totalCount()).isEqualTo(2)
             );
         }
 
@@ -363,6 +365,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.data().newCount()).isNull(),
                 () -> assertThat(result.data().guestBookCards()).hasSize(1),
                 () -> assertThat(result.data().guestBookCards().getFirst().id()).isEqualTo(unreadCard.id()),
+                () -> assertThat(result.data().guestBookCards().getFirst().isRead()).isNull(),
                 () -> assertThat(result.data().totalCount()).isOne()
             );
         }
@@ -543,6 +546,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // then
             ApiResponse<GuestBookResponse> result = RestAssuredMockMvc.given()
+                .header("X-API-Version", "2")
                 .header("Authorization", "Bearer " + accessToken)
                 .accept(ContentType.JSON)
                 .queryParam("page", 1)
