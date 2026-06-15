@@ -13,7 +13,7 @@ import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.domain.ContentsStorage;
 import com.forgather.domain.upload.domain.SignedUrlIssuer;
 import com.forgather.domain.upload.domain.UploadCategory;
-import com.forgather.domain.upload.domain.UploadFile;
+import com.forgather.domain.upload.domain.UploadFileMetadata;
 import com.forgather.domain.upload.dto.IssuePreSignedUrlRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlResponse;
@@ -70,11 +70,11 @@ public class UploadService {
 
     @Transactional(readOnly = true)
     public IssueSignedUrlResponse issueGuestbookSignedUrls(String spaceCode, IssuePreSignedUrlRequest request) {
-        List<UploadFile> uploadFiles = request.toUploadFiles();
+        List<UploadFileMetadata> uploadFilesData = request.toUploadFilesData();
         spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
 
         Map<String, String> signedUrls = signedUrlIssuer.issueForSpace(
-            uploadFiles,
+            uploadFilesData,
             spaceCode,
             UploadCategory.GUESTBOOK
         );
@@ -91,7 +91,7 @@ public class UploadService {
         validateSpaceHost(space, host);
 
         Map<String, String> signedUrls = signedUrlIssuer.issueForSpace(
-            request.toUploadFiles(),
+            request.toUploadFilesData(),
             spaceCode,
             UploadCategory.PRODUCT
         );
@@ -106,7 +106,7 @@ public class UploadService {
     }
 
     public IssueSignedUrlResponse issueExhibitionSignedUrls(IssuePreSignedUrlRequest request) {
-        Map<String, String> signedUrls = signedUrlIssuer.issueForExhibition(request.toUploadFiles());
+        Map<String, String> signedUrls = signedUrlIssuer.issueForExhibition(request.toUploadFilesData());
         return new IssueSignedUrlResponse(signedUrls);
     }
 }

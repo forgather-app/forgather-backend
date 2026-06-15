@@ -21,9 +21,9 @@ class SignedUrlIssuerTest {
 
     private final SignedUrlIssuer signedUrlIssuer = new SignedUrlIssuer(new FakeContentStorage());
 
-    private List<UploadFile> uploadFiles(String... fileNames) {
+    private List<UploadFileMetadata> uploadFiles(String... fileNames) {
         return Arrays.stream(fileNames)
-            .map(fileName -> new UploadFile(fileName, 1024L))
+            .map(fileName -> new UploadFileMetadata(fileName, 1024L))
             .toList();
     }
 
@@ -31,7 +31,7 @@ class SignedUrlIssuerTest {
     @Test
     void issueForSpace() {
         // given
-        List<UploadFile> files = uploadFiles("abc.webp", "def.webp", "hij.webp");
+        List<UploadFileMetadata> files = uploadFiles("abc.webp", "def.webp", "hij.webp");
 
         // when
         Map<String, String> result = signedUrlIssuer.issueForSpace(files, "1234567890", PRODUCT);
@@ -51,8 +51,8 @@ class SignedUrlIssuerTest {
     @Test
     void throwExceptionWhenExceedMaxCount() {
         // given
-        List<UploadFile> files = IntStream.range(0, 101)
-            .mapToObj(number -> new UploadFile(number + ".webp", 1024L))
+        List<UploadFileMetadata> files = IntStream.range(0, 101)
+            .mapToObj(number -> new UploadFileMetadata(number + ".webp", 1024L))
             .toList();
 
         // when, then
@@ -65,8 +65,8 @@ class SignedUrlIssuerTest {
     @Test
     void notThrowExceptionWhenNotExceedMaxCount() {
         // given
-        List<UploadFile> files = IntStream.range(0, 100)
-            .mapToObj(number -> new UploadFile(number + ".webp", 1024L))
+        List<UploadFileMetadata> files = IntStream.range(0, 100)
+            .mapToObj(number -> new UploadFileMetadata(number + ".webp", 1024L))
             .toList();
 
         // when, then
@@ -87,7 +87,7 @@ class SignedUrlIssuerTest {
     @Test
     void issueForExhibition() {
         // given
-        List<UploadFile> files = uploadFiles("abc.webp", "def.webp");
+        List<UploadFileMetadata> files = uploadFiles("abc.webp", "def.webp");
 
         // when
         Map<String, String> result = signedUrlIssuer.issueForExhibition(files);
@@ -105,8 +105,8 @@ class SignedUrlIssuerTest {
     @Test
     void throwExceptionWhenExhibitionExceedMaxCount() {
         // given
-        List<UploadFile> files = IntStream.range(0, 101)
-            .mapToObj(number -> new UploadFile(number + ".webp", 1024L))
+        List<UploadFileMetadata> files = IntStream.range(0, 101)
+            .mapToObj(number -> new UploadFileMetadata(number + ".webp", 1024L))
             .toList();
 
         // when, then

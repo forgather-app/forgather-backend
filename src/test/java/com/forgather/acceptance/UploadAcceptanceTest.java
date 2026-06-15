@@ -30,7 +30,7 @@ import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.AwsS3Cloud;
-import com.forgather.domain.upload.domain.UploadFile;
+import com.forgather.domain.upload.domain.UploadFileMetadata;
 import com.forgather.domain.upload.dto.IssuePreSignedUrlRequest;
 import com.forgather.domain.upload.dto.IssuePreSignedUrlRequest.UploadFileRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlRequest;
@@ -226,7 +226,7 @@ class UploadAcceptanceTest extends AcceptanceTest {
     @Test
     void issueExhibitionSignedUrlsWithOversizeFile() {
         // given
-        long oversize = UploadFile.MAX_FILE_SIZE_BYTES + 1;
+        long oversize = UploadFileMetadata.MAX_FILE_SIZE_BYTES + 1;
         IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
             new UploadFileRequest("abc.webp", oversize)
         ));
@@ -243,7 +243,7 @@ class UploadAcceptanceTest extends AcceptanceTest {
     void issueExhibitionSignedUrlsWithExactlyMaxSizeFile() {
         // given
         IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
-            new UploadFileRequest("abc.webp", UploadFile.MAX_FILE_SIZE_BYTES)
+            new UploadFileRequest("abc.webp", UploadFileMetadata.MAX_FILE_SIZE_BYTES)
         ));
         when(awsS3Cloud.getRootDirectory()).thenReturn("photogather/v2");
         when(awsS3Cloud.issueSignedUrl(anyString(), anyString(), anyLong())).thenAnswer(invocation -> {

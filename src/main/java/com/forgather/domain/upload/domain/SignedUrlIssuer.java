@@ -22,7 +22,7 @@ public class SignedUrlIssuer {
     private final ContentsStorage contentsStorage;
 
     public Map<String, String> issueForSpace(
-        List<UploadFile> uploadFiles,
+        List<UploadFileMetadata> uploadFiles,
         String spaceCode,
         UploadCategory category
     ) {
@@ -36,7 +36,7 @@ public class SignedUrlIssuer {
             throw new BaseException("업로드 카테고리는 필수입니다.");
         }
         Map<String, String> signedUrls = new HashMap<>();
-        for (UploadFile uploadFile : uploadFiles) {
+        for (UploadFileMetadata uploadFile : uploadFiles) {
             String filePath = generateContentsFilePath(
                 contentsStorage.getRootDirectory(),
                 spaceCode,
@@ -48,12 +48,12 @@ public class SignedUrlIssuer {
         return signedUrls;
     }
 
-    public Map<String, String> issueForExhibition(List<UploadFile> uploadFiles) {
+    public Map<String, String> issueForExhibition(List<UploadFileMetadata> uploadFiles) {
         validateNotEmpty(uploadFiles);
         validateCount(uploadFiles);
 
         Map<String, String> signedUrls = new HashMap<>();
-        for (UploadFile uploadFile : uploadFiles) {
+        for (UploadFileMetadata uploadFile : uploadFiles) {
             String filePath = generateExhibitionContentsFilePath(
                 contentsStorage.getRootDirectory(),
                 uploadFile.getFileName()
@@ -63,7 +63,7 @@ public class SignedUrlIssuer {
         return signedUrls;
     }
 
-    private String issueUploadUrl(String filePath, UploadFile uploadFile) {
+    private String issueUploadUrl(String filePath, UploadFileMetadata uploadFile) {
         return contentsStorage.issueSignedUrl(
             filePath,
             uploadFile.getContentType(),

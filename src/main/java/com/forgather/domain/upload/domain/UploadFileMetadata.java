@@ -5,19 +5,20 @@ import com.forgather.global.exception.BaseException;
 import lombok.Getter;
 
 /**
- * presigned URL을 발급할 업로드 파일 한 건의 도메인 값 객체.
+ * presigned URL 발급에 필요한 업로드 파일 한 건의 메타데이터(파일명·크기) 값 객체.
+ * 실제 파일 바이트가 아니라 업로드할 파일의 명세를 표현한다.
  * 파일명 형식과 크기 상한(최대 {@link #MAX_FILE_SIZE_BYTES})을 스스로 보장하고,
  * 파일명 확장자로부터 고정할 Content-Type을 제공한다.
  */
 @Getter
-public class UploadFile {
+public class UploadFileMetadata {
 
     public static final long MAX_FILE_SIZE_BYTES = 20L * 1024 * 1024; // 20MB
 
     private final String fileName;
     private final long size;
 
-    public UploadFile(String fileName, long size) {
+    public UploadFileMetadata(String fileName, long size) {
         UploadFileNamePolicy.validate(fileName);
         validateSize(fileName, size);
         this.fileName = fileName;

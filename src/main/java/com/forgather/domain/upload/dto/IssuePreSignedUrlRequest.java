@@ -2,7 +2,7 @@ package com.forgather.domain.upload.dto;
 
 import java.util.List;
 
-import com.forgather.domain.upload.domain.UploadFile;
+import com.forgather.domain.upload.domain.UploadFileMetadata;
 import com.forgather.domain.upload.domain.UploadFileNamePolicy;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,7 +22,7 @@ public record IssuePreSignedUrlRequest(
     List<UploadFileRequest> uploadFiles
 ) {
 
-    public List<UploadFile> toUploadFiles() {
+    public List<UploadFileMetadata> toUploadFilesData() {
         return uploadFiles.stream()
             .map(UploadFileRequest::toDomain)
             .toList();
@@ -40,13 +40,13 @@ public record IssuePreSignedUrlRequest(
 
         @NotNull
         @Positive
-        @Max(value = UploadFile.MAX_FILE_SIZE_BYTES, message = "업로드 파일 크기는 최대 20MB 입니다.")
+        @Max(value = UploadFileMetadata.MAX_FILE_SIZE_BYTES, message = "업로드 파일 크기는 최대 20MB 입니다.")
         @Schema(description = "업로드 파일 크기 (바이트)", example = "1048576")
         Long size
     ) {
 
-        public UploadFile toDomain() {
-            return new UploadFile(fileName, size);
+        public UploadFileMetadata toDomain() {
+            return new UploadFileMetadata(fileName, size);
         }
     }
 }
