@@ -99,7 +99,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
             () -> assertThat(response.message()).isNull(),
             () -> assertThat(response.data().id()).isNotNull(),
             () -> assertThat(response.data().title()).isEqualTo("봄 전시"),
-            () -> assertThat(response.data().representativeImagePath())
+            () -> assertThat(response.data().photoPath())
                 .isEqualTo("ROOT_DIRECTORY_PLACEHOLDER/exhibitions/spring.webp"),
             () -> assertThat(response.data().location().locationType()).isEqualTo(LocationType.ONLINE),
             () -> assertThat(response.data().location().url()).isEqualTo("https://forgather.app"),
@@ -146,6 +146,45 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
             () -> assertThat(response.data().location().baseAddress()).isEqualTo("서울특별시 송파구"),
             () -> assertThat(response.data().location().detailAddress()).isEqualTo("루터회관"),
             () -> assertThat(response.data().operatingHours()).isNull()
+        );
+    }
+
+    @DisplayName("전시 사진 없이 전시를 생성하면 대표 이미지 경로는 null이다.")
+    @Test
+    void createExhibitionWithoutPhoto() {
+        // given
+        CreateExhibitionRequest request = new CreateExhibitionRequest(
+            null,
+            "사진 없는 전시",
+            LocalDate.of(2026, 6, 1),
+            LocalDate.of(2026, 6, 30),
+            "사진 없이 생성한 전시입니다.",
+            null,
+            null,
+            new LocationRequest(LocationType.ONLINE, "https://forgather.app", null, null)
+        );
+
+        // when
+        ApiResponse<ExhibitionResponse> response = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/exhibitions")
+            .then()
+            .statusCode(HttpStatus.CREATED.value())
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+
+        // then
+        assertAll(
+            () -> assertThat(response.code()).isEqualTo(ResponseCode.SUCCESS),
+            () -> assertThat(response.data().id()).isNotNull(),
+            () -> assertThat(response.data().title()).isEqualTo("사진 없는 전시"),
+            () -> assertThat(response.data().photoPath()).isNull()
         );
     }
 

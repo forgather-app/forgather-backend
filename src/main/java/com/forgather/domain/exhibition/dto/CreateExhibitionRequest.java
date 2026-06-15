@@ -3,8 +3,6 @@ package com.forgather.domain.exhibition.dto;
 import java.time.LocalDate;
 import java.util.List;
 
-import com.forgather.domain.exhibition.model.Exhibition;
-
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
@@ -14,9 +12,8 @@ import jakarta.validation.constraints.Size;
 
 public record CreateExhibitionRequest(
 
-    @Schema(description = "전시 대표 이미지")
+    @Schema(description = "전시 대표 이미지 (선택, null 가능)")
     @Valid
-    @NotNull
     CreateExhibitionPhotoRequest photo,
 
     @Schema(description = "전시 제목 (최대 100자)", example = "봄 전시")

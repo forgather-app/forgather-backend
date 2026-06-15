@@ -68,7 +68,7 @@ class ExhibitionServiceTest extends TestOnContainer {
         assertAll(
             () -> assertThat(response.id()).isNotNull(),
             () -> assertThat(response.title()).isEqualTo("봄 전시"),
-            () -> assertThat(response.representativeImagePath())
+            () -> assertThat(response.photoPath())
                 .isEqualTo("ROOT_DIRECTORY_PLACEHOLDER/exhibitions/abc.webp"),
             () -> assertThat(response.location().locationType()).isEqualTo(LocationType.ONLINE),
             () -> assertThat(response.location().url()).isEqualTo("https://forgather.app"),
@@ -103,6 +103,32 @@ class ExhibitionServiceTest extends TestOnContainer {
             () -> assertThat(response.location().baseAddress()).isEqualTo("서울특별시 송파구"),
             () -> assertThat(response.location().detailAddress()).isEqualTo("루터회관"),
             () -> assertThat(response.operatingHours()).isNull()
+        );
+    }
+
+    @DisplayName("전시 사진 없이 생성하면 응답의 대표 이미지 경로는 null이다.")
+    @Test
+    void createWithoutPhoto() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        CreateExhibitionRequest request = new CreateExhibitionRequest(
+            null,
+            "사진 없는 전시",
+            LocalDate.of(2026, 6, 1),
+            LocalDate.of(2026, 6, 30),
+            "사진 없이 생성한 전시입니다.",
+            null,
+            null,
+            new LocationRequest(LocationType.ONLINE, "https://forgather.app", null, null)
+        );
+
+        // when
+        ExhibitionResponse response = exhibitionService.create(host, request);
+
+        // then
+        assertAll(
+            () -> assertThat(response.id()).isNotNull(),
+            () -> assertThat(response.photoPath()).isNull()
         );
     }
 
