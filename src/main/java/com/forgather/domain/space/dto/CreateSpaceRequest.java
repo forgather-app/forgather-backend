@@ -29,7 +29,7 @@ public record CreateSpaceRequest(
 
     @Schema(description = "스페이스 호스트 이메일", example = "forgather@forgather.me", maxLength = 50, nullable = true)
     @Email
-    @TextSize(max = 30)
+    @TextSize(max = 50)
     String email,
 
     @Schema(
