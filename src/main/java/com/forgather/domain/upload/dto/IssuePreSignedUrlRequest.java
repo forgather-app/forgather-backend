@@ -19,7 +19,7 @@ public record IssuePreSignedUrlRequest(
     @NotEmpty
     @Valid
     @Schema(description = "업로드 파일 목록")
-    List<UploadFileRequest> uploadFiles
+    List<@NotNull(message = "업로드 파일은 null일 수 없습니다.") UploadFileRequest> uploadFiles
 ) {
 
     public List<UploadFileMetadata> toUploadFilesData() {

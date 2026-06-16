@@ -9,6 +9,7 @@ import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -292,6 +293,22 @@ class UploadAcceptanceTest extends AcceptanceTest {
         // given
         IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
             new UploadFileRequest(null, 1024L)
+        ));
+
+        // when
+        ApiResponse<Void> result = postExhibitionSignedUrlsExpectingBadRequest(request);
+
+        // then
+        assertThat(result.code()).isEqualTo(ResponseCode.VALIDATION_FAILED);
+    }
+
+    @DisplayName("전시 사진 업로드 url 발급 시 업로드 파일 목록에 null이 포함되면 400(VALIDATION_FAILED)을 반환한다")
+    @Test
+    void issueExhibitionSignedUrlsWithNullFileElement() {
+        // given
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(Arrays.asList(
+            new UploadFileRequest("abc.webp", 1024L),
+            null
         ));
 
         // when
