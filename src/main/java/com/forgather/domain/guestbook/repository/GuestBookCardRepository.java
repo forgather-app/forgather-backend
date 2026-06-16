@@ -48,7 +48,7 @@ public interface GuestBookCardRepository {
                 g.nickname,
                 g.isRead,
                 CASE WHEN (
-                    SELECT COUNT(p) FROM GuestBookCardPhoto p WHERE p.guestBookCard = g
+                    SELECT COUNT(p) FROM GuestBookCardPhoto p WHERE p.guestBookCard = g AND p.deletedAt IS NULL
                 ) > 0 THEN true ELSE false END
             )
             FROM GuestBookCard g
@@ -68,7 +68,7 @@ public interface GuestBookCardRepository {
                 g.nickname,
                 g.isRead,
                 CASE WHEN (
-                    SELECT COUNT(p) FROM GuestBookCardPhoto p WHERE p.guestBookCard = g
+                    SELECT COUNT(p) FROM GuestBookCardPhoto p WHERE p.guestBookCard = g AND p.deletedAt IS NULL
                 ) > 0 THEN true ELSE false END
             )
             FROM GuestBookCard g
