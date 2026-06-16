@@ -29,7 +29,7 @@ public record GuestBookCardSimpleResponse(
         );
     }
 
-    @Deprecated(since = "2026-06-11", forRemoval = true)
+    @Deprecated(forRemoval = true)
     public static GuestBookCardSimpleResponse fromWithReadStatus(GuestBookCardListDto guestBookCardDto) {
         return new GuestBookCardSimpleResponse(
             guestBookCardDto.id(),

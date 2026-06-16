@@ -48,7 +48,7 @@ public class SpaceGuestbookController {
     private final GuestBookService guestBookService;
     private final GuestbookReportService guestBookReportService;
 
-    @Deprecated(since = "2026-06-11", forRemoval = true)
+    @Deprecated(forRemoval = true)
     @Hidden
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "방명록 조회",

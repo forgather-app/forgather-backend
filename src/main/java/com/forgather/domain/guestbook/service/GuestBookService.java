@@ -77,7 +77,7 @@ public class GuestBookService {
         return new GuestBookCardPhotos(photos);
     }
 
-    @Deprecated(since = "2026-06-11", forRemoval = true)
+    @Deprecated(forRemoval = true)
     @Transactional(readOnly = true)
     @SuppressWarnings("removal")
     public GuestBookResponse read(Host host, String spaceCode, Pageable pageable) {
