@@ -8,19 +8,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 public record CreateExhibitionRequest(
 
-    @Schema(description = "전시 이미지 경로 (S3 key)", example = "exhibitions/abc.webp")
-    @NotBlank
-    String imagePath,
-
-    @Schema(description = "전시 이미지 파일 크기 (bytes)", example = "102400")
-    @Positive
-    @NotNull
-    Long imageCapacity,
+    @Schema(description = "전시 대표 이미지 (선택, null 가능)")
+    @Valid
+    CreateExhibitionPhotoRequest photo,
 
     @Schema(description = "전시 제목 (최대 100자)", example = "봄 전시")
     @NotBlank

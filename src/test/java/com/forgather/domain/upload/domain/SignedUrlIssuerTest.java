@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
@@ -18,17 +19,44 @@ import com.forgather.global.exception.BaseException;
 
 class SignedUrlIssuerTest {
 
+    private final SignedUrlIssuer signedUrlIssuer = new SignedUrlIssuer(new FakeContentStorage());
+
+    private List<UploadFileMetadata> uploadFiles(String... fileNames) {
+        return Arrays.stream(fileNames)
+            .map(fileName -> new UploadFileMetadata(fileName, 1024L))
+            .toList();
+    }
+
+    @DisplayName("스페이스 사진의 서명된 url을 발급한다")
+    @Test
+    void issueForSpace() {
+        // given
+        List<UploadFileMetadata> files = uploadFiles("abc.webp", "def.webp", "hij.webp");
+
+        // when
+        Map<String, String> result = signedUrlIssuer.issueForSpace(files, "1234567890", PRODUCT);
+
+        // then
+        assertAll(
+            () -> assertThat(result.get("abc.webp"))
+                .isEqualTo("test-prefix-photogather/v2/spaces/1234567890/product/abc.webp-test-suffix"),
+            () -> assertThat(result.get("def.webp"))
+                .isEqualTo("test-prefix-photogather/v2/spaces/1234567890/product/def.webp-test-suffix"),
+            () -> assertThat(result.get("hij.webp"))
+                .isEqualTo("test-prefix-photogather/v2/spaces/1234567890/product/hij.webp-test-suffix")
+        );
+    }
+
     @DisplayName("한 번에 발급 가능한 url 개수를 초과하면 예외를 던진다")
     @Test
     void throwExceptionWhenExceedMaxCount() {
         // given
-        SignedUrlIssuer signedUrlIssuer = new SignedUrlIssuer(new FakeContentStorage());
-        List<String> fileNames = IntStream.range(0, 101)
-            .mapToObj(number -> number + ".jpg")
+        List<UploadFileMetadata> files = IntStream.range(0, 101)
+            .mapToObj(number -> new UploadFileMetadata(number + ".webp", 1024L))
             .toList();
 
         // when, then
-        assertThatThrownBy(() -> signedUrlIssuer.issueSignedUrls(fileNames, "1234567890", PRODUCT))
+        assertThatThrownBy(() -> signedUrlIssuer.issueForSpace(files, "1234567890", PRODUCT))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("한번에 발급 가능한 업로드 url 개수");
     }
@@ -37,38 +65,62 @@ class SignedUrlIssuerTest {
     @Test
     void notThrowExceptionWhenNotExceedMaxCount() {
         // given
-        SignedUrlIssuer signedUrlIssuer = new SignedUrlIssuer(new FakeContentStorage());
-        List<String> fileNames = IntStream.range(0, 100)
-            .mapToObj(number -> number + ".jpg")
+        List<UploadFileMetadata> files = IntStream.range(0, 100)
+            .mapToObj(number -> new UploadFileMetadata(number + ".webp", 1024L))
             .toList();
 
-        // when
-        assertThatCode(() -> signedUrlIssuer.issueSignedUrls(fileNames, "1234567890", PRODUCT))
+        // when, then
+        assertThatCode(() -> signedUrlIssuer.issueForSpace(files, "1234567890", PRODUCT))
             .doesNotThrowAnyException();
     }
 
-    @DisplayName("서명된 url을 발급한다")
+    @DisplayName("스페이스 사진 발급 시 파일 목록이 비어있으면 예외를 던진다")
     @Test
-    void issueSignedUrls() {
+    void throwExceptionWhenSpaceFilesEmpty() {
+        // when, then
+        assertThatThrownBy(() -> signedUrlIssuer.issueForSpace(List.of(), "1234567890", PRODUCT))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("업로드 파일명 목록은 null이거나 비어있을 수 없습니다");
+    }
+
+    @DisplayName("전시 사진의 서명된 url을 발급한다")
+    @Test
+    void issueForExhibition() {
         // given
-        SignedUrlIssuer signedUrlIssuer = new SignedUrlIssuer(new FakeContentStorage());
-        List<String> fileNames = List.of("abc.jpg", "def.jpg", "hij.png");
+        List<UploadFileMetadata> files = uploadFiles("abc.webp", "def.webp");
 
         // when
-        Map<String, String> result = signedUrlIssuer.issueSignedUrls(
-            fileNames,
-            "1234567890",
-            PRODUCT
-        );
+        Map<String, String> result = signedUrlIssuer.issueForExhibition(files);
 
         // then
         assertAll(
-            () -> assertThat(result.get("abc.jpg"))
-                .isEqualTo("test-prefix-photogather/v2/spaces/1234567890/product/abc.jpg-test-suffix"),
-            () -> assertThat(result.get("def.jpg"))
-                .isEqualTo("test-prefix-photogather/v2/spaces/1234567890/product/def.jpg-test-suffix"),
-            () -> assertThat(result.get("hij.png"))
-                .isEqualTo("test-prefix-photogather/v2/spaces/1234567890/product/hij.png-test-suffix")
+            () -> assertThat(result.get("abc.webp"))
+                .isEqualTo("test-prefix-photogather/v2/exhibitions/abc.webp-test-suffix"),
+            () -> assertThat(result.get("def.webp"))
+                .isEqualTo("test-prefix-photogather/v2/exhibitions/def.webp-test-suffix")
         );
+    }
+
+    @DisplayName("전시 사진 서명 url 발급 시 한 번에 발급 가능한 개수를 초과하면 예외를 던진다")
+    @Test
+    void throwExceptionWhenExhibitionExceedMaxCount() {
+        // given
+        List<UploadFileMetadata> files = IntStream.range(0, 101)
+            .mapToObj(number -> new UploadFileMetadata(number + ".webp", 1024L))
+            .toList();
+
+        // when, then
+        assertThatThrownBy(() -> signedUrlIssuer.issueForExhibition(files))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("한번에 발급 가능한 업로드 url 개수");
+    }
+
+    @DisplayName("전시 사진 서명 url 발급 시 파일 목록이 비어있으면 예외를 던진다")
+    @Test
+    void throwExceptionWhenExhibitionFilesEmpty() {
+        // when, then
+        assertThatThrownBy(() -> signedUrlIssuer.issueForExhibition(List.of()))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("업로드 파일명 목록은 null이거나 비어있을 수 없습니다");
     }
 }

@@ -1,5 +1,7 @@
 package com.forgather.domain.space.dto;
 
+import org.hibernate.validator.constraints.URL;
+
 import com.forgather.global.validation.TextSize;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -26,6 +28,23 @@ public record UpdateSpaceRequest(
     @Email
     @TextSize(max = 50)
     String email,
+
+    @Schema(
+        description = "새로운 소개 링크 URL (표시 이름과 함께 입력, 빈 쌍으로 삭제)",
+        example = "https://forgather.app",
+        maxLength = 2048,
+        nullable = true
+    )
+    @URL
+    String linkUrl,
+
+    @Schema(
+        description = "새로운 소개 링크 표시 이름 (URL과 함께 입력)",
+        example = "포트폴리오",
+        maxLength = 30,
+        nullable = true
+    )
+    String linkName,
 
     @Schema(description = "스페이스 사진 삭제 여부", example = "true")
     Boolean isDeletePhoto

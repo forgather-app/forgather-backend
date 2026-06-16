@@ -16,6 +16,8 @@ public record HostSpaceResponse(
                "isPublic": true,
                "instagramUsername": "forgather_official1",
                "email": "forgather1@forgather.me",
+               "linkUrl": "https://forgather.app",
+               "linkName": "포트폴리오",
                "spacePhoto": {
                  "isExists": true,
                  "path": "photogather/v2/spaces/1234567890/space/profile.png"
@@ -30,6 +32,8 @@ public record HostSpaceResponse(
               "isPublic": true,
               "instagramUsername": "forgather_official2",
               "email": "forgather2@forgather.me",
+              "linkUrl": "",
+              "linkName": "",
               "spacePhoto": {
                 "isExists": false,
                 "path": ""

@@ -78,7 +78,7 @@ public class SpaceService {
         validateSpaceHost(space, host);
 
         space.update(request.name(), request.description(), request.isPublic(), request.instagramUsername(),
-            request.email());
+            request.email(), request.linkUrl(), request.linkName());
 
         if (request.isDeletingPhoto()) {
             handlePhotoWithDeleteRequest(space, file, spaceCode);

@@ -29,8 +29,13 @@ public class Space extends SoftDeleteEntity {
     private static final int MAX_DESCRIPTION_LENGTH = 200;
     private static final int MAX_INSTAGRAM_USERNAME_LENGTH = 30;
     private static final int MAX_EMAIL_LENGTH = 50;
+    private static final int MAX_LINK_URL_LENGTH = 2048;
+    private static final int MAX_LINK_NAME_LENGTH = 30;
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
         "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,63}$"
+    );
+    private static final Pattern LINK_URL_PATTERN = Pattern.compile(
+        "^https?://[^\\s]+$"
     );
 
     @Id
@@ -55,6 +60,12 @@ public class Space extends SoftDeleteEntity {
     @Column(name = "email", nullable = false)
     private String email;
 
+    @Column(name = "link_url", nullable = false, length = 2048)
+    private String linkUrl;
+
+    @Column(name = "link_name", nullable = false)
+    private String linkName;
+
     /**
      * 스페이스를 생성한다.
      *
@@ -64,21 +75,26 @@ public class Space extends SoftDeleteEntity {
      * @param isPublic          스페이스 공개 여부 (필수)
      * @param instagramUsername 인스타그램 아이디 (필수, 최대 30자)
      * @param email             이메일 (필수, 최대 50자)
+     * @param linkUrl           소개 링크 URL (선택, 최대 2048자, 표시 이름과 함께 입력)
+     * @param linkName          소개 링크 표시 이름 (선택, 최대 30자, URL과 함께 입력)
      */
     public Space(String code, String name, String description, boolean isPublic, String instagramUsername,
-        String email) {
+        String email, String linkUrl, String linkName) {
         validateRequiredFields(code, name, description, instagramUsername, email);
         validateCode(code);
         validateName(name);
         validateDescription(description);
         validateInstagramUsername(instagramUsername);
         validateEmail(email);
+        validateLink(linkUrl, linkName);
         this.code = code;
         this.name = name;
         this.description = convertBlankToEmptyString(description);
         this.isPublic = isPublic;
         this.instagramUsername = convertBlankToEmptyString(instagramUsername);
         this.email = convertBlankToEmptyString(email);
+        this.linkUrl = convertBlankToEmptyString(linkUrl);
+        this.linkName = convertBlankToEmptyString(linkName);
     }
 
     private void validateRequiredFields(String code, String name, String description, String instagramUsername,
@@ -100,7 +116,8 @@ public class Space extends SoftDeleteEntity {
         }
     }
 
-    public void update(String name, String description, Boolean isPublic, String instagramUsername, String email) {
+    public void update(String name, String description, Boolean isPublic, String instagramUsername, String email,
+        String linkUrl, String linkName) {
         if (name != null) {
             validateName(name);
             this.name = name;
@@ -119,6 +136,22 @@ public class Space extends SoftDeleteEntity {
         if (email != null) {
             validateEmail(email);
             this.email = email;
+        }
+        updateLink(linkUrl, linkName);
+    }
+
+    private void updateLink(String linkUrl, String linkName) {
+        if (linkUrl == null && linkName == null) {
+            return;
+        }
+        String newLinkUrl = (linkUrl != null) ? linkUrl : this.linkUrl;
+        String newLinkName = (linkName != null) ? linkName : this.linkName;
+        validateLink(newLinkUrl, newLinkName);
+        if (linkUrl != null) {
+            this.linkUrl = convertBlankToEmptyString(linkUrl);
+        }
+        if (linkName != null) {
+            this.linkName = convertBlankToEmptyString(linkName);
         }
     }
 
@@ -161,8 +194,35 @@ public class Space extends SoftDeleteEntity {
         }
     }
 
+    private void validateLink(String linkUrl, String linkName) {
+        boolean hasUrl = linkUrl != null && !linkUrl.isBlank();
+        boolean hasName = linkName != null && !linkName.isBlank();
+        if (hasUrl != hasName) {
+            throw new BaseException("링크 URL과 표시 이름은 함께 입력해야 합니다.");
+        }
+        if (hasUrl) {
+            validateLinkUrl(linkUrl);
+            validateLinkName(linkName);
+        }
+    }
+
+    private void validateLinkUrl(String linkUrl) {
+        if (linkUrl.length() > MAX_LINK_URL_LENGTH) {
+            throw new BaseException("링크 URL은 최대 %d자까지 가능합니다.".formatted(MAX_LINK_URL_LENGTH));
+        }
+        if (!LINK_URL_PATTERN.matcher(linkUrl).matches()) {
+            throw new BaseException("링크 URL 형식이 올바르지 않습니다.");
+        }
+    }
+
+    private void validateLinkName(String linkName) {
+        if (TextLengthCounter.count(linkName) > MAX_LINK_NAME_LENGTH) {
+            throw new BaseException("링크 표시 이름은 최대 %d자까지 가능합니다.".formatted(MAX_LINK_NAME_LENGTH));
+        }
+    }
+
     private String convertBlankToEmptyString(String string) {
-        if (string.isBlank()) {
+        if (string == null || string.isBlank()) {
             return "";
         }
         return string;

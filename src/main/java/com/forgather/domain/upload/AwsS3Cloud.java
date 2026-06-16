@@ -140,13 +140,30 @@ public class AwsS3Cloud implements ContentsStorage {
     }
 
     @Override
+    @Deprecated(forRemoval = true)
+    @SuppressWarnings("removal")
     public String issueSignedUrl(String path) {
         PutObjectRequest objectRequest = PutObjectRequest.builder()
             .bucket(s3Properties.getBucketName())
             .key(path)
             .tagging(s3Properties.getTagging())
             .build();
+        return presign(objectRequest);
+    }
 
+    @Override
+    public String issueSignedUrl(String path, String contentType, long contentLength) {
+        PutObjectRequest objectRequest = PutObjectRequest.builder()
+            .bucket(s3Properties.getBucketName())
+            .key(path)
+            .tagging(s3Properties.getTagging())
+            .contentType(contentType)
+            .contentLength(contentLength)
+            .build();
+        return presign(objectRequest);
+    }
+
+    private String presign(PutObjectRequest objectRequest) {
         PutObjectPresignRequest preSignRequest = PutObjectPresignRequest.builder()
             .signatureDuration(Duration.ofMinutes(10L)) // 10MBps 에서 5MB 4초 -> 최대 100장 제한, 넉넉히 600초
             .putObjectRequest(objectRequest)
