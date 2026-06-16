@@ -377,7 +377,8 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
             .when()
             .post("/exhibitions")
             .then()
-            .statusCode(HttpStatus.BAD_REQUEST.value());
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("VALIDATION_FAILED"));
     }
 
     @DisplayName("운영 시간 항목이 7개를 초과하면 전시를 생성할 수 없다.")
@@ -446,6 +447,144 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
             .statusCode(HttpStatus.BAD_REQUEST.value())
             .body("code", equalTo("VALIDATION_FAILED"))
             .body("message", containsString("운영시간 항목은 null일 수 없습니다"));
+    }
+
+    @DisplayName("전시 제목이 100자를 초과하면 전시를 생성할 수 없다.")
+    @Test
+    void rejectsTitleExceedingMaxLength() {
+        // given
+        String title = "가".repeat(101);
+        CreateExhibitionRequest request = new CreateExhibitionRequest(
+            new CreateExhibitionPhotoRequest("long-title.webp", 1024L),
+            title,
+            LocalDate.of(2026, 6, 1),
+            LocalDate.of(2026, 6, 30),
+            "전시 설명",
+            null,
+            null,
+            new LocationRequest(LocationType.ONLINE, "https://forgather.app", null, null)
+        );
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/exhibitions")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("VALIDATION_FAILED"));
+    }
+
+    @DisplayName("전시 소개가 200자를 초과하면 전시를 생성할 수 없다.")
+    @Test
+    void rejectsDescriptionExceedingMaxLength() {
+        // given
+        String description = "가".repeat(201);
+        CreateExhibitionRequest request = new CreateExhibitionRequest(
+            new CreateExhibitionPhotoRequest("long-desc.webp", 1024L),
+            "긴 소개 전시",
+            LocalDate.of(2026, 6, 1),
+            LocalDate.of(2026, 6, 30),
+            description,
+            null,
+            null,
+            new LocationRequest(LocationType.ONLINE, "https://forgather.app", null, null)
+        );
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/exhibitions")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("VALIDATION_FAILED"));
+    }
+
+    @DisplayName("운영 공지가 200자를 초과하면 전시를 생성할 수 없다.")
+    @Test
+    void rejectsOperationNoticeExceedingMaxLength() {
+        // given
+        String operationNotice = "가".repeat(201);
+        CreateExhibitionRequest request = new CreateExhibitionRequest(
+            new CreateExhibitionPhotoRequest("long-notice.webp", 1024L),
+            "긴 운영 공지 전시",
+            LocalDate.of(2026, 6, 1),
+            LocalDate.of(2026, 6, 30),
+            "전시 설명",
+            operationNotice,
+            null,
+            new LocationRequest(LocationType.ONLINE, "https://forgather.app", null, null)
+        );
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/exhibitions")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("VALIDATION_FAILED"));
+    }
+
+    @DisplayName("전시 소개가 정확히 200자이면 전시가 정상 생성된다.")
+    @Test
+    void createExhibitionWithDescriptionAtMaxLength() {
+        // given
+        String description = "가".repeat(200);
+        CreateExhibitionRequest request = new CreateExhibitionRequest(
+            new CreateExhibitionPhotoRequest("max-desc.webp", 1024L),
+            "최대 길이 소개 전시",
+            LocalDate.of(2026, 6, 1),
+            LocalDate.of(2026, 6, 30),
+            description,
+            null,
+            null,
+            new LocationRequest(LocationType.ONLINE, "https://forgather.app", null, null)
+        );
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/exhibitions")
+            .then()
+            .statusCode(HttpStatus.CREATED.value());
+    }
+
+    @DisplayName("운영 공지가 정확히 200자이면 전시가 정상 생성된다.")
+    @Test
+    void createExhibitionWithOperationNoticeAtMaxLength() {
+        // given
+        String operationNotice = "가".repeat(200);
+        CreateExhibitionRequest request = new CreateExhibitionRequest(
+            new CreateExhibitionPhotoRequest("max-notice.webp", 1024L),
+            "최대 길이 운영 공지 전시",
+            LocalDate.of(2026, 6, 1),
+            LocalDate.of(2026, 6, 30),
+            "전시 설명",
+            operationNotice,
+            null,
+            new LocationRequest(LocationType.ONLINE, "https://forgather.app", null, null)
+        );
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/exhibitions")
+            .then()
+            .statusCode(HttpStatus.CREATED.value());
     }
 
     private CreateExhibitionRequest createValidRequest() {
