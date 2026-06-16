@@ -28,6 +28,11 @@ public class FakeContentStorage implements ContentsStorage {
     }
 
     @Override
+    public String issueSignedUrl(String path, String contentType, long contentLength) {
+        return "test-prefix-" + path + "-test-suffix";
+    }
+
+    @Override
     public String getRootDirectory() {
         return "photogather/v2";
     }

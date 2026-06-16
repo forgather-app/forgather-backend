@@ -27,8 +27,8 @@ public record ExhibitionResponse(
     @Schema(description = "운영 공지 (미설정 시 null)", example = "첫번째 주 일요일은 휴관합니다.")
     String operationNotice,
 
-    @Schema(description = "대표 이미지 경로", example = "exhibitions/abc.webp")
-    String representativeImagePath,
+    @Schema(description = "대표 이미지 경로 (미설정 시 null)", example = "exhibitions/abc.webp")
+    String photoPath,
 
     @Schema(description = "시작일", example = "2026-06-01")
     LocalDate startDate,
@@ -77,7 +77,7 @@ public record ExhibitionResponse(
             exhibition.getTitle(),
             exhibition.getDescription(),
             exhibition.getOperationNotice(),
-            photo.getPath(),
+            photo == null ? null : photo.getPath(),
             exhibition.getStartDate(),
             exhibition.getEndDate(),
             exhibition.calculateProgressStatus(LocalDate.now(ZoneId.of("Asia/Seoul"))).name(),

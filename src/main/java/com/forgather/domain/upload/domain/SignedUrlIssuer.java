@@ -1,6 +1,7 @@
 package com.forgather.domain.upload.domain;
 
 import static com.forgather.domain.upload.domain.FilePathGenerator.generateContentsFilePath;
+import static com.forgather.domain.upload.domain.FilePathGenerator.generateExhibitionContentsFilePath;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,45 +21,96 @@ public class SignedUrlIssuer {
 
     private final ContentsStorage contentsStorage;
 
-    public Map<String, String> issueSignedUrls(
-        List<String> uploadFileNames,
+    public Map<String, String> issueForSpace(
+        List<UploadFileMetadata> uploadFiles,
         String spaceCode,
         UploadCategory category
     ) {
-        if (uploadFileNames == null || uploadFileNames.isEmpty()) {
-            throw new BaseException("업로드 파일명 목록은 null이거나 비어있을 수 없습니다.");
-        }
+        validateNotEmpty(uploadFiles);
+        validateCount(uploadFiles);
+
         if (spaceCode == null || spaceCode.isEmpty()) {
             throw new BaseException("스페이스 코드는 null이거나 비어있을 수 없습니다.");
         }
         if (category == null) {
             throw new BaseException("업로드 카테고리는 필수입니다.");
         }
-        validateSize(uploadFileNames);
         Map<String, String> signedUrls = new HashMap<>();
-        for (String uploadFileName : uploadFileNames) {
-            String filePath = getFilePath(spaceCode, category, uploadFileName);
-            String signedUrl = contentsStorage.issueSignedUrl(filePath);
-            signedUrls.put(uploadFileName, signedUrl);
+        for (UploadFileMetadata uploadFile : uploadFiles) {
+            String filePath = generateContentsFilePath(
+                contentsStorage.getRootDirectory(),
+                spaceCode,
+                category,
+                uploadFile.getFileName()
+            );
+            signedUrls.put(uploadFile.getFileName(), issueUploadUrl(filePath, uploadFile));
         }
         return signedUrls;
     }
 
-    private void validateSize(List<String> uploadFileNames) {
-        if (uploadFileNames.size() > MAX_COUNT_PER_ISSUE) {
-            throw new BaseException("한번에 발급 가능한 업로드 url 개수는 %d개 입니다.".formatted(MAX_COUNT_PER_ISSUE));
+    public Map<String, String> issueForExhibition(List<UploadFileMetadata> uploadFiles) {
+        validateNotEmpty(uploadFiles);
+        validateCount(uploadFiles);
+
+        Map<String, String> signedUrls = new HashMap<>();
+        for (UploadFileMetadata uploadFile : uploadFiles) {
+            String filePath = generateExhibitionContentsFilePath(
+                contentsStorage.getRootDirectory(),
+                uploadFile.getFileName()
+            );
+            signedUrls.put(uploadFile.getFileName(), issueUploadUrl(filePath, uploadFile));
+        }
+        return signedUrls;
+    }
+
+    private String issueUploadUrl(String filePath, UploadFileMetadata uploadFile) {
+        return contentsStorage.issueSignedUrl(
+            filePath,
+            uploadFile.getContentType(),
+            uploadFile.getSize()
+        );
+    }
+
+    @Deprecated(forRemoval = true)
+    @SuppressWarnings("removal")
+    public Map<String, String> issueSignedUrls(
+        List<String> uploadFileNames,
+        String spaceCode,
+        UploadCategory category
+    ) {
+        validateNotEmpty(uploadFileNames);
+        if (spaceCode == null || spaceCode.isEmpty()) {
+            throw new BaseException("스페이스 코드는 null이거나 비어있을 수 없습니다.");
+        }
+        if (category == null) {
+            throw new BaseException("업로드 카테고리는 필수입니다.");
+        }
+        validateCount(uploadFileNames);
+        Map<String, String> signedUrls = new HashMap<>();
+        for (String uploadFileName : uploadFileNames) {
+            if (uploadFileName == null || uploadFileName.isBlank()) {
+                throw new BaseException("업로드 파일명은 null이거나 비어있을 수 없습니다.");
+            }
+            String filePath = generateContentsFilePath(
+                contentsStorage.getRootDirectory(),
+                spaceCode,
+                category,
+                uploadFileName
+            );
+            signedUrls.put(uploadFileName, contentsStorage.issueSignedUrl(filePath));
+        }
+        return signedUrls;
+    }
+
+    private void validateNotEmpty(List<?> uploadFiles) {
+        if (uploadFiles == null || uploadFiles.isEmpty()) {
+            throw new BaseException("업로드 파일명 목록은 null이거나 비어있을 수 없습니다.");
         }
     }
 
-    private String getFilePath(String spaceCode, UploadCategory category, String uploadFileName) {
-        if (uploadFileName == null || uploadFileName.isEmpty()) {
-            throw new BaseException("업로드 파일명은 null이거나 비어있을 수 없습니다.");
+    private void validateCount(List<?> uploadFiles) {
+        if (uploadFiles.size() > MAX_COUNT_PER_ISSUE) {
+            throw new BaseException("한번에 발급 가능한 업로드 url 개수는 %d개 입니다.".formatted(MAX_COUNT_PER_ISSUE));
         }
-        return generateContentsFilePath(
-            contentsStorage.getRootDirectory(),
-            spaceCode,
-            category,
-            uploadFileName
-        );
     }
 }
