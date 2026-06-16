@@ -39,6 +39,7 @@ public record CreateSpaceRequest(
         nullable = true
     )
     @URL
+    @TextSize(max = 2048)
     String linkUrl,
 
     @Schema(
@@ -47,6 +48,7 @@ public record CreateSpaceRequest(
         maxLength = 30,
         nullable = true
     )
+    @TextSize(max = 30)
     String linkName
 ) {
 
