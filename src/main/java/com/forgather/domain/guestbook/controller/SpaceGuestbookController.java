@@ -84,7 +84,7 @@ public class SpaceGuestbookController {
         Pageable pageable,
         @LoginHost(required = false) Host host
     ) {
-        GuestBookResponse response = guestBookService.read(host, spaceCode, pageable);
+        var response = guestBookService.read(host, spaceCode, pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -99,7 +99,7 @@ public class SpaceGuestbookController {
         Pageable pageable,
         @LoginHost(required = false) Host host
     ) {
-        GuestBookResponse response = guestBookService.readV2(host, spaceCode, pageable);
+        var response = guestBookService.readV2(host, spaceCode, pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -113,7 +113,7 @@ public class SpaceGuestbookController {
         Pageable pageable,
         @LoginHost(required = true) Host host
     ) {
-        GuestBookResponse response = guestBookService.readUnread(host, spaceCode, pageable);
+        var response = guestBookService.readUnread(host, spaceCode, pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -125,7 +125,7 @@ public class SpaceGuestbookController {
         @PathVariable(value = "guestBookCardId") Long guestBookCardId,
         @LoginHost(required = false) Host host
     ) {
-        GuestBookCardResponse response = guestBookService.readCard(host, spaceCode, guestBookCardId);
+        var response = guestBookService.readCard(host, spaceCode, guestBookCardId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
