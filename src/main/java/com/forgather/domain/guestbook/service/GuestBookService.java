@@ -120,13 +120,13 @@ public class GuestBookService {
                     pageable
                 ).map(GuestBookCardSimpleResponse::from);
 
-            long newCount = guestBookCardRepository.countBySpaceAndVisibilityStatusAndIsReadAndDeletedAtIsNull(
+            long unreadCount = guestBookCardRepository.countBySpaceAndVisibilityStatusAndIsReadAndDeletedAtIsNull(
                 space,
                 VISIBLE,
                 false
             );
 
-            return new GuestBookResponse(readResponses, newCount);
+            return new GuestBookResponse(readResponses, unreadCount);
         }
 
         // 방문객: 읽음 여부와 상관 없이 모두 조회, 안읽은 방명록 개수 응답 x

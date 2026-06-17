@@ -11,7 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record GuestBookResponse(
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Schema(description = "읽지 않은 방명록 카드 개수", example = "3")
-    Long newCount,
+    Long unreadCount,
 
     @Schema(description = "방명록 카드 목록", example = """
         [
@@ -51,8 +51,8 @@ public record GuestBookResponse(
         this(guestBookCards, null);
     }
 
-    public GuestBookResponse(Page<GuestBookCardSimpleResponse> guestBookCards, Long newCount) {
-        this(newCount,
+    public GuestBookResponse(Page<GuestBookCardSimpleResponse> guestBookCards, Long unreadCount) {
+        this(unreadCount,
             guestBookCards.toList(),
             guestBookCards.getNumber() + 1,
             guestBookCards.getSize(),

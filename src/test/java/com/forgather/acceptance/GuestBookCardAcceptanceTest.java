@@ -166,7 +166,9 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .asString();
 
             // then
-            assertThat(response).doesNotContain("\"newCount\"");
+            assertAll(
+                () -> assertThat(response).doesNotContain("\"unreadCount\"")
+            );
         }
 
         @DisplayName("방문자 조회 시 방명록은 각 방명록 카드의 방문자 닉네임과 사진 여부를 포함한다")
@@ -362,7 +364,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // then
             assertAll(
-                () -> assertThat(result.data().newCount()).isNull(),
+                () -> assertThat(result.data().unreadCount()).isNull(),
                 () -> assertThat(result.data().guestBookCards()).hasSize(1),
                 () -> assertThat(result.data().guestBookCards().getFirst().id()).isEqualTo(unreadCard.id()),
                 () -> assertThat(result.data().guestBookCards().getFirst().isRead()).isNull(),
@@ -545,7 +547,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(200);
 
             // then
-            ApiResponse<GuestBookResponse> result = RestAssuredMockMvc.given()
+            String response = RestAssuredMockMvc.given()
                 .header("X-API-Version", "2")
                 .header("Authorization", "Bearer " + accessToken)
                 .accept(ContentType.JSON)
@@ -559,14 +561,13 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(new TypeRef<>() {
-                });
+                .asString();
 
             assertAll(
-                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
-                () -> assertThat(result.message()).isNull(),
-                () -> assertThat(result.data().newCount()).isZero(),
-                () -> assertThat(result.data().guestBookCards().getFirst().id()).isEqualTo(writeResponse.id())
+                () -> assertThat(response).contains("\"code\":\"SUCCESS\""),
+                () -> assertThat(response).contains("\"unreadCount\":0"),
+                () -> assertThat(response).doesNotContain("\"newCount\""),
+                () -> assertThat(response).contains("\"id\":%d".formatted(writeResponse.id()))
             );
         }
     }
