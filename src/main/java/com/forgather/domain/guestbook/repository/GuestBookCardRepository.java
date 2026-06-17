@@ -48,7 +48,7 @@ public interface GuestBookCardRepository {
                 g.nickname,
                 g.isRead,
                 CASE WHEN (
-                    SELECT COUNT(p) FROM GuestBookCardPhoto p WHERE p.guestBookCard = g
+                    SELECT COUNT(p) FROM GuestBookCardPhoto p WHERE p.guestBookCard = g AND p.deletedAt IS NULL
                 ) > 0 THEN true ELSE false END
             )
             FROM GuestBookCard g
@@ -60,6 +60,34 @@ public interface GuestBookCardRepository {
         @Param("space") Space space,
         @Param("visibilityStatus") VisibilityStatus visibilityStatus,
         Pageable pageable
+    );
+
+    @Query("""
+            SELECT new com.forgather.domain.guestbook.repository.dto.GuestBookCardListDto(
+                g.id,
+                g.nickname,
+                g.isRead,
+                CASE WHEN (
+                    SELECT COUNT(p) FROM GuestBookCardPhoto p WHERE p.guestBookCard = g AND p.deletedAt IS NULL
+                ) > 0 THEN true ELSE false END
+            )
+            FROM GuestBookCard g
+            WHERE g.space = :space
+                AND g.visibilityStatus = :visibilityStatus
+                AND g.isRead = :isRead
+                AND g.deletedAt IS NULL
+        """)
+    Page<GuestBookCardListDto> findAllDtoBySpaceAndVisibilityStatusAndIsReadAndDeletedAtIsNull(
+        @Param("space") Space space,
+        @Param("visibilityStatus") VisibilityStatus visibilityStatus,
+        @Param("isRead") boolean isRead,
+        Pageable pageable
+    );
+
+    long countBySpaceAndVisibilityStatusAndIsReadAndDeletedAtIsNull(
+        Space space,
+        VisibilityStatus visibilityStatus,
+        boolean isRead
     );
 
     List<GuestBookCard> findAllBySpaceAndDeletedAtIsNull(Space space);

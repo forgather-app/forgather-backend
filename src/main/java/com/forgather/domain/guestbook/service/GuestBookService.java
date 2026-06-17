@@ -1,5 +1,6 @@
 package com.forgather.domain.guestbook.service;
 
+import static com.forgather.domain.guestbook.model.VisibilityStatus.VISIBLE;
 import static com.forgather.domain.upload.domain.FilePathGenerator.generateContentsFilePath;
 import static com.forgather.domain.upload.domain.UploadCategory.GUESTBOOK;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
@@ -23,16 +24,13 @@ import com.forgather.domain.guestbook.exception.GuestbookCardNotReadableExceptio
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookCardPhoto;
 import com.forgather.domain.guestbook.model.GuestBookCardPhotos;
-import com.forgather.domain.guestbook.model.VisibilityStatus;
 import com.forgather.domain.guestbook.repository.GuestBookCardPhotoRepository;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
-import com.forgather.domain.guestbook.repository.dto.GuestBookCardListDto;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.domain.ContentsStorage;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.repository.SpaceHostRepository;
-import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.ForbiddenException;
 import com.forgather.global.exception.NotFoundException;
@@ -79,26 +77,86 @@ public class GuestBookService {
         return new GuestBookCardPhotos(photos);
     }
 
+    @Deprecated(forRemoval = true)
     @Transactional(readOnly = true)
+    @SuppressWarnings("removal")
     public GuestBookResponse read(Host host, String spaceCode, Pageable pageable) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         boolean isSpaceHost = host != null && isSpaceHost(space, host);
         validateCanRead(space, isSpaceHost);
-        Page<GuestBookCardListDto> guestBookCardDtos =
+
+        Page<GuestBookCardSimpleResponse> simpleResponses =
             guestBookCardRepository.findAllDtoBySpaceAndVisibilityStatusAndDeletedAtIsNull(
                 space,
-                VisibilityStatus.VISIBLE,
+                VISIBLE,
                 pageable
-            );
-        Page<GuestBookCardSimpleResponse> simpleResponses = guestBookCardDtos.map(
-            guestBookCardDto -> new GuestBookCardSimpleResponse(
-                guestBookCardDto.id(),
-                guestBookCardDto.nickname(),
-                guestBookCardDto.isPhotoExists(),
-                isSpaceHost ? guestBookCardDto.isRead() : null
-            )
-        );
+            ).map(guestBookCardDto -> {
+                if (isSpaceHost) {
+                    return GuestBookCardSimpleResponse.fromWithReadStatus(guestBookCardDto);
+                }
+                return GuestBookCardSimpleResponse.from(guestBookCardDto);
+            });
+
         return new GuestBookResponse(simpleResponses);
+    }
+
+    /**
+     * VISIBLE 상태인 방명록 조회
+     * - 스페이스 호스트: isRead=true인 방명록만 조회, isRead=false인 방명록 개수 응답
+     * - 게스트: 모든 방명록 조회, 안읽은 방명록 개수 응답x
+     */
+    @Transactional(readOnly = true)
+    public GuestBookResponse readV2(Host host, String spaceCode, Pageable pageable) {
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
+        boolean isSpaceHost = host != null && isSpaceHost(space, host);
+        validateCanRead(space, isSpaceHost);
+
+        if (isSpaceHost) { // 스페이스 호스트: 읽은 방명록만 조회, 안읽은 방명록 개수 응답
+            Page<GuestBookCardSimpleResponse> readResponses =
+                guestBookCardRepository.findAllDtoBySpaceAndVisibilityStatusAndIsReadAndDeletedAtIsNull(
+                    space,
+                    VISIBLE,
+                    true,
+                    pageable
+                ).map(GuestBookCardSimpleResponse::from);
+
+            long unreadCount = guestBookCardRepository.countBySpaceAndVisibilityStatusAndIsReadAndDeletedAtIsNull(
+                space,
+                VISIBLE,
+                false
+            );
+
+            return new GuestBookResponse(readResponses, unreadCount);
+        }
+
+        // 방문객: 읽음 여부와 상관 없이 모두 조회, 안읽은 방명록 개수 응답 x
+        Page<GuestBookCardSimpleResponse> simpleResponses =
+            guestBookCardRepository.findAllDtoBySpaceAndVisibilityStatusAndDeletedAtIsNull(
+                space,
+                VISIBLE,
+                pageable
+            ).map(GuestBookCardSimpleResponse::from);
+
+        return new GuestBookResponse(simpleResponses);
+    }
+
+    /**
+     * 스페이스 호스트인 경우에만 isRead=false인 방명록 조회
+     */
+    @Transactional(readOnly = true)
+    public GuestBookResponse readUnread(Host host, String spaceCode, Pageable pageable) {
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
+        validateSpaceHost(host, space);
+
+        Page<GuestBookCardSimpleResponse> unreadResponses =
+            guestBookCardRepository.findAllDtoBySpaceAndVisibilityStatusAndIsReadAndDeletedAtIsNull(
+                space,
+                VISIBLE,
+                false,
+                pageable
+            ).map(GuestBookCardSimpleResponse::from);
+
+        return new GuestBookResponse(unreadResponses);
     }
 
     @Transactional

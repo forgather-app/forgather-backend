@@ -1,6 +1,7 @@
 package com.forgather.domain.guestbook.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.forgather.domain.guestbook.repository.dto.GuestBookCardListDto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -18,4 +19,23 @@ public record GuestBookCardSimpleResponse(
     @JsonInclude(JsonInclude.Include.NON_NULL)
     Boolean isRead
 ) {
+
+    public static GuestBookCardSimpleResponse from(GuestBookCardListDto guestBookCardDto) {
+        return new GuestBookCardSimpleResponse(
+            guestBookCardDto.id(),
+            guestBookCardDto.nickname(),
+            guestBookCardDto.isPhotoExists(),
+            null
+        );
+    }
+
+    @Deprecated(forRemoval = true)
+    public static GuestBookCardSimpleResponse fromWithReadStatus(GuestBookCardListDto guestBookCardDto) {
+        return new GuestBookCardSimpleResponse(
+            guestBookCardDto.id(),
+            guestBookCardDto.nickname(),
+            guestBookCardDto.isPhotoExists(),
+            guestBookCardDto.isRead()
+        );
+    }
 }

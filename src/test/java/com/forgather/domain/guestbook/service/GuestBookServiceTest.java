@@ -64,6 +64,7 @@ class GuestBookServiceTest {
 
     @DisplayName("방명록 목록 조회 시 숨김 처리되지 않은 방명록만 반환한다")
     @Test
+    @SuppressWarnings({"deprecation", "removal"})
     void readGuestBookExcludesHiddenCards() {
         // given
         GuestBookCard hiddenCard = guestBookCardRepository.save(createGuestBookCardWithSpace(space));
