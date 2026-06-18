@@ -133,7 +133,7 @@ public class SpaceGuestbookController {
     @PostMapping
     public ResponseEntity<ApiResponse<WriteGuestBookCardResponse>> writeCard(
         @PathVariable(value = "spaceCode") String spaceCode,
-        @RequestBody WriteGuestBookCardRequest request
+        @Valid @RequestBody WriteGuestBookCardRequest request
     ) {
         var response = guestBookService.writeCard(spaceCode, request);
         return ResponseEntity.status(CREATED).body(ApiResponse.success(response));

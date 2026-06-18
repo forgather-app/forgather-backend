@@ -627,8 +627,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .post("/spaces/%s/guestbook".formatted(publicSpace.getCode()))
                 .then()
                 .statusCode(400)
-                .body("code", equalTo("BAD_REQUEST"))
-                .body("message", containsString("방문자 닉네임은 최대 10자까지 입력 가능합니다."));
+                .body("code", equalTo("VALIDATION_FAILED"));
         }
 
         @DisplayName("방명록 카드 사진이 20개를 초과하면 예외를 던진다")

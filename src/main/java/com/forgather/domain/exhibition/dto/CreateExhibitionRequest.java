@@ -3,6 +3,8 @@ package com.forgather.domain.exhibition.dto;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.forgather.global.validation.TextSize;
+
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
@@ -16,8 +18,9 @@ public record CreateExhibitionRequest(
     @Valid
     CreateExhibitionPhotoRequest photo,
 
-    @Schema(description = "전시 제목 (최대 100자)", example = "봄 전시")
+    @Schema(description = "전시 제목 (최대 100자)", example = "봄 전시", maxLength = 100)
     @NotBlank
+    @TextSize(max = 100)
     String title,
 
     @Schema(description = "시작일", example = "2026-06-01")
@@ -28,10 +31,12 @@ public record CreateExhibitionRequest(
     @NotNull
     LocalDate endDate,
 
-    @Schema(description = "전시 소개 (최대 200자, null 가능)", example = "졸업 전시입니다.")
+    @Schema(description = "전시 소개 (최대 200자, null 가능)", example = "졸업 전시입니다.", maxLength = 200, nullable = true)
+    @TextSize(max = 200)
     String description,
 
-    @Schema(description = "운영 공지 (최대 200자, null 가능)", example = "첫번째 주 일요일은 휴관합니다.")
+    @Schema(description = "운영 공지 (최대 200자, null 가능)", example = "첫번째 주 일요일은 휴관합니다.", maxLength = 200, nullable = true)
+    @TextSize(max = 200)
     String operationNotice,
 
     @ArraySchema(
