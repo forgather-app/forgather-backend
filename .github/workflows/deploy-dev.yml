@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - v2/develop
+      - v2/refactor/#117-github-actions-cd  #테스트용
   workflow_dispatch:  # 워크플로우 수동 실행 가능
 
 permissions:
