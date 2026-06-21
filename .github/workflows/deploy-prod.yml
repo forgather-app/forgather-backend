@@ -1,0 +1,149 @@
+name: Deploy Prod
+
+on:
+  push:
+    branches:
+      - v2/main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+env:
+  ARTIFACT_PREFIX: deploy/prod
+  JAR_NAME: forgather-0.0.1-SNAPSHOT.jar
+
+jobs:
+  deploy:
+    name: Build and deploy prod
+    runs-on: ubuntu-latest
+    environment: prod
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+
+      - name: Install deployment dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-crypt zip unzip
+
+      - name: Unlock git-crypt files
+        env:
+          GIT_CRYPT_KEY_HEX: ${{ secrets.GIT_CRYPT_KEY_HEX }}
+        run: |
+          if [ -z "${GIT_CRYPT_KEY_HEX}" ]; then
+            echo "GIT_CRYPT_KEY_HEX secret is required." >&2
+            exit 1
+          fi
+
+          trap 'rm -f git-crypt-key' EXIT
+          umask 077
+          printf '%s' "$GIT_CRYPT_KEY_HEX" | tr -d '[:space:]' | xxd -r -p > git-crypt-key
+          git-crypt unlock git-crypt-key
+
+      - name: Build application
+        run: |
+          chmod +x ./gradlew
+          ./gradlew build -x test --no-daemon
+
+      - name: Create CodeDeploy bundle
+        run: |
+          artifact_name="forgather-prod-${GITHUB_SHA}.zip"
+          bundle_dir="build/codedeploy-prod"
+
+          mkdir -p "$bundle_dir/scripts"
+          cp "build/libs/${JAR_NAME}" "$bundle_dir/"
+          cp deploy/appspec-prod.yml "$bundle_dir/appspec.yml"
+          cp deploy/scripts/*.sh "$bundle_dir/scripts/"
+          chmod +x "$bundle_dir/scripts/"*.sh
+
+          for script in "$bundle_dir"/scripts/*.sh; do
+            bash -n "$script"
+          done
+          test -f "$bundle_dir/${JAR_NAME}"
+          test -f "$bundle_dir/appspec.yml"
+          test -f "$bundle_dir/scripts/common.sh"
+          test -f "$bundle_dir/scripts/after_install.sh"
+          test -f "$bundle_dir/scripts/application_start.sh"
+          test -f "$bundle_dir/scripts/validate_service.sh"
+
+          (cd "$bundle_dir" && zip -r "../${artifact_name}" .)
+          unzip -l "build/${artifact_name}"
+
+          echo "ARTIFACT_NAME=${artifact_name}" >> "$GITHUB_ENV"
+          echo "ARTIFACT_KEY=${ARTIFACT_PREFIX}/${GITHUB_SHA}/${artifact_name}" >> "$GITHUB_ENV"
+
+      - name: Validate deployment configuration
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          AWS_ROLE_TO_ASSUME: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          CODEDEPLOY_APPLICATION: ${{ vars.CODEDEPLOY_APPLICATION }}
+          CODEDEPLOY_DEPLOYMENT_GROUP: ${{ vars.CODEDEPLOY_DEPLOYMENT_GROUP }}
+          DEPLOY_ARTIFACT_BUCKET: ${{ vars.DEPLOY_ARTIFACT_BUCKET }}
+        run: |
+          missing=0
+          for name in AWS_REGION AWS_ROLE_TO_ASSUME CODEDEPLOY_APPLICATION CODEDEPLOY_DEPLOYMENT_GROUP DEPLOY_ARTIFACT_BUCKET; do
+            if [ -z "${!name}" ]; then
+              echo "${name} environment variable is required." >&2
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.1.0
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Upload bundle to S3
+        env:
+          DEPLOY_ARTIFACT_BUCKET: ${{ vars.DEPLOY_ARTIFACT_BUCKET }}
+        run: |
+          aws s3 cp "build/${ARTIFACT_NAME}" "s3://${DEPLOY_ARTIFACT_BUCKET}/${ARTIFACT_KEY}"
+
+      - name: Create CodeDeploy deployment
+        env:
+          CODEDEPLOY_APPLICATION: ${{ vars.CODEDEPLOY_APPLICATION }}
+          CODEDEPLOY_DEPLOYMENT_GROUP: ${{ vars.CODEDEPLOY_DEPLOYMENT_GROUP }}
+          DEPLOY_ARTIFACT_BUCKET: ${{ vars.DEPLOY_ARTIFACT_BUCKET }}
+        run: |
+          deployment_id="$(
+            aws deploy create-deployment \
+              --application-name "$CODEDEPLOY_APPLICATION" \
+              --deployment-group-name "$CODEDEPLOY_DEPLOYMENT_GROUP" \
+              --description "forgather prod ${GITHUB_SHA}" \
+              --s3-location bucket="$DEPLOY_ARTIFACT_BUCKET",key="$ARTIFACT_KEY",bundleType=zip \
+              --query 'deploymentId' \
+              --output text
+          )"
+
+          echo "DEPLOYMENT_ID=${deployment_id}" >> "$GITHUB_ENV"
+          echo "Created CodeDeploy deployment: ${deployment_id}"
+
+      - name: Wait for CodeDeploy deployment
+        run: |
+          set +e
+          aws deploy wait deployment-successful --deployment-id "$DEPLOYMENT_ID"
+          wait_status=$?
+          set -e
+
+          aws deploy get-deployment \
+            --deployment-id "$DEPLOYMENT_ID" \
+            --query 'deploymentInfo.{status:status,completeTime:completeTime,errorInformation:errorInformation}' \
+            --output json
+
+          exit "$wait_status"
