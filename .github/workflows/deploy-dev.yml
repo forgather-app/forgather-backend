@@ -67,7 +67,7 @@ jobs:
 
           mkdir -p "$bundle_dir"
           cp "build/libs/${JAR_NAME}" "$bundle_dir/"
-          cp deploy/appspec.yml "$bundle_dir/appspec.yml"
+          cp deploy/appspec-dev.yml "$bundle_dir/appspec.yml"
           cp deploy/deploy-dev.sh "$bundle_dir/deploy.sh"
           chmod +x "$bundle_dir/deploy.sh"
 
