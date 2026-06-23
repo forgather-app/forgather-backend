@@ -56,6 +56,23 @@ jobs:
           umask 077
           printf '%s' "$GIT_CRYPT_KEY_HEX" | tr -d '[:space:]' | xxd -r -p > git-crypt-key
           git-crypt unlock git-crypt-key
+          
+      - name: Validate deployment configuration
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          AWS_ROLE_TO_ASSUME: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          CODEDEPLOY_APPLICATION: ${{ vars.CODEDEPLOY_APPLICATION }}
+          CODEDEPLOY_DEPLOYMENT_GROUP: ${{ vars.CODEDEPLOY_DEPLOYMENT_GROUP }}
+          DEPLOY_ARTIFACT_BUCKET: ${{ vars.DEPLOY_ARTIFACT_BUCKET }}
+        run: |
+          missing=0
+          for name in AWS_REGION AWS_ROLE_TO_ASSUME CODEDEPLOY_APPLICATION CODEDEPLOY_DEPLOYMENT_GROUP DEPLOY_ARTIFACT_BUCKET; do
+            if [ -z "${!name}" ]; then
+              echo "${name} environment variable is required." >&2
+              missing=1
+            fi
+          done
+          exit "$missing"
 
       - name: Build application
         run: |
@@ -83,23 +100,6 @@ jobs:
 
           echo "ARTIFACT_NAME=${artifact_name}" >> "$GITHUB_ENV"
           echo "ARTIFACT_KEY=${ARTIFACT_PREFIX}/${GITHUB_SHA}/${artifact_name}" >> "$GITHUB_ENV"
-
-      - name: Validate deployment configuration
-        env:
-          AWS_REGION: ${{ vars.AWS_REGION }}
-          AWS_ROLE_TO_ASSUME: ${{ vars.AWS_ROLE_TO_ASSUME }}
-          CODEDEPLOY_APPLICATION: ${{ vars.CODEDEPLOY_APPLICATION }}
-          CODEDEPLOY_DEPLOYMENT_GROUP: ${{ vars.CODEDEPLOY_DEPLOYMENT_GROUP }}
-          DEPLOY_ARTIFACT_BUCKET: ${{ vars.DEPLOY_ARTIFACT_BUCKET }}
-        run: |
-          missing=0
-          for name in AWS_REGION AWS_ROLE_TO_ASSUME CODEDEPLOY_APPLICATION CODEDEPLOY_DEPLOYMENT_GROUP DEPLOY_ARTIFACT_BUCKET; do
-            if [ -z "${!name}" ]; then
-              echo "${name} environment variable is required." >&2
-              missing=1
-            fi
-          done
-          exit "$missing"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6.1.0
