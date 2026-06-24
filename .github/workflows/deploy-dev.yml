@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - v2/develop
+      - v2/refactor/#117-github-actions-cd
   workflow_dispatch:  # 워크플로우 수동 실행 가능
 
 permissions:
@@ -37,6 +38,7 @@ jobs:
         with:
           java-version: '21'
           distribution: temurin
+          cache: gradle
 
       - name: Install deployment dependencies
         run: |
