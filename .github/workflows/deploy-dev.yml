@@ -17,6 +17,8 @@ concurrency:
 env:
   ARTIFACT_PREFIX: deploy/dev
   ARTIFACT_RETENTION_COUNT: 10
+  CODEDEPLOY_STOP_WAIT_ATTEMPTS: 30
+  CODEDEPLOY_STOP_WAIT_INTERVAL_SECONDS: 5
   JAR_NAME: forgather-0.0.1-SNAPSHOT.jar
 
 jobs:
@@ -166,9 +168,36 @@ jobs:
           set -e
 
           if [ "$stop_status" -ne 0 ]; then
-            echo "CodeDeploy stop/rollback request failed or deployment already completed."
-            exit 0
+            echo "CodeDeploy stop/rollback request failed."
           fi
+
+          echo "Waiting for CodeDeploy deployment to stop or reach a terminal status."
+          for attempt in $(seq 1 "$CODEDEPLOY_STOP_WAIT_ATTEMPTS"); do
+            deployment_status="$(
+              aws deploy get-deployment \
+                --deployment-id "$DEPLOYMENT_ID" \
+                --query 'deploymentInfo.status' \
+                --output text 2>/dev/null || true
+            )"
+
+            echo "CodeDeploy status: ${deployment_status:-unknown} (${attempt}/${CODEDEPLOY_STOP_WAIT_ATTEMPTS})"
+
+            case "$deployment_status" in
+              Stopped|Failed)
+                exit 0
+                ;;
+              Succeeded)
+                echo "Deployment already succeeded; preserving artifact."
+                echo "SKIP_ARTIFACT_DELETE=true" >> "$GITHUB_ENV"
+                exit 0
+                ;;
+            esac
+
+            sleep "$CODEDEPLOY_STOP_WAIT_INTERVAL_SECONDS"
+          done
+
+          echo "Timed out waiting for CodeDeploy to stop; preserving artifact."
+          echo "SKIP_ARTIFACT_DELETE=true" >> "$GITHUB_ENV"
 
       - name: Delete failed deployment artifact
         if: failure() || cancelled()
@@ -177,6 +206,11 @@ jobs:
         run: |
           if [ "${ARTIFACT_UPLOADED:-false}" != "true" ]; then
             echo "No uploaded deployment artifact to delete."
+            exit 0
+          fi
+
+          if [ "${SKIP_ARTIFACT_DELETE:-false}" = "true" ]; then
+            echo "Skipping artifact deletion."
             exit 0
           fi
 
