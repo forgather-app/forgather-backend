@@ -82,7 +82,7 @@ jobs:
 
       - name: Create CodeDeploy bundle
         run: |
-          artifact_name="forgather-dev-${GITHUB_SHA}.zip"
+          artifact_name="forgather-dev.zip"
           bundle_dir="build/codedeploy"
 
           mkdir -p "$bundle_dir"
