@@ -85,7 +85,7 @@ jobs:
 
       - name: Create CodeDeploy bundle
         run: |
-          artifact_name="forgather-prod.zip"
+          artifact_name="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-forgather-prod.zip"
           bundle_dir="build/codedeploy-prod"
 
           mkdir -p "$bundle_dir/scripts"
