@@ -151,7 +151,7 @@ jobs:
           exit "$wait_status"
 
       - name: Delete failed deployment artifact
-        if: failure()
+        if: failure() || cancelled()
         env:
           DEPLOY_ARTIFACT_BUCKET: ${{ vars.DEPLOY_ARTIFACT_BUCKET }}
         run: |
