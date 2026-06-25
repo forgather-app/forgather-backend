@@ -16,7 +16,7 @@ concurrency:
 
 env:
   ARTIFACT_PREFIX: deploy/dev
-  ARTIFACT_RETENTION_COUNT: 3
+  ARTIFACT_RETENTION_COUNT: 10
   JAR_NAME: forgather-0.0.1-SNAPSHOT.jar
 
 jobs:
