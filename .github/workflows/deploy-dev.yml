@@ -15,6 +15,7 @@ concurrency:
 
 env:
   ARTIFACT_PREFIX: deploy/dev
+  ARTIFACT_RETENTION_COUNT: 10
   JAR_NAME: forgather-0.0.1-SNAPSHOT.jar
 
 jobs:
@@ -42,7 +43,7 @@ jobs:
       - name: Install deployment dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git-crypt zip unzip
+          sudo apt-get install -y git-crypt jq zip unzip
 
       - name: Unlock git-crypt files
         env:
@@ -113,6 +114,7 @@ jobs:
           DEPLOY_ARTIFACT_BUCKET: ${{ vars.DEPLOY_ARTIFACT_BUCKET }}
         run: |
           aws s3 cp "build/${ARTIFACT_NAME}" "s3://${DEPLOY_ARTIFACT_BUCKET}/${ARTIFACT_KEY}"
+          echo "ARTIFACT_UPLOADED=true" >> "$GITHUB_ENV"
 
       - name: Create CodeDeploy deployment
         env:
@@ -146,3 +148,51 @@ jobs:
             --output json
 
           exit "$wait_status"
+
+      - name: Delete failed deployment artifact
+        if: failure()
+        env:
+          DEPLOY_ARTIFACT_BUCKET: ${{ vars.DEPLOY_ARTIFACT_BUCKET }}
+        run: |
+          if [ "${ARTIFACT_UPLOADED:-false}" != "true" ]; then
+            echo "No uploaded deployment artifact to delete."
+            exit 0
+          fi
+
+          aws s3 rm "s3://${DEPLOY_ARTIFACT_BUCKET}/${ARTIFACT_KEY}"
+
+      - name: Cleanup old successful artifacts
+        if: success()
+        env:
+          DEPLOY_ARTIFACT_BUCKET: ${{ vars.DEPLOY_ARTIFACT_BUCKET }}
+        run: |
+          objects_to_delete="$(
+            aws s3api list-objects-v2 \
+              --bucket "$DEPLOY_ARTIFACT_BUCKET" \
+              --prefix "${ARTIFACT_PREFIX}/" \
+              --output json \
+            | jq --argjson keep "$ARTIFACT_RETENTION_COUNT" '
+                (.Contents // [])
+                | map(select(.Key | endswith(".zip")))
+                | sort_by(.LastModified)
+                | reverse
+                | .[$keep:]
+                | map({Key})
+              '
+          )"
+
+          delete_count="$(jq 'length' <<< "$objects_to_delete")"
+
+          if [ "$delete_count" -eq 0 ]; then
+            echo "No old successful artifacts to delete."
+            exit 0
+          fi
+
+          jq -n --argjson objects "$objects_to_delete" \
+            '{Objects: $objects, Quiet: true}' > delete-objects.json
+
+          aws s3api delete-objects \
+            --bucket "$DEPLOY_ARTIFACT_BUCKET" \
+            --delete file://delete-objects.json
+
+          echo "Deleted ${delete_count} old artifact(s)."
