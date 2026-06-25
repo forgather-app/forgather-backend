@@ -150,6 +150,26 @@ jobs:
 
           exit "$wait_status"
 
+      - name: Stop cancelled CodeDeploy deployment
+        if: cancelled()
+        run: |
+          if [ -z "${DEPLOYMENT_ID:-}" ]; then
+            echo "No CodeDeploy deployment to stop."
+            exit 0
+          fi
+
+          set +e
+          aws deploy stop-deployment \
+            --deployment-id "$DEPLOYMENT_ID" \
+            --auto-rollback-enabled
+          stop_status=$?
+          set -e
+
+          if [ "$stop_status" -ne 0 ]; then
+            echo "CodeDeploy stop/rollback request failed or deployment already completed."
+            exit 0
+          fi
+
       - name: Delete failed deployment artifact
         if: failure() || cancelled()
         env:
