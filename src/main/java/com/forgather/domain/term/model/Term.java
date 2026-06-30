@@ -1,6 +1,7 @@
 package com.forgather.domain.term.model;
 
 import com.forgather.domain.model.SoftDeleteEntity;
+import com.forgather.global.exception.BaseNullPointerException;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -48,14 +49,43 @@ public class Term extends SoftDeleteEntity {
         String name,
         String version,
         String content,
-        boolean isRequired,
-        int sortOrder
+        Boolean isRequired,
+        Integer sortOrder
     ) {
+        validateRequiredFields(type, name, version, content, isRequired, sortOrder);
         this.type = type;
         this.name = name;
         this.version = version;
         this.content = content;
         this.isRequired = isRequired;
         this.sortOrder = sortOrder;
+    }
+
+    private void validateRequiredFields(
+        TermType type,
+        String name,
+        String version,
+        String content,
+        Boolean isRequired,
+        Integer sortOrder
+    ) {
+        if (type == null) {
+            throw new BaseNullPointerException("약관 유형은 null일 수 없습니다.");
+        }
+        if (name == null) {
+            throw new BaseNullPointerException("약관명은 null일 수 없습니다.");
+        }
+        if (version == null) {
+            throw new BaseNullPointerException("약관 버전은 null일 수 없습니다.");
+        }
+        if (content == null) {
+            throw new BaseNullPointerException("약관 내용은 null일 수 없습니다.");
+        }
+        if (isRequired == null) {
+            throw new BaseNullPointerException("약관 필수 여부는 null일 수 없습니다.");
+        }
+        if (sortOrder == null) {
+            throw new BaseNullPointerException("약관 정렬 순서는 null일 수 없습니다.");
+        }
     }
 }
