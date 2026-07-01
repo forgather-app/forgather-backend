@@ -21,7 +21,7 @@ public class TermService {
     public List<TermResponse> getLatestTerms() {
         List<Term> terms = termRepository.findLatestTerms();
         return terms.stream()
-            .map(TermResponse::new)
+            .map(TermResponse::from)
             .toList();
     }
 }

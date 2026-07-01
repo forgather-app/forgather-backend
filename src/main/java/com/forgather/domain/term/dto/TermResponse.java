@@ -28,8 +28,8 @@ public record TermResponse(
     int sortOrder
 ) {
 
-    public TermResponse(Term term) {
-        this(
+    public static TermResponse from(Term term) {
+        return new TermResponse(
             term.getId(),
             term.getType().name(),
             term.getName(),
