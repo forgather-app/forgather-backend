@@ -1,7 +1,7 @@
 CREATE TABLE `term`
 (
     `id`         BIGINT       NOT NULL AUTO_INCREMENT,
-    `type`       VARCHAR(50)  NOT NULL,
+    `type`       ENUM ('SERVICE', 'PRIVACY', 'MARKETING') NOT NULL,
     `name`       VARCHAR(255) NOT NULL,
     `version`    VARCHAR(50)  NOT NULL,
     `content`    TEXT         NOT NULL,
