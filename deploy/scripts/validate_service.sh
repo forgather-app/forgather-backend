@@ -53,4 +53,8 @@ chmod 644 "$ACTIVE_FILE"
 
 rm -f "$STATE_FILE"
 
+log "ValidateService" "previous service stop -> $PREV_SERVICE"
+systemctl stop "$PREV_SERVICE"
+log "ValidateService" "previous service stopped: $PREV_SERVICE"
+
 log "ValidateService" "배포 완료: active=$NEXT"
