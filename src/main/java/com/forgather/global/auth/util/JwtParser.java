@@ -8,7 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.forgather.global.auth.client.KakaoAuthClient;
+import com.forgather.global.auth.client.SocialAuthClient;
+import com.forgather.global.auth.client.SocialProvider;
 import com.forgather.global.auth.dto.KakaoIdToken;
 import com.forgather.global.exception.JwtBaseException;
 import com.forgather.global.exception.JwtParseException;
@@ -22,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class JwtParser {
 
     private final ObjectMapper objectMapper;
-    private final KakaoAuthClient kakaoAuthClient;
+    private final SocialAuthClient socialAuthClient;
 
     public KakaoIdToken parseIdToken(String idToken) {
         try {
@@ -40,8 +41,8 @@ public class JwtParser {
                 throw new JwtParseException("Missing kid in JWT header", HttpStatus.UNAUTHORIZED);
             }
 
-            PublicKey publicKey = kakaoAuthClient.getKakaoPublicKey(kid);
-            
+            PublicKey publicKey = socialAuthClient.getPublicKey(SocialProvider.KAKAO, kid);
+
             Claims claims = Jwts.parser()
                     .verifyWith(publicKey)
                     .build()
@@ -51,7 +52,7 @@ public class JwtParser {
             return objectMapper.convertValue(claims, KakaoIdToken.class);
         } catch (JwtParseException e) {
             throw e;
-        }catch (Exception e) {
+        } catch (Exception e) {
             throw new JwtBaseException("ID Token이 잘못되었습니다.", HttpStatus.UNAUTHORIZED, e);
         }
     }

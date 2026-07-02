@@ -7,8 +7,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-@ConfigurationProperties(prefix = "kakao")
-public class KakaoProperties {
-    private final String clientId;
+@ConfigurationProperties(prefix = "google")
+public class GoogleProperties {
     private final String jwksUrl;
 }
