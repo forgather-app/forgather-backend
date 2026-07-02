@@ -1,0 +1,4 @@
+interface:
+  display_name: "작업 범위 커밋"
+  short_description: "변경 범위를 확인하고 관련 파일만 작업 단위별로 커밋"
+  default_prompt: "Use $commit-work-scope to review the current changes, stage only the requested scope, and create Korean work-unit commits."
