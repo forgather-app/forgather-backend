@@ -10,6 +10,7 @@ import java.util.Base64;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.http.HttpStatus;
@@ -46,16 +47,35 @@ public class SocialAuthClient {
     public PublicKey getPublicKey(SocialProvider provider, String kid) {
         List<Map<String, Object>> keys = keyCaches.get(provider);
         if (keys == null || keys.isEmpty()) {
-            throw new JwtBaseException("Public key cache is empty for provider: " + provider, HttpStatus.UNAUTHORIZED);
+            updateKeys(provider);
+            keys = keyCaches.get(provider);
+        }
+
+        Optional<PublicKey> publicKey = findPublicKey(keys, kid);
+        if (publicKey.isPresent()) {
+            return publicKey.get();
+        }
+
+        // kid 없는 경우 갱신
+        updateKeys(provider);
+        List<Map<String, Object>> refreshedKeys = keyCaches.get(provider);
+        return findPublicKey(refreshedKeys, kid)
+            .orElseThrow(() ->
+                new JwtBaseException(
+                    "Public key not found for provider: %s, kid: %s".formatted(provider, kid),
+                    HttpStatus.UNAUTHORIZED)
+            );
+    }
+
+    private Optional<PublicKey> findPublicKey(List<Map<String, Object>> keys, String kid) {
+        if (keys == null || keys.isEmpty()) {
+            throw new JwtBaseException("Public key cache is empty", HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         return keys.stream()
             .filter(key -> kid.equals(key.get("kid")))
             .findFirst()
-            .map(this::toPublicKey)
-            .orElseThrow(() ->
-                new JwtBaseException("Public key not found for provider: " + provider + ", kid: " + kid,
-                    HttpStatus.UNAUTHORIZED));
+            .map(this::toPublicKey);
     }
 
     public void updateKeys(SocialProvider provider) {

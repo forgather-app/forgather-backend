@@ -17,6 +17,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.client.RestClient;
 
 import com.forgather.global.config.GoogleProperties;
@@ -81,19 +82,57 @@ class SocialAuthClientTest {
         assertThat(googlePublicKey.getEncoded()).isEqualTo(googleJwk.publicKey().getEncoded());
     }
 
-    @DisplayName("초기 JWKS 조회가 실패해도 생성은 성공하고 캐시는 비워둔다")
+    @DisplayName("공개키 캐시가 비어 있으면 캐시를 갱신한 뒤 조회한다")
     @Test
-    void constructor_initialFetchFails_keepsApplicationStartup() {
+    void getPublicKey_cacheEmpty_refreshesKeys() throws Exception {
         // given
         stubJwksFailure("/kakao/.well-known/jwks.json");
+        SocialAuthClient socialAuthClient = createSocialAuthClient();
+        wireMock.resetAll();
+        RsaJwk kakaoJwk = createRsaJwk("kakao-key");
+        stubJwks("/kakao/.well-known/jwks.json", kakaoJwk);
 
         // when
+        PublicKey publicKey = socialAuthClient.getPublicKey(SocialProvider.KAKAO, "kakao-key");
+
+        // then
+        assertThat(publicKey.getEncoded()).isEqualTo(kakaoJwk.publicKey().getEncoded());
+    }
+
+    @DisplayName("공개키 캐시 갱신 후에도 비어 있으면 서버 에러로 처리한다")
+    @Test
+    void getPublicKey_cacheStillEmpty_throwsInternalServerError() {
+        // given
+        stubJwksFailure("/kakao/.well-known/jwks.json");
         SocialAuthClient socialAuthClient = createSocialAuthClient();
+        wireMock.resetAll();
+        stubEmptyJwks("/kakao/.well-known/jwks.json");
 
         // then
         assertThatThrownBy(() -> socialAuthClient.getPublicKey(SocialProvider.KAKAO, "missing-key"))
             .isInstanceOf(JwtBaseException.class)
-            .hasMessageContaining("Public key cache is empty");
+            .hasMessageContaining("Public key cache is empty")
+            .satisfies(exception ->
+                assertThat(((JwtBaseException)exception).getStatusCode())
+                    .isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+    }
+
+    @DisplayName("kid가 캐시에 없으면 공개키를 한 번 갱신한 뒤 다시 조회한다")
+    @Test
+    void getPublicKey_kidMiss_refreshesKeys() throws Exception {
+        // given
+        RsaJwk oldJwk = createRsaJwk("old-key");
+        stubJwks("/kakao/.well-known/jwks.json", oldJwk);
+        SocialAuthClient socialAuthClient = createSocialAuthClient();
+        wireMock.resetAll();
+        RsaJwk rotatedJwk = createRsaJwk("rotated-key");
+        stubJwks("/kakao/.well-known/jwks.json", rotatedJwk);
+
+        // when
+        PublicKey publicKey = socialAuthClient.getPublicKey(SocialProvider.KAKAO, "rotated-key");
+
+        // then
+        assertThat(publicKey.getEncoded()).isEqualTo(rotatedJwk.publicKey().getEncoded());
     }
 
     @DisplayName("스케줄 갱신 실패 시 기존 provider 캐시를 유지한다")
@@ -140,6 +179,17 @@ class SocialAuthClientTest {
                       ]
                     }
                     """.formatted(jwk.kid(), jwk.modulus(), jwk.exponent()))));
+    }
+
+    private void stubEmptyJwks(String path) {
+        wireMock.stubFor(get(urlPathEqualTo(path))
+            .willReturn(aResponse()
+                .withHeader("Content-Type", "application/json")
+                .withBody("""
+                    {
+                      "keys": []
+                    }
+                    """)));
     }
 
     private void stubJwksFailure(String path) {
