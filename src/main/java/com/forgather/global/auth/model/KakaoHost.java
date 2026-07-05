@@ -1,5 +1,8 @@
 package com.forgather.global.auth.model;
 
+import com.forgather.global.exception.BaseException;
+import com.forgather.global.exception.BaseNullPointerException;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,12 +30,26 @@ public class KakaoHost {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
+    @Column(name = "name", nullable = false)
+    private String name;
+
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "host_id", nullable = false)
     private Host host;
 
-    public KakaoHost(Host host, String userId) {
+    public KakaoHost(Host host, String userId, String name) {
+        validateName(name);
         this.host = host;
         this.userId = userId;
+        this.name = name;
+    }
+
+    private void validateName(String name) {
+        if (name == null) {
+            throw new BaseNullPointerException("카카오 닉네임은 null일 수 없습니다.", 400);
+        }
+        if (name.isBlank()) {
+            throw new BaseException("카카오 닉네임은 공백만 입력할 수 없습니다.");
+        }
     }
 }

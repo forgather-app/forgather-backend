@@ -15,11 +15,11 @@ public record HostResponse(
     @Schema(description = "호스트 프로필 사진 URL", example = "https://example.com/profile.jpg")
     String pictureUrl,
 
-    @Schema(description = "약관 동의 여부", example = "true")
-    boolean agreedTerms
+    @Schema(description = "온보딩 완료 여부", example = "true")
+    boolean onboardingCompleted
 ) {
 
-    public static HostResponse from(Host host) {
-        return new HostResponse(host.getId(), host.getName(), host.getPictureUrl(), host.getAgreedTerms());
+    public static HostResponse from(Host host, boolean onboardingCompleted) {
+        return new HostResponse(host.getId(), host.getName(), host.getPictureUrl(), onboardingCompleted);
     }
 }

@@ -12,6 +12,7 @@ import com.forgather.global.auth.dto.HostResponse;
 import com.forgather.global.auth.dto.KakaoLoginConfirmRequest;
 import com.forgather.global.auth.dto.KakaoLoginTokenResponse;
 import com.forgather.global.auth.dto.LoginResponse;
+import com.forgather.global.auth.dto.OnboardingRequest;
 import com.forgather.global.auth.dto.RefreshRequest;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.service.AuthService;
@@ -68,11 +69,14 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @PostMapping("/terms")
-    @Operation(summary = "서비스 이용 약관 동의",
-        description = "서비스 이용 약관에 동의합니다. ")
-    public ResponseEntity<ApiResponse<Void>> agreeTerms(@LoginHost Host host) {
-        authService.agreeTerms(host);
-        return ResponseEntity.ok(ApiResponse.success());
+    @PostMapping("/onboarding")
+    @Operation(summary = "온보딩 완료",
+        description = "서비스 닉네임과 약관 동의 이력을 함께 저장합니다.")
+    public ResponseEntity<ApiResponse<HostResponse>> submitOnboarding(
+        @LoginHost Host host,
+        @RequestBody OnboardingRequest request
+    ) {
+        var response = authService.submitOnboarding(host, request);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

@@ -20,4 +20,6 @@ public interface TermRepository {
         ORDER BY t.sortOrder ASC
         """)
     List<Term> findLatestTerms();
+
+    List<Term> findByIdInAndDeletedAtIsNull(List<Long> ids);
 }
