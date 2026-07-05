@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,7 @@ import com.forgather.global.auth.repository.KakaoHostRepository;
 import com.forgather.global.auth.util.JwtParser;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.exception.BaseException;
+import com.forgather.global.exception.BaseNullPointerException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -81,6 +83,10 @@ public class AuthService {
 
     @Transactional
     public HostResponse submitOnboarding(Host loginHost, OnboardingRequest request) {
+        if (request.agreedTermIds() == null) {
+            throw new BaseNullPointerException("동의 약관 목록은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+
         List<Term> submittedTerms = getActiveTermsByIds(request.agreedTermIds());
         validateRequiredTermTypes(submittedTerms);
 
