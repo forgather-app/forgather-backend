@@ -92,7 +92,7 @@ public class AuthService {
             .toList();
         hostTermHistoryRepository.saveAll(hostTermHistories);
 
-        return HostResponse.from(host, isOnboardingCompleted(host));
+        return HostResponse.from(host, true);
     }
 
     private boolean isOnboardingCompleted(Host host) {
