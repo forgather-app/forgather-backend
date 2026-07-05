@@ -51,7 +51,7 @@ public class JwtParser {
 
             return objectMapper.convertValue(claims, KakaoIdToken.class);
         } catch (JsonProcessingException | IllegalArgumentException e) {
-            throw new JwtParseException("JWT 형식이 유효하지 않습니다.", HttpStatus.UNAUTHORIZED);
+            throw new JwtParseException("JWT 형식이 유효하지 않습니다.", HttpStatus.UNAUTHORIZED, e);
         }
     }
 }
