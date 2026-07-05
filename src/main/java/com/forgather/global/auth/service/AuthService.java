@@ -60,10 +60,11 @@ public class AuthService {
     private KakaoHost toKakaoHost(KakaoLoginConfirmRequest request) {
         KakaoIdToken idToken = jwtParser.parseIdToken(request.idToken());
         Optional<KakaoHost> kakaoHost = kakaoHostRepository.findByUserId(idToken.sub());
-        Host host = new Host(idToken.nickname(), idToken.picture());
-        KakaoHost newKakaoHost = new KakaoHost(host, idToken.sub());
-
-        return kakaoHost.orElseGet(() -> kakaoHostRepository.save(newKakaoHost));
+        return kakaoHost.orElseGet(() -> {
+            Host host = new Host(idToken.nickname(), idToken.picture());
+            KakaoHost newKakaoHost = new KakaoHost(host, idToken.sub());
+            return kakaoHostRepository.save(newKakaoHost);
+        });
     }
 
     public LoginResponse refresh(String refreshToken) {
