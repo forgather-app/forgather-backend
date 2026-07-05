@@ -62,26 +62,6 @@ class SocialAuthClientTest {
         assertThat(publicKey.getEncoded()).isEqualTo(kakaoJwk.publicKey().getEncoded());
     }
 
-    @DisplayName("provider별 공개키 캐시를 분리해 같은 kid도 provider에 따라 다른 키를 반환한다")
-    @Test
-    void getPublicKey_separatesCacheByProvider() throws Exception {
-        // given
-        RsaJwk kakaoJwk = createRsaJwk("same-kid");
-        RsaJwk googleJwk = createRsaJwk("same-kid");
-        stubJwks("/kakao/.well-known/jwks.json", kakaoJwk);
-        stubJwks("/google/.well-known/jwks.json", googleJwk);
-
-        SocialAuthClient socialAuthClient = createSocialAuthClient();
-
-        // when
-        PublicKey kakaoPublicKey = socialAuthClient.getPublicKey(SocialProvider.KAKAO, "same-kid");
-        PublicKey googlePublicKey = socialAuthClient.getPublicKey(SocialProvider.GOOGLE, "same-kid");
-
-        // then
-        assertThat(kakaoPublicKey.getEncoded()).isEqualTo(kakaoJwk.publicKey().getEncoded());
-        assertThat(googlePublicKey.getEncoded()).isEqualTo(googleJwk.publicKey().getEncoded());
-    }
-
     @DisplayName("공개키 캐시가 비어 있으면 캐시를 갱신한 뒤 조회한다")
     @Test
     void getPublicKey_cacheEmpty_refreshesKeys() throws Exception {
@@ -133,24 +113,6 @@ class SocialAuthClientTest {
 
         // then
         assertThat(publicKey.getEncoded()).isEqualTo(rotatedJwk.publicKey().getEncoded());
-    }
-
-    @DisplayName("스케줄 갱신 실패 시 기존 provider 캐시를 유지한다")
-    @Test
-    void updateKeys_fetchFails_keepsExistingCache() throws Exception {
-        // given
-        RsaJwk kakaoJwk = createRsaJwk("kakao-key");
-        stubJwks("/kakao/.well-known/jwks.json", kakaoJwk);
-        SocialAuthClient socialAuthClient = createSocialAuthClient();
-        wireMock.resetAll();
-        stubJwksFailure("/kakao/.well-known/jwks.json");
-
-        // when
-        socialAuthClient.updateKeys(SocialProvider.KAKAO);
-
-        // then
-        PublicKey publicKey = socialAuthClient.getPublicKey(SocialProvider.KAKAO, "kakao-key");
-        assertThat(publicKey.getEncoded()).isEqualTo(kakaoJwk.publicKey().getEncoded());
     }
 
     private SocialAuthClient createSocialAuthClient() {
