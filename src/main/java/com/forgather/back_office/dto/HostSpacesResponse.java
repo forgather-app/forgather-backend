@@ -14,7 +14,7 @@ public record HostSpacesResponse(
     public static HostSpacesResponse of(Host host, List<Space> spaces) {
         return new HostSpacesResponse(
             host.getId(),
-            host.getName(),
+            host.getNickname(),
             spaces.stream()
                 .map(SimpleSpaceResponse::from)
                 .toList()

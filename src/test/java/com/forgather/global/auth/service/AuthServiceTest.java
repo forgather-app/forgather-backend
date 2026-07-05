@@ -49,7 +49,7 @@ class AuthServiceTest {
     @InjectMocks
     private AuthService authService;
 
-    @DisplayName("신규 카카오 가입은 서비스 닉네임을 비우고 카카오 원본 사용자명을 저장한다")
+    @DisplayName("신규 카카오 가입은 원본 사용자명을 이름으로 저장하고 서비스 닉네임은 비운다")
     @Test
     void createKakaoHostWithSeparatedNames() {
         // given
@@ -70,8 +70,8 @@ class AuthServiceTest {
 
         // then
         assertAll(
-            () -> assertThat(savedKakaoHost.getHost().getName()).isNull(),
-            () -> assertThat(savedKakaoHost.getName()).isEqualTo("카카오닉네임")
+            () -> assertThat(savedKakaoHost.getHost().getName()).isEqualTo("카카오닉네임"),
+            () -> assertThat(savedKakaoHost.getHost().getNickname()).isNull()
         );
     }
 
@@ -85,7 +85,7 @@ class AuthServiceTest {
         // when, then
         assertThatThrownBy(() -> authService.kakaoLoginConfirm(kakaoLoginConfirmRequest()))
             .isInstanceOf(BaseException.class)
-            .hasMessageContaining("카카오 닉네임");
+            .hasMessageContaining("이름");
     }
 
     private KakaoLoginConfirmRequest kakaoLoginConfirmRequest() {

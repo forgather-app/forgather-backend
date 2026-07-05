@@ -60,8 +60,8 @@ public class AuthService {
     private KakaoHost toKakaoHost(KakaoLoginConfirmRequest request) {
         KakaoIdToken idToken = jwtParser.parseIdToken(request.idToken());
         Optional<KakaoHost> kakaoHost = kakaoHostRepository.findByUserId(idToken.sub());
-        Host host = new Host(null, idToken.picture());
-        KakaoHost newKakaoHost = new KakaoHost(host, idToken.sub(), idToken.nickname());
+        Host host = new Host(idToken.nickname(), idToken.picture());
+        KakaoHost newKakaoHost = new KakaoHost(host, idToken.sub());
 
         return kakaoHost.orElseGet(() -> kakaoHostRepository.save(newKakaoHost));
     }
@@ -84,7 +84,7 @@ public class AuthService {
         validateRequiredTermTypes(submittedTerms);
 
         Host host = hostRepository.getByIdOrThrow(loginHost.getId());
-        host.updateName(request.nickname());
+        host.updateNickname(request.nickname());
 
         List<HostTermHistory> hostTermHistories = submittedTerms.stream()
             .map(term -> new HostTermHistory(host, term, AGREE))
@@ -95,7 +95,7 @@ public class AuthService {
     }
 
     private boolean isOnboardingCompleted(Host host) {
-        if (!host.hasValidName()) {
+        if (!host.hasValidNickname()) {
             return false;
         }
         Set<TermType> agreedTypes = hostTermHistoryRepository.findAgreedTermTypesByHostId(host.getId());

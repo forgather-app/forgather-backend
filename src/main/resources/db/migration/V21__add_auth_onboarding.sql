@@ -1,15 +1,14 @@
-ALTER TABLE `host_kakao`
-    ADD COLUMN `name` VARCHAR(255) NULL;
+ALTER TABLE `host`
+    ADD COLUMN `nickname` VARCHAR(255) NULL;
 
-UPDATE `host_kakao` hk
-    JOIN `host` h ON h.`id` = hk.`host_id`
-SET hk.`name` = h.`name`;
-
-ALTER TABLE `host_kakao`
-    MODIFY COLUMN `name` VARCHAR(255) NOT NULL;
+UPDATE `host`
+SET `nickname` = `name`;
 
 ALTER TABLE `host`
-    MODIFY COLUMN `name` VARCHAR(20) NULL;
+    MODIFY COLUMN `nickname` VARCHAR(20) NULL;
+
+ALTER TABLE `host`
+    MODIFY COLUMN `name` VARCHAR(255) NOT NULL;
 
 CREATE TABLE `host_term_history`
 (

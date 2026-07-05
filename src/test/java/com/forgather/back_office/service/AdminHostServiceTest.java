@@ -79,7 +79,7 @@ class AdminHostServiceTest extends TestOnContainer {
     @Test
     void getHostSpaces() {
         // given
-        Host host = hostRepository.save(HostFixture.createHost());
+        Host host = hostRepository.save(createHostWithNickname("카카오원본이름", "서비스닉네임"));
         Space space1 = spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", "첫번째 스페이스"));
         Space space2 = spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("2222222222", "두번째 스페이스"));
         spaceHostRepository.save(new SpaceHost(space1, host));
@@ -91,7 +91,7 @@ class AdminHostServiceTest extends TestOnContainer {
         // then
         assertAll(
             () -> assertThat(result.hostId()).isEqualTo(host.getId()),
-            () -> assertThat(result.hostName()).isEqualTo(host.getName()),
+            () -> assertThat(result.hostName()).isEqualTo(host.getNickname()),
             () -> assertThat(result.spaces()).hasSize(2),
             () -> assertThat(result.spaces()).extracting(SimpleSpaceResponse::code)
                 .containsExactlyInAnyOrder("1111111111", "2222222222"),
@@ -104,7 +104,7 @@ class AdminHostServiceTest extends TestOnContainer {
     @Test
     void getHostSpacesWithNoSpaces() {
         // given
-        Host host = hostRepository.save(HostFixture.createHost());
+        Host host = hostRepository.save(createHostWithNickname("카카오원본이름", "서비스닉네임"));
 
         // when
         HostSpacesResponse result = adminHostService.getHostSpaces(host.getId());
@@ -112,7 +112,7 @@ class AdminHostServiceTest extends TestOnContainer {
         // then
         assertAll(
             () -> assertThat(result.hostId()).isEqualTo(host.getId()),
-            () -> assertThat(result.hostName()).isEqualTo(host.getName()),
+            () -> assertThat(result.hostName()).isEqualTo(host.getNickname()),
             () -> assertThat(result.spaces()).isEmpty()
         );
     }
@@ -133,7 +133,7 @@ class AdminHostServiceTest extends TestOnContainer {
     void searchHostsByName() {
         // given
         String name = "포스티";
-        hostRepository.save(HostFixture.createHostWithName(name));
+        hostRepository.save(createHostWithNickname("카카오원본이름", name));
         Pageable pageable = PageRequest.of(0, 10);
 
         // when
@@ -146,13 +146,13 @@ class AdminHostServiceTest extends TestOnContainer {
         );
     }
 
-    @DisplayName("이름이 포함되면 이름 검색으로 조회된다.")
+    @DisplayName("서비스 닉네임이 포함되면 이름 검색으로 조회된다.")
     @Test
     void searchHostsByNameContaining() {
         // given
         String name = "포스";
-        hostRepository.save(HostFixture.createHostWithName("포스티"));
-        hostRepository.save(HostFixture.createHostWithName("1포스"));
+        hostRepository.save(createHostWithNickname("원본포스", "포스티"));
+        hostRepository.save(createHostWithNickname("포스원본", "1포스"));
         Pageable pageable = PageRequest.of(0, 10);
 
         // when
@@ -264,5 +264,11 @@ class AdminHostServiceTest extends TestOnContainer {
             () -> assertThat(result.hosts()).hasSize(1),
             () -> assertThat(result.hosts().get(0).name()).isEqualTo("포스\\티")
         );
+    }
+
+    private Host createHostWithNickname(String name, String nickname) {
+        Host host = new Host(name, "pictureUrl");
+        host.updateNickname(nickname);
+        return host;
     }
 }

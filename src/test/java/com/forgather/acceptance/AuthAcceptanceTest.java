@@ -162,7 +162,8 @@ class AuthAcceptanceTest extends AcceptanceTest {
             () -> assertThat(response.jsonPath().getString("code")).isEqualTo(ResponseCode.SUCCESS.name()),
             () -> assertThat(response.jsonPath().getString("data.name")).isEqualTo("포개더"),
             () -> assertThat(response.jsonPath().getBoolean("data.onboardingCompleted")).isTrue(),
-            () -> assertThat(savedHost.getName()).isEqualTo("포개더"),
+            () -> assertThat(savedHost.getName()).isEqualTo("카카오원본이름"),
+            () -> assertThat(savedHost.getNickname()).isEqualTo("포개더"),
             () -> assertThat(countAgreeHistories(host.getId())).isEqualTo(3)
         );
     }
@@ -192,7 +193,7 @@ class AuthAcceptanceTest extends AcceptanceTest {
         Host savedHost = hostRepository.getByIdOrThrow(host.getId());
 
         assertAll(
-            () -> assertThat(savedHost.getName()).isNull(),
+            () -> assertThat(savedHost.getNickname()).isNull(),
             () -> assertThat(countAgreeHistories(host.getId())).isZero()
         );
     }
@@ -223,7 +224,7 @@ class AuthAcceptanceTest extends AcceptanceTest {
         Host savedHost = hostRepository.getByIdOrThrow(host.getId());
 
         assertAll(
-            () -> assertThat(savedHost.getName()).isNull(),
+            () -> assertThat(savedHost.getNickname()).isNull(),
             () -> assertThat(countAgreeHistories(host.getId())).isZero()
         );
     }
@@ -258,13 +259,17 @@ class AuthAcceptanceTest extends AcceptanceTest {
         Host savedHost = hostRepository.getByIdOrThrow(host.getId());
 
         assertAll(
-            () -> assertThat(savedHost.getName()).isNull(),
+            () -> assertThat(savedHost.getNickname()).isNull(),
             () -> assertThat(countAgreeHistories(host.getId())).isZero()
         );
     }
 
-    private Host saveHost(String name) {
-        return hostRepository.save(new Host(name, "pictureUrl"));
+    private Host saveHost(String nickname) {
+        Host host = new Host("카카오원본이름", "pictureUrl");
+        if (nickname != null) {
+            host.updateNickname(nickname);
+        }
+        return hostRepository.save(host);
     }
 
     private void insertAgreeHistory(Long hostId, Long termId) {

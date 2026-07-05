@@ -19,7 +19,7 @@ public interface AdminHostRepository {
     @Query(
         value = """
             SELECT new com.forgather.back_office.dto.HostDetailResponse(
-                h.id, h.name, h.createdAt,
+                h.id, h.nickname, h.createdAt,
                 (SELECT COUNT(sh.id)
                  FROM SpaceHost sh JOIN sh.space s
                  WHERE sh.host = h AND s.deletedAt IS NULL AND sh.deletedAt IS NULL
@@ -34,16 +34,16 @@ public interface AdminHostRepository {
     @Query(
         value = """
             SELECT new com.forgather.back_office.dto.HostDetailResponse(
-                h.id, h.name, h.createdAt,
+                h.id, h.nickname, h.createdAt,
                 (SELECT COUNT(sh.id)
                  FROM SpaceHost sh JOIN sh.space s
                  WHERE sh.host = h AND s.deletedAt IS NULL AND sh.deletedAt IS NULL
                 )
             )
             FROM Host h
-            WHERE h.name LIKE CONCAT('%', :name, '%') ESCAPE '\\'
+            WHERE h.nickname LIKE CONCAT('%', :name, '%') ESCAPE '\\'
             """,
-        countQuery = "SELECT COUNT(h) FROM Host h WHERE h.name LIKE CONCAT('%', :name, '%') ESCAPE '\\'"
+        countQuery = "SELECT COUNT(h) FROM Host h WHERE h.nickname LIKE CONCAT('%', :name, '%') ESCAPE '\\'"
     )
     Page<HostDetailResponse> findByNameContaining(
         @Param("name") String name,
