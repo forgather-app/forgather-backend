@@ -109,7 +109,7 @@ class AuthAcceptanceTest extends AcceptanceTest {
     @DisplayName("필수 약관 타입별 동의 이력이 없으면 내 정보의 온보딩 완료 여부가 false이다")
     @Test
     void getCurrentUserWhenRequiredTermTypeIsMissing() {
-        // givem
+        // given
         Host host = saveHost("포개더");
         String token = jwtTokenProvider.generateAccessToken(host.getId());
         Term serviceTerm = termJpaRepository.save(createServiceTerm("1.0.0", "service"));
