@@ -107,10 +107,13 @@ public class AuthService {
         if (termIds.isEmpty()) {
             return List.of();
         }
-        List<Term> terms = termRepository.findByIdInAndDeletedAtIsNull(termIds);
-        if (terms.size() != termIds.size()) {
+
+        List<Long> distinctTermIds = termIds.stream().distinct().toList();
+        List<Term> terms = termRepository.findByIdInAndDeletedAtIsNull(distinctTermIds);
+        if (terms.size() != distinctTermIds.size()) {
             throw new BaseException("존재하지 않거나 삭제된 약관 ID가 포함되어 있습니다. termIds: " + termIds);
         }
+
         return terms;
     }
 
