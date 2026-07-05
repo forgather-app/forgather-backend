@@ -30,6 +30,7 @@ public class SocialAuthClient {
 
     private final RestClient restClient;
     private final Map<SocialProvider, String> jwksUrls;
+    private final Map<SocialProvider, Object> keyUpdateLocks;
     private final Map<SocialProvider, List<Map<String, Object>>> keyCaches = new ConcurrentHashMap<>();
 
     public SocialAuthClient(
@@ -41,14 +42,23 @@ public class SocialAuthClient {
         this.jwksUrls = new EnumMap<>(SocialProvider.class);
         this.jwksUrls.put(SocialProvider.KAKAO, kakaoProperties.getJwksUrl());
         this.jwksUrls.put(SocialProvider.GOOGLE, googleProperties.getJwksUrl());
+        this.keyUpdateLocks = new EnumMap<>(SocialProvider.class);
+        for (SocialProvider provider : SocialProvider.values()) {
+            this.keyUpdateLocks.put(provider, new Object());
+        }
         updateAllKeys();
     }
 
     public PublicKey getPublicKey(SocialProvider provider, String kid) {
         List<Map<String, Object>> keys = keyCaches.get(provider);
         if (keys == null || keys.isEmpty()) {
-            updateKeys(provider);
-            keys = keyCaches.get(provider);
+            synchronized (getKeyUpdateLock(provider)) {
+                keys = keyCaches.get(provider);
+                if (keys == null || keys.isEmpty()) {
+                    updateKeys(provider);
+                    keys = keyCaches.get(provider);
+                }
+            }
         }
 
         Optional<PublicKey> publicKey = findPublicKey(keys, kid);
@@ -57,8 +67,20 @@ public class SocialAuthClient {
         }
 
         // kid 없는 경우 갱신
-        updateKeys(provider);
-        List<Map<String, Object>> refreshedKeys = keyCaches.get(provider);
+        List<Map<String, Object>> refreshedKeys;
+        synchronized (getKeyUpdateLock(provider)) {
+            refreshedKeys = keyCaches.get(provider);
+            if (refreshedKeys != null && !refreshedKeys.isEmpty()) {
+                publicKey = findPublicKey(refreshedKeys, kid);
+                if (publicKey.isPresent()) {
+                    return publicKey.get();
+                }
+            }
+
+            updateKeys(provider);
+            refreshedKeys = keyCaches.get(provider);
+        }
+
         return findPublicKey(refreshedKeys, kid)
             .orElseThrow(() ->
                 new JwtBaseException(
@@ -90,6 +112,10 @@ public class SocialAuthClient {
         for (SocialProvider provider : SocialProvider.values()) {
             updateKeys(provider);
         }
+    }
+
+    private Object getKeyUpdateLock(SocialProvider provider) {
+        return keyUpdateLocks.get(provider);
     }
 
     private PublicKey toPublicKey(Map<String, Object> key) {
