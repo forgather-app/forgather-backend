@@ -1,0 +1,4 @@
+interface:
+  display_name: "작업 범위 커밋"
+  short_description: "커밋 구분안을 승인받고 관련 파일만 작업 단위별로 커밋"
+  default_prompt: "Use $commit-work-scope to review the current changes, propose Korean work-unit commits for approval, then commit only the approved scope."
