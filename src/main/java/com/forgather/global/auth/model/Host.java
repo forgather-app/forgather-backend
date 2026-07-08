@@ -31,12 +31,20 @@ public class Host extends BaseTimeEntity {
     @Column(name = "picture_url")
     private String pictureUrl;
 
+    @Column(name = "email")
+    private String email;
+
     @Column(name = "agreed_terms")
     private Boolean agreedTerms = false;
 
     public Host(String name, String pictureUrl) {
+        this(name, pictureUrl, null);
+    }
+
+    public Host(String name, String pictureUrl, String email) {
         this.name = name;
         this.pictureUrl = pictureUrl;
+        this.email = email;
     }
 
     public void agreeTerms() {
