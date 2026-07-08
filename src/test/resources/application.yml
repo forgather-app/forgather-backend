@@ -58,6 +58,12 @@ cors:
 api:
   base-url: http://localhost:8080
 
+apple:
+  jwks-url: https://appleid.apple.com/auth/keys
+  issuer: https://appleid.apple.com
+  allowed-audiences:
+    - test-apple-audience
+
 app:
   download:
     temp:
