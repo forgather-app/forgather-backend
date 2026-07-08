@@ -12,6 +12,7 @@ import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.RestClient;
 
+import com.forgather.global.config.AppleProperties;
 import com.forgather.global.config.GoogleProperties;
 import com.forgather.global.config.KakaoProperties;
 import com.forgather.global.exception.JwtBaseException;
@@ -48,18 +50,29 @@ class SocialAuthClientTest {
         RsaJwk kakaoJwk = createRsaJwk("kakao-key");
         stubJwks("/kakao/.well-known/jwks.json", kakaoJwk);
 
-        RestClient restClient = RestClient.create();
-        SocialAuthClient socialAuthClient = new SocialAuthClient(
-            restClient,
-            new KakaoProperties("client-id", wireMock.baseUrl() + "/kakao/.well-known/jwks.json"),
-            new GoogleProperties(wireMock.baseUrl() + "/google/.well-known/jwks.json")
-        );
+        SocialAuthClient socialAuthClient = createSocialAuthClient();
 
         // when
         PublicKey publicKey = socialAuthClient.getPublicKey(SocialProvider.KAKAO, "kakao-key");
 
         // then
         assertThat(publicKey.getEncoded()).isEqualTo(kakaoJwk.publicKey().getEncoded());
+    }
+
+    @DisplayName("Apple provider의 JWKS URL에서 공개키를 조회해 APPLE 캐시에 저장한다")
+    @Test
+    void getPublicKey_loadsAppleKeysByProvider() throws Exception {
+        // given
+        RsaJwk appleJwk = createRsaJwk("apple-key");
+        stubJwks("/apple/auth/keys", appleJwk);
+
+        SocialAuthClient socialAuthClient = createSocialAuthClient();
+
+        // when
+        PublicKey publicKey = socialAuthClient.getPublicKey(SocialProvider.APPLE, "apple-key");
+
+        // then
+        assertThat(publicKey.getEncoded()).isEqualTo(appleJwk.publicKey().getEncoded());
     }
 
     @DisplayName("공개키 캐시가 비어 있으면 캐시를 갱신한 뒤 조회한다")
@@ -119,7 +132,12 @@ class SocialAuthClientTest {
         return new SocialAuthClient(
             RestClient.create(),
             new KakaoProperties("client-id", wireMock.baseUrl() + "/kakao/.well-known/jwks.json"),
-            new GoogleProperties(wireMock.baseUrl() + "/google/.well-known/jwks.json")
+            new GoogleProperties(wireMock.baseUrl() + "/google/.well-known/jwks.json"),
+            new AppleProperties(
+                wireMock.baseUrl() + "/apple/auth/keys",
+                "https://appleid.apple.com",
+                List.of("test-apple-audience")
+            )
         );
     }
 
