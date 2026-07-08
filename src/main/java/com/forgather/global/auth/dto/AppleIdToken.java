@@ -6,10 +6,10 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record AppleIdToken(
     String iss,
-    String aud,
+    Object aud,
     String sub,
     String email,
-    Boolean emailVerified,
+    Object emailVerified,
     Long exp,
     Long iat,
     String nonce

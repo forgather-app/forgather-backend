@@ -76,6 +76,7 @@ public class AuthService {
         return appleHost.orElseGet(() -> {
             AppleUser appleUser = parseAppleUser(request.user());
             Host host = new Host(appleUser.fullName(), null, idToken.email());
+            hostRepository.save(host);
             return appleHostRepository.save(new AppleHost(host, idToken.sub()));
         });
     }
