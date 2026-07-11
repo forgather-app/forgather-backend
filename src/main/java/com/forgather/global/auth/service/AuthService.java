@@ -10,21 +10,18 @@ import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.term.model.HostTermHistory;
 import com.forgather.domain.term.model.Term;
 import com.forgather.domain.term.model.TermType;
 import com.forgather.domain.term.repository.HostTermHistoryRepository;
 import com.forgather.domain.term.repository.TermRepository;
+import com.forgather.global.auth.client.AppleAuthClient;
 import com.forgather.global.auth.client.KakaoAuthClient;
 import com.forgather.global.auth.dto.AppleIdToken;
 import com.forgather.global.auth.dto.AppleLoginConfirmRequest;
-import com.forgather.global.auth.dto.AppleUser;
+import com.forgather.global.auth.dto.AppleTokenResponse;
 import com.forgather.global.auth.dto.HostResponse;
 import com.forgather.global.auth.dto.KakaoIdToken;
 import com.forgather.global.auth.dto.KakaoLoginConfirmRequest;
@@ -56,7 +53,7 @@ public class AuthService {
     private final TermRepository termRepository;
     private final HostTermHistoryRepository hostTermHistoryRepository;
     private final AppleHostRepository appleHostRepository;
-    private final ObjectMapper objectMapper;
+    private final AppleAuthClient appleAuthClient;
 
     public KakaoLoginTokenResponse getKakaoLoginToken() {
         return new KakaoLoginTokenResponse(kakaoAuthClient.getKakaoClientId());
@@ -82,32 +79,29 @@ public class AuthService {
 
     @Transactional
     public LoginResponse appleLoginConfirm(AppleLoginConfirmRequest request) {
-        AppleHost appleHost = toAppleHost(request);
+        AppleTokenResponse appleToken = appleAuthClient.exchangeAuthorizationCode(request.authorizationCode());
+        AppleIdToken idToken = jwtParser.parseAppleIdToken(appleToken.idToken(), request.rawNonce());
+        AppleHost appleHost = toAppleHost(request, idToken, appleToken.refreshToken());
         String accessToken = jwtTokenProvider.generateAccessToken(appleHost.getHost().getId());
         String refreshToken = jwtTokenProvider.generateRefreshToken(appleHost.getHost().getId());
         return LoginResponse.of(accessToken, refreshToken);
     }
 
-    private AppleHost toAppleHost(AppleLoginConfirmRequest request) {
-        AppleIdToken idToken = jwtParser.parseAppleIdToken(request.idToken(), request.rawNonce());
+    private AppleHost toAppleHost(
+        AppleLoginConfirmRequest request,
+        AppleIdToken idToken,
+        String appleRefreshToken
+    ) {
         Optional<AppleHost> appleHost = appleHostRepository.findByUserId(idToken.sub());
-        return appleHost.orElseGet(() -> {
-            AppleUser appleUser = parseAppleUser(request.user());
-            Host host = new Host(appleUser.fullName(), null, idToken.email());
-            hostRepository.save(host);
-            return appleHostRepository.save(new AppleHost(host, idToken.sub()));
-        });
-    }
+        if (appleHost.isPresent()) {
+            AppleHost existingAppleHost = appleHost.get();
+            existingAppleHost.updateRefreshToken(appleRefreshToken);
+            return existingAppleHost;
+        }
 
-    private AppleUser parseAppleUser(String userJson) {
-        if (!StringUtils.hasText(userJson)) {
-            throw new BaseException("회원가입을 위해 애플 사용자 정보가 필요합니다.", HttpStatus.BAD_REQUEST);
-        }
-        try {
-            return objectMapper.readValue(userJson, AppleUser.class);
-        } catch (JsonProcessingException e) {
-            throw new BaseException("애플 사용자 정보 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST, e);
-        }
+        Host host = new Host(request.fullName(), null, idToken.email());
+        hostRepository.save(host);
+        return appleHostRepository.save(new AppleHost(host, idToken.sub(), appleRefreshToken));
     }
 
     public LoginResponse refresh(String refreshToken) {

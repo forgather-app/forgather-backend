@@ -18,7 +18,6 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HexFormat;
-import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -193,11 +192,42 @@ class JwtParserTest {
             .hasMessageContaining("Apple email");
     }
 
+    @DisplayName("Apple id token에 사용자 식별자가 없으면 실패한다")
+    @Test
+    void parseAppleIdToken_withoutSubject() throws Exception {
+        // given
+        KeyPair keyPair = generateRsaKeyPair();
+        stubJwks("/apple/auth/keys", "apple-key", (RSAPublicKey)keyPair.getPublic());
+        JwtParser jwtParser = createJwtParser();
+        String rawNonce = "raw-nonce";
+        String idToken = Jwts.builder()
+            .header()
+            .keyId("apple-key")
+            .and()
+            .issuer("https://appleid.apple.com")
+            .claim("aud", "test-apple-audience")
+            .claim("email", "apple@example.com")
+            .claim("email_verified", true)
+            .claim("nonce", sha256Hex(rawNonce))
+            .expiration(Date.from(Instant.now().plusSeconds(600)))
+            .signWith((RSAPrivateKey)keyPair.getPrivate())
+            .compact();
+
+        // when & then
+        assertThatThrownBy(() -> jwtParser.parseAppleIdToken(idToken, rawNonce))
+            .isInstanceOf(JwtParseException.class)
+            .hasMessageContaining("사용자 식별자");
+    }
+
     private JwtParser createJwtParser() {
         AppleProperties appleProperties = new AppleProperties(
             wireMock.baseUrl() + "/apple/auth/keys",
             "https://appleid.apple.com",
-            List.of("test-apple-audience")
+            "test-apple-audience",
+            "test-team-id",
+            "test-key-id",
+            "test-private-key",
+            wireMock.baseUrl() + "/apple/auth/token"
         );
         SocialAuthClient socialAuthClient = new SocialAuthClient(
             RestClient.create(),

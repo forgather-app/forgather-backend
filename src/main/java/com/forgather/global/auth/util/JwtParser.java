@@ -85,8 +85,20 @@ public class JwtParser {
         if (!appleProperties.isAllowedAudience(idToken.aud())) {
             throw new JwtParseException("Apple audience가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED);
         }
+        if (idToken.exp() == null) {
+            throw new JwtParseException("Apple token 만료 시간이 없습니다.", HttpStatus.UNAUTHORIZED);
+        }
+        if (!StringUtils.hasText(idToken.sub())) {
+            throw new JwtParseException("Apple 사용자 식별자가 없습니다.", HttpStatus.UNAUTHORIZED);
+        }
+        if (!StringUtils.hasText(idToken.email())) {
+            throw new JwtParseException("Apple email이 없습니다.", HttpStatus.UNAUTHORIZED);
+        }
         if (!idToken.isEmailVerified()) {
             throw new JwtParseException("Apple email이 올바르지 않습니다.", HttpStatus.UNAUTHORIZED);
+        }
+        if (!StringUtils.hasText(rawNonce) || !StringUtils.hasText(idToken.nonce())) {
+            throw new JwtParseException("Apple nonce가 없습니다.", HttpStatus.UNAUTHORIZED);
         }
         if (!hashRawNonce(rawNonce).equals(idToken.nonce())) {
             throw new JwtParseException("Apple nonce가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED);

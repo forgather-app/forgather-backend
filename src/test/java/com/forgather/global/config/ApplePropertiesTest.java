@@ -2,22 +2,16 @@ package com.forgather.global.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class ApplePropertiesTest {
 
-    @DisplayName("문자열 audience가 허용 목록에 있으면 true를 반환한다")
+    @DisplayName("ID token audience가 Apple client ID와 같으면 허용한다")
     @Test
     void isAllowedAudienceWithString() {
         // given
-        AppleProperties appleProperties = new AppleProperties(
-            "https://appleid.apple.com/auth/keys",
-            "https://appleid.apple.com",
-            List.of("test-apple-audience")
-        );
+        AppleProperties appleProperties = appleProperties();
 
         // when
         boolean allowed = appleProperties.isAllowedAudience("test-apple-audience");
@@ -26,20 +20,28 @@ class ApplePropertiesTest {
         assertThat(allowed).isTrue();
     }
 
-    @DisplayName("배열 audience 중 허용 목록에 포함된 값이 있으면 true를 반환한다")
+    @DisplayName("ID token audience가 Apple client ID와 다르면 허용하지 않는다")
     @Test
-    void isAllowedAudienceWithArray() {
+    void isAllowedAudienceWithDifferentClientId() {
         // given
-        AppleProperties appleProperties = new AppleProperties(
-            "https://appleid.apple.com/auth/keys",
-            "https://appleid.apple.com",
-            List.of("test-apple-audience")
-        );
+        AppleProperties appleProperties = appleProperties();
 
         // when
-        boolean allowed = appleProperties.isAllowedAudience(List.of("other-audience", "test-apple-audience"));
+        boolean allowed = appleProperties.isAllowedAudience("other-audience");
 
         // then
-        assertThat(allowed).isTrue();
+        assertThat(allowed).isFalse();
+    }
+
+    private AppleProperties appleProperties() {
+        return new AppleProperties(
+            "https://appleid.apple.com/auth/keys",
+            "https://appleid.apple.com",
+            "test-apple-audience",
+            "test-team-id",
+            "test-key-id",
+            "test-private-key",
+            "https://appleid.apple.com/auth/token"
+        );
     }
 }

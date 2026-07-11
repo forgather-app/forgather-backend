@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -24,14 +25,15 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.term.model.TermType;
 import com.forgather.domain.term.repository.HostTermHistoryRepository;
 import com.forgather.domain.term.repository.TermRepository;
+import com.forgather.global.auth.client.AppleAuthClient;
 import com.forgather.global.auth.client.KakaoAuthClient;
 import com.forgather.global.auth.dto.AppleIdToken;
 import com.forgather.global.auth.dto.AppleLoginConfirmRequest;
+import com.forgather.global.auth.dto.AppleTokenResponse;
 import com.forgather.global.auth.dto.HostResponse;
 import com.forgather.global.auth.dto.KakaoIdToken;
 import com.forgather.global.auth.dto.KakaoLoginConfirmRequest;
@@ -73,6 +75,9 @@ class AuthServiceTest {
     @Mock
     private AppleHostRepository appleHostRepository;
 
+    @Mock
+    private AppleAuthClient appleAuthClient;
+
     private AuthService authService;
 
     @BeforeEach
@@ -86,20 +91,23 @@ class AuthServiceTest {
             termRepository,
             hostTermHistoryRepository,
             appleHostRepository,
-            new ObjectMapper()
+            appleAuthClient
         );
     }
 
-    @DisplayName("신규 Apple 로그인은 user JSON으로 Host와 AppleHost를 생성하고 토큰을 발급한다")
+    @DisplayName("신규 Apple 로그인은 code 교환 응답으로 Host와 AppleHost를 생성하고 토큰을 발급한다")
     @Test
     void appleLoginConfirm_createsAppleHost() {
         // given
         AppleLoginConfirmRequest request = new AppleLoginConfirmRequest(
             "id-token",
-            "{\"name\":{\"firstName\":\"길동\",\"lastName\":\"홍\"},\"email\":\"ignored@example.com\"}",
-            "raw-nonce"
+            "authorization-code",
+            "raw-nonce",
+            "홍길동"
         );
-        when(jwtParser.parseAppleIdToken("id-token", "raw-nonce"))
+        when(appleAuthClient.exchangeAuthorizationCode("authorization-code"))
+            .thenReturn(appleTokenResponse("apple-refresh-token"));
+        when(jwtParser.parseAppleIdToken("apple-server-id-token", "raw-nonce"))
             .thenReturn(new AppleIdToken(
                 "https://appleid.apple.com",
                 "test-apple-audience",
@@ -123,6 +131,7 @@ class AuthServiceTest {
         verify(appleHostRepository).save(captor.capture());
         AppleHost saved = captor.getValue();
         assertThat(saved.getUserId()).isEqualTo("apple-sub");
+        assertThat(saved.getRefreshToken()).isEqualTo("apple-refresh-token");
         assertThat(saved.getHost().getName()).isEqualTo("홍길동");
         assertThat(saved.getHost().getEmail()).isEqualTo("apple@example.com");
         assertThat(saved.getHost().getPictureUrl()).isNull();
@@ -131,14 +140,21 @@ class AuthServiceTest {
         verify(hostRepository).save(saved.getHost());
     }
 
-    @DisplayName("기존 AppleHost 로그인은 user 없이 기존 Host로 토큰을 발급한다")
+    @DisplayName("기존 AppleHost 로그인은 이름 없이 refresh token을 갱신하고 기존 Host로 토큰을 발급한다")
     @Test
-    void appleLoginConfirm_existingAppleHostDoesNotRequireUser() {
+    void appleLoginConfirm_existingAppleHostDoesNotRequireFullName() {
         // given
-        AppleLoginConfirmRequest request = new AppleLoginConfirmRequest("id-token", null, "raw-nonce");
+        AppleLoginConfirmRequest request = new AppleLoginConfirmRequest(
+            "id-token",
+            "authorization-code",
+            "raw-nonce",
+            null
+        );
         Host host = new Host("기존사용자", null, "old@example.com");
-        AppleHost appleHost = new AppleHost(host, "apple-sub");
-        when(jwtParser.parseAppleIdToken("id-token", "raw-nonce"))
+        AppleHost appleHost = new AppleHost(host, "apple-sub", "old-apple-refresh-token");
+        when(appleAuthClient.exchangeAuthorizationCode("authorization-code"))
+            .thenReturn(appleTokenResponse("new-apple-refresh-token"));
+        when(jwtParser.parseAppleIdToken("apple-server-id-token", "raw-nonce"))
             .thenReturn(new AppleIdToken(
                 "https://appleid.apple.com",
                 "test-apple-audience",
@@ -159,16 +175,24 @@ class AuthServiceTest {
         // then
         verify(appleHostRepository, never()).save(any());
         assertThat(host.getEmail()).isEqualTo("old@example.com");
+        assertThat(appleHost.getRefreshToken()).isEqualTo("new-apple-refresh-token");
         assertThat(response.accessToken()).isEqualTo("access-token");
         assertThat(response.refreshToken()).isEqualTo("refresh-token");
     }
 
-    @DisplayName("신규 Apple 로그인에서 user가 없으면 실패한다")
+    @DisplayName("신규 Apple 로그인에서 이름이 없으면 실패한다")
     @Test
-    void appleLoginConfirm_newAppleHostRequiresUser() {
+    void appleLoginConfirm_newAppleHostRequiresFullName() {
         // given
-        AppleLoginConfirmRequest request = new AppleLoginConfirmRequest("id-token", null, "raw-nonce");
-        when(jwtParser.parseAppleIdToken("id-token", "raw-nonce"))
+        AppleLoginConfirmRequest request = new AppleLoginConfirmRequest(
+            "id-token",
+            "authorization-code",
+            "raw-nonce",
+            null
+        );
+        when(appleAuthClient.exchangeAuthorizationCode("authorization-code"))
+            .thenReturn(appleTokenResponse("apple-refresh-token"));
+        when(jwtParser.parseAppleIdToken("apple-server-id-token", "raw-nonce"))
             .thenReturn(new AppleIdToken(
                 "https://appleid.apple.com",
                 "test-apple-audience",
@@ -184,7 +208,37 @@ class AuthServiceTest {
         // when, then
         assertThatThrownBy(() -> authService.appleLoginConfirm(request))
             .isInstanceOf(BaseException.class)
-            .hasMessageContaining("회원가입을 위해 애플 사용자 정보가 필요합니다.");
+            .hasMessageContaining("이름");
+    }
+
+    @DisplayName("Apple code 교환에 실패하면 회원 조회와 서비스 토큰 발급을 수행하지 않는다")
+    @Test
+    void appleLoginConfirm_failsWhenCodeExchangeFails() {
+        // given
+        AppleLoginConfirmRequest request = new AppleLoginConfirmRequest(
+            "id-token",
+            "invalid-authorization-code",
+            "raw-nonce",
+            "홍길동"
+        );
+        when(appleAuthClient.exchangeAuthorizationCode("invalid-authorization-code"))
+            .thenThrow(new BaseException("Apple authorization code가 유효하지 않습니다."));
+
+        // when & then
+        assertThatThrownBy(() -> authService.appleLoginConfirm(request))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("authorization code");
+        verifyNoInteractions(appleHostRepository, jwtTokenProvider);
+    }
+
+    private AppleTokenResponse appleTokenResponse(String refreshToken) {
+        return new AppleTokenResponse(
+            "apple-access-token",
+            "Bearer",
+            3600L,
+            refreshToken,
+            "apple-server-id-token"
+        );
     }
 
     @DisplayName("신규 카카오 가입은 원본 사용자명을 이름으로 저장하고 서비스 닉네임은 비운다")

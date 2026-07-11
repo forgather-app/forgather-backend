@@ -136,7 +136,11 @@ class SocialAuthClientTest {
             new AppleProperties(
                 wireMock.baseUrl() + "/apple/auth/keys",
                 "https://appleid.apple.com",
-                List.of("test-apple-audience")
+                "test-apple-audience",
+                "test-team-id",
+                "test-key-id",
+                "test-private-key",
+                wireMock.baseUrl() + "/apple/auth/token"
             )
         );
     }

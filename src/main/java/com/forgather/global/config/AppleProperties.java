@@ -2,7 +2,6 @@ package com.forgather.global.config;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -16,26 +15,24 @@ public class AppleProperties {
 
     private final String jwksUrl;
     private final String issuer;
-    private final List<String> allowedAudiences;
+    private final String clientId;
+    private final String teamId;
+    private final String keyId;
+    private final String privateKey;
+    private final String tokenUrl;
 
     public boolean isAllowedAudience(Object audience) {
-        if (audience == null || allowedAudiences == null) {
+        if (clientId == null || audience == null) {
             return false;
         }
         if (audience instanceof String value) {
-            return allowedAudiences.contains(value);
+            return clientId.equals(value);
         }
         if (audience instanceof Collection<?> values) {
-            return values.stream()
-                .filter(String.class::isInstance)
-                .map(String.class::cast)
-                .anyMatch(allowedAudiences::contains);
+            return values.stream().anyMatch(clientId::equals);
         }
         if (audience instanceof Object[] values) {
-            return Arrays.stream(values)
-                .filter(String.class::isInstance)
-                .map(String.class::cast)
-                .anyMatch(allowedAudiences::contains);
+            return Arrays.stream(values).anyMatch(clientId::equals);
         }
         return false;
     }
