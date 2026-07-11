@@ -30,3 +30,6 @@ ALTER TABLE `host_term_history`
 
 ALTER TABLE `host`
     DROP COLUMN `agreed_terms`;
+
+ALTER TABLE `term`
+    DROP COLUMN `is_required`;

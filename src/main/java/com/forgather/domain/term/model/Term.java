@@ -41,23 +41,18 @@ public class Term extends SoftDeleteEntity {
     @Column(name = "sort_order", nullable = false)
     private int sortOrder;
 
-    @Column(name = "is_required", nullable = false)
-    private boolean isRequired;
-
     public Term(
         TermType type,
         String name,
         String version,
         String content,
-        Boolean isRequired,
         Integer sortOrder
     ) {
-        validateRequiredFields(type, name, version, content, isRequired, sortOrder);
+        validateRequiredFields(type, name, version, content, sortOrder);
         this.type = type;
         this.name = name;
         this.version = version;
         this.content = content;
-        this.isRequired = isRequired;
         this.sortOrder = sortOrder;
     }
 
@@ -66,7 +61,6 @@ public class Term extends SoftDeleteEntity {
         String name,
         String version,
         String content,
-        Boolean isRequired,
         Integer sortOrder
     ) {
         if (type == null) {
@@ -80,9 +74,6 @@ public class Term extends SoftDeleteEntity {
         }
         if (content == null) {
             throw new BaseNullPointerException("약관 내용은 null일 수 없습니다.");
-        }
-        if (isRequired == null) {
-            throw new BaseNullPointerException("약관 필수 여부는 null일 수 없습니다.");
         }
         if (sortOrder == null) {
             throw new BaseNullPointerException("약관 정렬 순서는 null일 수 없습니다.");

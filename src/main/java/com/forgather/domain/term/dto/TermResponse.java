@@ -35,7 +35,7 @@ public record TermResponse(
             term.getName(),
             term.getVersion(),
             term.getContent(),
-            term.isRequired(),
+            term.getType().isRequired(),
             term.getSortOrder()
         );
     }
