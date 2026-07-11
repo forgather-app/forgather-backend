@@ -63,7 +63,7 @@ public class Host extends BaseTimeEntity {
 
     private void validateNickname(String nickname) {
         if (nickname == null) {
-            throw new BaseNullPointerException("닉네임은 null일 수 없습니다.", 400);
+            throw new BaseNullPointerException("닉네임은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
         }
         if (nickname.isBlank()) {
             throw new BaseException("닉네임은 공백만 입력할 수 없습니다.");
