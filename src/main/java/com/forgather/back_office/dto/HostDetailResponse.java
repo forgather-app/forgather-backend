@@ -12,6 +12,6 @@ public record HostDetailResponse(
 ) {
 
     public static HostDetailResponse of(Host host, long spaceCount) {
-        return new HostDetailResponse(host.getId(), host.getName(), host.getCreatedAt(), spaceCount);
+        return new HostDetailResponse(host.getId(), host.getNickname(), host.getCreatedAt(), spaceCount);
     }
 }

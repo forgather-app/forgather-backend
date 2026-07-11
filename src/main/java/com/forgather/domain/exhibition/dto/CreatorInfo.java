@@ -14,6 +14,6 @@ public record CreatorInfo(
 ) {
 
     public static CreatorInfo from(Host host) {
-        return new CreatorInfo(host.getId(), host.getName());
+        return new CreatorInfo(host.getId(), host.getNickname());
     }
 }

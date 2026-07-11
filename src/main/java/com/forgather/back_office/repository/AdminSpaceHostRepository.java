@@ -16,7 +16,7 @@ public interface AdminSpaceHostRepository {
     @Query(
         value = """
             SELECT new com.forgather.back_office.dto.HostDetailResponse(
-                h.id, h.name, h.createdAt,
+                h.id, h.nickname, h.createdAt,
                 (SELECT COUNT(sh.id)
                  FROM SpaceHost sh JOIN sh.space s
                  WHERE sh.host = h AND s.deletedAt IS NULL

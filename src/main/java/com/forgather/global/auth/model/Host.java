@@ -2,7 +2,12 @@ package com.forgather.global.auth.model;
 
 import java.util.Objects;
 
+import org.springframework.http.HttpStatus;
+
 import com.forgather.domain.model.BaseTimeEntity;
+import com.forgather.global.exception.BaseException;
+import com.forgather.global.exception.BaseNullPointerException;
+import com.forgather.global.util.TextLengthCounter;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,26 +26,58 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Host extends BaseTimeEntity {
 
+    private static final int MAX_NICKNAME_LENGTH = 20;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name")
+    @Column(name = "name", nullable = false)
     private String name;
+
+    @Column(name = "nickname", length = MAX_NICKNAME_LENGTH)
+    private String nickname;
 
     @Column(name = "picture_url")
     private String pictureUrl;
 
-    @Column(name = "agreed_terms")
-    private Boolean agreedTerms = false;
-
     public Host(String name, String pictureUrl) {
+        validateName(name);
         this.name = name;
         this.pictureUrl = pictureUrl;
     }
 
-    public void agreeTerms() {
-        this.agreedTerms = true;
+    public void updateNickname(String nickname) {
+        validateNickname(nickname);
+        this.nickname = nickname;
+    }
+
+    private void validateName(String name) {
+        if (name == null) {
+            throw new BaseNullPointerException("이름은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+        if (name.isBlank()) {
+            throw new BaseException("이름은 공백만 입력할 수 없습니다.");
+        }
+    }
+
+    private void validateNickname(String nickname) {
+        if (nickname == null) {
+            throw new BaseNullPointerException("닉네임은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+        if (nickname.isBlank()) {
+            throw new BaseException("닉네임은 공백만 입력할 수 없습니다.");
+        }
+        int length = TextLengthCounter.count(nickname);
+        if (length > MAX_NICKNAME_LENGTH) {
+            throw new BaseException("닉네임은 최대 20자까지 입력 가능합니다. nickname.length: " + length);
+        }
+    }
+
+    public boolean hasValidNickname() {
+        return nickname != null
+            && !nickname.isBlank()
+            && TextLengthCounter.count(nickname) <= MAX_NICKNAME_LENGTH;
     }
 
     @Override
