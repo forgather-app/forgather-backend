@@ -56,7 +56,9 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
     void setUp() {
         RestAssuredMockMvc.mockMvc(mockMvc);
 
-        host = hostRepository.save(createHost());
+        Host newHost = new Host("카카오원본이름", "pictureUrl");
+        newHost.updateNickname("서비스닉네임");
+        host = hostRepository.save(newHost);
         token = jwtTokenProvider.generateAccessToken(host.getId());
     }
 
@@ -105,7 +107,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
             () -> assertThat(response.data().location().url()).isEqualTo("https://forgather.app"),
             () -> assertThat(response.data().operatingHours()).hasSize(2),
             () -> assertThat(response.data().creator().id()).isEqualTo(host.getId()),
-            () -> assertThat(response.data().creator().name()).isEqualTo(host.getName())
+            () -> assertThat(response.data().creator().name()).isEqualTo(host.getNickname())
         );
     }
 

@@ -135,7 +135,7 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
         // then
         assertAll(
             () -> assertThat(result.hostId()).isEqualTo(host.getId()),
-            () -> assertThat(result.hostName()).isEqualTo(host.getName()),
+            () -> assertThat(result.hostName()).isEqualTo(host.getNickname()),
             () -> assertThat(result.spaces()).hasSize(2)
         );
     }
