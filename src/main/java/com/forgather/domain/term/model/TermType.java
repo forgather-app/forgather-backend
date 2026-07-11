@@ -19,9 +19,12 @@ public enum TermType {
         return required;
     }
 
-    public static Set<TermType> requiredTypes() {
-        return Arrays.stream(values())
+    private static final Set<TermType> REQUIRED_TYPES =
+        Arrays.stream(values())
             .filter(TermType::isRequired)
-            .collect(Collectors.toSet());
+            .collect(Collectors.toUnmodifiableSet());
+
+    public static Set<TermType> requiredTypes() {
+        return REQUIRED_TYPES;
     }
 }
