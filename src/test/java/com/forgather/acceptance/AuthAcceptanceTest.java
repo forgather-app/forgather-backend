@@ -21,6 +21,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.term.model.Term;
@@ -34,6 +35,7 @@ import io.restassured.http.ContentType;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import io.restassured.module.mockmvc.response.MockMvcResponse;
 import io.restassured.response.ExtractableResponse;
+import jakarta.servlet.http.Cookie;
 
 @DisplayName("인수 테스트: Auth")
 @AutoConfigureMockMvc
@@ -92,7 +94,7 @@ class AuthAcceptanceTest extends AcceptanceTest {
 
         // when
         ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
-            .cookie(AuthCookieProvider.ACCESS_TOKEN_COOKIE_NAME, token)
+            .postProcessors(withCookie(AuthCookieProvider.ACCESS_TOKEN_COOKIE_NAME, token))
             .accept(ContentType.JSON)
             .when()
             .get("/auth/me")
@@ -116,7 +118,7 @@ class AuthAcceptanceTest extends AcceptanceTest {
         // when
         ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
             .header(HttpHeaders.AUTHORIZATION, "Bearer " + headerToken)
-            .cookie(AuthCookieProvider.ACCESS_TOKEN_COOKIE_NAME, cookieToken)
+            .postProcessors(withCookie(AuthCookieProvider.ACCESS_TOKEN_COOKIE_NAME, cookieToken))
             .accept(ContentType.JSON)
             .when()
             .get("/auth/me")
@@ -138,7 +140,7 @@ class AuthAcceptanceTest extends AcceptanceTest {
         // when & then
         RestAssuredMockMvc.given()
             .header(HttpHeaders.AUTHORIZATION, "Invalid token")
-            .cookie(AuthCookieProvider.ACCESS_TOKEN_COOKIE_NAME, cookieToken)
+            .postProcessors(withCookie(AuthCookieProvider.ACCESS_TOKEN_COOKIE_NAME, cookieToken))
             .when()
             .get("/auth/me")
             .then()
@@ -155,7 +157,7 @@ class AuthAcceptanceTest extends AcceptanceTest {
 
         // when
         ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
-            .cookie(AuthCookieProvider.REFRESH_TOKEN_COOKIE_NAME, refreshToken)
+            .postProcessors(withCookie(AuthCookieProvider.REFRESH_TOKEN_COOKIE_NAME, refreshToken))
             .when()
             .post("/auth/refresh")
             .then()
@@ -366,6 +368,13 @@ class AuthAcceptanceTest extends AcceptanceTest {
             host.updateNickname(nickname);
         }
         return hostRepository.save(host);
+    }
+
+    private RequestPostProcessor withCookie(String name, String value) {
+        return request -> {
+            request.setCookies(new Cookie(name, value));
+            return request;
+        };
     }
 
     private void insertAgreeHistory(Long hostId, Long termId) {
