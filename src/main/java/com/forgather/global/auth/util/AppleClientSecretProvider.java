@@ -10,7 +10,6 @@ import java.util.Date;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import com.forgather.global.config.AppleProperties;
 import com.forgather.global.exception.BaseException;
@@ -22,13 +21,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AppleClientSecretProvider {
 
-    private static final String APPLE_ISSUER = "https://appleid.apple.com";
     private static final long CLIENT_SECRET_VALID_MINUTES = 5L;
 
     private final AppleProperties appleProperties;
 
     public String generate() {
-        validateProperties();
         Instant issuedAt = Instant.now();
         Instant expiresAt = issuedAt.plus(CLIENT_SECRET_VALID_MINUTES, ChronoUnit.MINUTES);
 
@@ -39,7 +36,7 @@ public class AppleClientSecretProvider {
             .issuer(appleProperties.getTeamId())
             .subject(appleProperties.getClientId())
             .audience()
-            .single(APPLE_ISSUER)
+            .single(appleProperties.getIssuer())
             .issuedAt(Date.from(issuedAt))
             .expiration(Date.from(expiresAt))
             .signWith(parsePrivateKey(), Jwts.SIG.ES256)
@@ -61,12 +58,4 @@ public class AppleClientSecretProvider {
         }
     }
 
-    private void validateProperties() {
-        if (!StringUtils.hasText(appleProperties.getClientId())
-            || !StringUtils.hasText(appleProperties.getTeamId())
-            || !StringUtils.hasText(appleProperties.getKeyId())
-            || !StringUtils.hasText(appleProperties.getPrivateKey())) {
-            throw new BaseException("Apple client secret 설정이 누락되었습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
 }

@@ -81,14 +81,14 @@ public class AuthService {
     public LoginResponse appleLoginConfirm(AppleLoginConfirmRequest request) {
         AppleTokenResponse appleToken = appleAuthClient.exchangeAuthorizationCode(request.authorizationCode());
         AppleIdToken idToken = jwtParser.parseAppleIdToken(appleToken.idToken(), request.rawNonce());
-        AppleHost appleHost = toAppleHost(request, idToken, appleToken.refreshToken());
+        AppleHost appleHost = toAppleHost(request.fullName(), idToken, appleToken.refreshToken());
         String accessToken = jwtTokenProvider.generateAccessToken(appleHost.getHost().getId());
         String refreshToken = jwtTokenProvider.generateRefreshToken(appleHost.getHost().getId());
         return LoginResponse.of(accessToken, refreshToken);
     }
 
     private AppleHost toAppleHost(
-        AppleLoginConfirmRequest request,
+        String fullName,
         AppleIdToken idToken,
         String appleRefreshToken
     ) {
@@ -99,7 +99,7 @@ public class AuthService {
             return existingAppleHost;
         }
 
-        Host host = new Host(request.fullName(), null, idToken.email());
+        Host host = new Host(fullName, null, idToken.email());
         hostRepository.save(host);
         return appleHostRepository.save(new AppleHost(host, idToken.sub(), appleRefreshToken));
     }

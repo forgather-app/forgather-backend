@@ -82,6 +82,8 @@ public class AppleAuthClient {
                 new BaseException("Apple token 요청이 올바르지 않습니다.", HttpStatus.BAD_REQUEST, exception);
             case "invalid_grant" ->
                 new BaseException("Apple authorization code가 유효하지 않습니다.", HttpStatus.UNAUTHORIZED, exception);
+            case "invalid_scope" ->
+                new BaseException("Apple token 요청 scope가 올바르지 않습니다.", HttpStatus.BAD_GATEWAY, exception);
             case "invalid_client", "unauthorized_client", "unsupported_grant_type" ->
                 new BaseException("Apple token 서버 인증에 실패했습니다.", HttpStatus.BAD_GATEWAY, exception);
             default -> new BaseException("Apple token 교환에 실패했습니다.", HttpStatus.BAD_GATEWAY, exception);

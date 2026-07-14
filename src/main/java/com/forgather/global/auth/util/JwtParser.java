@@ -23,6 +23,7 @@ import com.forgather.global.config.AppleProperties;
 import com.forgather.global.exception.JwtParseException;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 
@@ -55,6 +56,10 @@ public class JwtParser {
     }
 
     private Claims parseClaims(String idToken, SocialProvider provider) throws JsonProcessingException {
+        if (idToken == null || idToken.isBlank()) {
+            throw new JwtParseException("ID Token이 제공되지 않았습니다.", HttpStatus.UNAUTHORIZED);
+        }
+
         String[] parts = idToken.split("\\.");
         if (parts.length != 3) {
             throw new JwtParseException("Invalid JWT format", HttpStatus.UNAUTHORIZED);
@@ -71,11 +76,15 @@ public class JwtParser {
 
         PublicKey publicKey = socialAuthClient.getPublicKey(provider, kid);
 
-        return Jwts.parser()
-            .verifyWith(publicKey)
-            .build()
-            .parseSignedClaims(idToken)
-            .getPayload();
+        try {
+            return Jwts.parser()
+                .verifyWith(publicKey)
+                .build()
+                .parseSignedClaims(idToken)
+                .getPayload();
+        } catch (JwtException e) {
+            throw new JwtParseException("JWT 검증에 실패했습니다.", HttpStatus.UNAUTHORIZED, e);
+        }
     }
 
     private void validateAppleIdToken(AppleIdToken idToken, String rawNonce) {

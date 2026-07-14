@@ -68,6 +68,15 @@ jwt:
   refresh-token-expiration: 7776000 # 90 days
   secret: mokohistaleopostymingobluelunapongjumokohistaleopostymingobluelunapongjumokohistaleopostymingobluelunapongju
 
+apple:
+  jwks-url: http://localhost/apple/auth/keys
+  issuer: https://appleid.apple.com
+  client-id: test-apple-client-id
+  team-id: test-apple-team-id
+  key-id: test-apple-key-id
+  private-key: test-apple-private-key
+  token-url: http://localhost/apple/auth/token
+
 monitoring:
   prometheus-url: ""
   dashboard-url: ""
