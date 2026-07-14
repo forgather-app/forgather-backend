@@ -106,6 +106,26 @@ class AppleAuthClientTest {
             .isEqualTo(401);
     }
 
+    @DisplayName("Apple이 invalid_scope를 반환하면 token 요청 설정 예외를 던진다")
+    @Test
+    void exchangeAuthorizationCodeWithInvalidScope() {
+        // given
+        wireMock.stubFor(post(urlEqualTo("/auth/token"))
+            .willReturn(aResponse()
+                .withStatus(400)
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .withBody("""
+                    {"error":"invalid_scope"}
+                    """)));
+
+        // when & then
+        assertThatThrownBy(() -> appleAuthClient.exchangeAuthorizationCode("authorization-code"))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("scope")
+            .extracting("statusCode")
+            .isEqualTo(502);
+    }
+
     private AppleProperties appleProperties() throws Exception {
         return new AppleProperties(
             wireMock.baseUrl() + "/auth/keys",

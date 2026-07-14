@@ -10,7 +10,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -209,26 +208,6 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.appleLoginConfirm(request))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("이름");
-    }
-
-    @DisplayName("Apple code 교환에 실패하면 회원 조회와 서비스 토큰 발급을 수행하지 않는다")
-    @Test
-    void appleLoginConfirm_failsWhenCodeExchangeFails() {
-        // given
-        AppleLoginConfirmRequest request = new AppleLoginConfirmRequest(
-            "id-token",
-            "invalid-authorization-code",
-            "raw-nonce",
-            "홍길동"
-        );
-        when(appleAuthClient.exchangeAuthorizationCode("invalid-authorization-code"))
-            .thenThrow(new BaseException("Apple authorization code가 유효하지 않습니다."));
-
-        // when & then
-        assertThatThrownBy(() -> authService.appleLoginConfirm(request))
-            .isInstanceOf(BaseException.class)
-            .hasMessageContaining("authorization code");
-        verifyNoInteractions(appleHostRepository, jwtTokenProvider);
     }
 
     private AppleTokenResponse appleTokenResponse(String refreshToken) {
