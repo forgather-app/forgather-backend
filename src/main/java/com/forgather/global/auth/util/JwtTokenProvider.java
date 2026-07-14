@@ -12,6 +12,7 @@ import com.forgather.global.config.JwtProperties;
 import com.forgather.global.exception.JwtBaseException;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
@@ -94,8 +95,12 @@ public class JwtTokenProvider {
     }
 
     public long getRemainingExpirationSeconds(String token) {
-        long remainingMillis = getClaims(token).getExpiration().getTime() - System.currentTimeMillis();
-        return Math.max(remainingMillis / 1000, 0);
+        try {
+            long remainingMillis = getClaims(token).getExpiration().getTime() - System.currentTimeMillis();
+            return Math.max(remainingMillis / 1000, 0);
+        } catch (ExpiredJwtException e) {
+            return 0;
+        }
     }
 
     private Claims getClaims(String token) {
