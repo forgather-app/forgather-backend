@@ -93,6 +93,11 @@ public class JwtTokenProvider {
         return HOST;
     }
 
+    public long getRemainingExpirationSeconds(String token) {
+        long remainingMillis = getClaims(token).getExpiration().getTime() - System.currentTimeMillis();
+        return Math.max(remainingMillis / 1000, 0);
+    }
+
     private Claims getClaims(String token) {
         return Jwts.parser()
             .verifyWith(getSigningKey())

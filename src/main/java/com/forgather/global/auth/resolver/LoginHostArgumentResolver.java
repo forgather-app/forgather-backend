@@ -4,18 +4,22 @@ import java.util.Objects;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
+import org.springframework.web.util.WebUtils;
 
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.auth.model.Host;
+import com.forgather.global.auth.util.AuthCookieProvider;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.exception.UnauthorizedException;
 
 import io.jsonwebtoken.JwtException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
@@ -42,16 +46,11 @@ public class LoginHostArgumentResolver implements HandlerMethodArgumentResolver 
         boolean required = Objects.requireNonNull(annotation).required();
         HttpServletRequest request = (HttpServletRequest)webRequest.getNativeRequest();
 
-        String jwtToken = request.getHeader(AUTHORIZATION_HEADER_NAME);
+        String jwtToken = resolveJwtToken(request);
         if (jwtToken == null) {
             throwExceptionIfRequired(required);
             return null;
         }
-        if (!jwtToken.startsWith(BEARER)) {
-            throw new JwtException("Invalid JWT token format");
-        }
-
-        jwtToken = jwtToken.substring(BEARER.length());
         jwtTokenProvider.validateToken(jwtToken);
         if (!jwtTokenProvider.getRole(jwtToken).equals(HOST)) {
             throw new UnauthorizedException("호스트 로그인이 필요합니다.");
@@ -59,6 +58,26 @@ public class LoginHostArgumentResolver implements HandlerMethodArgumentResolver 
 
         Long hostId = jwtTokenProvider.getId(jwtToken);
         return hostRepository.getByIdOrThrow(hostId);
+    }
+
+    private String resolveJwtToken(HttpServletRequest request) {
+        String authorizationHeader = request.getHeader(AUTHORIZATION_HEADER_NAME);
+        if (authorizationHeader != null) {
+            return extractBearerToken(authorizationHeader);
+        }
+
+        Cookie accessTokenCookie = WebUtils.getCookie(request, AuthCookieProvider.ACCESS_TOKEN_COOKIE_NAME);
+        if (accessTokenCookie == null || !StringUtils.hasText(accessTokenCookie.getValue())) {
+            return null;
+        }
+        return accessTokenCookie.getValue();
+    }
+
+    private String extractBearerToken(String authorizationHeader) {
+        if (!authorizationHeader.startsWith(BEARER)) {
+            throw new JwtException("Invalid JWT token format");
+        }
+        return authorizationHeader.substring(BEARER.length());
     }
 
     private void throwExceptionIfRequired(boolean required) {
