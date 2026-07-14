@@ -1,0 +1,4 @@
+interface:
+  display_name: "커밋 Push 및 PR 생성"
+  short_description: "현재 브랜치의 커밋을 Push하고 PR을 안전하게 생성"
+  default_prompt: "$publish-pull-request를 사용해 현재 브랜치의 커밋을 Push하고 v2/develop 대상 PR을 생성해줘."
