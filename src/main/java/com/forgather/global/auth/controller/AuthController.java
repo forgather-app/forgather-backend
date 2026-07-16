@@ -1,6 +1,9 @@
 package com.forgather.global.auth.controller;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,9 +19,12 @@ import com.forgather.global.auth.dto.OnboardingRequest;
 import com.forgather.global.auth.dto.RefreshRequest;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.service.AuthService;
+import com.forgather.global.auth.util.AuthCookieProvider;
+import com.forgather.global.exception.UnauthorizedException;
 import com.forgather.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -29,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthController {
 
     private final AuthService authService;
+    private final AuthCookieProvider authCookieProvider;
 
     @GetMapping("/me")
     @Operation(summary = "내 정보 확인",
@@ -50,23 +57,27 @@ public class AuthController {
     @PostMapping("/login/kakao/confirm")
     @Operation(summary = "Kakao 로그인 완료",
         description = "Kakao 로그인 후 발급받은 액세스토큰을 전달하여 로그인합니다. " +
-            "로그인 성공 시, 액세스토큰과 리프레시토큰을 반환합니다.")
+            "로그인 성공 시, 액세스토큰과 리프레시토큰을 응답 바디와 HttpOnly 쿠키로 반환합니다.")
     public ResponseEntity<ApiResponse<LoginResponse>> kakaoLoginConfirm(
         @RequestBody KakaoLoginConfirmRequest request
     ) {
         var response = authService.kakaoLoginConfirm(request);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return createTokenResponse(response);
     }
 
     @PostMapping("/refresh")
     @Operation(summary = "로그인 세션 갱신",
-        description = "리프레시 토큰을 사용하여 로그인 세션을 갱신합니다. " +
-            "로그인 이력이 있다면 재로그인 없이 로그인 세션을 갱신할 수 있습니다.")
+        description = "요청 바디의 리프레시 토큰을 우선 사용하고, 없으면 쿠키의 리프레시 토큰으로 " +
+            "로그인 세션을 갱신합니다. 갱신된 토큰은 응답 바디와 HttpOnly 쿠키로 반환합니다.")
     public ResponseEntity<ApiResponse<LoginResponse>> refresh(
-        @RequestBody RefreshRequest request
+        @RequestBody(required = false) RefreshRequest request,
+        @Parameter(hidden = true)
+        @CookieValue(name = AuthCookieProvider.REFRESH_TOKEN_COOKIE_NAME, required = false)
+        String refreshTokenCookie
     ) {
-        var response = authService.refresh(request.refreshToken());
-        return ResponseEntity.ok(ApiResponse.success(response));
+        String refreshToken = resolveRefreshToken(request, refreshTokenCookie);
+        var response = authService.refresh(refreshToken);
+        return createTokenResponse(response);
     }
 
     @PostMapping("/onboarding")
@@ -78,5 +89,30 @@ public class AuthController {
     ) {
         var response = authService.submitOnboarding(host, request);
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    private String resolveRefreshToken(RefreshRequest request, String refreshTokenCookie) {
+        if (request != null && StringUtils.hasText(request.refreshToken())) {
+            return request.refreshToken();
+        }
+        if (StringUtils.hasText(refreshTokenCookie)) {
+            return refreshTokenCookie;
+        }
+        throw new UnauthorizedException("리프레시 토큰이 필요합니다.");
+    }
+
+    private ResponseEntity<ApiResponse<LoginResponse>> createTokenResponse(LoginResponse response) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(
+            HttpHeaders.SET_COOKIE,
+            authCookieProvider.createAccessTokenCookie(response.accessToken()).toString()
+        );
+        headers.add(
+            HttpHeaders.SET_COOKIE,
+            authCookieProvider.createRefreshTokenCookie(response.refreshToken()).toString()
+        );
+        return ResponseEntity.ok()
+            .headers(headers)
+            .body(ApiResponse.success(response));
     }
 }
