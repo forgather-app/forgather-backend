@@ -1,6 +1,7 @@
 package com.forgather.global.auth.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.security.KeyPair;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.global.config.AppleProperties;
+import com.forgather.global.exception.BaseException;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -53,6 +55,18 @@ class AppleClientSecretProviderTest {
             () -> assertThat(claims.getIssuedAt().toInstant()).isBeforeOrEqualTo(Instant.now()),
             () -> assertThat(claims.getExpiration()).isAfter(claims.getIssuedAt())
         );
+    }
+
+    @DisplayName("Apple private key 형식이 올바르지 않으면 Provider를 생성할 수 없다")
+    @Test
+    void createProviderWithInvalidPrivateKey() {
+        // given
+        AppleProperties properties = appleProperties("invalid-private-key");
+
+        // when & then
+        assertThatThrownBy(() -> new AppleClientSecretProvider(properties))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("Apple private key 형식");
     }
 
     private KeyPair generateEcKeyPair() throws Exception {

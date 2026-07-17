@@ -15,15 +15,19 @@ import com.forgather.global.config.AppleProperties;
 import com.forgather.global.exception.BaseException;
 
 import io.jsonwebtoken.Jwts;
-import lombok.RequiredArgsConstructor;
 
 @Component
-@RequiredArgsConstructor
 public class AppleClientSecretProvider {
 
     private static final long CLIENT_SECRET_VALID_MINUTES = 5L;
 
     private final AppleProperties appleProperties;
+    private final PrivateKey privateKey;
+
+    public AppleClientSecretProvider(AppleProperties appleProperties) {
+        this.appleProperties = appleProperties;
+        this.privateKey = parsePrivateKey(appleProperties.getPrivateKey());
+    }
 
     public String generate() {
         Instant issuedAt = Instant.now();
@@ -39,18 +43,18 @@ public class AppleClientSecretProvider {
             .single(appleProperties.getIssuer())
             .issuedAt(Date.from(issuedAt))
             .expiration(Date.from(expiresAt))
-            .signWith(parsePrivateKey(), Jwts.SIG.ES256)
+            .signWith(privateKey, Jwts.SIG.ES256)
             .compact();
     }
 
-    private PrivateKey parsePrivateKey() {
+    private PrivateKey parsePrivateKey(String privateKeyValue) {
         try {
-            String privateKey = appleProperties.getPrivateKey()
+            String normalizedPrivateKey = privateKeyValue
                 .replace("\\n", "\n")
                 .replace("-----BEGIN PRIVATE KEY-----", "")
                 .replace("-----END PRIVATE KEY-----", "")
                 .replaceAll("\\s", "");
-            byte[] encodedKey = Base64.getDecoder().decode(privateKey);
+            byte[] encodedKey = Base64.getDecoder().decode(normalizedPrivateKey);
             PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encodedKey);
             return KeyFactory.getInstance("EC").generatePrivate(keySpec);
         } catch (Exception e) {
