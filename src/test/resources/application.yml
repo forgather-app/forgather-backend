@@ -74,6 +74,10 @@ auth:
   cookie:
     secure: false
     same-site: Lax
+  dev-login:
+    login-id: testId
+    password: testPw
+    nickname: 테스트
 
 monitoring:
   prometheus-url: ""
