@@ -4,6 +4,7 @@ import static com.forgather.fixture.TermFixture.createMarketingTerm;
 import static com.forgather.fixture.TermFixture.createPrivacyTerm;
 import static com.forgather.fixture.TermFixture.createServiceTerm;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.util.Arrays;
@@ -16,14 +17,17 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.term.model.Term;
 import com.forgather.domain.term.repository.jpa.TermJpaRepository;
 import com.forgather.global.auth.model.Host;
+import com.forgather.global.auth.util.AuthCookieProvider;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.response.ResponseCode;
 
@@ -31,6 +35,7 @@ import io.restassured.http.ContentType;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import io.restassured.module.mockmvc.response.MockMvcResponse;
 import io.restassured.response.ExtractableResponse;
+import jakarta.servlet.http.Cookie;
 
 @DisplayName("인수 테스트: Auth")
 @AutoConfigureMockMvc
@@ -77,6 +82,99 @@ class AuthAcceptanceTest extends AcceptanceTest {
         assertAll(
             () -> assertThat(response.jsonPath().getString("code")).isEqualTo(ResponseCode.SUCCESS.name()),
             () -> assertThat(response.jsonPath().getBoolean("data.onboardingCompleted")).isFalse()
+        );
+    }
+
+    @DisplayName("Authorization 헤더가 없으면 access token 쿠키로 내 정보를 조회한다")
+    @Test
+    void getCurrentUserWithAccessTokenCookie() {
+        // given
+        Host host = saveHost("쿠키호스트");
+        String token = jwtTokenProvider.generateAccessToken(host.getId());
+
+        // when
+        ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
+            .postProcessors(withCookie(AuthCookieProvider.ACCESS_TOKEN_COOKIE_NAME, token))
+            .accept(ContentType.JSON)
+            .when()
+            .get("/auth/me")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract();
+
+        // then
+        assertThat(response.jsonPath().getLong("data.id")).isEqualTo(host.getId());
+    }
+
+    @DisplayName("Authorization 헤더와 access token 쿠키가 함께 있으면 헤더로 인증한다")
+    @Test
+    void getCurrentUserWithAuthorizationHeaderAndCookie() {
+        // given
+        Host headerHost = saveHost("헤더호스트");
+        Host cookieHost = saveHost("쿠키호스트");
+        String headerToken = jwtTokenProvider.generateAccessToken(headerHost.getId());
+        String cookieToken = jwtTokenProvider.generateAccessToken(cookieHost.getId());
+
+        // when
+        ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + headerToken)
+            .postProcessors(withCookie(AuthCookieProvider.ACCESS_TOKEN_COOKIE_NAME, cookieToken))
+            .accept(ContentType.JSON)
+            .when()
+            .get("/auth/me")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract();
+
+        // then
+        assertThat(response.jsonPath().getLong("data.id")).isEqualTo(headerHost.getId());
+    }
+
+    @DisplayName("Authorization 헤더 형식이 잘못되면 정상 쿠키가 있어도 인증에 실패한다")
+    @Test
+    void failAuthenticationWithInvalidAuthorizationHeaderAndValidCookie() {
+        // given
+        Host host = saveHost("쿠키호스트");
+        String cookieToken = jwtTokenProvider.generateAccessToken(host.getId());
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header(HttpHeaders.AUTHORIZATION, "Invalid token")
+            .postProcessors(withCookie(AuthCookieProvider.ACCESS_TOKEN_COOKIE_NAME, cookieToken))
+            .when()
+            .get("/auth/me")
+            .then()
+            .statusCode(HttpStatus.UNAUTHORIZED.value())
+            .body("code", equalTo(ResponseCode.JWT_INVALID.name()));
+    }
+
+    @DisplayName("refresh 요청 바디가 없으면 refresh token 쿠키로 토큰을 재발급한다")
+    @Test
+    void refreshWithRefreshTokenCookie() {
+        // given
+        Host host = saveHost("쿠키호스트");
+        String refreshToken = jwtTokenProvider.generateRefreshToken(host.getId());
+
+        // when
+        ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
+            .postProcessors(withCookie(AuthCookieProvider.REFRESH_TOKEN_COOKIE_NAME, refreshToken))
+            .when()
+            .post("/auth/refresh")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract();
+
+        // then
+        List<String> setCookieHeaders = response.headers().getValues(HttpHeaders.SET_COOKIE);
+        assertAll(
+            () -> assertThat(response.jsonPath().getString("data.refreshToken")).isEqualTo(refreshToken),
+            () -> assertThat(setCookieHeaders).hasSize(2),
+            () -> assertThat(setCookieHeaders).anySatisfy(
+                cookie -> assertThat(cookie).startsWith(AuthCookieProvider.ACCESS_TOKEN_COOKIE_NAME + "=")
+            ),
+            () -> assertThat(setCookieHeaders).anySatisfy(
+                cookie -> assertThat(cookie).startsWith(AuthCookieProvider.REFRESH_TOKEN_COOKIE_NAME + "=")
+            )
         );
     }
 
@@ -270,6 +368,13 @@ class AuthAcceptanceTest extends AcceptanceTest {
             host.updateNickname(nickname);
         }
         return hostRepository.save(host);
+    }
+
+    private RequestPostProcessor withCookie(String name, String value) {
+        return request -> {
+            request.setCookies(new Cookie(name, value));
+            return request;
+        };
     }
 
     private void insertAgreeHistory(Long hostId, Long termId) {

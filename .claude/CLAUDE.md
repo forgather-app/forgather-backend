@@ -55,6 +55,7 @@ src/main/java/com/forgather/
 - **ALWAYS** make `findBy...()` return `Optional<T>`; **ALWAYS** make `getBy...()` throw on missing
 
 ## 주의사항
+- **ALWAYS** 작업 명령/컨텍스트에 작업 내용을 커밋하라는 요구사항이 없으면 임의로 커밋하지 않는다.
 - **ALWAYS** register new/moved sensitive files in `.gitattributes` with `filter=git-crypt diff=git-crypt` **before** the first commit
 - **ALWAYS** run `git-crypt status` on new/moved sensitive files before push; un-encrypted entries must be zero
 - **NEVER** let CI/CD pipelines (buildspec.yml 등) commit back generated `application*.yml` without a prior git-crypt check

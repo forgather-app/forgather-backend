@@ -41,6 +41,8 @@ aws:
 cors:
   allowed-origins:
     - http://localhost:8080
+    - http://localhost:5173
+    - http://localhost:5174
   allowed-methods:
     - GET
     - POST
@@ -67,6 +69,11 @@ jwt:
   access-token-expiration: 7776000 # 90 days
   refresh-token-expiration: 7776000 # 90 days
   secret: mokohistaleopostymingobluelunapongjumokohistaleopostymingobluelunapongjumokohistaleopostymingobluelunapongju
+
+auth:
+  cookie:
+    secure: false
+    same-site: Lax
 
 apple:
   jwks-url: http://localhost/apple/auth/keys

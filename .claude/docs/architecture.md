@@ -48,7 +48,7 @@ private String buildAccessToken(Long id, String role) {
 
 | 구분 | Host (작가) | Admin (관리자) |
 |-----|------------|---------------|
-| 인증 방식 | JWT + Kakao OAuth | JWT + 세션 |
+| 인증 방식 | JWT + Kakao OAuth (Authorization 헤더 또는 HttpOnly 쿠키) | JWT + 세션 |
 | 리졸버 | `LoginHostArgumentResolver` | `LoginAdminUserArgumentResolver` |
 | 인터셉터 | - | `AdminAuthInterceptor` |
 | 어노테이션 | `@LoginHost` | `@LoginAdminUser` |
@@ -58,13 +58,12 @@ private String buildAccessToken(Long id, String role) {
 // LoginHostArgumentResolver - @LoginHost 처리 (global/auth/resolver/LoginHostArgumentResolver.java)
 @Override
 public Host resolveArgument(MethodParameter parameter, ...) {
-    String jwtToken = request.getHeader("Authorization");
+    String jwtToken = resolveJwtToken(request); // Authorization 헤더 우선, 없으면 access_token 쿠키
     if (jwtToken == null) {
         throwExceptionIfRequired(required);
         return null;
     }
 
-    jwtToken = jwtToken.substring(BEARER.length());
     jwtTokenProvider.validateToken(jwtToken);
 
     if (!jwtTokenProvider.getRole(jwtToken).equals(HOST)) {
@@ -90,7 +89,7 @@ sequenceDiagram
     Server->>Server: 4. JWT 헤더에서 kid 추출
     Server->>Server: 5. 캐시된 공개키로 RSA 서명 검증
     Server->>Server: 6. Host 조회/생성
-    Server-->>Client: 7. accessToken, refreshToken 반환 (HMAC)
+    Server-->>Client: 7. accessToken, refreshToken을 응답 바디와 HttpOnly 쿠키로 반환 (HMAC)
 ```
 
 #### JWKS 공개키 관리
@@ -394,7 +393,7 @@ private void executeBatchDeletion(List<String> deletePaths) {
 3. **서버**: 캐시된 JWKS에서 `kid`에 해당하는 공개키 조회
 4. **서버**: RSA 공개키로 `idToken` 서명 검증
 5. **서버**: `sub` (카카오 사용자 ID)로 Host 조회/생성
-6. **서버**: HMAC-SHA256으로 서명된 `accessToken`, `refreshToken` 발급
+6. **서버**: HMAC-SHA256으로 서명된 `accessToken`, `refreshToken`을 응답 바디와 HttpOnly 쿠키로 발급
 
 #### 스케줄러
 
