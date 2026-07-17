@@ -81,7 +81,13 @@ apple:
   client-id: test-apple-client-id
   team-id: test-apple-team-id
   key-id: test-apple-key-id
-  private-key: test-apple-private-key
+  # 테스트 전용 EC PKCS#8 개인 키이며 실서비스에서는 사용하지 않는다
+  private-key: |-
+    -----BEGIN PRIVATE KEY-----
+    MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgVkPMdODqOjI7/sBK
+    eIgzhRb7ksP2lMNAZxVCLMIYpKqhRANCAARGHmOIsGmj7xxcwy2dlTS9gT+jKUVG
+    qvpcG9GmkUaNyK5+6TOFZQvljuloKNDLrzQ9zW2qsLoghDmbR4uDdnHw
+    -----END PRIVATE KEY-----
   token-url: http://localhost/apple/auth/token
 
 monitoring:
