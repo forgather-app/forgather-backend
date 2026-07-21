@@ -1,6 +1,5 @@
 package com.forgather.global.auth.client;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -27,7 +26,7 @@ public class AppleAuthClient {
     private final AppleClientSecretProvider clientSecretProvider;
 
     public AppleAuthClient(
-        @Qualifier("appleRestClient") RestClient restClient,
+        RestClient restClient,
         ObjectMapper objectMapper,
         AppleProperties appleProperties,
         AppleClientSecretProvider clientSecretProvider
