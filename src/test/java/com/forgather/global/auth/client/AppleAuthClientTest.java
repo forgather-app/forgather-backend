@@ -123,7 +123,7 @@ class AppleAuthClientTest {
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("scope")
             .extracting("statusCode")
-            .isEqualTo(502);
+            .isEqualTo(500);
     }
 
     private AppleProperties appleProperties() throws Exception {
