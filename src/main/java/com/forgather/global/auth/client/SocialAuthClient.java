@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
+import com.forgather.global.config.AppleProperties;
 import com.forgather.global.config.GoogleProperties;
 import com.forgather.global.config.KakaoProperties;
 import com.forgather.global.exception.JwtBaseException;
@@ -36,12 +37,14 @@ public class SocialAuthClient {
     public SocialAuthClient(
         RestClient restClient,
         KakaoProperties kakaoProperties,
-        GoogleProperties googleProperties
+        GoogleProperties googleProperties,
+        AppleProperties appleProperties
     ) {
         this.restClient = restClient;
         this.jwksUrls = new EnumMap<>(SocialProvider.class);
         this.jwksUrls.put(SocialProvider.KAKAO, kakaoProperties.getJwksUrl());
         this.jwksUrls.put(SocialProvider.GOOGLE, googleProperties.getJwksUrl());
+        this.jwksUrls.put(SocialProvider.APPLE, appleProperties.getJwksUrl());
         this.keyUpdateLocks = new EnumMap<>(SocialProvider.class);
         for (SocialProvider provider : SocialProvider.values()) {
             this.keyUpdateLocks.put(provider, new Object());

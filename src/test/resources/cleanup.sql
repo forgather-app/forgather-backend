@@ -9,6 +9,7 @@ TRUNCATE TABLE space_photo;
 TRUNCATE TABLE guest_book_card;
 TRUNCATE TABLE product;
 TRUNCATE TABLE space_host_map;
+TRUNCATE TABLE host_apple;
 TRUNCATE TABLE host_kakao;
 TRUNCATE TABLE space;
 TRUNCATE TABLE exhibition_time;

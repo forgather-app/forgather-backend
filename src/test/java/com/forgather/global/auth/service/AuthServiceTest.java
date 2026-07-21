@@ -8,19 +8,19 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -28,13 +28,20 @@ import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.term.model.TermType;
 import com.forgather.domain.term.repository.HostTermHistoryRepository;
 import com.forgather.domain.term.repository.TermRepository;
+import com.forgather.global.auth.client.AppleAuthClient;
 import com.forgather.global.auth.client.KakaoAuthClient;
+import com.forgather.global.auth.dto.AppleIdToken;
+import com.forgather.global.auth.dto.AppleLoginConfirmRequest;
+import com.forgather.global.auth.dto.AppleTokenResponse;
 import com.forgather.global.auth.dto.HostResponse;
 import com.forgather.global.auth.dto.KakaoIdToken;
 import com.forgather.global.auth.dto.KakaoLoginConfirmRequest;
+import com.forgather.global.auth.dto.LoginResponse;
 import com.forgather.global.auth.dto.OnboardingRequest;
+import com.forgather.global.auth.model.AppleHost;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.KakaoHost;
+import com.forgather.global.auth.repository.AppleHostRepository;
 import com.forgather.global.auth.repository.KakaoHostRepository;
 import com.forgather.global.auth.util.JwtParser;
 import com.forgather.global.auth.util.JwtTokenProvider;
@@ -64,8 +71,154 @@ class AuthServiceTest {
     @Mock
     private HostTermHistoryRepository hostTermHistoryRepository;
 
-    @InjectMocks
+    @Mock
+    private AppleHostRepository appleHostRepository;
+
+    @Mock
+    private AppleAuthClient appleAuthClient;
+
     private AuthService authService;
+
+    @BeforeEach
+    void setUp() {
+        authService = new AuthService(
+            jwtParser,
+            jwtTokenProvider,
+            kakaoAuthClient,
+            kakaoHostRepository,
+            hostRepository,
+            termRepository,
+            hostTermHistoryRepository,
+            appleHostRepository,
+            appleAuthClient
+        );
+    }
+
+    @DisplayName("신규 Apple 로그인은 code 교환 응답으로 Host와 AppleHost를 생성하고 토큰을 발급한다")
+    @Test
+    void appleLoginConfirm_createsAppleHost() {
+        // given
+        AppleLoginConfirmRequest request = new AppleLoginConfirmRequest(
+            "id-token",
+            "authorization-code",
+            "raw-nonce",
+            "홍길동"
+        );
+        when(appleAuthClient.exchangeAuthorizationCode("authorization-code"))
+            .thenReturn(appleTokenResponse("apple-refresh-token"));
+        when(jwtParser.parseAppleIdToken("apple-server-id-token", "raw-nonce"))
+            .thenReturn(new AppleIdToken(
+                "https://appleid.apple.com",
+                "test-apple-audience",
+                "apple-sub",
+                "apple@example.com",
+                true,
+                1L,
+                1L,
+                "nonce"
+            ));
+        when(appleHostRepository.findByUserId("apple-sub")).thenReturn(Optional.empty());
+        when(appleHostRepository.save(any(AppleHost.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(jwtTokenProvider.generateAccessToken(nullable(Long.class))).thenReturn("access-token");
+        when(jwtTokenProvider.generateRefreshToken(nullable(Long.class))).thenReturn("refresh-token");
+
+        // when
+        LoginResponse response = authService.appleLoginConfirm(request);
+
+        // then
+        ArgumentCaptor<AppleHost> captor = ArgumentCaptor.forClass(AppleHost.class);
+        verify(appleHostRepository).save(captor.capture());
+        AppleHost saved = captor.getValue();
+        assertThat(saved.getUserId()).isEqualTo("apple-sub");
+        assertThat(saved.getRefreshToken()).isEqualTo("apple-refresh-token");
+        assertThat(saved.getHost().getName()).isEqualTo("홍길동");
+        assertThat(saved.getHost().getEmail()).isEqualTo("apple@example.com");
+        assertThat(saved.getHost().getPictureUrl()).isNull();
+        assertThat(response.accessToken()).isEqualTo("access-token");
+        assertThat(response.refreshToken()).isEqualTo("refresh-token");
+        verify(hostRepository).save(saved.getHost());
+    }
+
+    @DisplayName("기존 AppleHost 로그인은 이름 없이 refresh token을 갱신하고 기존 Host로 토큰을 발급한다")
+    @Test
+    void appleLoginConfirm_existingAppleHostDoesNotRequireFullName() {
+        // given
+        AppleLoginConfirmRequest request = new AppleLoginConfirmRequest(
+            "id-token",
+            "authorization-code",
+            "raw-nonce",
+            null
+        );
+        Host host = new Host("기존사용자", null, "old@example.com");
+        AppleHost appleHost = new AppleHost(host, "apple-sub", "old-apple-refresh-token");
+        when(appleAuthClient.exchangeAuthorizationCode("authorization-code"))
+            .thenReturn(appleTokenResponse("new-apple-refresh-token"));
+        when(jwtParser.parseAppleIdToken("apple-server-id-token", "raw-nonce"))
+            .thenReturn(new AppleIdToken(
+                "https://appleid.apple.com",
+                "test-apple-audience",
+                "apple-sub",
+                "new@example.com",
+                "true",
+                1L,
+                1L,
+                "nonce"
+            ));
+        when(appleHostRepository.findByUserId("apple-sub")).thenReturn(Optional.of(appleHost));
+        when(jwtTokenProvider.generateAccessToken(nullable(Long.class))).thenReturn("access-token");
+        when(jwtTokenProvider.generateRefreshToken(nullable(Long.class))).thenReturn("refresh-token");
+
+        // when
+        LoginResponse response = authService.appleLoginConfirm(request);
+
+        // then
+        verify(appleHostRepository, never()).save(any());
+        assertThat(host.getEmail()).isEqualTo("old@example.com");
+        assertThat(appleHost.getRefreshToken()).isEqualTo("new-apple-refresh-token");
+        assertThat(response.accessToken()).isEqualTo("access-token");
+        assertThat(response.refreshToken()).isEqualTo("refresh-token");
+    }
+
+    @DisplayName("신규 Apple 로그인에서 이름이 없으면 실패한다")
+    @Test
+    void appleLoginConfirm_newAppleHostRequiresFullName() {
+        // given
+        AppleLoginConfirmRequest request = new AppleLoginConfirmRequest(
+            "id-token",
+            "authorization-code",
+            "raw-nonce",
+            null
+        );
+        when(appleAuthClient.exchangeAuthorizationCode("authorization-code"))
+            .thenReturn(appleTokenResponse("apple-refresh-token"));
+        when(jwtParser.parseAppleIdToken("apple-server-id-token", "raw-nonce"))
+            .thenReturn(new AppleIdToken(
+                "https://appleid.apple.com",
+                "test-apple-audience",
+                "apple-sub",
+                "apple@example.com",
+                true,
+                1L,
+                1L,
+                "nonce"
+            ));
+        when(appleHostRepository.findByUserId("apple-sub")).thenReturn(Optional.empty());
+
+        // when, then
+        assertThatThrownBy(() -> authService.appleLoginConfirm(request))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("이름");
+    }
+
+    private AppleTokenResponse appleTokenResponse(String refreshToken) {
+        return new AppleTokenResponse(
+            "apple-access-token",
+            "Bearer",
+            3600L,
+            refreshToken,
+            "apple-server-id-token"
+        );
+    }
 
     @DisplayName("신규 카카오 가입은 원본 사용자명을 이름으로 저장하고 서비스 닉네임은 비운다")
     @Test
@@ -73,7 +226,7 @@ class AuthServiceTest {
         // given
         KakaoIdToken idToken = new KakaoIdToken(null, "kakao-user-id", null, null, "카카오닉네임", null, null,
             "pictureUrl");
-        when(jwtParser.parseIdToken("id-token")).thenReturn(idToken);
+        when(jwtParser.parseKakaoIdToken("id-token")).thenReturn(idToken);
         when(kakaoHostRepository.findByUserId("kakao-user-id")).thenReturn(Optional.empty());
         when(kakaoHostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(jwtTokenProvider.generateAccessToken(nullable(Long.class))).thenReturn("access-token");
@@ -98,7 +251,7 @@ class AuthServiceTest {
     void failKakaoLoginWhenNicknameIsMissing() {
         // given
         KakaoIdToken idToken = new KakaoIdToken(null, "kakao-user-id", null, null, null, null, null, "pictureUrl");
-        when(jwtParser.parseIdToken("id-token")).thenReturn(idToken);
+        when(jwtParser.parseKakaoIdToken("id-token")).thenReturn(idToken);
 
         // when, then
         assertThatThrownBy(() -> authService.kakaoLoginConfirm(kakaoLoginConfirmRequest()))

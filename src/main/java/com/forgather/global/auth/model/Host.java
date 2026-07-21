@@ -41,10 +41,18 @@ public class Host extends BaseTimeEntity {
     @Column(name = "picture_url")
     private String pictureUrl;
 
+    @Column(name = "email")
+    private String email;
+
     public Host(String name, String pictureUrl) {
+        this(name, pictureUrl, null);
+    }
+
+    public Host(String name, String pictureUrl, String email) {
         validateName(name);
         this.name = name;
         this.pictureUrl = pictureUrl;
+        this.email = email;
     }
 
     public void updateNickname(String nickname) {

@@ -17,7 +17,11 @@ import com.forgather.domain.term.model.Term;
 import com.forgather.domain.term.model.TermType;
 import com.forgather.domain.term.repository.HostTermHistoryRepository;
 import com.forgather.domain.term.repository.TermRepository;
+import com.forgather.global.auth.client.AppleAuthClient;
 import com.forgather.global.auth.client.KakaoAuthClient;
+import com.forgather.global.auth.dto.AppleIdToken;
+import com.forgather.global.auth.dto.AppleLoginConfirmRequest;
+import com.forgather.global.auth.dto.AppleTokenResponse;
 import com.forgather.global.auth.dto.HostResponse;
 import com.forgather.global.auth.dto.KakaoIdToken;
 import com.forgather.global.auth.dto.KakaoLoginConfirmRequest;
@@ -26,6 +30,8 @@ import com.forgather.global.auth.dto.LoginResponse;
 import com.forgather.global.auth.dto.OnboardingRequest;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.KakaoHost;
+import com.forgather.global.auth.model.AppleHost;
+import com.forgather.global.auth.repository.AppleHostRepository;
 import com.forgather.global.auth.repository.KakaoHostRepository;
 import com.forgather.global.auth.util.JwtParser;
 import com.forgather.global.auth.util.JwtTokenProvider;
@@ -46,6 +52,8 @@ public class AuthService {
     private final HostRepository hostRepository;
     private final TermRepository termRepository;
     private final HostTermHistoryRepository hostTermHistoryRepository;
+    private final AppleHostRepository appleHostRepository;
+    private final AppleAuthClient appleAuthClient;
 
     public KakaoLoginTokenResponse getKakaoLoginToken() {
         return new KakaoLoginTokenResponse(kakaoAuthClient.getKakaoClientId());
@@ -60,13 +68,40 @@ public class AuthService {
     }
 
     private KakaoHost toKakaoHost(KakaoLoginConfirmRequest request) {
-        KakaoIdToken idToken = jwtParser.parseIdToken(request.idToken());
+        KakaoIdToken idToken = jwtParser.parseKakaoIdToken(request.idToken());
         Optional<KakaoHost> kakaoHost = kakaoHostRepository.findByUserId(idToken.sub());
         return kakaoHost.orElseGet(() -> {
             Host host = new Host(idToken.nickname(), idToken.picture());
             KakaoHost newKakaoHost = new KakaoHost(host, idToken.sub());
             return kakaoHostRepository.save(newKakaoHost);
         });
+    }
+
+    @Transactional
+    public LoginResponse appleLoginConfirm(AppleLoginConfirmRequest request) {
+        AppleTokenResponse appleToken = appleAuthClient.exchangeAuthorizationCode(request.authorizationCode());
+        AppleIdToken idToken = jwtParser.parseAppleIdToken(appleToken.idToken(), request.rawNonce());
+        AppleHost appleHost = toAppleHost(request.fullName(), idToken, appleToken.refreshToken());
+        String accessToken = jwtTokenProvider.generateAccessToken(appleHost.getHost().getId());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(appleHost.getHost().getId());
+        return LoginResponse.of(accessToken, refreshToken);
+    }
+
+    private AppleHost toAppleHost(
+        String fullName,
+        AppleIdToken idToken,
+        String appleRefreshToken
+    ) {
+        Optional<AppleHost> appleHost = appleHostRepository.findByUserId(idToken.sub());
+        if (appleHost.isPresent()) {
+            AppleHost existingAppleHost = appleHost.get();
+            existingAppleHost.updateRefreshToken(appleRefreshToken);
+            return existingAppleHost;
+        }
+
+        Host host = new Host(fullName, null, idToken.email());
+        hostRepository.save(host);
+        return appleHostRepository.save(new AppleHost(host, idToken.sub(), appleRefreshToken));
     }
 
     public LoginResponse refresh(String refreshToken) {

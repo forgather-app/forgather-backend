@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.forgather.global.auth.annotation.LoginHost;
+import com.forgather.global.auth.dto.AppleLoginConfirmRequest;
 import com.forgather.global.auth.dto.HostResponse;
 import com.forgather.global.auth.dto.KakaoLoginConfirmRequest;
 import com.forgather.global.auth.dto.KakaoLoginTokenResponse;
@@ -62,6 +63,18 @@ public class AuthController {
         @RequestBody KakaoLoginConfirmRequest request
     ) {
         var response = authService.kakaoLoginConfirm(request);
+        return createTokenResponse(response);
+    }
+
+    @PostMapping("/login/apple/confirm")
+    @Operation(summary = "Apple 로그인 완료",
+        description = "Apple 로그인 후 발급받은 identity token, authorization code, raw nonce와 이름을 전달합니다. " +
+            "서버는 authorization code를 Apple token endpoint에 교환하여 로그인합니다. " +
+            "로그인 성공 시, 액세스토큰과 리프레시토큰을 응답 바디와 HttpOnly 쿠키로 반환합니다.")
+    public ResponseEntity<ApiResponse<LoginResponse>> appleLoginConfirm(
+        @RequestBody AppleLoginConfirmRequest request
+    ) {
+        var response = authService.appleLoginConfirm(request);
         return createTokenResponse(response);
     }
 
