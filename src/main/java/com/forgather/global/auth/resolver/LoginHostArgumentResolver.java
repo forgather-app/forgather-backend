@@ -57,7 +57,8 @@ public class LoginHostArgumentResolver implements HandlerMethodArgumentResolver 
         }
 
         Long hostId = jwtTokenProvider.getId(jwtToken);
-        return hostRepository.getByIdOrThrow(hostId);
+        return hostRepository.findByIdAndDeletedAtIsNull(hostId)
+            .orElseThrow(() -> new UnauthorizedException("탈퇴했거나 존재하지 않는 호스트입니다. id: " + hostId));
     }
 
     private String resolveJwtToken(HttpServletRequest request) {

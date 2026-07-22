@@ -41,7 +41,8 @@ class ApplePropertiesTest {
             "test-team-id",
             "test-key-id",
             "test-private-key",
-            "https://appleid.apple.com/auth/token"
+            "https://appleid.apple.com/auth/token",
+            "https://appleid.apple.com/auth/revoke"
         );
     }
 }

@@ -37,6 +37,9 @@ public class AppleProperties {
     @NotBlank
     private final String tokenUrl;
 
+    @NotBlank
+    private final String revokeUrl;
+
     public boolean isAllowedAudience(Object audience) {
         if (clientId == null || audience == null) {
             return false;

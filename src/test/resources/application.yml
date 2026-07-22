@@ -93,6 +93,7 @@ apple:
     qvpcG9GmkUaNyK5+6TOFZQvljuloKNDLrzQ9zW2qsLoghDmbR4uDdnHw
     -----END PRIVATE KEY-----
   token-url: http://localhost/apple/auth/token
+  revoke-url: http://localhost/apple/auth/revoke
 
 monitoring:
   prometheus-url: ""

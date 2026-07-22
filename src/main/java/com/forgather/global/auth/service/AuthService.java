@@ -37,6 +37,7 @@ import com.forgather.global.auth.util.JwtParser;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
+import com.forgather.global.exception.UnauthorizedException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -71,7 +72,7 @@ public class AuthService {
         KakaoIdToken idToken = jwtParser.parseKakaoIdToken(request.idToken());
         Optional<KakaoHost> kakaoHost = kakaoHostRepository.findByUserId(idToken.sub());
         return kakaoHost.orElseGet(() -> {
-            Host host = new Host(idToken.nickname(), idToken.picture());
+            Host host = hostRepository.save(new Host(idToken.nickname(), idToken.picture()));
             KakaoHost newKakaoHost = new KakaoHost(host, idToken.sub());
             return kakaoHostRepository.save(newKakaoHost);
         });
@@ -107,7 +108,8 @@ public class AuthService {
     public LoginResponse refresh(String refreshToken) {
         jwtTokenProvider.validateToken(refreshToken);
         Long hostId = jwtTokenProvider.getId(refreshToken);
-        Host host = hostRepository.getByIdOrThrow(hostId);
+        Host host = hostRepository.findByIdAndDeletedAtIsNull(hostId)
+            .orElseThrow(() -> new UnauthorizedException("탈퇴했거나 존재하지 않는 호스트입니다. id: " + hostId));
         String accessToken = jwtTokenProvider.generateAccessToken(host.getId());
         return LoginResponse.of(accessToken, refreshToken);
     }

@@ -1,5 +1,7 @@
 package com.forgather.domain.space.repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -14,6 +16,10 @@ public interface HostRepository {
     Host save(Host host);
 
     Optional<Host> findById(Long id);
+
+    Optional<Host> findByIdAndDeletedAtIsNull(Long id);
+
+    List<Host> findAllByDeletedAtBeforeAndAnonymizedAtIsNull(LocalDateTime threshold);
 
     Page<Host> findAll(Pageable pageable);
 

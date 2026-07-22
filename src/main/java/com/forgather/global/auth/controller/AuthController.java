@@ -4,6 +4,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,6 +21,7 @@ import com.forgather.global.auth.dto.OnboardingRequest;
 import com.forgather.global.auth.dto.RefreshRequest;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.service.AuthService;
+import com.forgather.global.auth.service.WithdrawService;
 import com.forgather.global.auth.util.AuthCookieProvider;
 import com.forgather.global.exception.UnauthorizedException;
 import com.forgather.global.response.ApiResponse;
@@ -36,6 +38,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthController {
 
     private final AuthService authService;
+    private final WithdrawService withdrawService;
     private final AuthCookieProvider authCookieProvider;
 
     @GetMapping("/me")
@@ -102,6 +105,21 @@ public class AuthController {
     ) {
         var response = authService.submitOnboarding(host, request);
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @DeleteMapping("/me")
+    @Operation(summary = "회원 탈퇴",
+        description = "회원을 탈퇴 처리합니다. 소셜 연결(Kakao/Apple)을 해제하고 계정과 소유 콘텐츠를 삭제합니다. " +
+            "성공 시 액세스토큰과 리프레시토큰 쿠키를 만료시킵니다. " +
+            "탈퇴 후 같은 소셜 계정으로 다시 로그인하면 신규 가입으로 처리됩니다.")
+    public ResponseEntity<ApiResponse<Void>> withdraw(@LoginHost Host host) {
+        withdrawService.withdraw(host);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, authCookieProvider.expireAccessTokenCookie().toString());
+        headers.add(HttpHeaders.SET_COOKIE, authCookieProvider.expireRefreshTokenCookie().toString());
+        return ResponseEntity.ok()
+            .headers(headers)
+            .body(ApiResponse.success());
     }
 
     private String resolveRefreshToken(RefreshRequest request, String refreshTokenCookie) {

@@ -89,7 +89,8 @@ class AppleClientSecretProviderTest {
             "test-team-id",
             "test-key-id",
             privateKey,
-            "https://appleid.apple.com/auth/token"
+            "https://appleid.apple.com/auth/token",
+            "https://appleid.apple.com/auth/revoke"
         );
     }
 }

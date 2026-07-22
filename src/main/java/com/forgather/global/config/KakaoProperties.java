@@ -11,4 +11,6 @@ import lombok.RequiredArgsConstructor;
 public class KakaoProperties {
     private final String clientId;
     private final String jwksUrl;
+    private final String adminKey;
+    private final String unlinkUrl;
 }

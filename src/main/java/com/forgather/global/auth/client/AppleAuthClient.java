@@ -64,6 +64,31 @@ public class AppleAuthClient {
         }
     }
 
+    public void revoke(String refreshToken) {
+        if (!StringUtils.hasText(refreshToken)) {
+            throw new BaseException("Apple refresh token이 필요합니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add("client_id", appleProperties.getClientId());
+        form.add("client_secret", clientSecretProvider.generate());
+        form.add("token", refreshToken);
+        form.add("token_type_hint", "refresh_token");
+
+        try {
+            restClient.post()
+                .uri(appleProperties.getRevokeUrl())
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(form)
+                .retrieve()
+                .toBodilessEntity();
+        } catch (RestClientResponseException e) {
+            throw new BaseException("Apple token revoke에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e);
+        } catch (RestClientException e) {
+            throw new BaseException("Apple token 서버에 연결할 수 없습니다.", HttpStatus.BAD_GATEWAY, e);
+        }
+    }
+
     private void validateResponse(AppleTokenResponse response) {
         if (response == null
             || !StringUtils.hasText(response.accessToken())
