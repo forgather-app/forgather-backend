@@ -18,7 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.forgather.global.auth.client.AppleAuthClient;
-import com.forgather.global.auth.client.KakaoUnlinkClient;
+import com.forgather.global.auth.client.KakaoAuthClient;
 import com.forgather.global.auth.client.SocialProvider;
 import com.forgather.global.auth.model.SocialRevokeFailLog;
 import com.forgather.global.auth.repository.SocialRevokeFailLogRepository;
@@ -28,7 +28,7 @@ import com.forgather.global.exception.BaseException;
 class SocialRevokeServiceTest {
 
     @Mock
-    private KakaoUnlinkClient kakaoUnlinkClient;
+    private KakaoAuthClient kakaoAuthClient;
 
     @Mock
     private AppleAuthClient appleAuthClient;
@@ -37,7 +37,7 @@ class SocialRevokeServiceTest {
     private SocialRevokeFailLogRepository socialRevokeFailLogRepository;
 
     private SocialRevokeService createService() {
-        return new SocialRevokeService(kakaoUnlinkClient, appleAuthClient, socialRevokeFailLogRepository);
+        return new SocialRevokeService(kakaoAuthClient, appleAuthClient, socialRevokeFailLogRepository);
     }
 
     @DisplayName("Kakao unlink에 성공하면 실패 로그를 남기지 않는다")
@@ -50,7 +50,7 @@ class SocialRevokeServiceTest {
         service.revokeKakao("kakao-user-1");
 
         // then
-        verify(kakaoUnlinkClient).unlink("kakao-user-1");
+        verify(kakaoAuthClient).unlink("kakao-user-1");
         verify(socialRevokeFailLogRepository, never()).save(any());
     }
 
@@ -60,7 +60,7 @@ class SocialRevokeServiceTest {
         // given
         SocialRevokeService service = createService();
         doThrow(new BaseException("Kakao unlink에 실패했습니다."))
-            .when(kakaoUnlinkClient).unlink("kakao-user-1");
+            .when(kakaoAuthClient).unlink("kakao-user-1");
 
         // when
         service.revokeKakao("kakao-user-1");
@@ -105,7 +105,7 @@ class SocialRevokeServiceTest {
         when(socialRevokeFailLogRepository.findAllByCompletedAtIsNull())
             .thenReturn(List.of(kakaoLog, appleLog));
         doThrow(new BaseException("Kakao unlink에 실패했습니다."))
-            .when(kakaoUnlinkClient).unlink("kakao-user-1");
+            .when(kakaoAuthClient).unlink("kakao-user-1");
 
         // when
         service.retryFailedRevokes();

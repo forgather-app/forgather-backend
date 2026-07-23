@@ -25,7 +25,8 @@ public class HostWithdrawScheduler {
 
     private void anonymizeExpiredHosts() {
         try {
-            hostAnonymizeService.anonymizeExpiredHosts();
+            int anonymizedCount = hostAnonymizeService.anonymizeExpiredHosts();
+            log.info("탈퇴 회원 익명화 완료. 처리: {}건", anonymizedCount);
         } catch (Exception e) {
             log.error("탈퇴 회원 익명화 배치 실패", e);
         }

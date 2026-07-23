@@ -5,7 +5,7 @@ ALTER TABLE `host`
 CREATE TABLE `social_revoke_fail_log`
 (
     `id`                  BIGINT       NOT NULL AUTO_INCREMENT,
-    `provider`            VARCHAR(20)  NOT NULL,
+    `provider`            ENUM ('KAKAO', 'GOOGLE', 'APPLE') NOT NULL,
     `social_user_id`      VARCHAR(255) NOT NULL,
     `apple_refresh_token` VARCHAR(512) NULL,
     `fail_count`          INT          NOT NULL DEFAULT 1,

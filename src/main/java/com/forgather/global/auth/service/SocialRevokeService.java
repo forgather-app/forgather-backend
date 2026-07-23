@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.forgather.global.auth.client.AppleAuthClient;
-import com.forgather.global.auth.client.KakaoUnlinkClient;
+import com.forgather.global.auth.client.KakaoAuthClient;
 import com.forgather.global.auth.model.SocialRevokeFailLog;
 import com.forgather.global.auth.repository.SocialRevokeFailLogRepository;
 
@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class SocialRevokeService {
 
-    private final KakaoUnlinkClient kakaoUnlinkClient;
+    private final KakaoAuthClient kakaoAuthClient;
     private final AppleAuthClient appleAuthClient;
     private final SocialRevokeFailLogRepository socialRevokeFailLogRepository;
 
@@ -27,7 +27,7 @@ public class SocialRevokeService {
      */
     public void revokeKakao(String userId) {
         try {
-            kakaoUnlinkClient.unlink(userId);
+            kakaoAuthClient.unlink(userId);
         } catch (Exception e) {
             log.warn("Kakao unlink 실패. userId: {}", userId, e);
             socialRevokeFailLogRepository.save(SocialRevokeFailLog.kakao(userId));
@@ -57,7 +57,7 @@ public class SocialRevokeService {
     private void retry(SocialRevokeFailLog failLog) {
         try {
             switch (failLog.getProvider()) {
-                case KAKAO -> kakaoUnlinkClient.unlink(failLog.getSocialUserId());
+                case KAKAO -> kakaoAuthClient.unlink(failLog.getSocialUserId());
                 case APPLE -> appleAuthClient.revoke(failLog.getAppleRefreshToken());
                 default -> throw new IllegalStateException("지원하지 않는 provider입니다. provider: " + failLog.getProvider());
             }

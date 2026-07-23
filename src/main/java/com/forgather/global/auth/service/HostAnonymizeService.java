@@ -22,17 +22,17 @@ public class HostAnonymizeService {
     private final HostRepository hostRepository;
 
     /**
-     * 탈퇴 후 30일이 지난 회원의 개인정보를 익명화한다.
+     * 탈퇴 후 30일이 지난 회원의 개인정보를 익명화하고 처리 건수를 반환한다.
      * 익명화된 행은 유지되어 count() 기반 누적 통계가 보존된다.
      */
     @Transactional
-    public void anonymizeExpiredHosts() {
+    public int anonymizeExpiredHosts() {
         LocalDateTime threshold = LocalDateTime.now().minusDays(RETENTION_DAYS);
         List<Host> hosts = hostRepository.findAllByDeletedAtBeforeAndAnonymizedAtIsNull(threshold);
         log.info("탈퇴 회원 익명화 시작. 대상: {}건", hosts.size());
         for (Host host : hosts) {
             host.anonymize();
         }
-        log.info("탈퇴 회원 익명화 완료. 처리: {}건", hosts.size());
+        return hosts.size();
     }
 }

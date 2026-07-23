@@ -27,7 +27,6 @@ public class KakaoHost {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
-    // cascade 없음: 탈퇴 시 매핑 hard delete가 Host 물리 삭제로 전파되지 않아야 한다
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "host_id", nullable = false)
     private Host host;

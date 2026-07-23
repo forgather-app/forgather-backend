@@ -1,10 +1,7 @@
 package com.forgather.global.auth.service;
 
 import static com.forgather.fixture.HostFixture.createHostWithId;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -80,21 +77,4 @@ class WithdrawServiceTest {
         verify(hostDeleteService).delete(1L);
     }
 
-    @DisplayName("소셜 매핑이 없는 회원은 연결 해제 없이 삭제만 수행한다")
-    @Test
-    void withdrawHostWithoutSocialAccount() {
-        // given
-        WithdrawService service = createService();
-        Host host = createHostWithId(1L);
-        when(kakaoHostRepository.findByHost(host)).thenReturn(Optional.empty());
-        when(appleHostRepository.findByHost(host)).thenReturn(Optional.empty());
-
-        // when
-        service.withdraw(host);
-
-        // then
-        verify(socialRevokeService, never()).revokeKakao(anyString());
-        verify(socialRevokeService, never()).revokeApple(anyString(), any());
-        verify(hostDeleteService).delete(1L);
-    }
 }

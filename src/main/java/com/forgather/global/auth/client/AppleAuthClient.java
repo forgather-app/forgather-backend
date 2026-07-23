@@ -83,7 +83,7 @@ public class AppleAuthClient {
                 .retrieve()
                 .toBodilessEntity();
         } catch (RestClientResponseException e) {
-            throw new BaseException("Apple token revoke에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e);
+            throw new BaseException("Apple token revoke에 실패했습니다.", HttpStatus.BAD_GATEWAY, e);
         } catch (RestClientException e) {
             throw new BaseException("Apple token 서버에 연결할 수 없습니다.", HttpStatus.BAD_GATEWAY, e);
         }
