@@ -66,6 +66,7 @@ public class SocialRevokeFailLog extends BaseTimeEntity {
         if (completedAt != null) {
             return;
         }
+        this.appleRefreshToken = null;
         this.completedAt = LocalDateTime.now();
     }
 }
