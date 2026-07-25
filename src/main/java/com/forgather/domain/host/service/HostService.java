@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class HostProfileService {
+public class HostService {
 
     private final HostRepository hostRepository;
 
