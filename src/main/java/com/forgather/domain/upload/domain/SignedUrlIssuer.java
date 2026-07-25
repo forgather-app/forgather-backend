@@ -64,23 +64,21 @@ public class SignedUrlIssuer {
         return signedUrls;
     }
 
-    public Map<String, String> issueForHostProfile(List<UploadFileMetadata> uploadFiles, Long hostId) {
+    public Map.Entry<String, String> issueForHostProfile(List<UploadFileMetadata> uploadFiles, Long hostId) {
         validateNotEmpty(uploadFiles);
-        validateCount(uploadFiles);
-
+        if (uploadFiles.size() != 1) {
+            throw new BaseException("프로필 사진은 한 장만 업로드할 수 있습니다.");
+        }
         if (hostId == null) {
             throw new BaseException("호스트 id는 null일 수 없습니다.");
         }
-        Map<String, String> signedUrls = new HashMap<>();
-        for (UploadFileMetadata uploadFile : uploadFiles) {
-            String filePath = generateHostProfileFilePath(
-                contentsStorage.getRootDirectory(),
-                hostId,
-                uploadFile.getFileName()
-            );
-            signedUrls.put(uploadFile.getFileName(), issueUploadUrl(filePath, uploadFile));
-        }
-        return signedUrls;
+        UploadFileMetadata uploadFile = uploadFiles.getFirst();
+        String filePath = generateHostProfileFilePath(
+            contentsStorage.getRootDirectory(),
+            hostId,
+            uploadFile.getFileName()
+        );
+        return Map.entry(uploadFile.getFileName(), issueUploadUrl(filePath, uploadFile));
     }
 
     private String issueUploadUrl(String filePath, UploadFileMetadata uploadFile) {

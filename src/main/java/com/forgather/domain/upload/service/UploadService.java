@@ -111,10 +111,10 @@ public class UploadService {
     }
 
     public IssueSignedUrlResponse issueHostProfileSignedUrls(Host host, IssuePreSignedUrlRequest request) {
-        Map<String, String> signedUrls = signedUrlIssuer.issueForHostProfile(
+        Map.Entry<String, String> signedUrl = signedUrlIssuer.issueForHostProfile(
             request.toUploadFilesData(),
             host.getId()
         );
-        return new IssueSignedUrlResponse(signedUrls);
+        return new IssueSignedUrlResponse(signedUrl);
     }
 }

@@ -202,6 +202,27 @@ class UploadAcceptanceTest extends AcceptanceTest {
         );
     }
 
+    @DisplayName("프로필 사진 서명된 url은 한 장만 발급할 수 있다")
+    @Test
+    void rejectHostProfileSignedUrlsWhenMultipleFiles() {
+        // given
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
+            new UploadFileRequest("abc.webp", 1024L),
+            new UploadFileRequest("def.webp", 2048L)
+        ));
+
+        // when, then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/hosts/me/profile/upload/signed-urls")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value());
+    }
+
     @DisplayName("프로필 사진 서명된 url 발급은 인증 없이 호출하면 401을 반환한다")
     @Test
     void issueHostProfileSignedUrlsRequiresAuth() {
