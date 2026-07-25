@@ -49,4 +49,16 @@ public class FilePathGenerator {
             fileName
         );
     }
+
+    public static String generateHostProfileFilePath(
+        String rootDirectory,
+        Long hostId,
+        String fileName
+    ) {
+        return "%s/hosts/%d/profile/%s".formatted(
+            rootDirectory,
+            hostId,
+            fileName
+        );
+    }
 }
