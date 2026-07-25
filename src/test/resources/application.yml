@@ -79,6 +79,12 @@ auth:
     password: testPw
     nickname: 테스트
 
+kakao:
+  client-id: test-kakao-client-id
+  jwks-url: http://localhost/kakao/.well-known/jwks.json
+  admin-key: test-kakao-admin-key
+  unlink-url: http://localhost/kakao/v1/user/unlink
+
 apple:
   jwks-url: http://localhost/apple/auth/keys
   issuer: https://appleid.apple.com
@@ -93,6 +99,7 @@ apple:
     qvpcG9GmkUaNyK5+6TOFZQvljuloKNDLrzQ9zW2qsLoghDmbR4uDdnHw
     -----END PRIVATE KEY-----
   token-url: http://localhost/apple/auth/token
+  revoke-url: http://localhost/apple/auth/revoke
 
 monitoring:
   prometheus-url: ""

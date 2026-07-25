@@ -227,11 +227,13 @@ class JwtParserTest {
             "test-team-id",
             "test-key-id",
             "test-private-key",
-            wireMock.baseUrl() + "/apple/auth/token"
+            wireMock.baseUrl() + "/apple/auth/token",
+            wireMock.baseUrl() + "/apple/auth/revoke"
         );
         SocialAuthClient socialAuthClient = new SocialAuthClient(
             RestClient.create(),
-            new KakaoProperties("client-id", wireMock.baseUrl() + "/kakao/.well-known/jwks.json"),
+            new KakaoProperties("client-id", wireMock.baseUrl() + "/kakao/.well-known/jwks.json",
+                "test-admin-key", wireMock.baseUrl() + "/kakao/v1/user/unlink"),
             new GoogleProperties(wireMock.baseUrl() + "/google/.well-known/jwks.json"),
             appleProperties
         );

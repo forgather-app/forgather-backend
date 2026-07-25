@@ -228,6 +228,7 @@ class AuthServiceTest {
             "pictureUrl");
         when(jwtParser.parseKakaoIdToken("id-token")).thenReturn(idToken);
         when(kakaoHostRepository.findByUserId("kakao-user-id")).thenReturn(Optional.empty());
+        when(hostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(kakaoHostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(jwtTokenProvider.generateAccessToken(nullable(Long.class))).thenReturn("access-token");
         when(jwtTokenProvider.generateRefreshToken(nullable(Long.class))).thenReturn("refresh-token");

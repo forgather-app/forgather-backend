@@ -27,7 +27,7 @@ public class KakaoHost {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "host_id", nullable = false)
     private Host host;
 

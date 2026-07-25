@@ -1,10 +1,11 @@
 package com.forgather.global.auth.model;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 import org.springframework.http.HttpStatus;
 
-import com.forgather.domain.model.BaseTimeEntity;
+import com.forgather.domain.model.SoftDeleteEntity;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.util.TextLengthCounter;
@@ -24,9 +25,10 @@ import lombok.NoArgsConstructor;
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Host extends BaseTimeEntity {
+public class Host extends SoftDeleteEntity {
 
     private static final int MAX_NICKNAME_LENGTH = 20;
+    private static final String ANONYMIZED_NAME = "탈퇴한 회원";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,6 +45,9 @@ public class Host extends BaseTimeEntity {
 
     @Column(name = "email")
     private String email;
+
+    @Column(name = "anonymized_at")
+    private LocalDateTime anonymizedAt;
 
     public Host(String name, String pictureUrl) {
         this(name, pictureUrl, null);
@@ -80,6 +85,17 @@ public class Host extends BaseTimeEntity {
         if (length > MAX_NICKNAME_LENGTH) {
             throw new BaseException("닉네임은 최대 20자까지 입력 가능합니다. nickname.length: " + length);
         }
+    }
+
+    public void anonymize() {
+        if (anonymizedAt != null) {
+            return;
+        }
+        this.name = ANONYMIZED_NAME;
+        this.nickname = null;
+        this.pictureUrl = null;
+        this.email = null;
+        this.anonymizedAt = LocalDateTime.now();
     }
 
     public boolean hasValidNickname() {

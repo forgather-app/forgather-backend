@@ -4,12 +4,15 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.KakaoHost;
 import com.forgather.global.exception.NotFoundException;
 
 public interface KakaoHostRepository extends JpaRepository<KakaoHost, Long> {
 
     Optional<KakaoHost> findByUserId(String userId);
+
+    Optional<KakaoHost> findByHost(Host host);
 
     default KakaoHost getById(Long id) {
         return findById(id)

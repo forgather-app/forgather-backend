@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.term.model.Term;
 import com.forgather.domain.term.repository.TermRepository;
 import com.forgather.global.auth.dto.LoginResponse;
@@ -32,6 +33,7 @@ public class DevAuthService {
     private final DevLoginProperties devLoginProperties;
     private final JwtTokenProvider jwtTokenProvider;
     private final KakaoHostRepository kakaoHostRepository;
+    private final HostRepository hostRepository;
     private final TermRepository termRepository;
     private final AuthService authService;
 
@@ -70,7 +72,7 @@ public class DevAuthService {
     }
 
     private KakaoHost createOnboardedHost(String userId) {
-        Host host = new Host(devLoginProperties.getNickname(), null);
+        Host host = hostRepository.save(new Host(devLoginProperties.getNickname(), null));
         KakaoHost savedKakaoHost = kakaoHostRepository.save(new KakaoHost(host, userId));
         completeOnboarding(savedKakaoHost.getHost());
         return savedKakaoHost;

@@ -134,7 +134,8 @@ class AppleAuthClientTest {
             "test-team-id",
             "test-key-id",
             toPem(generateEcKeyPair()),
-            wireMock.baseUrl() + "/auth/token"
+            wireMock.baseUrl() + "/auth/token",
+            "https://appleid.apple.com/auth/revoke"
         );
     }
 
