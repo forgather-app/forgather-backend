@@ -161,6 +161,66 @@ class UploadAcceptanceTest extends AcceptanceTest {
         );
     }
 
+    @DisplayName("프로필 사진 서명된 url 발급")
+    @Test
+    void issueHostProfileSignedUrls() {
+        // given
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
+            new UploadFileRequest("abc.webp", 1024L)
+        ));
+        when(awsS3Cloud.getRootDirectory()).thenReturn("photogather/v2");
+        when(awsS3Cloud.issueSignedUrl(anyString(), anyString(), anyLong())).thenAnswer(invocation -> {
+            String path = invocation.getArgument(0);
+            String contentType = invocation.getArgument(1);
+            long contentLength = invocation.getArgument(2);
+            return "test-prefix-" + path + "-" + contentType + "-" + contentLength + "-test-suffix";
+        });
+
+        // when
+        ApiResponse<IssueSignedUrlResponse> result = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/hosts/me/profile/upload/signed-urls")
+            .then()
+            .statusCode(200)
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+        Map<String, String> signedUrls = result.data().signedUrls();
+
+        // then
+        String expectedPrefix = "test-prefix-photogather/v2/hosts/%d/profile/".formatted(host.getId());
+        assertAll(
+            () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+            () -> assertThat(result.message()).isNull(),
+            () -> assertThat(signedUrls.get("abc.webp"))
+                .isEqualTo(expectedPrefix + "abc.webp-image/webp-1024-test-suffix")
+        );
+    }
+
+    @DisplayName("프로필 사진 서명된 url 발급은 인증 없이 호출하면 401을 반환한다")
+    @Test
+    void issueHostProfileSignedUrlsRequiresAuth() {
+        // given
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
+            new UploadFileRequest("abc.webp", 1024L)
+        ));
+
+        // when, then
+        RestAssuredMockMvc.given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/hosts/me/profile/upload/signed-urls")
+            .then()
+            .statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
     @DisplayName("전시 사진 서명된 url 발급은 인증 없이 호출하면 401을 반환한다")
     @Test
     void issueExhibitionSignedUrlsRequiresAuth() {

@@ -2,12 +2,16 @@ package com.forgather.global.auth.model;
 
 import static com.forgather.fixture.HostFixture.createHost;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import com.forgather.global.exception.BaseException;
 
 class HostTest {
 
@@ -28,6 +32,223 @@ class HostTest {
             () -> assertThat(host.getEmail()).isNull(),
             () -> assertThat(host.getAnonymizedAt()).isNotNull()
         );
+    }
+
+    @DisplayName("익명화하면 한 줄 소개와 링크도 제거된다")
+    @Test
+    void anonymizeClearsProfileFields() {
+        // given
+        Host host = createHost();
+        host.updateProfile(null, "안녕하세요, 포게더 작가입니다.", "https://forgather.app/", null);
+
+        // when
+        host.anonymize();
+
+        // then
+        assertAll(
+            () -> assertThat(host.getIntroduction()).isNull(),
+            () -> assertThat(host.getLinkUrl()).isNull()
+        );
+    }
+
+    @Nested
+    @DisplayName("프로필 수정")
+    class UpdateProfile {
+
+        @DisplayName("닉네임, 한 줄 소개, 링크, 프로필 사진을 모두 변경한다")
+        @Test
+        void updateProfile() {
+            // given
+            Host host = createHost();
+
+            // when
+            host.updateProfile("새닉네임", "안녕하세요, 포게더 작가입니다.", "https://forgather.app/",
+                "https://cdn.forgather.app/hosts/1/profile/a.webp");
+
+            // then
+            assertAll(
+                () -> assertThat(host.getNickname()).isEqualTo("새닉네임"),
+                () -> assertThat(host.getIntroduction()).isEqualTo("안녕하세요, 포게더 작가입니다."),
+                () -> assertThat(host.getLinkUrl()).isEqualTo("https://forgather.app/"),
+                () -> assertThat(host.getPictureUrl()).isEqualTo("https://cdn.forgather.app/hosts/1/profile/a.webp")
+            );
+        }
+
+        @DisplayName("null로 전달된 필드는 변경하지 않는다")
+        @Test
+        void ignoresNullFields() {
+            // given
+            Host host = createHost();
+            host.updateProfile("닉네임", "소개", "https://forgather.app/", "https://cdn.forgather.app/a.webp");
+
+            // when
+            host.updateProfile(null, null, null, null);
+
+            // then
+            assertAll(
+                () -> assertThat(host.getNickname()).isEqualTo("닉네임"),
+                () -> assertThat(host.getIntroduction()).isEqualTo("소개"),
+                () -> assertThat(host.getLinkUrl()).isEqualTo("https://forgather.app/"),
+                () -> assertThat(host.getPictureUrl()).isEqualTo("https://cdn.forgather.app/a.webp")
+            );
+        }
+
+        @DisplayName("빈 문자열로 전달된 한 줄 소개, 링크, 프로필 사진은 제거된다")
+        @Test
+        void clearsBlankFields() {
+            // given
+            Host host = createHost();
+            host.updateProfile("닉네임", "소개", "https://forgather.app/", "https://cdn.forgather.app/a.webp");
+
+            // when
+            host.updateProfile(null, " ", " ", " ");
+
+            // then
+            assertAll(
+                () -> assertThat(host.getNickname()).isEqualTo("닉네임"),
+                () -> assertThat(host.getIntroduction()).isNull(),
+                () -> assertThat(host.getLinkUrl()).isNull(),
+                () -> assertThat(host.getPictureUrl()).isNull()
+            );
+        }
+
+        @DisplayName("닉네임을 빈 문자열로 수정하면 예외가 발생한다")
+        @Test
+        void rejectsBlankNickname() {
+            // given
+            Host host = createHost();
+
+            // when & then
+            assertThatThrownBy(() -> host.updateProfile(" ", null, null, null))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("닉네임은 공백만 입력할 수 없습니다");
+        }
+
+        @DisplayName("닉네임 10자는 허용된다")
+        @Test
+        void allowsNicknameAtMaxLength() {
+            // given
+            Host host = createHost();
+
+            // when
+            host.updateProfile("가나다라마바사아자차", null, null, null);
+
+            // then
+            assertThat(host.getNickname()).isEqualTo("가나다라마바사아자차");
+        }
+
+        @DisplayName("닉네임이 10자를 초과하면 예외가 발생한다")
+        @Test
+        void rejectsNicknameOverMaxLength() {
+            // given
+            Host host = createHost();
+
+            // when & then
+            assertThatThrownBy(() -> host.updateProfile("가나다라마바사아자차카", null, null, null))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("닉네임은 최대 10자까지 입력 가능합니다");
+        }
+
+        @DisplayName("이모지 닉네임은 눈에 보이는 글자 수 기준으로 검증된다")
+        @Test
+        void countsNicknameByGrapheme() {
+            // given
+            Host host = createHost();
+            String emojiNickname = "🧑‍🧑‍🧒‍🧒".repeat(10);
+
+            // when
+            host.updateProfile(emojiNickname, null, null, null);
+
+            // then
+            assertThat(host.getNickname()).isEqualTo(emojiNickname);
+        }
+
+        @DisplayName("한 줄 소개 50자는 허용된다")
+        @Test
+        void allowsIntroductionAtMaxLength() {
+            // given
+            Host host = createHost();
+
+            // when
+            host.updateProfile(null, "가".repeat(50), null, null);
+
+            // then
+            assertThat(host.getIntroduction()).isEqualTo("가".repeat(50));
+        }
+
+        @DisplayName("한 줄 소개가 50자를 초과하면 예외가 발생한다")
+        @Test
+        void rejectsIntroductionOverMaxLength() {
+            // given
+            Host host = createHost();
+
+            // when & then
+            assertThatThrownBy(() -> host.updateProfile(null, "가".repeat(51), null, null))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("한 줄 소개는 최대 50자까지 입력 가능합니다");
+        }
+
+        @DisplayName("링크가 http(s) URL 형식이 아니면 예외가 발생한다")
+        @Test
+        void rejectsInvalidLinkUrl() {
+            // given
+            Host host = createHost();
+
+            // when & then
+            assertThatThrownBy(() -> host.updateProfile(null, null, "forgather.app", null))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("링크 URL 형식이 올바르지 않습니다");
+        }
+
+        @DisplayName("링크가 2048자를 초과하면 예외가 발생한다")
+        @Test
+        void rejectsLinkUrlOverMaxLength() {
+            // given
+            Host host = createHost();
+            String longLinkUrl = "https://" + "a".repeat(2041);
+
+            // when & then
+            assertThatThrownBy(() -> host.updateProfile(null, null, longLinkUrl, null))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("링크 URL은 최대 2048자까지 가능합니다");
+        }
+
+        @DisplayName("프로필 사진 URL이 http(s) 형식이 아니면 예외가 발생한다")
+        @Test
+        void rejectsInvalidPictureUrl() {
+            // given
+            Host host = createHost();
+
+            // when & then
+            assertThatThrownBy(() -> host.updateProfile(null, null, null, "cdn.forgather.app/a.webp"))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("프로필 사진 URL 형식이 올바르지 않습니다");
+        }
+
+        @DisplayName("프로필 사진 URL이 255자를 초과하면 예외가 발생한다")
+        @Test
+        void rejectsPictureUrlOverMaxLength() {
+            // given
+            Host host = createHost();
+            String longPictureUrl = "https://" + "a".repeat(248);
+
+            // when & then
+            assertThatThrownBy(() -> host.updateProfile(null, null, null, longPictureUrl))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("프로필 사진 URL은 최대 255자까지 가능합니다");
+        }
+    }
+
+    @DisplayName("온보딩 닉네임도 10자를 초과하면 예외가 발생한다")
+    @Test
+    void updateNicknameRejectsOverMaxLength() {
+        // given
+        Host host = createHost();
+
+        // when & then
+        assertThatThrownBy(() -> host.updateNickname("가나다라마바사아자차카"))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("닉네임은 최대 10자까지 입력 가능합니다");
     }
 
     @DisplayName("이미 익명화된 회원을 다시 익명화해도 익명화 시각이 변경되지 않는다")
