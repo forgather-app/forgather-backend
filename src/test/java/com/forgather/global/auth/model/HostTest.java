@@ -20,6 +20,7 @@ class HostTest {
     void anonymize() {
         // given
         Host host = createHost();
+        host.updateProfile(null, "안녕하세요, 포게더 작가입니다.", "https://forgather.app/", null);
 
         // when
         host.anonymize();
@@ -30,24 +31,9 @@ class HostTest {
             () -> assertThat(host.getNickname()).isNull(),
             () -> assertThat(host.getPictureUrl()).isNull(),
             () -> assertThat(host.getEmail()).isNull(),
-            () -> assertThat(host.getAnonymizedAt()).isNotNull()
-        );
-    }
-
-    @DisplayName("익명화하면 한 줄 소개와 링크도 제거된다")
-    @Test
-    void anonymizeClearsProfileFields() {
-        // given
-        Host host = createHost();
-        host.updateProfile(null, "안녕하세요, 포게더 작가입니다.", "https://forgather.app/", null);
-
-        // when
-        host.anonymize();
-
-        // then
-        assertAll(
             () -> assertThat(host.getIntroduction()).isNull(),
-            () -> assertThat(host.getLinkUrl()).isNull()
+            () -> assertThat(host.getLinkUrl()).isNull(),
+            () -> assertThat(host.getAnonymizedAt()).isNotNull()
         );
     }
 
@@ -239,7 +225,7 @@ class HostTest {
         }
     }
 
-    @DisplayName("온보딩 닉네임도 10자를 초과하면 예외가 발생한다")
+    @DisplayName("닉네임을 10자 초과로 변경하면 예외가 발생한다")
     @Test
     void updateNicknameRejectsOverMaxLength() {
         // given
