@@ -16,7 +16,6 @@ public class HostService {
 
     private final HostRepository hostRepository;
 
-    @Transactional(readOnly = true)
     public HostProfileResponse getProfile(Host loginHost) {
         return HostProfileResponse.from(loginHost);
     }

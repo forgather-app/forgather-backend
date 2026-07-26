@@ -32,8 +32,6 @@ public class Host extends SoftDeleteEntity {
     private static final int MAX_INTRODUCTION_LENGTH = 50;
     private static final int MAX_LINK_URL_LENGTH = 2048;
     private static final int MAX_PICTURE_URL_LENGTH = 255;
-    // 검증은 grapheme(눈에 보이는 글자) 기준, VARCHAR는 코드포인트 기준이라
-    // 컬럼은 검증 한도 × 10(RGI 표준 최장 이모지 = 10 코드포인트)으로 잡는다
     private static final int NICKNAME_COLUMN_LENGTH = MAX_NICKNAME_LENGTH * 10;
     private static final int INTRODUCTION_COLUMN_LENGTH = MAX_INTRODUCTION_LENGTH * 10;
     private static final String ANONYMIZED_NAME = "탈퇴한 회원";
@@ -96,31 +94,30 @@ public class Host extends SoftDeleteEntity {
             this.nickname = nickname;
         }
         if (introduction != null) {
-            this.introduction = normalizeIntroduction(introduction);
+            validateIntroduction(introduction);
+            this.introduction = introduction.isBlank() ? null : introduction;
         }
         if (linkUrl != null) {
-            this.linkUrl = normalizeLinkUrl(linkUrl);
+            validateLinkUrl(linkUrl);
+            this.linkUrl = linkUrl.isBlank() ? null : linkUrl;
         }
         if (pictureUrl != null) {
-            this.pictureUrl = normalizePictureUrl(pictureUrl);
+            validatePictureUrl(pictureUrl);
+            this.pictureUrl = pictureUrl.isBlank() ? null : pictureUrl;
         }
     }
 
-    private String normalizeIntroduction(String introduction) {
-        if (introduction.isBlank()) {
-            return null;
-        }
+    private void validateIntroduction(String introduction) {
         int length = TextLengthCounter.count(introduction);
         if (length > MAX_INTRODUCTION_LENGTH) {
             throw new BaseException("한 줄 소개는 최대 %d자까지 입력 가능합니다. introduction.length: %d"
                 .formatted(MAX_INTRODUCTION_LENGTH, length));
         }
-        return introduction;
     }
 
-    private String normalizeLinkUrl(String linkUrl) {
+    private void validateLinkUrl(String linkUrl) {
         if (linkUrl.isBlank()) {
-            return null;
+            return;
         }
         if (linkUrl.length() > MAX_LINK_URL_LENGTH) {
             throw new BaseException("링크 URL은 최대 %d자까지 가능합니다.".formatted(MAX_LINK_URL_LENGTH));
@@ -128,12 +125,11 @@ public class Host extends SoftDeleteEntity {
         if (!PROFILE_URL_PATTERN.matcher(linkUrl).matches()) {
             throw new BaseException("링크 URL 형식이 올바르지 않습니다.");
         }
-        return linkUrl;
     }
 
-    private String normalizePictureUrl(String pictureUrl) {
+    private void validatePictureUrl(String pictureUrl) {
         if (pictureUrl.isBlank()) {
-            return null;
+            return;
         }
         if (pictureUrl.length() > MAX_PICTURE_URL_LENGTH) {
             throw new BaseException("프로필 사진 URL은 최대 %d자까지 가능합니다.".formatted(MAX_PICTURE_URL_LENGTH));
@@ -141,7 +137,6 @@ public class Host extends SoftDeleteEntity {
         if (!PROFILE_URL_PATTERN.matcher(pictureUrl).matches()) {
             throw new BaseException("프로필 사진 URL 형식이 올바르지 않습니다.");
         }
-        return pictureUrl;
     }
 
     private void validateName(String name) {
