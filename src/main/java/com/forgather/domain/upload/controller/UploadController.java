@@ -99,4 +99,17 @@ public class UploadController {
         var response = uploadService.issueExhibitionSignedUrls(request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
+
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping(path = "/hosts/me/profile/upload/signed-urls")
+    @Operation(summary = "프로필 사진 업로드 URL 발급",
+        description = "로그인한 호스트가 자신의 프로필 사진 업로드용 presigned URL을 발급받습니다. "
+            + "프로필 사진은 한 장만 발급할 수 있습니다." + PRESIGN_USAGE_NOTE)
+    public ResponseEntity<ApiResponse<IssueSignedUrlResponse>> issueHostProfileSignedUrls(
+        @LoginHost(required = true) Host host,
+        @Valid @RequestBody IssuePreSignedUrlRequest request
+    ) {
+        var response = uploadService.issueHostProfileSignedUrls(host, request);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
 }

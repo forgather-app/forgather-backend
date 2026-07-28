@@ -14,4 +14,8 @@ public record IssueSignedUrlResponse(
         """)
     Map<String, String> signedUrls
 ) {
+
+    public IssueSignedUrlResponse(Map.Entry<String, String> signedUrl) {
+        this(Map.ofEntries(signedUrl));
+    }
 }
