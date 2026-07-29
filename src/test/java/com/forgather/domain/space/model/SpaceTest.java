@@ -425,6 +425,95 @@ class SpaceTest {
             .hasMessageContaining("함께 입력");
     }
 
+    @DisplayName("스페이스를 생성하면 축하받는 스페이스로 지정되지 않은 상태다.")
+    @Test
+    void createSpaceIsNotCelebrating() {
+        // given & when
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
+            "forgather@forgather.me", "", "");
+
+        // then
+        assertThat(space.isCelebrating()).isFalse();
+    }
+
+    @DisplayName("스페이스를 축하받는 스페이스로 지정한다.")
+    @Test
+    void celebrate() {
+        // given
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
+            "forgather@forgather.me", "", "");
+
+        // when
+        space.celebrate();
+
+        // then
+        assertThat(space.isCelebrating()).isTrue();
+    }
+
+    @DisplayName("이미 지정된 스페이스를 다시 지정해도 지정 상태를 유지한다.")
+    @Test
+    void celebrateIsIdempotent() {
+        // given
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
+            "forgather@forgather.me", "", "");
+        space.celebrate();
+
+        // when
+        space.celebrate();
+
+        // then
+        assertThat(space.isCelebrating()).isTrue();
+    }
+
+    @DisplayName("축하받는 스페이스 지정을 해제한다.")
+    @Test
+    void stopCelebrating() {
+        // given
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
+            "forgather@forgather.me", "", "");
+        space.celebrate();
+
+        // when
+        space.stopCelebrating();
+
+        // then
+        assertThat(space.isCelebrating()).isFalse();
+    }
+
+    @DisplayName("지정되지 않은 스페이스를 해제해도 예외 없이 미지정 상태를 유지한다.")
+    @Test
+    void stopCelebratingIsIdempotent() {
+        // given
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
+            "forgather@forgather.me", "", "");
+
+        // when
+        space.stopCelebrating();
+
+        // then
+        assertThat(space.isCelebrating()).isFalse();
+    }
+
+    /**
+     * "호스트당 축하받는 스페이스 1개"는 DB 제약이 아니라 서비스 계층이 보장한다.
+     * 스페이스 수정 경로로 지정 상태가 바뀌면 그 보장이 통째로 우회되므로, update()가
+     * 이 값을 건드리지 않는다는 사실을 회귀 테스트로 고정한다.
+     */
+    @DisplayName("스페이스 정보를 수정해도 축하받는 스페이스 지정 상태는 바뀌지 않는다.")
+    @Test
+    void updateDoesNotChangeCelebrating() {
+        // given
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
+            "forgather@forgather.me", "", "");
+        space.celebrate();
+
+        // when
+        space.update("새 이름", "새 설명", true, "new_official", "new@forgather.me", "https://forgather.me", "포트폴리오");
+
+        // then
+        assertThat(space.isCelebrating()).isTrue();
+    }
+
     private String getString(int length) {
         return "a".repeat(Math.max(0, length));
     }

@@ -67,6 +67,12 @@ public class Space extends SoftDeleteEntity {
     private String linkName;
 
     /**
+     * 호스트가 지정한 '지금 축하받고 있는 스페이스'인지 여부.
+     */
+    @Column(name = "is_celebrating", nullable = false)
+    private boolean isCelebrating = false;
+
+    /**
      * 스페이스를 생성한다.
      *
      * @param code              스페이스 코드 (필수, 10자)
@@ -153,6 +159,20 @@ public class Space extends SoftDeleteEntity {
         if (linkName != null) {
             this.linkName = convertBlankToEmptyString(linkName);
         }
+    }
+
+    /**
+     * 이 스페이스를 '지금 축하받고 있는 스페이스'로 지정한다.
+     * <p>
+     * 호스트당 1개라는 제약은 이 메서드가 아니라 호출부({@code SpaceService.updateCelebratingSpace()})가
+     * 보장한다. 호출부는 호스트의 모든 스페이스를 {@link #stopCelebrating()} 한 뒤 대상 하나만 지정한다.
+     */
+    public void celebrate() {
+        this.isCelebrating = true;
+    }
+
+    public void stopCelebrating() {
+        this.isCelebrating = false;
     }
 
     private void validateCode(String code) {
