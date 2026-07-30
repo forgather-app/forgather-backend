@@ -15,6 +15,7 @@ import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
 import com.forgather.domain.guestbook.repository.dto.SpaceGuestBookCountDto;
 import com.forgather.domain.guestbook.service.GuestBookService;
 import com.forgather.domain.product.service.ProductService;
+import com.forgather.domain.space.dto.CelebratingSpaceResponse;
 import com.forgather.domain.space.dto.CheckSpaceHostResponse;
 import com.forgather.domain.space.dto.CreateSpaceRequest;
 import com.forgather.domain.space.dto.CreateSpaceResponse;
@@ -137,6 +138,7 @@ public class SpaceService {
         deleteGuestBookAndProduct(host, space);
         deleteSpaceHost(host, space);
         deleteSpacePhoto(space);
+        space.stopCelebrating();
         space.delete();
     }
 
@@ -208,6 +210,18 @@ public class SpaceService {
                 return SpaceResponse.from(space, spacePhoto, guestBookCardCount);
             })
             .toList();
+    }
+
+    @Transactional
+    public CelebratingSpaceResponse updateCelebratingSpace(Host host, String spaceCode) {
+        Space targetSpace = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
+        validateSpaceHost(targetSpace, host);
+
+        spaceHostRepository.findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host)
+            .forEach(spaceHost -> spaceHost.getSpace().stopCelebrating());
+        targetSpace.celebrate();
+
+        return new CelebratingSpaceResponse(targetSpace.getCode());
     }
 
     @Transactional(readOnly = true)
