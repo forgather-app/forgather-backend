@@ -43,6 +43,24 @@ public interface GuestBookCardRepository {
     );
 
     @Query("""
+        SELECT new com.forgather.domain.guestbook.repository.dto.SpaceGuestBookCountDto(
+            g.space.id,
+            COUNT(g.id)
+        )
+        FROM GuestBookCard g
+        WHERE g.space.id IN :spaceIds
+            AND g.visibilityStatus = :visibilityStatus
+            AND g.isRead = :isRead
+            AND g.deletedAt IS NULL
+        GROUP BY g.space.id
+        """)
+    List<SpaceGuestBookCountDto> countBySpaceIdInAndVisibilityStatusAndIsReadAndDeletedAtIsNull(
+        @Param("spaceIds") List<Long> spaceIds,
+        @Param("visibilityStatus") VisibilityStatus visibilityStatus,
+        @Param("isRead") boolean isRead
+    );
+
+    @Query("""
             SELECT new com.forgather.domain.guestbook.repository.dto.GuestBookCardListDto(
                 g.id,
                 g.nickname,

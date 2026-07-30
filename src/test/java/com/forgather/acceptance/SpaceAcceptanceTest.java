@@ -34,6 +34,7 @@ import com.forgather.domain.product.repository.ProductRepository;
 import com.forgather.domain.space.dto.CelebratingSpaceResponse;
 import com.forgather.domain.space.dto.CreateSpaceRequest;
 import com.forgather.domain.space.dto.CreateSpaceResponse;
+import com.forgather.domain.space.dto.HostSpaceItemResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
 import com.forgather.domain.space.dto.SpaceResponse;
 import com.forgather.domain.space.dto.UpdateCelebratingSpaceRequest;
@@ -841,6 +842,86 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // then
         assertThat(isCelebrating(space)).isTrue();
+    }
+
+    @DisplayName("나의 스페이스 목록의 읽지 않은 방명록 수는 공개 상태이면서 읽지 않은 방명록만 센다.")
+    @Test
+    void getSpacesWithUnreadGuestBookCount() {
+        // given
+        Space space = saveSpaceOf(host, "1111111111");
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "안읽음1", "방명록"));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "안읽음2", "방명록"));
+
+        GuestBookCard readCard = GuestBookCardFixture.createGuestBookCard(space, "읽음", "방명록");
+        readCard.read(true);
+        guestBookCardRepository.save(readCard);
+
+        GuestBookCard hiddenCard = GuestBookCardFixture.createGuestBookCard(space, "숨김", "방명록");
+        hiddenCard.hideByAdmin();
+        guestBookCardRepository.save(hiddenCard);
+
+        // when
+        HostSpaceItemResponse response = findByCode(getMySpaces(), space.getCode());
+
+        // then
+        assertAll(
+            () -> assertThat(response.guestBookCardCount()).isEqualTo(3L),
+            () -> assertThat(response.unreadGuestBookCount()).isEqualTo(2L)
+        );
+    }
+
+    @DisplayName("방명록이 없는 스페이스의 읽지 않은 방명록 수는 0이다.")
+    @Test
+    void getSpacesWithoutGuestBook() {
+        // given
+        Space space = saveSpaceOf(host, "1111111111");
+
+        // when
+        HostSpaceItemResponse response = findByCode(getMySpaces(), space.getCode());
+
+        // then
+        assertThat(response.unreadGuestBookCount()).isZero();
+    }
+
+    @DisplayName("나의 스페이스 목록에서 축하받는 스페이스로 지정된 항목은 항상 1개다.")
+    @Test
+    void getSpacesWithCelebratingSpace() {
+        // given
+        Space first = saveSpaceOf(host, "1111111111");
+        Space second = saveSpaceOf(host, "2222222222");
+        celebrate(first.getCode());
+        celebrate(second.getCode());
+
+        // when
+        List<HostSpaceItemResponse> spaces = getMySpaces();
+
+        // then
+        assertAll(
+            () -> assertThat(findByCode(spaces, first.getCode()).isCelebrating()).isFalse(),
+            () -> assertThat(findByCode(spaces, second.getCode()).isCelebrating()).isTrue(),
+            () -> assertThat(spaces.stream().filter(HostSpaceItemResponse::isCelebrating)).hasSize(1)
+        );
+    }
+
+    private List<HostSpaceItemResponse> getMySpaces() {
+        ApiResponse<HostSpaceResponse> response = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .when()
+            .get("/spaces/me")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+        return response.data().spaces();
+    }
+
+    private HostSpaceItemResponse findByCode(List<HostSpaceItemResponse> spaces, String spaceCode) {
+        return spaces.stream()
+            .filter(space -> space.spaceCode().equals(spaceCode))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("스페이스를 찾을 수 없습니다. spaceCode: " + spaceCode));
     }
 
     private Space saveSpaceOf(Host owner, String spaceCode) {
