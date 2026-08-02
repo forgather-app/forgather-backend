@@ -140,7 +140,6 @@ public class SpaceService {
         deleteGuestBookAndProduct(host, space);
         deleteSpaceHost(host, space);
         deleteSpacePhoto(space);
-        space.unfeature();
         space.delete();
     }
 

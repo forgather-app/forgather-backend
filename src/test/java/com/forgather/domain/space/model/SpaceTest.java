@@ -495,6 +495,48 @@ class SpaceTest {
     }
 
     /**
+     * 삭제 시 정리해야 할 자기 상태는 서비스가 아니라 스페이스가 책임진다.
+     * 정리 대상 필드가 늘어날 때 서비스에서 호출을 빠뜨리는 것을 막기 위한 회귀 테스트다.
+     */
+    @DisplayName("스페이스를 삭제하면 축하받는 스페이스 지정도 함께 해제된다.")
+    @Test
+    void deleteUnfeatures() {
+        // given
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
+            "forgather@forgather.me", "", "");
+        space.feature();
+
+        // when
+        space.delete();
+
+        // then
+        assertAll(
+            () -> assertThat(space.isFeatured()).isFalse(),
+            () -> assertThat(space.getDeletedAt()).isNotNull()
+        );
+    }
+
+    @DisplayName("이미 삭제된 스페이스를 다시 삭제해도 삭제 시각은 바뀌지 않는다.")
+    @Test
+    void deleteIsIdempotent() {
+        // given
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
+            "forgather@forgather.me", "", "");
+        space.feature();
+        space.delete();
+        var deletedAt = space.getDeletedAt();
+
+        // when
+        space.delete();
+
+        // then
+        assertAll(
+            () -> assertThat(space.getDeletedAt()).isEqualTo(deletedAt),
+            () -> assertThat(space.isFeatured()).isFalse()
+        );
+    }
+
+    /**
      * "호스트당 축하받는 스페이스 1개"는 DB 제약이 아니라 서비스 계층이 보장한다.
      * 스페이스 수정 경로로 지정 상태가 바뀌면 그 보장이 통째로 우회되므로, update()가
      * 이 값을 건드리지 않는다는 사실을 회귀 테스트로 고정한다.
