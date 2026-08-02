@@ -42,7 +42,7 @@ public record HostSpaceItemResponse(
     @Schema(description = "호스트가 아직 읽지 않은 방명록 카드 개수", example = "6")
     Long unreadGuestBookCount,
 
-    @Schema(description = "'지금 축하받고 있는 스페이스'로 지정되었는지 여부 (호스트당 최대 1개)", example = "true")
+    @Schema(description = "'지금 축하받고 있는 스페이스'로 지정되었는지 여부", example = "true")
     boolean isFeatured
 ) {
 

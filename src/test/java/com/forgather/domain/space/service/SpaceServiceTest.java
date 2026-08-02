@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.forgather.container.TestOnContainer;
 import com.forgather.domain.space.dto.CreateSpaceRequest;
-import com.forgather.domain.space.dto.FeaturedSpaceResponse;
+import com.forgather.domain.space.dto.FeatureSpacesRequest;
+import com.forgather.domain.space.dto.FeaturedSpacesResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.HostRepository;
@@ -26,6 +29,7 @@ import com.forgather.fixture.SpaceFixture;
 import com.forgather.fixture.SpaceHostFixture;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.repository.SpaceHostRepository;
+import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.ForbiddenException;
 import com.forgather.global.exception.NotFoundException;
 
@@ -106,91 +110,198 @@ class SpaceServiceTest extends TestOnContainer {
             .hasMessageContaining("존재하지 않는 스페이스입니다.");
     }
 
-    @DisplayName("호스트의 스페이스를 축하받는 스페이스로 지정한다.")
+    @DisplayName("여러 스페이스를 축하받는 스페이스로 한 번에 지정하고 지정된 코드 목록을 반환한다.")
     @Test
-    void updateFeaturedSpace() {
-        // given
-        Host host = hostRepository.save(HostFixture.createHost());
-        Space space = saveSpaceOf(host, "1111111111");
-
-        // when
-        FeaturedSpaceResponse response = spaceService.updateFeaturedSpace(host, space.getCode());
-
-        // then
-        assertAll(
-            () -> assertThat(response.spaceCode()).isEqualTo(space.getCode()),
-            () -> assertThat(space.isFeatured()).isTrue()
-        );
-    }
-
-    @DisplayName("다른 스페이스를 지정하면 이전에 지정된 스페이스는 해제된다.")
-    @Test
-    void updateFeaturedSpaceReplacesPreviousOne() {
+    void featureSpaces() {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         Space first = saveSpaceOf(host, "1111111111");
         Space second = saveSpaceOf(host, "2222222222");
-        spaceService.updateFeaturedSpace(host, first.getCode());
 
         // when
-        spaceService.updateFeaturedSpace(host, second.getCode());
+        FeaturedSpacesResponse response =
+            spaceService.featureSpaces(host, new FeatureSpacesRequest(List.of(first.getCode(), second.getCode())));
 
         // then
         assertAll(
-            () -> assertThat(first.isFeatured()).isFalse(),
+            () -> assertThat(response.spaceCodes()).containsExactlyInAnyOrder(first.getCode(), second.getCode()),
+            () -> assertThat(first.isFeatured()).isTrue(),
             () -> assertThat(second.isFeatured()).isTrue()
         );
     }
 
     /**
-     * "호스트당 최대 1개"는 DB 제약이 아니라 서비스가 보장한다. 지정 시 호스트의 모든 스페이스를 해제한 뒤
-     * 대상 하나만 켜므로, 어떤 이유로 불변식이 깨져도 다음 지정 요청에서 스스로 정상화되어야 한다.
+     * 지정 API는 요청한 스페이스만 켠다. 해제는 별도 해제 API의 책임이므로, 요청에서 빠졌다는 이유로
+     * 기존 지정이 풀려서는 안 된다. 이 API가 교체 의미를 갖지 않는다는 것을 고정하는 테스트다.
      */
-    @DisplayName("여러 스페이스가 지정된 상태에서 지정을 요청하면 지정된 스페이스가 1개로 정리된다.")
+    @DisplayName("요청에 포함되지 않은 스페이스의 지정 상태는 그대로 유지된다.")
     @Test
-    void updateFeaturedSpaceHealsMultipleFeaturedSpaces() {
+    void featureSpacesKeepsOmittedSpaces() {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         Space first = saveSpaceOf(host, "1111111111");
         Space second = saveSpaceOf(host, "2222222222");
-        first.feature();
-        second.feature();
+        spaceService.featureSpaces(host, new FeatureSpacesRequest(List.of(first.getCode(), second.getCode())));
 
         // when
-        spaceService.updateFeaturedSpace(host, second.getCode());
+        spaceService.featureSpaces(host, new FeatureSpacesRequest(List.of(second.getCode())));
 
         // then
         assertAll(
-            () -> assertThat(first.isFeatured()).isFalse(),
+            () -> assertThat(first.isFeatured()).isTrue(),
             () -> assertThat(second.isFeatured()).isTrue()
         );
     }
 
-    @DisplayName("다른 호스트의 스페이스를 축하받는 스페이스로 지정하면 예외를 던진다.")
+    /**
+     * 지정 개수에 상한이 없다. 호스트가 가진 스페이스를 전부 지정할 수 있어야 한다.
+     */
+    @DisplayName("호스트가 가진 모든 스페이스를 축하받는 스페이스로 지정할 수 있다.")
     @Test
-    void updateFeaturedSpaceWithOtherHostSpace() {
+    void featureSpacesWithAllSpaces() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        Space first = saveSpaceOf(host, "1111111111");
+        Space second = saveSpaceOf(host, "2222222222");
+        Space third = saveSpaceOf(host, "3333333333");
+
+        // when
+        spaceService.featureSpaces(host,
+            new FeatureSpacesRequest(List.of(first.getCode(), second.getCode(), third.getCode())));
+
+        // then
+        assertAll(
+            () -> assertThat(first.isFeatured()).isTrue(),
+            () -> assertThat(second.isFeatured()).isTrue(),
+            () -> assertThat(third.isFeatured()).isTrue()
+        );
+    }
+
+    @DisplayName("빈 목록을 요청하면 예외를 던진다.")
+    @Test
+    void featureSpacesWithEmptyList() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+
+        // when & then
+        assertThatThrownBy(() -> spaceService.featureSpaces(host, new FeatureSpacesRequest(List.of())))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("스페이스 코드 목록이 존재하지 않습니다.");
+    }
+
+    @DisplayName("같은 목록으로 다시 지정해도 지정 상태가 유지된다.")
+    @Test
+    void featureSpacesIsIdempotent() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        Space space = saveSpaceOf(host, "1111111111");
+        spaceService.featureSpaces(host, new FeatureSpacesRequest(List.of(space.getCode())));
+
+        // when
+        spaceService.featureSpaces(host, new FeatureSpacesRequest(List.of(space.getCode())));
+
+        // then
+        assertThat(space.isFeatured()).isTrue();
+    }
+
+    @DisplayName("같은 스페이스 코드가 중복으로 들어와도 집합으로 취급해 한 번만 지정된다.")
+    @Test
+    void featureSpacesWithDuplicatedCodes() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        Space space = saveSpaceOf(host, "1111111111");
+
+        // when
+        FeaturedSpacesResponse response =
+            spaceService.featureSpaces(host, new FeatureSpacesRequest(List.of(space.getCode(), space.getCode())));
+
+        // then
+        assertAll(
+            () -> assertThat(response.spaceCodes()).containsExactly(space.getCode()),
+            () -> assertThat(space.isFeatured()).isTrue()
+        );
+    }
+
+    /**
+     * 지정은 "호스트가 가진 스페이스"에만 적용되어야 한다. 다른 호스트의 지정 상태를 건드리면 안 된다.
+     */
+    @DisplayName("스페이스를 지정해도 다른 호스트의 지정 상태에는 영향을 주지 않는다.")
+    @Test
+    void featureSpacesDoesNotAffectOtherHostSpaces() {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         Host otherHost = hostRepository.save(HostFixture.createHost());
+        Space space = saveSpaceOf(host, "1111111111");
         Space otherSpace = saveSpaceOf(otherHost, "9999999999");
+        spaceService.featureSpaces(otherHost, new FeatureSpacesRequest(List.of(otherSpace.getCode())));
 
-        // when & then
-        assertThatThrownBy(() -> spaceService.updateFeaturedSpace(host, otherSpace.getCode()))
-            .isInstanceOf(ForbiddenException.class)
-            .hasMessageContaining("권한이 존재하지 않습니다.");
+        // when
+        spaceService.featureSpaces(host, new FeatureSpacesRequest(List.of(space.getCode())));
+
+        // then
+        assertAll(
+            () -> assertThat(space.isFeatured()).isTrue(),
+            () -> assertThat(otherSpace.isFeatured()).isTrue()
+        );
     }
 
-    @DisplayName("존재하지 않는 스페이스를 축하받는 스페이스로 지정하면 예외를 던진다.")
+    /**
+     * 부분 반영을 허용하면 클라이언트가 최종 상태를 알 수 없다. 목록에 남의 스페이스가 섞이면
+     * 요청 전체가 실패하고 기존 지정 상태가 그대로 남아야 한다.
+     */
+    @DisplayName("목록에 다른 호스트의 스페이스가 섞이면 예외를 던지고 기존 지정 상태가 유지된다.")
     @Test
-    void updateFeaturedSpaceWithNotExistingSpace() {
+    void featureSpacesWithOtherHostSpace() {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
+        Host otherHost = hostRepository.save(HostFixture.createHost());
+        Space featured = saveSpaceOf(host, "1111111111");
+        Space notFeatured = saveSpaceOf(host, "2222222222");
+        Space otherSpace = saveSpaceOf(otherHost, "9999999999");
+        spaceService.featureSpaces(host, new FeatureSpacesRequest(List.of(featured.getCode())));
+
+        // when & then
+        assertAll(
+            () -> assertThatThrownBy(() -> spaceService.featureSpaces(
+                host, new FeatureSpacesRequest(List.of(notFeatured.getCode(), otherSpace.getCode()))))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessageContaining("권한이 존재하지 않습니다."),
+            () -> assertThat(featured.isFeatured()).isTrue(),
+            () -> assertThat(notFeatured.isFeatured()).isFalse()
+        );
+    }
+
+    @DisplayName("목록에 존재하지 않는 스페이스가 섞이면 예외를 던지고 기존 지정 상태가 유지된다.")
+    @Test
+    void featureSpacesWithNotExistingSpace() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        Space featured = saveSpaceOf(host, "1111111111");
+        Space notFeatured = saveSpaceOf(host, "2222222222");
+        spaceService.featureSpaces(host, new FeatureSpacesRequest(List.of(featured.getCode())));
         String notExistingSpaceCode = "0000000000";
 
         // when & then
-        assertThatThrownBy(() -> spaceService.updateFeaturedSpace(host, notExistingSpaceCode))
-            .isInstanceOf(NotFoundException.class)
-            .hasMessageContaining("존재하지 않는 스페이스입니다.");
+        assertAll(
+            () -> assertThatThrownBy(() -> spaceService.featureSpaces(
+                host, new FeatureSpacesRequest(List.of(notFeatured.getCode(), notExistingSpaceCode))))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("존재하지 않는 스페이스입니다."),
+            () -> assertThat(featured.isFeatured()).isTrue(),
+            () -> assertThat(notFeatured.isFeatured()).isFalse()
+        );
+    }
+
+    @DisplayName("스페이스 코드 목록이 null이면 예외를 던진다.")
+    @Test
+    void featureSpacesWithNullSpaceCodes() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+
+        // when & then
+        assertThatThrownBy(() -> spaceService.featureSpaces(host, new FeatureSpacesRequest(null)))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("스페이스 코드 목록이 존재하지 않습니다.");
     }
 
     @DisplayName("지정된 스페이스를 삭제하면 지정이 해제된다.")
@@ -199,7 +310,7 @@ class SpaceServiceTest extends TestOnContainer {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         Space space = saveSpaceOf(host, "1111111111");
-        spaceService.updateFeaturedSpace(host, space.getCode());
+        spaceService.featureSpaces(host, new FeatureSpacesRequest(List.of(space.getCode())));
 
         // when
         spaceService.delete(space.getCode(), host);

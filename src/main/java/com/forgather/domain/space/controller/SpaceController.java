@@ -20,10 +20,10 @@ import org.springframework.web.multipart.MultipartFile;
 import com.forgather.domain.space.dto.CheckSpaceHostResponse;
 import com.forgather.domain.space.dto.CreateSpaceRequest;
 import com.forgather.domain.space.dto.CreateSpaceResponse;
-import com.forgather.domain.space.dto.FeaturedSpaceResponse;
+import com.forgather.domain.space.dto.FeatureSpacesRequest;
+import com.forgather.domain.space.dto.FeaturedSpacesResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
 import com.forgather.domain.space.dto.SpaceResponse;
-import com.forgather.domain.space.dto.UpdateFeaturedSpaceRequest;
 import com.forgather.domain.space.dto.UpdateSpaceRequest;
 import com.forgather.domain.space.service.SpaceService;
 import com.forgather.global.auth.annotation.LoginHost;
@@ -139,15 +139,17 @@ public class SpaceController {
 
     @PutMapping("/me/featured")
     @Operation(summary = "축하받는 스페이스 지정",
-        description = "로그인한 호스트의 '지금 축하받고 있는 스페이스'를 지정합니다. 최초 지정과 교체를 모두 처리합니다. "
-            + "호스트당 최대 1개만 지정되며, 이미 다른 스페이스가 지정되어 있으면 해제되고 요청한 스페이스로 교체됩니다. "
-            + "이미 같은 스페이스가 지정되어 있어도 성공 응답을 반환합니다.")
+        description = "요청한 스페이스들을 '지금 축하받고 있는 스페이스'로 지정합니다. "
+            + "요청에 포함되지 않은 스페이스의 지정 상태는 변경되지 않습니다."
+            + "이미 지정된 스페이스가 포함되어 있어도 성공 응답을 반환합니다. "
+            + "요청 목록에 다른 호스트의 스페이스가 하나라도 포함되면 부분 반영 없이 전체가 실패합니다."
+            + "응답에는 처리 후 지정된 호스트의 전체 스페이스 코드 목록이 담깁니다.")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<ApiResponse<FeaturedSpaceResponse>> updateFeaturedSpace(
-        @RequestBody @Valid UpdateFeaturedSpaceRequest request,
+    public ResponseEntity<ApiResponse<FeaturedSpacesResponse>> featureSpaces(
+        @RequestBody @Valid FeatureSpacesRequest request,
         @LoginHost Host host
     ) {
-        var response = spaceService.updateFeaturedSpace(host, request.spaceCode());
+        var response = spaceService.featureSpaces(host, request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

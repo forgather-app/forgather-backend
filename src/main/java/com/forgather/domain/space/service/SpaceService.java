@@ -5,6 +5,7 @@ import static com.forgather.domain.guestbook.model.VisibilityStatus.VISIBLE;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -18,7 +19,8 @@ import com.forgather.domain.product.service.ProductService;
 import com.forgather.domain.space.dto.CheckSpaceHostResponse;
 import com.forgather.domain.space.dto.CreateSpaceRequest;
 import com.forgather.domain.space.dto.CreateSpaceResponse;
-import com.forgather.domain.space.dto.FeaturedSpaceResponse;
+import com.forgather.domain.space.dto.FeatureSpacesRequest;
+import com.forgather.domain.space.dto.FeaturedSpacesResponse;
 import com.forgather.domain.space.dto.HostSpaceItemResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
 import com.forgather.domain.space.dto.SpaceResponse;
@@ -34,6 +36,7 @@ import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.ForbiddenException;
+import com.forgather.global.exception.NotFoundException;
 import com.forgather.global.exception.UnauthorizedException;
 import com.forgather.global.util.RandomCodeGenerator;
 
@@ -226,15 +229,39 @@ public class SpaceService {
     }
 
     @Transactional
-    public FeaturedSpaceResponse updateFeaturedSpace(Host host, String spaceCode) {
-        Space targetSpace = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
-        validateSpaceHost(targetSpace, host);
+    public FeaturedSpacesResponse featureSpaces(Host host, FeatureSpacesRequest request) {
+        validateHostNull(host);
+        Set<String> targetCodes = request.toUniqueSpaceCodes();
+        if (targetCodes.isEmpty()) {
+            throw new BaseException("스페이스 코드 목록이 존재하지 않습니다.");
+        }
 
-        spaceHostRepository.findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host)
-            .forEach(spaceHost -> spaceHost.getSpace().unfeature());
-        targetSpace.feature();
+        List<Space> spaces = spaceHostRepository.findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host)
+            .stream()
+            .map(SpaceHost::getSpace)
+            .toList();
+        validateTargetCodes(targetCodes, spaces);
 
-        return new FeaturedSpaceResponse(targetSpace.getCode());
+        spaces.stream()
+            .filter(space -> targetCodes.contains(space.getCode()))
+            .forEach(Space::feature);
+        return FeaturedSpacesResponse.from(spaces);
+    }
+
+    private void validateTargetCodes(Set<String> targetCodes, List<Space> spaces) {
+        Set<String> spaceCodes = spaces.stream()
+            .map(Space::getCode)
+            .collect(Collectors.toSet());
+
+        for (String targetCode : targetCodes) {
+            if (spaceCodes.contains(targetCode)) {
+                continue;
+            }
+            if (spaceRepository.findByCodeAndDeletedAtIsNull(targetCode).isEmpty()) {
+                throw new NotFoundException("존재하지 않는 스페이스입니다. spaceCode: " + targetCode);
+            }
+            throw new ForbiddenException("권한이 존재하지 않습니다. spaceCode: " + targetCode);
+        }
     }
 
     @Transactional(readOnly = true)
