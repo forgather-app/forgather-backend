@@ -46,6 +46,8 @@ public interface GuestBookCardRepository {
             SELECT new com.forgather.domain.guestbook.repository.dto.GuestBookCardListDto(
                 g.id,
                 g.nickname,
+                g.message,
+                g.createdAt,
                 g.isRead,
                 CASE WHEN (
                     SELECT COUNT(p) FROM GuestBookCardPhoto p WHERE p.guestBookCard = g AND p.deletedAt IS NULL
@@ -66,6 +68,8 @@ public interface GuestBookCardRepository {
             SELECT new com.forgather.domain.guestbook.repository.dto.GuestBookCardListDto(
                 g.id,
                 g.nickname,
+                g.message,
+                g.createdAt,
                 g.isRead,
                 CASE WHEN (
                     SELECT COUNT(p) FROM GuestBookCardPhoto p WHERE p.guestBookCard = g AND p.deletedAt IS NULL
