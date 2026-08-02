@@ -337,6 +337,40 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
             );
         }
 
+        @DisplayName("방명록 조회 v2 응답의 각 방명록 카드는 메세지와 생성 시각을 포함한다")
+        @Test
+        void guestBookCardContainsMessageAndCreatedAtInV2() {
+            // given
+            WriteGuestBookCardResponse writeResponse = writeGuestBookCard(publicSpace);
+
+            // when
+            ApiResponse<GuestBookResponse> result = RestAssuredMockMvc.given()
+                .header("X-API-Version", "2")
+                .accept(ContentType.JSON)
+                .queryParam("page", 1)
+                .queryParam("size", 15)
+                .queryParam("sort", "createdAt,desc")
+                .queryParam("sort", "id,desc")
+                .when()
+                .get("/spaces/%s/guestbook".formatted(publicSpace.getCode()))
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+            // then
+            assertAll(
+                () -> assertThat(result.data().guestBookCards()).hasSize(1),
+                () -> assertThat(result.data().guestBookCards().getFirst().id()).isEqualTo(writeResponse.id()),
+                () -> assertThat(result.data().guestBookCards().getFirst().message()).isEqualTo(
+                    writeRequest.message()),
+                () -> assertThat(result.data().guestBookCards().getFirst().createdAt()).isBetween(
+                    LocalDateTime.now().minusMinutes(1), LocalDateTime.now())
+            );
+        }
+
         @DisplayName("호스트는 읽지 않은 방명록 목록을 조회할 수 있다")
         @Test
         void hostCanReadUnreadGuestBookCards() {
@@ -367,6 +401,8 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.data().unreadCount()).isNull(),
                 () -> assertThat(result.data().guestBookCards()).hasSize(1),
                 () -> assertThat(result.data().guestBookCards().getFirst().id()).isEqualTo(unreadCard.id()),
+                () -> assertThat(result.data().guestBookCards().getFirst().message()).isEqualTo("message2"),
+                () -> assertThat(result.data().guestBookCards().getFirst().createdAt()).isNotNull(),
                 () -> assertThat(result.data().guestBookCards().getFirst().isRead()).isNull(),
                 () -> assertThat(result.data().totalCount()).isOne()
             );

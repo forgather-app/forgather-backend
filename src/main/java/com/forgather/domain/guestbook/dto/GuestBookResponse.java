@@ -18,16 +18,22 @@ public record GuestBookResponse(
             {
               "id": 1,
               "nickname": "밍퐁루블",
+              "message": "전시 잘봤다~~ 너가 최고야 🤙",
+              "createdAt": "2025-10-13T13:05",
               "containsPhoto": false
             },
             {
               "id": 2,
               "nickname": "레오",
+              "message": "졸업 전시 축하해!",
+              "createdAt": "2025-10-13T14:20",
               "containsPhoto": true
             },
             {
               "id": 3,
               "nickname": "포스티",
+              "message": "전시 너무 잘 봤어 🤍",
+              "createdAt": "2025-10-14T09:41",
               "containsPhoto": true
             }
           ]
