@@ -69,8 +69,8 @@ public class Space extends SoftDeleteEntity {
     /**
      * 호스트가 지정한 '지금 축하받고 있는 스페이스'인지 여부.
      */
-    @Column(name = "is_celebrating", nullable = false)
-    private boolean isCelebrating = false;
+    @Column(name = "is_featured", nullable = false)
+    private boolean isFeatured = false;
 
     /**
      * 스페이스를 생성한다.
@@ -161,12 +161,12 @@ public class Space extends SoftDeleteEntity {
         }
     }
 
-    public void celebrate() {
-        this.isCelebrating = true;
+    public void feature() {
+        this.isFeatured = true;
     }
 
-    public void stopCelebrating() {
-        this.isCelebrating = false;
+    public void unfeature() {
+        this.isFeatured = false;
     }
 
     private void validateCode(String code) {

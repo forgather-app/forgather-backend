@@ -15,8 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.forgather.container.TestOnContainer;
-import com.forgather.domain.space.dto.CelebratingSpaceResponse;
 import com.forgather.domain.space.dto.CreateSpaceRequest;
+import com.forgather.domain.space.dto.FeaturedSpaceResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.HostRepository;
@@ -108,37 +108,37 @@ class SpaceServiceTest extends TestOnContainer {
 
     @DisplayName("호스트의 스페이스를 축하받는 스페이스로 지정한다.")
     @Test
-    void updateCelebratingSpace() {
+    void updateFeaturedSpace() {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         Space space = saveSpaceOf(host, "1111111111");
 
         // when
-        CelebratingSpaceResponse response = spaceService.updateCelebratingSpace(host, space.getCode());
+        FeaturedSpaceResponse response = spaceService.updateFeaturedSpace(host, space.getCode());
 
         // then
         assertAll(
             () -> assertThat(response.spaceCode()).isEqualTo(space.getCode()),
-            () -> assertThat(space.isCelebrating()).isTrue()
+            () -> assertThat(space.isFeatured()).isTrue()
         );
     }
 
     @DisplayName("다른 스페이스를 지정하면 이전에 지정된 스페이스는 해제된다.")
     @Test
-    void updateCelebratingSpaceReplacesPreviousOne() {
+    void updateFeaturedSpaceReplacesPreviousOne() {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         Space first = saveSpaceOf(host, "1111111111");
         Space second = saveSpaceOf(host, "2222222222");
-        spaceService.updateCelebratingSpace(host, first.getCode());
+        spaceService.updateFeaturedSpace(host, first.getCode());
 
         // when
-        spaceService.updateCelebratingSpace(host, second.getCode());
+        spaceService.updateFeaturedSpace(host, second.getCode());
 
         // then
         assertAll(
-            () -> assertThat(first.isCelebrating()).isFalse(),
-            () -> assertThat(second.isCelebrating()).isTrue()
+            () -> assertThat(first.isFeatured()).isFalse(),
+            () -> assertThat(second.isFeatured()).isTrue()
         );
     }
 
@@ -148,64 +148,64 @@ class SpaceServiceTest extends TestOnContainer {
      */
     @DisplayName("여러 스페이스가 지정된 상태에서 지정을 요청하면 지정된 스페이스가 1개로 정리된다.")
     @Test
-    void updateCelebratingSpaceHealsMultipleCelebratingSpaces() {
+    void updateFeaturedSpaceHealsMultipleFeaturedSpaces() {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         Space first = saveSpaceOf(host, "1111111111");
         Space second = saveSpaceOf(host, "2222222222");
-        first.celebrate();
-        second.celebrate();
+        first.feature();
+        second.feature();
 
         // when
-        spaceService.updateCelebratingSpace(host, second.getCode());
+        spaceService.updateFeaturedSpace(host, second.getCode());
 
         // then
         assertAll(
-            () -> assertThat(first.isCelebrating()).isFalse(),
-            () -> assertThat(second.isCelebrating()).isTrue()
+            () -> assertThat(first.isFeatured()).isFalse(),
+            () -> assertThat(second.isFeatured()).isTrue()
         );
     }
 
     @DisplayName("다른 호스트의 스페이스를 축하받는 스페이스로 지정하면 예외를 던진다.")
     @Test
-    void updateCelebratingSpaceWithOtherHostSpace() {
+    void updateFeaturedSpaceWithOtherHostSpace() {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         Host otherHost = hostRepository.save(HostFixture.createHost());
         Space otherSpace = saveSpaceOf(otherHost, "9999999999");
 
         // when & then
-        assertThatThrownBy(() -> spaceService.updateCelebratingSpace(host, otherSpace.getCode()))
+        assertThatThrownBy(() -> spaceService.updateFeaturedSpace(host, otherSpace.getCode()))
             .isInstanceOf(ForbiddenException.class)
             .hasMessageContaining("권한이 존재하지 않습니다.");
     }
 
     @DisplayName("존재하지 않는 스페이스를 축하받는 스페이스로 지정하면 예외를 던진다.")
     @Test
-    void updateCelebratingSpaceWithNotExistingSpace() {
+    void updateFeaturedSpaceWithNotExistingSpace() {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         String notExistingSpaceCode = "0000000000";
 
         // when & then
-        assertThatThrownBy(() -> spaceService.updateCelebratingSpace(host, notExistingSpaceCode))
+        assertThatThrownBy(() -> spaceService.updateFeaturedSpace(host, notExistingSpaceCode))
             .isInstanceOf(NotFoundException.class)
             .hasMessageContaining("존재하지 않는 스페이스입니다.");
     }
 
     @DisplayName("지정된 스페이스를 삭제하면 지정이 해제된다.")
     @Test
-    void deleteCelebratingSpace() {
+    void deleteFeaturedSpace() {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         Space space = saveSpaceOf(host, "1111111111");
-        spaceService.updateCelebratingSpace(host, space.getCode());
+        spaceService.updateFeaturedSpace(host, space.getCode());
 
         // when
         spaceService.delete(space.getCode(), host);
 
         // then
-        assertThat(space.isCelebrating()).isFalse();
+        assertThat(space.isFeatured()).isFalse();
     }
 
     private Space saveSpaceOf(Host owner, String spaceCode) {

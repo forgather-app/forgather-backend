@@ -22,7 +22,7 @@ public record HostSpaceResponse(
                },
                "guestBookCardCount": 15,
                "unreadGuestBookCount": 6,
-               "isCelebrating": true
+               "isFeatured": true
             },
             {
               "id": 2,
@@ -38,7 +38,7 @@ public record HostSpaceResponse(
               },
               "guestBookCardCount": 0,
               "unreadGuestBookCount": 0,
-              "isCelebrating": false
+              "isFeatured": false
             }
         ]
         """)

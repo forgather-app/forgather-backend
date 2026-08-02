@@ -43,7 +43,7 @@ public record HostSpaceItemResponse(
     Long unreadGuestBookCount,
 
     @Schema(description = "'지금 축하받고 있는 스페이스'로 지정되었는지 여부 (호스트당 최대 1개)", example = "true")
-    boolean isCelebrating
+    boolean isFeatured
 ) {
 
     public static HostSpaceItemResponse from(
@@ -63,7 +63,7 @@ public record HostSpaceItemResponse(
             SpacePhotoResponse.from(spacePhoto),
             guestBookCardCount,
             unreadGuestBookCount,
-            space.isCelebrating()
+            space.isFeatured()
         );
     }
 }

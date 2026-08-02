@@ -427,71 +427,71 @@ class SpaceTest {
 
     @DisplayName("스페이스를 생성하면 축하받는 스페이스로 지정되지 않은 상태다.")
     @Test
-    void createSpaceIsNotCelebrating() {
+    void createSpaceIsNotFeatured() {
         // given & when
         Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
             "forgather@forgather.me", "", "");
 
         // then
-        assertThat(space.isCelebrating()).isFalse();
+        assertThat(space.isFeatured()).isFalse();
     }
 
     @DisplayName("스페이스를 축하받는 스페이스로 지정한다.")
     @Test
-    void celebrate() {
+    void feature() {
         // given
         Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
             "forgather@forgather.me", "", "");
 
         // when
-        space.celebrate();
+        space.feature();
 
         // then
-        assertThat(space.isCelebrating()).isTrue();
+        assertThat(space.isFeatured()).isTrue();
     }
 
     @DisplayName("이미 지정된 스페이스를 다시 지정해도 지정 상태를 유지한다.")
     @Test
-    void celebrateIsIdempotent() {
+    void featureIsIdempotent() {
         // given
         Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
             "forgather@forgather.me", "", "");
-        space.celebrate();
+        space.feature();
 
         // when
-        space.celebrate();
+        space.feature();
 
         // then
-        assertThat(space.isCelebrating()).isTrue();
+        assertThat(space.isFeatured()).isTrue();
     }
 
     @DisplayName("축하받는 스페이스 지정을 해제한다.")
     @Test
-    void stopCelebrating() {
+    void unfeature() {
         // given
         Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
             "forgather@forgather.me", "", "");
-        space.celebrate();
+        space.feature();
 
         // when
-        space.stopCelebrating();
+        space.unfeature();
 
         // then
-        assertThat(space.isCelebrating()).isFalse();
+        assertThat(space.isFeatured()).isFalse();
     }
 
     @DisplayName("지정되지 않은 스페이스를 해제해도 예외 없이 미지정 상태를 유지한다.")
     @Test
-    void stopCelebratingIsIdempotent() {
+    void unfeatureIsIdempotent() {
         // given
         Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
             "forgather@forgather.me", "", "");
 
         // when
-        space.stopCelebrating();
+        space.unfeature();
 
         // then
-        assertThat(space.isCelebrating()).isFalse();
+        assertThat(space.isFeatured()).isFalse();
     }
 
     /**
@@ -501,17 +501,17 @@ class SpaceTest {
      */
     @DisplayName("스페이스 정보를 수정해도 축하받는 스페이스 지정 상태는 바뀌지 않는다.")
     @Test
-    void updateDoesNotChangeCelebrating() {
+    void updateDoesNotChangeFeatured() {
         // given
         Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
             "forgather@forgather.me", "", "");
-        space.celebrate();
+        space.feature();
 
         // when
         space.update("새 이름", "새 설명", true, "new_official", "new@forgather.me", "https://forgather.me", "포트폴리오");
 
         // then
-        assertThat(space.isCelebrating()).isTrue();
+        assertThat(space.isFeatured()).isTrue();
     }
 
     private String getString(int length) {
