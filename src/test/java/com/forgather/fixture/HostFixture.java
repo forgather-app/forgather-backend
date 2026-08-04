@@ -20,6 +20,16 @@ public class HostFixture {
         return host;
     }
 
+    /**
+     * 이메일 저장 이전에 가입해 email이 비어 있는 기존 회원을 재현한다.
+     * 생성자는 email을 필수로 받으므로, DB에서 로드된 상태를 리플렉션으로 만든다.
+     */
+    public static Host createHostWithoutEmail(String name) {
+        Host host = new Host(name, EMAIL);
+        ReflectionTestUtils.setField(host, "email", null);
+        return host;
+    }
+
     public static Host createHostWithId(long id) {
         Host host = new Host("포스티", EMAIL);
         ReflectionTestUtils.setField(host, "id", id);

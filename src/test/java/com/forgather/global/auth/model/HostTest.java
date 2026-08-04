@@ -1,6 +1,7 @@
 package com.forgather.global.auth.model;
 
 import static com.forgather.fixture.HostFixture.createHost;
+import static com.forgather.fixture.HostFixture.createHostWithoutEmail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.forgather.global.exception.BaseException;
+import com.forgather.global.exception.BaseNullPointerException;
 
 class HostTest {
 
@@ -39,6 +41,35 @@ class HostTest {
     }
 
     @Nested
+    @DisplayName("생성")
+    class Create {
+
+        @DisplayName("이름이 null이면 예외가 발생한다")
+        @Test
+        void rejectsNullName() {
+            assertThatThrownBy(() -> new Host(null, "posty@forgather.app"))
+                .isInstanceOf(BaseNullPointerException.class)
+                .hasMessageContaining("이름");
+        }
+
+        @DisplayName("이메일이 null이면 예외가 발생한다")
+        @Test
+        void rejectsNullEmail() {
+            assertThatThrownBy(() -> new Host("포스티", null))
+                .isInstanceOf(BaseNullPointerException.class)
+                .hasMessageContaining("이메일");
+        }
+
+        @DisplayName("이름이 공백만이면 예외가 발생한다")
+        @Test
+        void rejectsBlankName() {
+            assertThatThrownBy(() -> new Host(" ", "posty@forgather.app"))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("이름은 공백만");
+        }
+    }
+
+    @Nested
     @DisplayName("이메일 갱신")
     class UpdateEmail {
 
@@ -46,7 +77,7 @@ class HostTest {
         @Test
         void updatesEmail() {
             // given
-            Host host = new Host("포스티", null);
+            Host host = createHostWithoutEmail("포스티");
 
             // when
             host.updateEmail("posty@forgather.app");

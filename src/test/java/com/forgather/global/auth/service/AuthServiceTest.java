@@ -2,6 +2,7 @@ package com.forgather.global.auth.service;
 
 import static com.forgather.fixture.HostFixture.createHost;
 import static com.forgather.fixture.HostFixture.createHostWithId;
+import static com.forgather.fixture.HostFixture.createHostWithoutEmail;
 import static com.forgather.fixture.TermFixture.createPrivacyTerm;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -246,7 +247,7 @@ class AuthServiceTest {
     @Test
     void backfillEmailWhenExistingKakaoHostLogsIn() {
         // given
-        Host host = new Host("카카오원본이름", null);
+        Host host = createHostWithoutEmail("카카오원본이름");
         KakaoHost kakaoHost = new KakaoHost(host, "kakao-user-id");
         when(jwtParser.parseKakaoIdToken("id-token", "raw-nonce")).thenReturn(kakaoIdToken("카카오닉네임", "kakao@example.com"));
         when(kakaoHostRepository.findByUserId("kakao-user-id")).thenReturn(Optional.of(kakaoHost));
