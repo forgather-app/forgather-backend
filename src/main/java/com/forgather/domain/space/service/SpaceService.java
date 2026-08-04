@@ -36,7 +36,6 @@ import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.ForbiddenException;
-import com.forgather.global.exception.NotFoundException;
 import com.forgather.global.exception.UnauthorizedException;
 import com.forgather.global.util.RandomCodeGenerator;
 
@@ -236,31 +235,26 @@ public class SpaceService {
             throw new BaseException("스페이스 코드 목록이 존재하지 않습니다.");
         }
 
-        List<Space> spaces = spaceHostRepository.findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host)
+        List<Space> hostSpaces = spaceHostRepository.findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host)
             .stream()
             .map(SpaceHost::getSpace)
             .toList();
-        validateTargetCodes(targetCodes, spaces);
+        validateTargetCodes(targetCodes, hostSpaces);
 
-        spaces.stream()
+        hostSpaces.stream()
             .filter(space -> targetCodes.contains(space.getCode()))
             .forEach(Space::feature);
-        return FeaturedSpacesResponse.from(spaces);
+        return FeaturedSpacesResponse.from(hostSpaces);
     }
 
     private void validateTargetCodes(Set<String> targetCodes, List<Space> spaces) {
-        Set<String> spaceCodes = spaces.stream()
-            .map(Space::getCode)
-            .collect(Collectors.toSet());
+        List<String> invalidCodes = targetCodes.stream()
+            .filter(targetCode -> spaces.stream()
+                .noneMatch(space -> space.isSameCode(targetCode))
+            ).toList();
 
-        for (String targetCode : targetCodes) {
-            if (spaceCodes.contains(targetCode)) {
-                continue;
-            }
-            if (spaceRepository.findByCodeAndDeletedAtIsNull(targetCode).isEmpty()) {
-                throw new NotFoundException("존재하지 않는 스페이스입니다. spaceCode: " + targetCode);
-            }
-            throw new ForbiddenException("권한이 존재하지 않습니다. spaceCode: " + targetCode);
+        if (!invalidCodes.isEmpty()) {
+            throw new BaseException("유효하지 않은 스페이스 코드입니다. spaceCodes: " + invalidCodes);
         }
     }
 

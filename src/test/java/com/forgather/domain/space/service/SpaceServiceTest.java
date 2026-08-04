@@ -30,7 +30,6 @@ import com.forgather.fixture.SpaceHostFixture;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.BaseException;
-import com.forgather.global.exception.ForbiddenException;
 import com.forgather.global.exception.NotFoundException;
 
 @ActiveProfiles("test")
@@ -264,8 +263,8 @@ class SpaceServiceTest extends TestOnContainer {
         assertAll(
             () -> assertThatThrownBy(() -> spaceService.featureSpaces(
                 host, new FeatureSpacesRequest(List.of(notFeatured.getCode(), otherSpace.getCode()))))
-                .isInstanceOf(ForbiddenException.class)
-                .hasMessageContaining("권한이 존재하지 않습니다."),
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("유효하지 않은 스페이스 코드입니다."),
             () -> assertThat(featured.isFeatured()).isTrue(),
             () -> assertThat(notFeatured.isFeatured()).isFalse()
         );
@@ -285,8 +284,8 @@ class SpaceServiceTest extends TestOnContainer {
         assertAll(
             () -> assertThatThrownBy(() -> spaceService.featureSpaces(
                 host, new FeatureSpacesRequest(List.of(notFeatured.getCode(), notExistingSpaceCode))))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("존재하지 않는 스페이스입니다."),
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("유효하지 않은 스페이스 코드입니다."),
             () -> assertThat(featured.isFeatured()).isTrue(),
             () -> assertThat(notFeatured.isFeatured()).isFalse()
         );

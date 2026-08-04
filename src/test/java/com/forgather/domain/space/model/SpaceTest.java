@@ -11,6 +11,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import com.forgather.fixture.SpaceFixture;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
 
@@ -554,6 +555,58 @@ class SpaceTest {
 
         // then
         assertThat(space.isFeatured()).isTrue();
+    }
+
+    @DisplayName("스페이스 코드가 같으면 true를 반환한다.")
+    @Test
+    void isSameCode() {
+        // given
+        Space space = SpaceFixture.createSpaceWithCode("1234567890");
+
+        // when
+        boolean result = space.isSameCode("1234567890");
+
+        // then
+        assertThat(result).isTrue();
+    }
+
+    @DisplayName("스페이스 코드가 다르면 false를 반환한다.")
+    @Test
+    void isSameCodeWithDifferentCode() {
+        // given
+        Space space = SpaceFixture.createSpaceWithCode("1234567890");
+
+        // when
+        boolean result = space.isSameCode("0987654321");
+
+        // then
+        assertThat(result).isFalse();
+    }
+
+    @DisplayName("비교할 스페이스 코드가 null이면 예외 없이 false를 반환한다.")
+    @Test
+    void isSameCodeWithNull() {
+        // given
+        Space space = SpaceFixture.createSpaceWithCode("1234567890");
+
+        // when
+        boolean result = space.isSameCode(null);
+
+        // then
+        assertThat(result).isFalse();
+    }
+
+    @DisplayName("스페이스 코드 비교는 대소문자를 구분한다.")
+    @Test
+    void isSameCodeIsCaseSensitive() {
+        // given
+        Space space = SpaceFixture.createSpaceWithCode("abcdefghij");
+
+        // when
+        boolean result = space.isSameCode("ABCDEFGHIJ");
+
+        // then
+        assertThat(result).isFalse();
     }
 
     private String getString(int length) {

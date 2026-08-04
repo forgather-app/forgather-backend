@@ -169,6 +169,10 @@ public class Space extends SoftDeleteEntity {
         this.isFeatured = false;
     }
 
+    public boolean isSameCode(String code) {
+        return this.code.equals(code);
+    }
+
     /**
      * 삭제되는 스페이스가 스스로 정리해야 할 상태를 초기화한 뒤 소프트 삭제한다.
      * 삭제 시 정리가 필요한 필드가 늘어나면 서비스가 아니라 이 메서드에 추가한다.
