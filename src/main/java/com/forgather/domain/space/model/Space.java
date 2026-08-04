@@ -67,6 +67,12 @@ public class Space extends SoftDeleteEntity {
     private String linkName;
 
     /**
+     * 호스트가 지정한 '지금 축하받고 있는 스페이스'인지 여부.
+     */
+    @Column(name = "is_featured", nullable = false)
+    private boolean isFeatured = false;
+
+    /**
      * 스페이스를 생성한다.
      *
      * @param code              스페이스 코드 (필수, 10자)
@@ -153,6 +159,28 @@ public class Space extends SoftDeleteEntity {
         if (linkName != null) {
             this.linkName = convertBlankToEmptyString(linkName);
         }
+    }
+
+    public void feature() {
+        this.isFeatured = true;
+    }
+
+    public void unfeature() {
+        this.isFeatured = false;
+    }
+
+    public boolean isSameCode(String code) {
+        return this.code.equals(code);
+    }
+
+    /**
+     * 삭제되는 스페이스가 스스로 정리해야 할 상태를 초기화한 뒤 소프트 삭제한다.
+     * 삭제 시 정리가 필요한 필드가 늘어나면 서비스가 아니라 이 메서드에 추가한다.
+     */
+    @Override
+    public void delete() {
+        unfeature();
+        super.delete();
     }
 
     private void validateCode(String code) {

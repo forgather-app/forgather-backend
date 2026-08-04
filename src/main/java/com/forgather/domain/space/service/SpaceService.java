@@ -5,6 +5,7 @@ import static com.forgather.domain.guestbook.model.VisibilityStatus.VISIBLE;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -18,6 +19,9 @@ import com.forgather.domain.product.service.ProductService;
 import com.forgather.domain.space.dto.CheckSpaceHostResponse;
 import com.forgather.domain.space.dto.CreateSpaceRequest;
 import com.forgather.domain.space.dto.CreateSpaceResponse;
+import com.forgather.domain.space.dto.FeatureSpacesRequest;
+import com.forgather.domain.space.dto.FeaturedSpacesResponse;
+import com.forgather.domain.space.dto.HostSpaceItemResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
 import com.forgather.domain.space.dto.SpaceResponse;
 import com.forgather.domain.space.dto.UpdateSpaceRequest;
@@ -125,7 +129,8 @@ public class SpaceService {
     }
 
     private SpaceResponse createSpaceResponse(Space space) {
-        Long guestBookCardCount = guestBookCardRepository.countBySpaceAndVisibilityStatusAndDeletedAtIsNull(space, VISIBLE);
+        Long guestBookCardCount =
+            guestBookCardRepository.countBySpaceAndVisibilityStatusAndDeletedAtIsNull(space, VISIBLE);
         SpacePhoto spacePhoto = spacePhotoRepository.getBySpaceAndDeletedAtIsNullOrEmpty(space);
         return SpaceResponse.from(space, spacePhoto, guestBookCardCount);
     }
@@ -172,26 +177,27 @@ public class SpaceService {
 
     @Transactional(readOnly = true)
     public HostSpaceResponse getSpacesInformation(Host host) {
-        List<SpaceHost> spaceHosts = spaceHostRepository.findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host);
+        List<SpaceHost> spaceHosts =
+            spaceHostRepository.findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host);
         if (spaceHosts.isEmpty()) {
             return new HostSpaceResponse(Collections.emptyList());
         }
-        List<SpaceResponse> spaceResponses = createSpaceResponses(spaceHosts);
+        List<HostSpaceItemResponse> spaceResponses = createSpaceResponses(spaceHosts);
         return new HostSpaceResponse(spaceResponses);
     }
 
-    private List<SpaceResponse> createSpaceResponses(List<SpaceHost> spaceHosts) {
+    private List<HostSpaceItemResponse> createSpaceResponses(List<SpaceHost> spaceHosts) {
         List<Long> spaceIds = spaceHosts.stream()
             .map(spaceHost -> spaceHost.getSpace().getId())
             .toList();
 
-        Map<Long, Long> guestBookCardCounts = guestBookCardRepository
-            .countBySpaceIdInAndVisibilityStatusAndDeletedAtIsNull(spaceIds, VISIBLE)
-            .stream()
-            .collect(Collectors.toMap(
-                SpaceGuestBookCountDto::spaceId,
-                SpaceGuestBookCountDto::guestBookCount)
-            );
+        Map<Long, Long> guestBookCardCounts = toCountBySpaceId(
+            guestBookCardRepository.countBySpaceIdInAndVisibilityStatusAndDeletedAtIsNull(spaceIds, VISIBLE)
+        );
+        Map<Long, Long> unreadGuestBookCounts = toCountBySpaceId(
+            guestBookCardRepository.countBySpaceIdInAndVisibilityStatusAndIsReadAndDeletedAtIsNull(
+                spaceIds, VISIBLE, false)
+        );
 
         Map<Long, SpacePhoto> spacePhotos = spacePhotoRepository.findAllBySpaceIdInAndDeletedAtIsNull(spaceIds)
             .stream()
@@ -203,18 +209,62 @@ public class SpaceService {
         return spaceHosts.stream()
             .map(spaceHost -> {
                 Space space = spaceHost.getSpace();
-                Long guestBookCardCount = guestBookCardCounts.getOrDefault(space.getId(), 0L);
-                SpacePhoto spacePhoto = spacePhotos.getOrDefault(space.getId(), SpacePhoto.empty(space));
-                return SpaceResponse.from(space, spacePhoto, guestBookCardCount);
+                return HostSpaceItemResponse.from(
+                    space,
+                    spacePhotos.getOrDefault(space.getId(), SpacePhoto.empty(space)),
+                    guestBookCardCounts.getOrDefault(space.getId(), 0L),
+                    unreadGuestBookCounts.getOrDefault(space.getId(), 0L)
+                );
             })
             .toList();
+    }
+
+    private Map<Long, Long> toCountBySpaceId(List<SpaceGuestBookCountDto> counts) {
+        return counts.stream()
+            .collect(Collectors.toMap(
+                SpaceGuestBookCountDto::spaceId,
+                SpaceGuestBookCountDto::guestBookCount)
+            );
+    }
+
+    @Transactional
+    public FeaturedSpacesResponse featureSpaces(Host host, FeatureSpacesRequest request) {
+        validateHostNull(host);
+        Set<String> targetCodes = request.toUniqueSpaceCodes();
+        if (targetCodes.isEmpty()) {
+            throw new BaseException("스페이스 코드 목록이 존재하지 않습니다.");
+        }
+
+        List<Space> hostSpaces = spaceHostRepository.findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host)
+            .stream()
+            .map(SpaceHost::getSpace)
+            .toList();
+        validateTargetCodes(targetCodes, hostSpaces);
+
+        hostSpaces.stream()
+            .filter(space -> targetCodes.contains(space.getCode()))
+            .forEach(Space::feature);
+        return FeaturedSpacesResponse.from(hostSpaces);
+    }
+
+    private void validateTargetCodes(Set<String> targetCodes, List<Space> spaces) {
+        List<String> invalidCodes = targetCodes.stream()
+            .filter(targetCode -> spaces.stream()
+                .noneMatch(space -> space.isSameCode(targetCode))
+            ).toList();
+
+        if (!invalidCodes.isEmpty()) {
+            throw new BaseException("유효하지 않은 스페이스 코드입니다. spaceCodes: " + invalidCodes);
+        }
     }
 
     @Transactional(readOnly = true)
     public CheckSpaceHostResponse checkSpaceHost(String spaceCode, Host host) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateHostNull(host);
-        return new CheckSpaceHostResponse(spaceHostRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent());
+        return new CheckSpaceHostResponse(
+            spaceHostRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent()
+        );
     }
 
     private void validateHostNull(Host host) {
