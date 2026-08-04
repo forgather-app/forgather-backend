@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -827,9 +828,9 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             .when()
             .put("/spaces/me/featured")
             .then()
-            .statusCode(HttpStatus.FORBIDDEN.value())
-            .body("code", equalTo("FORBIDDEN"))
-            .body("message", containsString("권한이 존재하지 않습니다."));
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("BAD_REQUEST"))
+            .body("message", containsString("유효하지 않은 스페이스 코드입니다."));
 
         // then
         assertAll(
@@ -856,9 +857,9 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             .when()
             .put("/spaces/me/featured")
             .then()
-            .statusCode(HttpStatus.NOT_FOUND.value())
-            .body("code", equalTo("NOT_FOUND"))
-            .body("message", containsString("존재하지 않는 스페이스입니다."));
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("BAD_REQUEST"))
+            .body("message", containsString("유효하지 않은 스페이스 코드입니다."));
 
         // then
         assertAll(
@@ -895,6 +896,30 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             .header("Authorization", "Bearer " + token)
             .contentType(ContentType.JSON)
             .body(new FeatureSpacesRequest(nullSpaceCodes))
+            .when()
+            .put("/spaces/me/featured")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("VALIDATION_FAILED"));
+    }
+
+    /**
+     * 요청 목록은 호스트가 가진 스페이스 수를 넘을 이유가 없다. 상한이 없으면 악의적 요청이
+     * 임의 크기의 목록을 보내 역직렬화 단계에서 메모리를 소모시킬 수 있으므로 경계에서 막는다.
+     */
+    @DisplayName("스페이스 코드를 100개 넘게 요청하면 축하받는 스페이스를 지정할 수 없다.")
+    @Test
+    void featureSpacesWithTooManySpaceCodes() {
+        // given
+        List<String> tooManySpaceCodes = IntStream.rangeClosed(1, 101)
+            .mapToObj(number -> "%010d".formatted(number))
+            .toList();
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(new FeatureSpacesRequest(tooManySpaceCodes))
             .when()
             .put("/spaces/me/featured")
             .then()

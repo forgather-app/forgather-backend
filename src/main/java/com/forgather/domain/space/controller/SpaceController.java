@@ -142,7 +142,8 @@ public class SpaceController {
         description = "요청한 스페이스들을 '지금 축하받고 있는 스페이스'로 지정합니다. "
             + "요청에 포함되지 않은 스페이스의 지정 상태는 변경되지 않습니다."
             + "이미 지정된 스페이스가 포함되어 있어도 성공 응답을 반환합니다. "
-            + "요청 목록에 다른 호스트의 스페이스가 하나라도 포함되면 부분 반영 없이 전체가 실패합니다."
+            + "요청 목록에 호스트가 소유하지 않은 스페이스 코드가 하나라도 포함되면 부분 반영 없이 전체가 실패합니다. "
+            + "존재하지 않는 코드와 다른 호스트의 코드를 구분하지 않고 400으로 응답합니다."
             + "응답에는 처리 후 지정된 호스트의 전체 스페이스 코드 목록이 담깁니다.")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<FeaturedSpacesResponse>> featureSpaces(
