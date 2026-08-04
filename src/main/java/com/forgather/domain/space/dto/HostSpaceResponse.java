@@ -14,15 +14,15 @@ public record HostSpaceResponse(
                "name": "서양화 졸업 전시",
                "description": "나의 서양화 졸업 전시",
                "isPublic": true,
-               "instagramUsername": "forgather_official1",
-               "email": "forgather1@forgather.me",
                "linkUrl": "https://forgather.app",
                "linkName": "포트폴리오",
                "spacePhoto": {
                  "isExists": true,
                  "path": "photogather/v2/spaces/1234567890/space/profile.png"
                },
-               "guestBookCardCount": 15
+               "guestBookCardCount": 15,
+               "unreadGuestBookCount": 6,
+               "isFeatured": true
             },
             {
               "id": 2,
@@ -30,18 +30,18 @@ public record HostSpaceResponse(
               "name": "동양화 졸업 전시",
               "description": "나의 동양화 졸업 전시",
               "isPublic": true,
-              "instagramUsername": "forgather_official2",
-              "email": "forgather2@forgather.me",
               "linkUrl": "",
               "linkName": "",
               "spacePhoto": {
                 "isExists": false,
                 "path": ""
               },
-              "guestBookCardCount": 0
+              "guestBookCardCount": 0,
+              "unreadGuestBookCount": 0,
+              "isFeatured": false
             }
         ]
         """)
-    List<SpaceResponse> spaces
+    List<HostSpaceItemResponse> spaces
 ) {
 }

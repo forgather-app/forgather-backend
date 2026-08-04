@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,6 +20,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.forgather.domain.space.dto.CheckSpaceHostResponse;
 import com.forgather.domain.space.dto.CreateSpaceRequest;
 import com.forgather.domain.space.dto.CreateSpaceResponse;
+import com.forgather.domain.space.dto.FeatureSpacesRequest;
+import com.forgather.domain.space.dto.FeaturedSpacesResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
 import com.forgather.domain.space.dto.SpaceResponse;
 import com.forgather.domain.space.dto.UpdateSpaceRequest;
@@ -32,6 +36,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -129,6 +134,23 @@ public class SpaceController {
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<HostSpaceResponse>> getSpacesInformation(@LoginHost Host host) {
         var response = spaceService.getSpacesInformation(host);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PutMapping("/me/featured")
+    @Operation(summary = "축하받는 스페이스 지정",
+        description = "요청한 스페이스들을 '지금 축하받고 있는 스페이스'로 지정합니다. "
+            + "요청에 포함되지 않은 스페이스의 지정 상태는 변경되지 않습니다."
+            + "이미 지정된 스페이스가 포함되어 있어도 성공 응답을 반환합니다. "
+            + "요청 목록에 호스트가 소유하지 않은 스페이스 코드가 하나라도 포함되면 부분 반영 없이 전체가 실패합니다. "
+            + "존재하지 않는 코드와 다른 호스트의 코드를 구분하지 않고 400으로 응답합니다."
+            + "응답에는 처리 후 지정된 호스트의 전체 스페이스 코드 목록이 담깁니다.")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<FeaturedSpacesResponse>> featureSpaces(
+        @RequestBody @Valid FeatureSpacesRequest request,
+        @LoginHost Host host
+    ) {
+        var response = spaceService.featureSpaces(host, request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

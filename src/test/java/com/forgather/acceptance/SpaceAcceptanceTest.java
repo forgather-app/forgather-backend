@@ -2,6 +2,7 @@ package com.forgather.acceptance;
 
 import static com.forgather.fixture.HostFixture.createHost;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,6 +34,9 @@ import com.forgather.domain.product.repository.ProductPhotoRepository;
 import com.forgather.domain.product.repository.ProductRepository;
 import com.forgather.domain.space.dto.CreateSpaceRequest;
 import com.forgather.domain.space.dto.CreateSpaceResponse;
+import com.forgather.domain.space.dto.FeatureSpacesRequest;
+import com.forgather.domain.space.dto.FeaturedSpacesResponse;
+import com.forgather.domain.space.dto.HostSpaceItemResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
 import com.forgather.domain.space.dto.SpaceResponse;
 import com.forgather.domain.space.dto.UpdateSpaceRequest;
@@ -46,6 +51,7 @@ import com.forgather.fixture.GuestBookCardPhotoFixture;
 import com.forgather.fixture.ProductFixture;
 import com.forgather.fixture.ProductPhotoFixture;
 import com.forgather.fixture.SpaceFixture;
+import com.forgather.fixture.SpaceHostFixture;
 import com.forgather.fixture.SpacePhotoFixture;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHost;
@@ -55,6 +61,7 @@ import com.forgather.global.response.ApiResponse;
 import com.forgather.global.response.ResponseCode;
 
 import io.restassured.common.mapper.TypeRef;
+import io.restassured.http.ContentType;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 
 @DisplayName("인수 테스트: Space")
@@ -403,7 +410,8 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(productRepository.findAllBySpaceAndDeletedAtIsNull(space)).isEmpty(),
             () -> assertThat(productPhotoRepository.findAllByProductAndDeletedAtIsNull(product)).isEmpty(),
             () -> assertThat(guestBookCardRepository.findAllBySpaceAndDeletedAtIsNull(space)).isEmpty(),
-            () -> assertThat(guestBookCardPhotoRepository.findAllByGuestBookCardAndDeletedAtIsNull(guestBookCard)).isEmpty()
+            () -> assertThat(
+                guestBookCardPhotoRepository.findAllByGuestBookCardAndDeletedAtIsNull(guestBookCard)).isEmpty()
         );
     }
 
@@ -488,7 +496,8 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(result.data().email()).isEqualTo("forgather_new@forgather.me"),
             () -> assertThat(result.data().linkUrl()).isEqualTo("https://forgather.me"),
             () -> assertThat(result.data().linkName()).isEqualTo("포트폴리오"),
-            () -> assertThat(spacePhotoRepository.getBySpaceAndDeletedAtIsNullOrEmpty(space).getOriginalName()).isEqualTo("new.jpg"),
+            () -> assertThat(
+                spacePhotoRepository.getBySpaceAndDeletedAtIsNullOrEmpty(space).getOriginalName()).isEqualTo("new.jpg"),
             () -> assertThat(result.data().guestBookCardCount()).isZero()
         );
     }
@@ -618,5 +627,471 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(result.data().spaces().getLast().spaceCode()).isEqualTo(space1.getCode()),
             () -> assertThat(result.data().spaces().getLast().guestBookCardCount()).isOne()
         );
+    }
+
+    @DisplayName("여러 스페이스를 축하받는 스페이스로 한 번에 지정하고 지정된 코드 목록을 응답한다.")
+    @Test
+    void featureSpaces() {
+        // given
+        Space first = saveSpaceOf(host, "1111111111");
+        Space second = saveSpaceOf(host, "2222222222");
+
+        // when
+        ApiResponse<FeaturedSpacesResponse> response = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(new FeatureSpacesRequest(List.of(first.getCode(), second.getCode())))
+            .when()
+            .put("/spaces/me/featured")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+
+        // then
+        assertAll(
+            () -> assertThat(response.code()).isEqualTo(ResponseCode.SUCCESS),
+            () -> assertThat(response.data().spaceCodes())
+                .containsExactlyInAnyOrder(first.getCode(), second.getCode()),
+            () -> assertThat(isFeatured(first)).isTrue(),
+            () -> assertThat(isFeatured(second)).isTrue()
+        );
+    }
+
+    /**
+     * 지정 API는 요청한 스페이스만 켠다. 해제는 별도 해제 API의 책임이므로, 요청에서 빠졌다는 이유로
+     * 기존 지정이 풀려서는 안 된다. 이 API가 교체 의미를 갖지 않는다는 것을 고정하는 테스트다.
+     */
+    @DisplayName("요청에 포함되지 않은 스페이스의 지정 상태는 그대로 유지된다.")
+    @Test
+    void featureSpacesKeepsOmittedSpaces() {
+        // given
+        Space first = saveSpaceOf(host, "1111111111");
+        Space second = saveSpaceOf(host, "2222222222");
+        feature(first.getCode(), second.getCode());
+
+        // when
+        feature(second.getCode());
+
+        // then
+        assertAll(
+            () -> assertThat(isFeatured(first)).isTrue(),
+            () -> assertThat(isFeatured(second)).isTrue()
+        );
+    }
+
+    @DisplayName("응답에는 이번에 지정한 스페이스와 이전에 지정되어 있던 스페이스가 함께 담긴다.")
+    @Test
+    void featureSpacesRespondsWithAllFeaturedSpaces() {
+        // given
+        Space previous = saveSpaceOf(host, "1111111111");
+        Space target = saveSpaceOf(host, "2222222222");
+        feature(previous.getCode());
+
+        // when
+        ApiResponse<FeaturedSpacesResponse> response = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(new FeatureSpacesRequest(List.of(target.getCode())))
+            .when()
+            .put("/spaces/me/featured")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+
+        // then
+        assertThat(response.data().spaceCodes())
+            .containsExactlyInAnyOrder(previous.getCode(), target.getCode());
+    }
+
+    @DisplayName("호스트가 가진 모든 스페이스를 축하받는 스페이스로 지정할 수 있다.")
+    @Test
+    void featureSpacesWithAllSpaces() {
+        // given
+        Space first = saveSpaceOf(host, "1111111111");
+        Space second = saveSpaceOf(host, "2222222222");
+        Space third = saveSpaceOf(host, "3333333333");
+
+        // when
+        feature(first.getCode(), second.getCode(), third.getCode());
+
+        // then
+        assertAll(
+            () -> assertThat(isFeatured(first)).isTrue(),
+            () -> assertThat(isFeatured(second)).isTrue(),
+            () -> assertThat(isFeatured(third)).isTrue()
+        );
+    }
+
+    @DisplayName("빈 목록을 요청하면 축하받는 스페이스를 지정할 수 없다.")
+    @Test
+    void featureSpacesWithEmptyList() {
+        // given
+        List<String> emptySpaceCodes = List.of();
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(new FeatureSpacesRequest(emptySpaceCodes))
+            .when()
+            .put("/spaces/me/featured")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("BAD_REQUEST"))
+            .body("message", containsString("스페이스 코드 목록이 존재하지 않습니다."));
+    }
+
+    @DisplayName("같은 목록으로 다시 지정해도 지정 상태가 유지된다.")
+    @Test
+    void featureSpacesIsIdempotent() {
+        // given
+        Space first = saveSpaceOf(host, "1111111111");
+        Space second = saveSpaceOf(host, "2222222222");
+        feature(first.getCode(), second.getCode());
+
+        // when
+        feature(first.getCode(), second.getCode());
+
+        // then
+        assertAll(
+            () -> assertThat(isFeatured(first)).isTrue(),
+            () -> assertThat(isFeatured(second)).isTrue()
+        );
+    }
+
+    @DisplayName("같은 스페이스 코드가 중복으로 들어와도 집합으로 취급해 한 번만 지정된다.")
+    @Test
+    void featureSpacesWithDuplicatedCodes() {
+        // given
+        Space space = saveSpaceOf(host, "1111111111");
+
+        // when
+        ApiResponse<FeaturedSpacesResponse> response = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(new FeatureSpacesRequest(List.of(space.getCode(), space.getCode())))
+            .when()
+            .put("/spaces/me/featured")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+
+        // then
+        assertAll(
+            () -> assertThat(response.data().spaceCodes()).containsExactly(space.getCode()),
+            () -> assertThat(isFeatured(space)).isTrue()
+        );
+    }
+
+    @DisplayName("한 번도 지정하지 않으면 모든 스페이스가 미지정 상태다.")
+    @Test
+    void notFeaturedByDefault() {
+        // given
+        Space first = saveSpaceOf(host, "1111111111");
+        Space second = saveSpaceOf(host, "2222222222");
+
+        // when & then
+        assertAll(
+            () -> assertThat(isFeatured(first)).isFalse(),
+            () -> assertThat(isFeatured(second)).isFalse()
+        );
+    }
+
+    /**
+     * 부분 반영을 허용하면 클라이언트가 최종 상태를 알 수 없다. 목록에 남의 스페이스가 섞이면
+     * 요청 전체가 실패하고 기존 지정 상태가 그대로 남아야 한다.
+     */
+    @DisplayName("목록에 다른 호스트의 스페이스가 섞이면 전체가 실패하고 기존 지정 상태가 유지된다.")
+    @Test
+    void featureSpacesWithOtherHostSpace() {
+        // given
+        Space featured = saveSpaceOf(host, "1111111111");
+        Space notFeatured = saveSpaceOf(host, "2222222222");
+        feature(featured.getCode());
+        Host otherHost = hostRepository.save(createHost());
+        Space otherSpace = saveSpaceOf(otherHost, "9999999999");
+
+        // when
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(new FeatureSpacesRequest(List.of(notFeatured.getCode(), otherSpace.getCode())))
+            .when()
+            .put("/spaces/me/featured")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("BAD_REQUEST"))
+            .body("message", containsString("유효하지 않은 스페이스 코드입니다."));
+
+        // then
+        assertAll(
+            () -> assertThat(isFeatured(featured)).isTrue(),
+            () -> assertThat(isFeatured(notFeatured)).isFalse(),
+            () -> assertThat(isFeatured(otherSpace)).isFalse()
+        );
+    }
+
+    @DisplayName("목록에 존재하지 않는 스페이스가 섞이면 전체가 실패하고 기존 지정 상태가 유지된다.")
+    @Test
+    void featureSpacesWithNotExistingSpace() {
+        // given
+        Space featured = saveSpaceOf(host, "1111111111");
+        Space notFeatured = saveSpaceOf(host, "2222222222");
+        feature(featured.getCode());
+        String notExistingSpaceCode = "0000000000";
+
+        // when
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(new FeatureSpacesRequest(List.of(notFeatured.getCode(), notExistingSpaceCode)))
+            .when()
+            .put("/spaces/me/featured")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("BAD_REQUEST"))
+            .body("message", containsString("유효하지 않은 스페이스 코드입니다."));
+
+        // then
+        assertAll(
+            () -> assertThat(isFeatured(featured)).isTrue(),
+            () -> assertThat(isFeatured(notFeatured)).isFalse()
+        );
+    }
+
+    @DisplayName("로그인하지 않으면 축하받는 스페이스를 지정할 수 없다.")
+    @Test
+    void featureSpacesWithoutLogin() {
+        // given
+        Space space = saveSpaceOf(host, "1111111111");
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .contentType(ContentType.JSON)
+            .body(new FeatureSpacesRequest(List.of(space.getCode())))
+            .when()
+            .put("/spaces/me/featured")
+            .then()
+            .statusCode(HttpStatus.UNAUTHORIZED.value())
+            .body("code", equalTo("UNAUTHORIZED"));
+    }
+
+    @DisplayName("스페이스 코드 목록이 null이면 축하받는 스페이스를 지정할 수 없다.")
+    @Test
+    void featureSpacesWithNullSpaceCodes() {
+        // given
+        List<String> nullSpaceCodes = null;
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(new FeatureSpacesRequest(nullSpaceCodes))
+            .when()
+            .put("/spaces/me/featured")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("VALIDATION_FAILED"));
+    }
+
+    /**
+     * 요청 목록은 호스트가 가진 스페이스 수를 넘을 이유가 없다. 상한이 없으면 악의적 요청이
+     * 임의 크기의 목록을 보내 역직렬화 단계에서 메모리를 소모시킬 수 있으므로 경계에서 막는다.
+     */
+    @DisplayName("스페이스 코드를 100개 넘게 요청하면 축하받는 스페이스를 지정할 수 없다.")
+    @Test
+    void featureSpacesWithTooManySpaceCodes() {
+        // given
+        List<String> tooManySpaceCodes = IntStream.rangeClosed(1, 101)
+            .mapToObj(number -> "%010d".formatted(number))
+            .toList();
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(new FeatureSpacesRequest(tooManySpaceCodes))
+            .when()
+            .put("/spaces/me/featured")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("VALIDATION_FAILED"));
+    }
+
+    @DisplayName("스페이스 코드 목록에 공백이 섞이면 축하받는 스페이스를 지정할 수 없다.")
+    @Test
+    void featureSpacesWithBlankSpaceCode() {
+        // given
+        Space space = saveSpaceOf(host, "1111111111");
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(new FeatureSpacesRequest(List.of(space.getCode(), " ")))
+            .when()
+            .put("/spaces/me/featured")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("VALIDATION_FAILED"));
+    }
+
+    @DisplayName("지정된 스페이스를 삭제한 뒤에도 다른 스페이스를 축하받는 스페이스로 지정할 수 있다.")
+    @Test
+    void featureAfterDeletingFeaturedSpace() {
+        // given
+        Space featuredSpace = saveSpaceOf(host, "1111111111");
+        Space other = saveSpaceOf(host, "2222222222");
+        feature(featuredSpace.getCode());
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .when()
+            .delete("/spaces/{spaceCode}", featuredSpace.getCode())
+            .then()
+            .statusCode(HttpStatus.NO_CONTENT.value());
+
+        // when
+        feature(other.getCode());
+
+        // then
+        assertThat(isFeatured(other)).isTrue();
+    }
+
+    /**
+     * 지정 상태는 전용 엔드포인트로만 바뀌어야 한다. 스페이스 수정 API로도 바뀌면 지정/해제 경로가
+     * 이원화되므로, {@code UpdateSpaceRequest}에 축하 여부 필드가 추가되는 것을 막는 회귀 테스트다.
+     */
+    @DisplayName("스페이스 정보를 수정해도 축하받는 스페이스 지정 상태는 바뀌지 않는다.")
+    @Test
+    void updateSpaceDoesNotChangeFeatured() throws Exception {
+        // given
+        Space space = saveSpaceOf(host, "1111111111");
+        feature(space.getCode());
+        String request = objectMapper.writeValueAsString(
+            new UpdateSpaceRequest("새로운 이름", null, null, null, null, null, null, false)
+        );
+
+        // when
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .multiPart("request", request, "application/json")
+            .when()
+            .patch("/spaces/{spaceCode}", space.getCode())
+            .then()
+            .statusCode(HttpStatus.OK.value());
+
+        // then
+        assertThat(isFeatured(space)).isTrue();
+    }
+
+    @DisplayName("나의 스페이스 목록의 읽지 않은 방명록 수는 공개 상태이면서 읽지 않은 방명록만 센다.")
+    @Test
+    void getSpacesWithUnreadGuestBookCount() {
+        // given
+        Space space = saveSpaceOf(host, "1111111111");
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "안읽음1", "방명록"));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "안읽음2", "방명록"));
+
+        GuestBookCard readCard = GuestBookCardFixture.createGuestBookCard(space, "읽음", "방명록");
+        readCard.read(true);
+        guestBookCardRepository.save(readCard);
+
+        GuestBookCard hiddenCard = GuestBookCardFixture.createGuestBookCard(space, "숨김", "방명록");
+        hiddenCard.hideByAdmin();
+        guestBookCardRepository.save(hiddenCard);
+
+        // when
+        HostSpaceItemResponse response = findByCode(getMySpaces(), space.getCode());
+
+        // then
+        assertAll(
+            () -> assertThat(response.guestBookCardCount()).isEqualTo(3L),
+            () -> assertThat(response.unreadGuestBookCount()).isEqualTo(2L)
+        );
+    }
+
+    @DisplayName("방명록이 없는 스페이스의 읽지 않은 방명록 수는 0이다.")
+    @Test
+    void getSpacesWithoutGuestBook() {
+        // given
+        Space space = saveSpaceOf(host, "1111111111");
+
+        // when
+        HostSpaceItemResponse response = findByCode(getMySpaces(), space.getCode());
+
+        // then
+        assertThat(response.unreadGuestBookCount()).isZero();
+    }
+
+    @DisplayName("나의 스페이스 목록은 스페이스별 지정 여부를 그대로 내려준다.")
+    @Test
+    void getSpacesWithFeaturedSpace() {
+        // given
+        Space first = saveSpaceOf(host, "1111111111");
+        Space second = saveSpaceOf(host, "2222222222");
+        Space third = saveSpaceOf(host, "3333333333");
+        feature(first.getCode(), second.getCode());
+
+        // when
+        List<HostSpaceItemResponse> spaces = getMySpaces();
+
+        // then
+        assertAll(
+            () -> assertThat(findByCode(spaces, first.getCode()).isFeatured()).isTrue(),
+            () -> assertThat(findByCode(spaces, second.getCode()).isFeatured()).isTrue(),
+            () -> assertThat(findByCode(spaces, third.getCode()).isFeatured()).isFalse(),
+            () -> assertThat(spaces.stream().filter(HostSpaceItemResponse::isFeatured)).hasSize(2)
+        );
+    }
+
+    private List<HostSpaceItemResponse> getMySpaces() {
+        ApiResponse<HostSpaceResponse> response = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .when()
+            .get("/spaces/me")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+        return response.data().spaces();
+    }
+
+    private HostSpaceItemResponse findByCode(List<HostSpaceItemResponse> spaces, String spaceCode) {
+        return spaces.stream()
+            .filter(space -> space.spaceCode().equals(spaceCode))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("스페이스를 찾을 수 없습니다. spaceCode: " + spaceCode));
+    }
+
+    private Space saveSpaceOf(Host owner, String spaceCode) {
+        Space space = spaceRepository.save(SpaceFixture.createSpaceWithCode(spaceCode));
+        spaceHostRepository.save(SpaceHostFixture.createSpaceHostWithSpaceAndHost(space, owner));
+        return space;
+    }
+
+    private void feature(String... spaceCodes) {
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(new FeatureSpacesRequest(List.of(spaceCodes)))
+            .when()
+            .put("/spaces/me/featured")
+            .then()
+            .statusCode(HttpStatus.OK.value());
+    }
+
+    private boolean isFeatured(Space space) {
+        return spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(space.getCode()).isFeatured();
     }
 }
