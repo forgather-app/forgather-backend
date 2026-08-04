@@ -1,10 +1,9 @@
 package com.forgather.global.config;
 
-import java.util.Arrays;
-import java.util.Collection;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
+
+import com.forgather.global.util.AudienceMatcher;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -41,18 +40,6 @@ public class AppleProperties {
     private final String revokeUrl;
 
     public boolean isAllowedAudience(Object audience) {
-        if (clientId == null || audience == null) {
-            return false;
-        }
-        if (audience instanceof String value) {
-            return clientId.equals(value);
-        }
-        if (audience instanceof Collection<?> values) {
-            return values.stream().anyMatch(clientId::equals);
-        }
-        if (audience instanceof Object[] values) {
-            return Arrays.stream(values).anyMatch(clientId::equals);
-        }
-        return false;
+        return AudienceMatcher.matches(clientId, audience);
     }
 }
