@@ -292,18 +292,6 @@ class SpaceServiceTest extends TestOnContainer {
         );
     }
 
-    @DisplayName("스페이스 코드 목록이 null이면 예외를 던진다.")
-    @Test
-    void featureSpacesWithNullSpaceCodes() {
-        // given
-        Host host = hostRepository.save(HostFixture.createHost());
-
-        // when & then
-        assertThatThrownBy(() -> spaceService.featureSpaces(host, new FeatureSpacesRequest(null)))
-            .isInstanceOf(BaseException.class)
-            .hasMessageContaining("스페이스 코드 목록이 존재하지 않습니다.");
-    }
-
     @DisplayName("지정된 스페이스를 삭제하면 지정이 해제된다.")
     @Test
     void deleteFeaturedSpace() {

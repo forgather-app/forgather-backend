@@ -1,6 +1,5 @@
 package com.forgather.domain.space.dto;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -19,9 +18,6 @@ public record FeatureSpacesRequest(
 ) {
 
     public Set<String> toUniqueSpaceCodes() {
-        if (spaceCodes == null) {
-            return Collections.emptySet();
-        }
         return new HashSet<>(spaceCodes);
     }
 }
