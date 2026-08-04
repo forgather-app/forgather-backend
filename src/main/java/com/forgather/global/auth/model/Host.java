@@ -67,6 +67,7 @@ public class Host extends SoftDeleteEntity {
     public Host(String name, String email) {
         validateRequiredFields(name, email);
         validateName(name);
+        validateEmail(email);
         this.name = name;
         this.email = email;
     }
@@ -161,6 +162,12 @@ public class Host extends SoftDeleteEntity {
     private void validateName(String name) {
         if (name.isBlank()) {
             throw new BaseException("이름은 공백만 입력할 수 없습니다.");
+        }
+    }
+
+    private void validateEmail(String email) {
+        if (email.isBlank()) {
+            throw new BaseException("이메일은 공백만 입력할 수 없습니다.");
         }
     }
 
