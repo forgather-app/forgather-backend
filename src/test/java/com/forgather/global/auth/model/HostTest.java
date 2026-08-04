@@ -20,7 +20,8 @@ class HostTest {
     void anonymize() {
         // given
         Host host = createHost();
-        host.updateProfile(null, "안녕하세요, 포게더 작가입니다.", "https://forgather.app/", null);
+        host.updateProfile(null, "안녕하세요, 포게더 작가입니다.", "https://forgather.app/",
+            "https://cdn.forgather.app/hosts/1/profile/a.webp");
 
         // when
         host.anonymize();
@@ -35,6 +36,38 @@ class HostTest {
             () -> assertThat(host.getLinkUrl()).isNull(),
             () -> assertThat(host.getAnonymizedAt()).isNotNull()
         );
+    }
+
+    @Nested
+    @DisplayName("이메일 갱신")
+    class UpdateEmail {
+
+        @DisplayName("새 이메일이 들어오면 갱신한다")
+        @Test
+        void updatesEmail() {
+            // given
+            Host host = new Host("포스티", null);
+
+            // when
+            host.updateEmail("postie@forgather.app");
+
+            // then
+            assertThat(host.getEmail()).isEqualTo("postie@forgather.app");
+        }
+
+        @DisplayName("이메일이 없으면 기존 이메일을 유지한다")
+        @Test
+        void keepsEmailWhenNotProvided() {
+            // given
+            Host host = new Host("포스티", "postie@forgather.app");
+
+            // when
+            host.updateEmail(null);
+            host.updateEmail(" ");
+
+            // then
+            assertThat(host.getEmail()).isEqualTo("postie@forgather.app");
+        }
     }
 
     @Nested

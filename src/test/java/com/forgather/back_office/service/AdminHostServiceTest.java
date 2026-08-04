@@ -267,7 +267,7 @@ class AdminHostServiceTest extends TestOnContainer {
     }
 
     private Host createHostWithNickname(String name, String nickname) {
-        Host host = new Host(name, "pictureUrl");
+        Host host = new Host(name, "postie@forgather.app");
         host.updateNickname(nickname);
         return host;
     }

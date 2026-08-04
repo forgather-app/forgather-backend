@@ -29,7 +29,6 @@ import com.forgather.domain.term.model.TermType;
 import com.forgather.domain.term.repository.HostTermHistoryRepository;
 import com.forgather.domain.term.repository.TermRepository;
 import com.forgather.global.auth.client.AppleAuthClient;
-import com.forgather.global.auth.client.KakaoAuthClient;
 import com.forgather.global.auth.dto.AppleIdToken;
 import com.forgather.global.auth.dto.AppleLoginConfirmRequest;
 import com.forgather.global.auth.dto.AppleTokenResponse;
@@ -57,9 +56,6 @@ class AuthServiceTest {
     private JwtTokenProvider jwtTokenProvider;
 
     @Mock
-    private KakaoAuthClient kakaoAuthClient;
-
-    @Mock
     private KakaoHostRepository kakaoHostRepository;
 
     @Mock
@@ -84,7 +80,6 @@ class AuthServiceTest {
         authService = new AuthService(
             jwtParser,
             jwtTokenProvider,
-            kakaoAuthClient,
             kakaoHostRepository,
             hostRepository,
             termRepository,
@@ -149,7 +144,7 @@ class AuthServiceTest {
             "raw-nonce",
             null
         );
-        Host host = new Host("기존사용자", null, "old@example.com");
+        Host host = new Host("기존사용자", "old@example.com");
         AppleHost appleHost = new AppleHost(host, "apple-sub", "old-apple-refresh-token");
         when(appleAuthClient.exchangeAuthorizationCode("authorization-code"))
             .thenReturn(appleTokenResponse("new-apple-refresh-token"));
@@ -224,8 +219,7 @@ class AuthServiceTest {
     @Test
     void createKakaoHostWithSeparatedNames() {
         // given
-        KakaoIdToken idToken = new KakaoIdToken(null, "kakao-user-id", null, null, "카카오닉네임", null, null,
-            "pictureUrl");
+        KakaoIdToken idToken = kakaoIdToken("카카오닉네임", "kakao@example.com");
         when(jwtParser.parseKakaoIdToken("id-token")).thenReturn(idToken);
         when(kakaoHostRepository.findByUserId("kakao-user-id")).thenReturn(Optional.empty());
         when(hostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -243,7 +237,30 @@ class AuthServiceTest {
         // then
         assertAll(
             () -> assertThat(savedKakaoHost.getHost().getName()).isEqualTo("카카오닉네임"),
-            () -> assertThat(savedKakaoHost.getHost().getNickname()).isNull()
+            () -> assertThat(savedKakaoHost.getHost().getNickname()).isNull(),
+            () -> assertThat(savedKakaoHost.getHost().getEmail()).isEqualTo("kakao@example.com")
+        );
+    }
+
+    @DisplayName("기존 카카오 회원이 재로그인하면 id token의 email로 Host email을 채운다")
+    @Test
+    void backfillEmailWhenExistingKakaoHostLogsIn() {
+        // given
+        Host host = new Host("카카오원본이름", null);
+        KakaoHost kakaoHost = new KakaoHost(host, "kakao-user-id");
+        when(jwtParser.parseKakaoIdToken("id-token")).thenReturn(kakaoIdToken("카카오닉네임", "kakao@example.com"));
+        when(kakaoHostRepository.findByUserId("kakao-user-id")).thenReturn(Optional.of(kakaoHost));
+        when(jwtTokenProvider.generateAccessToken(nullable(Long.class))).thenReturn("access-token");
+        when(jwtTokenProvider.generateRefreshToken(nullable(Long.class))).thenReturn("refresh-token");
+
+        // when
+        authService.kakaoLoginConfirm(kakaoLoginConfirmRequest());
+
+        // then
+        assertAll(
+            () -> assertThat(host.getEmail()).isEqualTo("kakao@example.com"),
+            () -> verify(hostRepository, never()).save(any()),
+            () -> verify(kakaoHostRepository, never()).save(any())
         );
     }
 
@@ -251,13 +268,27 @@ class AuthServiceTest {
     @Test
     void failKakaoLoginWhenNicknameIsMissing() {
         // given
-        KakaoIdToken idToken = new KakaoIdToken(null, "kakao-user-id", null, null, null, null, null, "pictureUrl");
+        KakaoIdToken idToken = kakaoIdToken(null, "kakao@example.com");
         when(jwtParser.parseKakaoIdToken("id-token")).thenReturn(idToken);
 
         // when, then
         assertThatThrownBy(() -> authService.kakaoLoginConfirm(kakaoLoginConfirmRequest()))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("이름");
+    }
+
+    private KakaoIdToken kakaoIdToken(String nickname, String email) {
+        return new KakaoIdToken(
+            "https://kauth.kakao.com",
+            "test-kakao-native-app-key",
+            "kakao-user-id",
+            1L,
+            1L,
+            1L,
+            "nonce",
+            nickname,
+            email
+        );
     }
 
     private KakaoLoginConfirmRequest kakaoLoginConfirmRequest() {

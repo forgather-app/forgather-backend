@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HexFormat;
+import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,9 +65,12 @@ class JwtParserTest {
             .header()
             .keyId("kakao-key")
             .and()
-            .claim("sub", "12345")
+            .issuer("https://kauth.kakao.com")
+            .claim("aud", "test-kakao-native-app-key")
+            .subject("12345")
             .claim("nickname", "forgather")
-            .claim("picture", "https://example.com/profile.png")
+            .claim("email", "forgather@example.com")
+            .expiration(Date.from(Instant.now().plusSeconds(600)))
             .signWith((RSAPrivateKey)keyPair.getPrivate())
             .compact();
 
@@ -76,7 +80,186 @@ class JwtParserTest {
         // then
         assertThat(kakaoIdToken.sub()).isEqualTo("12345");
         assertThat(kakaoIdToken.nickname()).isEqualTo("forgather");
-        assertThat(kakaoIdToken.picture()).isEqualTo("https://example.com/profile.png");
+        assertThat(kakaoIdToken.email()).isEqualTo("forgather@example.com");
+    }
+
+    @DisplayName("Kakao id token의 audience가 배열이어도 앱 키가 포함되면 통과한다")
+    @Test
+    void parseKakaoIdToken_audienceAsArray() throws Exception {
+        // given
+        KeyPair keyPair = generateRsaKeyPair();
+        stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
+        JwtParser jwtParser = createJwtParser();
+        String idToken = Jwts.builder()
+            .header()
+            .keyId("kakao-key")
+            .and()
+            .issuer("https://kauth.kakao.com")
+            .claim("aud", List.of("other-audience", "test-kakao-native-app-key"))
+            .subject("12345")
+            .claim("nickname", "forgather")
+            .claim("email", "forgather@example.com")
+            .expiration(Date.from(Instant.now().plusSeconds(600)))
+            .signWith((RSAPrivateKey)keyPair.getPrivate())
+            .compact();
+
+        // when
+        KakaoIdToken kakaoIdToken = jwtParser.parseKakaoIdToken(idToken);
+
+        // then
+        assertThat(kakaoIdToken.sub()).isEqualTo("12345");
+    }
+
+    @DisplayName("Kakao id token의 issuer가 다르면 실패한다")
+    @Test
+    void parseKakaoIdToken_invalidIssuer() throws Exception {
+        // given
+        KeyPair keyPair = generateRsaKeyPair();
+        stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
+        JwtParser jwtParser = createJwtParser();
+        String idToken = Jwts.builder()
+            .header()
+            .keyId("kakao-key")
+            .and()
+            .issuer("https://kauth.kakao.com.evil.example.com")
+            .claim("aud", "test-kakao-native-app-key")
+            .subject("12345")
+            .claim("nickname", "forgather")
+            .claim("email", "forgather@example.com")
+            .expiration(Date.from(Instant.now().plusSeconds(600)))
+            .signWith((RSAPrivateKey)keyPair.getPrivate())
+            .compact();
+
+        // when & then
+        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken))
+            .isInstanceOf(JwtParseException.class)
+            .hasMessageContaining("Kakao issuer");
+    }
+
+    @DisplayName("Kakao id token의 audience가 앱 키와 다르면 실패한다")
+    @Test
+    void parseKakaoIdToken_invalidAudience() throws Exception {
+        // given
+        KeyPair keyPair = generateRsaKeyPair();
+        stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
+        JwtParser jwtParser = createJwtParser();
+        String idToken = Jwts.builder()
+            .header()
+            .keyId("kakao-key")
+            .and()
+            .issuer("https://kauth.kakao.com")
+            .claim("aud", "other-audience")
+            .subject("12345")
+            .claim("nickname", "forgather")
+            .claim("email", "forgather@example.com")
+            .expiration(Date.from(Instant.now().plusSeconds(600)))
+            .signWith((RSAPrivateKey)keyPair.getPrivate())
+            .compact();
+
+        // when & then
+        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken))
+            .isInstanceOf(JwtParseException.class)
+            .hasMessageContaining("Kakao audience");
+    }
+
+    @DisplayName("Kakao id token에 만료 시간이 없으면 실패한다")
+    @Test
+    void parseKakaoIdToken_withoutExpiration() throws Exception {
+        // given
+        KeyPair keyPair = generateRsaKeyPair();
+        stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
+        JwtParser jwtParser = createJwtParser();
+        String idToken = Jwts.builder()
+            .header()
+            .keyId("kakao-key")
+            .and()
+            .issuer("https://kauth.kakao.com")
+            .claim("aud", "test-kakao-native-app-key")
+            .subject("12345")
+            .claim("nickname", "forgather")
+            .claim("email", "forgather@example.com")
+            .signWith((RSAPrivateKey)keyPair.getPrivate())
+            .compact();
+
+        // when & then
+        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken))
+            .isInstanceOf(JwtParseException.class)
+            .hasMessageContaining("만료 시간");
+    }
+
+    @DisplayName("Kakao id token에 사용자 식별자가 없으면 실패한다")
+    @Test
+    void parseKakaoIdToken_withoutSubject() throws Exception {
+        // given
+        KeyPair keyPair = generateRsaKeyPair();
+        stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
+        JwtParser jwtParser = createJwtParser();
+        String idToken = Jwts.builder()
+            .header()
+            .keyId("kakao-key")
+            .and()
+            .issuer("https://kauth.kakao.com")
+            .claim("aud", "test-kakao-native-app-key")
+            .claim("nickname", "forgather")
+            .claim("email", "forgather@example.com")
+            .expiration(Date.from(Instant.now().plusSeconds(600)))
+            .signWith((RSAPrivateKey)keyPair.getPrivate())
+            .compact();
+
+        // when & then
+        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken))
+            .isInstanceOf(JwtParseException.class)
+            .hasMessageContaining("사용자 식별자");
+    }
+
+    @DisplayName("Kakao id token에 닉네임이 없으면 실패한다")
+    @Test
+    void parseKakaoIdToken_withoutNickname() throws Exception {
+        // given
+        KeyPair keyPair = generateRsaKeyPair();
+        stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
+        JwtParser jwtParser = createJwtParser();
+        String idToken = Jwts.builder()
+            .header()
+            .keyId("kakao-key")
+            .and()
+            .issuer("https://kauth.kakao.com")
+            .claim("aud", "test-kakao-native-app-key")
+            .subject("12345")
+            .claim("email", "forgather@example.com")
+            .expiration(Date.from(Instant.now().plusSeconds(600)))
+            .signWith((RSAPrivateKey)keyPair.getPrivate())
+            .compact();
+
+        // when & then
+        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken))
+            .isInstanceOf(JwtParseException.class)
+            .hasMessageContaining("Kakao 닉네임");
+    }
+
+    @DisplayName("Kakao id token에 email이 없으면 실패한다")
+    @Test
+    void parseKakaoIdToken_withoutEmail() throws Exception {
+        // given
+        KeyPair keyPair = generateRsaKeyPair();
+        stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
+        JwtParser jwtParser = createJwtParser();
+        String idToken = Jwts.builder()
+            .header()
+            .keyId("kakao-key")
+            .and()
+            .issuer("https://kauth.kakao.com")
+            .claim("aud", "test-kakao-native-app-key")
+            .subject("12345")
+            .claim("nickname", "forgather")
+            .expiration(Date.from(Instant.now().plusSeconds(600)))
+            .signWith((RSAPrivateKey)keyPair.getPrivate())
+            .compact();
+
+        // when & then
+        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken))
+            .isInstanceOf(JwtParseException.class)
+            .hasMessageContaining("Kakao email");
     }
 
     @DisplayName("Apple id token을 검증하고 claim을 반환한다")
@@ -230,14 +413,20 @@ class JwtParserTest {
             wireMock.baseUrl() + "/apple/auth/token",
             wireMock.baseUrl() + "/apple/auth/revoke"
         );
+        KakaoProperties kakaoProperties = new KakaoProperties(
+            "test-kakao-native-app-key",
+            "https://kauth.kakao.com",
+            wireMock.baseUrl() + "/kakao/.well-known/jwks.json",
+            "test-admin-key",
+            wireMock.baseUrl() + "/kakao/v1/user/unlink"
+        );
         SocialAuthClient socialAuthClient = new SocialAuthClient(
             RestClient.create(),
-            new KakaoProperties("client-id", wireMock.baseUrl() + "/kakao/.well-known/jwks.json",
-                "test-admin-key", wireMock.baseUrl() + "/kakao/v1/user/unlink"),
+            kakaoProperties,
             new GoogleProperties(wireMock.baseUrl() + "/google/.well-known/jwks.json"),
             appleProperties
         );
-        return new JwtParser(new ObjectMapper(), socialAuthClient, appleProperties);
+        return new JwtParser(new ObjectMapper(), socialAuthClient, appleProperties, kakaoProperties);
     }
 
     private KeyPair generateRsaKeyPair() throws Exception {
