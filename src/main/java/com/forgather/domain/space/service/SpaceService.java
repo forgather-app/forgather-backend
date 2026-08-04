@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -231,31 +232,18 @@ public class SpaceService {
     @Transactional
     public FeaturedSpacesResponse featureSpaces(Host host, FeatureSpacesRequest request) {
         validateHostNull(host);
-        Set<String> targetCodes = request.toUniqueSpaceCodes();
-        if (targetCodes.isEmpty()) {
-            throw new BaseException("스페이스 코드 목록이 존재하지 않습니다.");
-        }
-
-        List<Space> hostSpaces = spaceHostRepository.findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host)
-            .stream()
-            .map(SpaceHost::getSpace)
-            .toList();
-        validateTargetCodes(targetCodes, hostSpaces);
-
-        hostSpaces.stream()
-            .filter(space -> targetCodes.contains(space.getCode()))
-            .forEach(Space::feature);
-        return FeaturedSpacesResponse.from(hostSpaces);
+        return FeaturedSpacesResponse.from(
+            changeFeaturedState(host, request.toUniqueSpaceCodes(), Space::feature)
+        );
     }
 
-    /**
-     * 지정과 달리 처리 결과를 반환하지 않는다. 전부 성공 아니면 전부 실패라 "해제된 코드"는 요청과 항상 같고,
-     * 해제 후 지정 목록이 필요한 화면은 스페이스 목록 조회를 사용한다.
-     */
     @Transactional
     public void unfeatureSpaces(Host host, UnfeatureSpacesRequest request) {
         validateHostNull(host);
-        Set<String> targetCodes = request.toUniqueSpaceCodes();
+        changeFeaturedState(host, request.toUniqueSpaceCodes(), Space::unfeature);
+    }
+
+    private List<Space> changeFeaturedState(Host host, Set<String> targetCodes, Consumer<Space> action) {
         if (targetCodes.isEmpty()) {
             throw new BaseException("스페이스 코드 목록이 존재하지 않습니다.");
         }
@@ -268,7 +256,8 @@ public class SpaceService {
 
         hostSpaces.stream()
             .filter(space -> targetCodes.contains(space.getCode()))
-            .forEach(Space::unfeature);
+            .forEach(action);
+        return hostSpaces;
     }
 
     private void validateTargetCodes(Set<String> targetCodes, List<Space> spaces) {
