@@ -24,6 +24,7 @@ import com.forgather.domain.space.dto.FeaturedSpacesResponse;
 import com.forgather.domain.space.dto.HostSpaceItemResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
 import com.forgather.domain.space.dto.SpaceResponse;
+import com.forgather.domain.space.dto.UnfeatureSpacesRequest;
 import com.forgather.domain.space.dto.UpdateSpaceRequest;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.model.SpacePhoto;
@@ -244,6 +245,26 @@ public class SpaceService {
         hostSpaces.stream()
             .filter(space -> targetCodes.contains(space.getCode()))
             .forEach(Space::feature);
+        return FeaturedSpacesResponse.from(hostSpaces);
+    }
+
+    @Transactional
+    public FeaturedSpacesResponse unfeatureSpaces(Host host, UnfeatureSpacesRequest request) {
+        validateHostNull(host);
+        Set<String> targetCodes = request.toUniqueSpaceCodes();
+        if (targetCodes.isEmpty()) {
+            throw new BaseException("스페이스 코드 목록이 존재하지 않습니다.");
+        }
+
+        List<Space> hostSpaces = spaceHostRepository.findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host)
+            .stream()
+            .map(SpaceHost::getSpace)
+            .toList();
+        validateTargetCodes(targetCodes, hostSpaces);
+
+        hostSpaces.stream()
+            .filter(space -> targetCodes.contains(space.getCode()))
+            .forEach(Space::unfeature);
         return FeaturedSpacesResponse.from(hostSpaces);
     }
 
