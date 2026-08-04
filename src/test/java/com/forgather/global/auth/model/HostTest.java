@@ -67,6 +67,22 @@ class HostTest {
                 .isInstanceOf(BaseException.class)
                 .hasMessageContaining("이름은 공백만");
         }
+
+        @DisplayName("이메일이 빈 문자열이면 예외가 발생한다")
+        @Test
+        void rejectsEmptyEmail() {
+            assertThatThrownBy(() -> new Host("포스티", ""))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("이메일은 공백만");
+        }
+
+        @DisplayName("이메일이 공백만이면 예외가 발생한다")
+        @Test
+        void rejectsBlankEmail() {
+            assertThatThrownBy(() -> new Host("포스티", " "))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("이메일은 공백만");
+        }
     }
 
     @Nested
