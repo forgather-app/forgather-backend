@@ -37,11 +37,11 @@ public class JwtParser {
     private final AppleProperties appleProperties;
     private final KakaoProperties kakaoProperties;
 
-    public KakaoIdToken parseKakaoIdToken(String idToken) {
+    public KakaoIdToken parseKakaoIdToken(String idToken, String rawNonce) {
         try {
             Claims claims = parseClaims(idToken, SocialProvider.KAKAO);
             KakaoIdToken kakaoIdToken = objectMapper.convertValue(claims, KakaoIdToken.class);
-            validateKakaoIdToken(kakaoIdToken);
+            validateKakaoIdToken(kakaoIdToken, rawNonce);
             return kakaoIdToken;
         } catch (JsonProcessingException | IllegalArgumentException e) {
             throw new JwtParseException("Kakao ID Token 형식이 유효하지 않습니다.", HttpStatus.UNAUTHORIZED, e);
@@ -93,9 +93,9 @@ public class JwtParser {
 
     /**
      * 카카오 콘솔에서 닉네임과 카카오계정(이메일)을 필수 동의로 설정했으므로 두 클레임이 항상 존재한다고 보고 검증한다.
-     * nonce는 KakaoLoginConfirmRequest가 원본 nonce를 받지 않아 검증 대상에서 제외한다.
+     * nonce는 애플과 동일하게, 클라이언트가 원본을 SHA-256 해싱해 카카오에 전달했다고 보고 해시를 대조한다.
      */
-    private void validateKakaoIdToken(KakaoIdToken idToken) {
+    private void validateKakaoIdToken(KakaoIdToken idToken, String rawNonce) {
         if (!kakaoProperties.getIssuer().equals(idToken.iss())) {
             throw new JwtParseException("Kakao issuer가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED);
         }
@@ -113,6 +113,12 @@ public class JwtParser {
         }
         if (!StringUtils.hasText(idToken.email())) {
             throw new JwtParseException("Kakao email이 없습니다.", HttpStatus.UNAUTHORIZED);
+        }
+        if (!StringUtils.hasText(rawNonce) || !StringUtils.hasText(idToken.nonce())) {
+            throw new JwtParseException("Kakao nonce가 없습니다.", HttpStatus.UNAUTHORIZED);
+        }
+        if (!hashRawNonce(rawNonce).equals(idToken.nonce())) {
+            throw new JwtParseException("Kakao nonce가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED);
         }
     }
 

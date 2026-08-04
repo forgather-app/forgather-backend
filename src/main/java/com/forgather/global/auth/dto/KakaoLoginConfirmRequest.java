@@ -20,6 +20,11 @@ public record KakaoLoginConfirmRequest(
     @Schema(description = "ID 토큰", example = "your-id-token")
     String idToken,
 
+    @Schema(description = "카카오 로그인 요청에 사용한 nonce의 원본 문자열. "
+        + "클라이언트는 이 값을 SHA-256 해싱한 결과를 카카오 SDK에 nonce로 전달해야 한다.",
+        example = "client-generated-random-nonce")
+    String rawNonce,
+
     @Schema(description = "액세스 토큰과 ID 토큰의 만료 시간(초)", example = "3600")
     Long expiresIn,
 

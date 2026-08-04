@@ -66,7 +66,7 @@ public class AuthService {
      * 이메일 저장 이전에 가입한 회원의 빈 이메일을 별도 배치 없이 점진적으로 채우기 위함이다.
      */
     private KakaoHost toKakaoHost(KakaoLoginConfirmRequest request) {
-        KakaoIdToken idToken = jwtParser.parseKakaoIdToken(request.idToken());
+        KakaoIdToken idToken = jwtParser.parseKakaoIdToken(request.idToken(), request.rawNonce());
         Optional<KakaoHost> kakaoHost = kakaoHostRepository.findByUserId(idToken.sub());
         if (kakaoHost.isPresent()) {
             KakaoHost existingKakaoHost = kakaoHost.get();
