@@ -49,24 +49,24 @@ class HostTest {
             Host host = new Host("포스티", null);
 
             // when
-            host.updateEmail("postie@forgather.app");
+            host.updateEmail("posty@forgather.app");
 
             // then
-            assertThat(host.getEmail()).isEqualTo("postie@forgather.app");
+            assertThat(host.getEmail()).isEqualTo("posty@forgather.app");
         }
 
         @DisplayName("이메일이 없으면 기존 이메일을 유지한다")
         @Test
         void keepsEmailWhenNotProvided() {
             // given
-            Host host = new Host("포스티", "postie@forgather.app");
+            Host host = new Host("포스티", "posty@forgather.app");
 
             // when
             host.updateEmail(null);
             host.updateEmail(" ");
 
             // then
-            assertThat(host.getEmail()).isEqualTo("postie@forgather.app");
+            assertThat(host.getEmail()).isEqualTo("posty@forgather.app");
         }
     }
 

@@ -6,7 +6,7 @@ import com.forgather.global.auth.model.Host;
 
 public class HostFixture {
 
-    private static final String EMAIL = "postie@forgather.app";
+    private static final String EMAIL = "posty@forgather.app";
 
     public static Host createHost() {
         Host host = new Host("포스티", EMAIL);
