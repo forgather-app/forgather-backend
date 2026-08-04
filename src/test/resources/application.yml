@@ -78,6 +78,7 @@ auth:
     login-id: testId
     password: testPw
     nickname: 테스트
+    email: test@forgather.app
 
 kakao:
   native-app-key: test-kakao-native-app-key

@@ -65,9 +65,23 @@ public class Host extends SoftDeleteEntity {
     private LocalDateTime anonymizedAt;
 
     public Host(String name, String email) {
+        validateRequiredFields(name, email);
         validateName(name);
         this.name = name;
         this.email = email;
+    }
+
+    /**
+     * 익명화 이후나 이메일 저장 이전에 가입한 회원은 email이 비어 있을 수 있어 컬럼은 nullable이지만,
+     * 신규 생성 시점에는 소셜 로그인이 항상 이메일을 제공하므로 필수로 받는다.
+     */
+    private void validateRequiredFields(String name, String email) {
+        if (name == null) {
+            throw new BaseNullPointerException("이름은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+        if (email == null) {
+            throw new BaseNullPointerException("이메일은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
     }
 
     public void updateNickname(String nickname) {
@@ -145,9 +159,6 @@ public class Host extends SoftDeleteEntity {
     }
 
     private void validateName(String name) {
-        if (name == null) {
-            throw new BaseNullPointerException("이름은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
-        }
         if (name.isBlank()) {
             throw new BaseException("이름은 공백만 입력할 수 없습니다.");
         }

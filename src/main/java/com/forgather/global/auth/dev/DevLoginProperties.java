@@ -15,4 +15,5 @@ public class DevLoginProperties {
     private final String loginId;
     private final String password;
     private final String nickname;
+    private final String email;
 }

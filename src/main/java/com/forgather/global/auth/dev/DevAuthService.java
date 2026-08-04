@@ -72,7 +72,8 @@ public class DevAuthService {
     }
 
     private KakaoHost createOnboardedHost(String userId) {
-        Host host = hostRepository.save(new Host(devLoginProperties.getNickname(), null));
+        Host host = hostRepository.save(
+            new Host(devLoginProperties.getNickname(), devLoginProperties.getEmail()));
         KakaoHost savedKakaoHost = kakaoHostRepository.save(new KakaoHost(host, userId));
         completeOnboarding(savedKakaoHost.getHost());
         return savedKakaoHost;
