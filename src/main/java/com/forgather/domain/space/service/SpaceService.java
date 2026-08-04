@@ -248,8 +248,12 @@ public class SpaceService {
         return FeaturedSpacesResponse.from(hostSpaces);
     }
 
+    /**
+     * 지정과 달리 처리 결과를 반환하지 않는다. 전부 성공 아니면 전부 실패라 "해제된 코드"는 요청과 항상 같고,
+     * 해제 후 지정 목록이 필요한 화면은 스페이스 목록 조회를 사용한다.
+     */
     @Transactional
-    public FeaturedSpacesResponse unfeatureSpaces(Host host, UnfeatureSpacesRequest request) {
+    public void unfeatureSpaces(Host host, UnfeatureSpacesRequest request) {
         validateHostNull(host);
         Set<String> targetCodes = request.toUniqueSpaceCodes();
         if (targetCodes.isEmpty()) {
@@ -265,7 +269,6 @@ public class SpaceService {
         hostSpaces.stream()
             .filter(space -> targetCodes.contains(space.getCode()))
             .forEach(Space::unfeature);
-        return FeaturedSpacesResponse.from(hostSpaces);
     }
 
     private void validateTargetCodes(Set<String> targetCodes, List<Space> spaces) {

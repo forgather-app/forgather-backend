@@ -3,6 +3,7 @@ package com.forgather.acceptance;
 import static com.forgather.fixture.HostFixture.createHost;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
@@ -654,7 +655,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // then
         assertAll(
             () -> assertThat(response.code()).isEqualTo(ResponseCode.SUCCESS),
-            () -> assertThat(response.data().spaceCodes())
+            () -> assertThat(response.data().featuredSpaceCodes())
                 .containsExactlyInAnyOrder(first.getCode(), second.getCode()),
             () -> assertThat(isFeatured(first)).isTrue(),
             () -> assertThat(isFeatured(second)).isTrue()
@@ -706,7 +707,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             });
 
         // then
-        assertThat(response.data().spaceCodes())
+        assertThat(response.data().featuredSpaceCodes())
             .containsExactlyInAnyOrder(previous.getCode(), target.getCode());
     }
 
@@ -788,7 +789,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // then
         assertAll(
-            () -> assertThat(response.data().spaceCodes()).containsExactly(space.getCode()),
+            () -> assertThat(response.data().featuredSpaceCodes()).containsExactly(space.getCode()),
             () -> assertThat(isFeatured(space)).isTrue()
         );
     }
@@ -1054,7 +1055,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         );
     }
 
-    @DisplayName("일부를 해제하면 응답에는 해제되지 않고 여전히 지정 상태인 스페이스 코드만 담긴다.")
+    @DisplayName("지정된 스페이스 중 일부만 해제하고 본문 없이 204로 응답한다.")
     @Test
     void unfeatureSpaces() {
         // given
@@ -1063,23 +1064,18 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         feature(first.getCode(), second.getCode());
 
         // when
-        ApiResponse<FeaturedSpacesResponse> response = RestAssuredMockMvc.given()
+        RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
             .contentType(ContentType.JSON)
             .body(new UnfeatureSpacesRequest(List.of(first.getCode())))
             .when()
             .delete("/spaces/me/featured")
             .then()
-            .statusCode(HttpStatus.OK.value())
-            .extract()
-            .body()
-            .as(new TypeRef<>() {
-            });
+            .statusCode(HttpStatus.NO_CONTENT.value())
+            .body(emptyOrNullString());
 
         // then
         assertAll(
-            () -> assertThat(response.code()).isEqualTo(ResponseCode.SUCCESS),
-            () -> assertThat(response.data().spaceCodes()).containsExactly(second.getCode()),
             () -> assertThat(isFeatured(first)).isFalse(),
             () -> assertThat(isFeatured(second)).isTrue()
         );
@@ -1129,24 +1125,10 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         feature(space.getCode());
 
         // when
-        ApiResponse<FeaturedSpacesResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
-            .contentType(ContentType.JSON)
-            .body(new UnfeatureSpacesRequest(List.of(space.getCode(), space.getCode())))
-            .when()
-            .delete("/spaces/me/featured")
-            .then()
-            .statusCode(HttpStatus.OK.value())
-            .extract()
-            .body()
-            .as(new TypeRef<>() {
-            });
+        unfeature(space.getCode(), space.getCode());
 
         // then
-        assertAll(
-            () -> assertThat(response.data().spaceCodes()).isEmpty(),
-            () -> assertThat(isFeatured(space)).isFalse()
-        );
+        assertThat(isFeatured(space)).isFalse();
     }
 
     @DisplayName("빈 목록을 요청하면 축하받는 스페이스를 해제할 수 없다.")
@@ -1370,7 +1352,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             .when()
             .delete("/spaces/me/featured")
             .then()
-            .statusCode(HttpStatus.OK.value());
+            .statusCode(HttpStatus.NO_CONTENT.value());
     }
 
     private boolean isFeatured(Space space) {

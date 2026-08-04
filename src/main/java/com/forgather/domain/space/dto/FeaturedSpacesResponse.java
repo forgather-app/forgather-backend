@@ -9,9 +9,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record FeaturedSpacesResponse(
 
     @Schema(description = "처리 후 '지금 축하받고 있는 스페이스'로 지정되어 있는 호스트의 전체 스페이스 코드 목록. "
-        + "이번 요청으로 지정·해제한 것뿐 아니라 요청에 포함되지 않아 그대로 유지된 것도 반영됩니다.",
+        + "이번 요청으로 지정한 것뿐 아니라 이전에 지정되어 있던 것도 함께 담깁니다.",
         example = "[\"1234567890\", \"0987654321\"]")
-    List<String> spaceCodes
+    List<String> featuredSpaceCodes
 ) {
 
     /**

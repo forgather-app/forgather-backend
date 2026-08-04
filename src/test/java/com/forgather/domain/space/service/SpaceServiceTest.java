@@ -124,7 +124,7 @@ class SpaceServiceTest extends TestOnContainer {
 
         // then
         assertAll(
-            () -> assertThat(response.spaceCodes()).containsExactlyInAnyOrder(first.getCode(), second.getCode()),
+            () -> assertThat(response.featuredSpaceCodes()).containsExactlyInAnyOrder(first.getCode(), second.getCode()),
             () -> assertThat(first.isFeatured()).isTrue(),
             () -> assertThat(second.isFeatured()).isTrue()
         );
@@ -217,7 +217,7 @@ class SpaceServiceTest extends TestOnContainer {
 
         // then
         assertAll(
-            () -> assertThat(response.spaceCodes()).containsExactly(space.getCode()),
+            () -> assertThat(response.featuredSpaceCodes()).containsExactly(space.getCode()),
             () -> assertThat(space.isFeatured()).isTrue()
         );
     }
@@ -307,7 +307,7 @@ class SpaceServiceTest extends TestOnContainer {
         assertThat(space.isFeatured()).isFalse();
     }
 
-    @DisplayName("일부를 해제하면 해제되지 않고 여전히 지정 상태인 스페이스 코드만 반환한다.")
+    @DisplayName("일부를 해제하면 해제 대상만 미지정 상태가 된다.")
     @Test
     void unfeatureSpaces() {
         // given
@@ -317,12 +317,10 @@ class SpaceServiceTest extends TestOnContainer {
         spaceService.featureSpaces(host, new FeatureSpacesRequest(List.of(first.getCode(), second.getCode())));
 
         // when
-        FeaturedSpacesResponse response =
-            spaceService.unfeatureSpaces(host, new UnfeatureSpacesRequest(List.of(first.getCode())));
+        spaceService.unfeatureSpaces(host, new UnfeatureSpacesRequest(List.of(first.getCode())));
 
         // then
         assertAll(
-            () -> assertThat(response.spaceCodes()).containsExactly(second.getCode()),
             () -> assertThat(first.isFeatured()).isFalse(),
             () -> assertThat(second.isFeatured()).isTrue()
         );
@@ -356,14 +354,10 @@ class SpaceServiceTest extends TestOnContainer {
         Space space = saveSpaceOf(host, "1111111111");
 
         // when
-        FeaturedSpacesResponse response =
-            spaceService.unfeatureSpaces(host, new UnfeatureSpacesRequest(List.of(space.getCode())));
+        spaceService.unfeatureSpaces(host, new UnfeatureSpacesRequest(List.of(space.getCode())));
 
         // then
-        assertAll(
-            () -> assertThat(response.spaceCodes()).isEmpty(),
-            () -> assertThat(space.isFeatured()).isFalse()
-        );
+        assertThat(space.isFeatured()).isFalse();
     }
 
     @DisplayName("빈 목록으로 해제를 요청하면 예외를 던진다.")
