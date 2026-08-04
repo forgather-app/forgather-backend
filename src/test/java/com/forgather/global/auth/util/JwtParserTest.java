@@ -41,6 +41,8 @@ import io.jsonwebtoken.Jwts;
 
 class JwtParserTest {
 
+    private static final String KAKAO_RAW_NONCE = "kakao-raw-nonce";
+
     private WireMockServer wireMock;
 
     @BeforeEach
@@ -70,12 +72,13 @@ class JwtParserTest {
             .subject("12345")
             .claim("nickname", "forgather")
             .claim("email", "forgather@example.com")
+            .claim("nonce", sha256Hex(KAKAO_RAW_NONCE))
             .expiration(Date.from(Instant.now().plusSeconds(600)))
             .signWith((RSAPrivateKey)keyPair.getPrivate())
             .compact();
 
         // when
-        KakaoIdToken kakaoIdToken = jwtParser.parseKakaoIdToken(idToken);
+        KakaoIdToken kakaoIdToken = jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE);
 
         // then
         assertThat(kakaoIdToken.sub()).isEqualTo("12345");
@@ -99,12 +102,13 @@ class JwtParserTest {
             .subject("12345")
             .claim("nickname", "forgather")
             .claim("email", "forgather@example.com")
+            .claim("nonce", sha256Hex(KAKAO_RAW_NONCE))
             .expiration(Date.from(Instant.now().plusSeconds(600)))
             .signWith((RSAPrivateKey)keyPair.getPrivate())
             .compact();
 
         // when
-        KakaoIdToken kakaoIdToken = jwtParser.parseKakaoIdToken(idToken);
+        KakaoIdToken kakaoIdToken = jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE);
 
         // then
         assertThat(kakaoIdToken.sub()).isEqualTo("12345");
@@ -126,12 +130,13 @@ class JwtParserTest {
             .subject("12345")
             .claim("nickname", "forgather")
             .claim("email", "forgather@example.com")
+            .claim("nonce", sha256Hex(KAKAO_RAW_NONCE))
             .expiration(Date.from(Instant.now().plusSeconds(600)))
             .signWith((RSAPrivateKey)keyPair.getPrivate())
             .compact();
 
         // when & then
-        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken))
+        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
             .isInstanceOf(JwtParseException.class)
             .hasMessageContaining("Kakao issuer");
     }
@@ -152,12 +157,13 @@ class JwtParserTest {
             .subject("12345")
             .claim("nickname", "forgather")
             .claim("email", "forgather@example.com")
+            .claim("nonce", sha256Hex(KAKAO_RAW_NONCE))
             .expiration(Date.from(Instant.now().plusSeconds(600)))
             .signWith((RSAPrivateKey)keyPair.getPrivate())
             .compact();
 
         // when & then
-        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken))
+        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
             .isInstanceOf(JwtParseException.class)
             .hasMessageContaining("Kakao audience");
     }
@@ -178,11 +184,12 @@ class JwtParserTest {
             .subject("12345")
             .claim("nickname", "forgather")
             .claim("email", "forgather@example.com")
+            .claim("nonce", sha256Hex(KAKAO_RAW_NONCE))
             .signWith((RSAPrivateKey)keyPair.getPrivate())
             .compact();
 
         // when & then
-        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken))
+        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
             .isInstanceOf(JwtParseException.class)
             .hasMessageContaining("만료 시간");
     }
@@ -202,12 +209,13 @@ class JwtParserTest {
             .claim("aud", "test-kakao-native-app-key")
             .claim("nickname", "forgather")
             .claim("email", "forgather@example.com")
+            .claim("nonce", sha256Hex(KAKAO_RAW_NONCE))
             .expiration(Date.from(Instant.now().plusSeconds(600)))
             .signWith((RSAPrivateKey)keyPair.getPrivate())
             .compact();
 
         // when & then
-        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken))
+        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
             .isInstanceOf(JwtParseException.class)
             .hasMessageContaining("사용자 식별자");
     }
@@ -227,12 +235,13 @@ class JwtParserTest {
             .claim("aud", "test-kakao-native-app-key")
             .subject("12345")
             .claim("email", "forgather@example.com")
+            .claim("nonce", sha256Hex(KAKAO_RAW_NONCE))
             .expiration(Date.from(Instant.now().plusSeconds(600)))
             .signWith((RSAPrivateKey)keyPair.getPrivate())
             .compact();
 
         // when & then
-        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken))
+        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
             .isInstanceOf(JwtParseException.class)
             .hasMessageContaining("Kakao 닉네임");
     }
@@ -252,14 +261,95 @@ class JwtParserTest {
             .claim("aud", "test-kakao-native-app-key")
             .subject("12345")
             .claim("nickname", "forgather")
+            .claim("nonce", sha256Hex(KAKAO_RAW_NONCE))
             .expiration(Date.from(Instant.now().plusSeconds(600)))
             .signWith((RSAPrivateKey)keyPair.getPrivate())
             .compact();
 
         // when & then
-        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken))
+        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
             .isInstanceOf(JwtParseException.class)
             .hasMessageContaining("Kakao email");
+    }
+
+    @DisplayName("Kakao id token의 nonce가 rawNonce 해시와 다르면 실패한다")
+    @Test
+    void parseKakaoIdToken_nonceMismatch() throws Exception {
+        // given
+        KeyPair keyPair = generateRsaKeyPair();
+        stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
+        JwtParser jwtParser = createJwtParser();
+        String idToken = Jwts.builder()
+            .header()
+            .keyId("kakao-key")
+            .and()
+            .issuer("https://kauth.kakao.com")
+            .claim("aud", "test-kakao-native-app-key")
+            .subject("12345")
+            .claim("nickname", "forgather")
+            .claim("email", "forgather@example.com")
+            .claim("nonce", sha256Hex("different-raw-nonce"))
+            .expiration(Date.from(Instant.now().plusSeconds(600)))
+            .signWith((RSAPrivateKey)keyPair.getPrivate())
+            .compact();
+
+        // when & then
+        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
+            .isInstanceOf(JwtParseException.class)
+            .hasMessageContaining("Kakao nonce");
+    }
+
+    @DisplayName("Kakao id token에 nonce가 없으면 실패한다")
+    @Test
+    void parseKakaoIdToken_withoutNonce() throws Exception {
+        // given
+        KeyPair keyPair = generateRsaKeyPair();
+        stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
+        JwtParser jwtParser = createJwtParser();
+        String idToken = Jwts.builder()
+            .header()
+            .keyId("kakao-key")
+            .and()
+            .issuer("https://kauth.kakao.com")
+            .claim("aud", "test-kakao-native-app-key")
+            .subject("12345")
+            .claim("nickname", "forgather")
+            .claim("email", "forgather@example.com")
+            .expiration(Date.from(Instant.now().plusSeconds(600)))
+            .signWith((RSAPrivateKey)keyPair.getPrivate())
+            .compact();
+
+        // when & then
+        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
+            .isInstanceOf(JwtParseException.class)
+            .hasMessageContaining("Kakao nonce");
+    }
+
+    @DisplayName("Kakao 로그인 요청에 rawNonce가 없으면 실패한다")
+    @Test
+    void parseKakaoIdToken_withoutRawNonce() throws Exception {
+        // given
+        KeyPair keyPair = generateRsaKeyPair();
+        stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
+        JwtParser jwtParser = createJwtParser();
+        String idToken = Jwts.builder()
+            .header()
+            .keyId("kakao-key")
+            .and()
+            .issuer("https://kauth.kakao.com")
+            .claim("aud", "test-kakao-native-app-key")
+            .subject("12345")
+            .claim("nickname", "forgather")
+            .claim("email", "forgather@example.com")
+            .claim("nonce", sha256Hex(KAKAO_RAW_NONCE))
+            .expiration(Date.from(Instant.now().plusSeconds(600)))
+            .signWith((RSAPrivateKey)keyPair.getPrivate())
+            .compact();
+
+        // when & then
+        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken, null))
+            .isInstanceOf(JwtParseException.class)
+            .hasMessageContaining("Kakao nonce");
     }
 
     @DisplayName("Apple id token을 검증하고 claim을 반환한다")

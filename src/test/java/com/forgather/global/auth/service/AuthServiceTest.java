@@ -220,7 +220,7 @@ class AuthServiceTest {
     void createKakaoHostWithSeparatedNames() {
         // given
         KakaoIdToken idToken = kakaoIdToken("카카오닉네임", "kakao@example.com");
-        when(jwtParser.parseKakaoIdToken("id-token")).thenReturn(idToken);
+        when(jwtParser.parseKakaoIdToken("id-token", "raw-nonce")).thenReturn(idToken);
         when(kakaoHostRepository.findByUserId("kakao-user-id")).thenReturn(Optional.empty());
         when(hostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(kakaoHostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -248,7 +248,7 @@ class AuthServiceTest {
         // given
         Host host = new Host("카카오원본이름", null);
         KakaoHost kakaoHost = new KakaoHost(host, "kakao-user-id");
-        when(jwtParser.parseKakaoIdToken("id-token")).thenReturn(kakaoIdToken("카카오닉네임", "kakao@example.com"));
+        when(jwtParser.parseKakaoIdToken("id-token", "raw-nonce")).thenReturn(kakaoIdToken("카카오닉네임", "kakao@example.com"));
         when(kakaoHostRepository.findByUserId("kakao-user-id")).thenReturn(Optional.of(kakaoHost));
         when(jwtTokenProvider.generateAccessToken(nullable(Long.class))).thenReturn("access-token");
         when(jwtTokenProvider.generateRefreshToken(nullable(Long.class))).thenReturn("refresh-token");
@@ -269,7 +269,7 @@ class AuthServiceTest {
     void failKakaoLoginWhenNicknameIsMissing() {
         // given
         KakaoIdToken idToken = kakaoIdToken(null, "kakao@example.com");
-        when(jwtParser.parseKakaoIdToken("id-token")).thenReturn(idToken);
+        when(jwtParser.parseKakaoIdToken("id-token", "raw-nonce")).thenReturn(idToken);
 
         // when, then
         assertThatThrownBy(() -> authService.kakaoLoginConfirm(kakaoLoginConfirmRequest()))
@@ -297,6 +297,7 @@ class AuthServiceTest {
             "bearer",
             "refresh-token",
             "id-token",
+            "raw-nonce",
             3600L,
             "profile",
             "604800"
