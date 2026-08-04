@@ -15,7 +15,6 @@ import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.auth.dto.AppleLoginConfirmRequest;
 import com.forgather.global.auth.dto.HostResponse;
 import com.forgather.global.auth.dto.KakaoLoginConfirmRequest;
-import com.forgather.global.auth.dto.KakaoLoginTokenResponse;
 import com.forgather.global.auth.dto.LoginResponse;
 import com.forgather.global.auth.dto.OnboardingRequest;
 import com.forgather.global.auth.dto.RefreshRequest;
@@ -47,14 +46,6 @@ public class AuthController {
             "로그인된 사용자가 없으면 401 Unauthorized를 반환합니다.")
     public ResponseEntity<ApiResponse<HostResponse>> getCurrentUser(@LoginHost Host host) {
         var response = authService.getCurrentUser(host);
-        return ResponseEntity.ok(ApiResponse.success(response));
-    }
-
-    @GetMapping("/login/kakao")
-    @Operation(summary = "Kakao 로그인을 위한 토큰 발급",
-        description = "Kakao 로그인 페이지로 리다이렉트하기 위한 URL을 반환합니다.")
-    public ResponseEntity<ApiResponse<KakaoLoginTokenResponse>> getKakaoLoginToken() {
-        var response = authService.getKakaoLoginToken();
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

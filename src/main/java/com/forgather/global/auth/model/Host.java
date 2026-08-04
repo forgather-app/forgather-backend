@@ -64,20 +64,25 @@ public class Host extends SoftDeleteEntity {
     @Column(name = "anonymized_at")
     private LocalDateTime anonymizedAt;
 
-    public Host(String name, String pictureUrl) {
-        this(name, pictureUrl, null);
-    }
-
-    public Host(String name, String pictureUrl, String email) {
+    public Host(String name, String email) {
         validateName(name);
         this.name = name;
-        this.pictureUrl = pictureUrl;
         this.email = email;
     }
 
     public void updateNickname(String nickname) {
         validateNickname(nickname);
         this.nickname = nickname;
+    }
+
+    /**
+     * 소셜 로그인 시 전달된 이메일로 갱신한다. 이메일이 없으면 기존 값을 유지한다.
+     */
+    public void updateEmail(String email) {
+        if (email == null || email.isBlank() || email.equals(this.email)) {
+            return;
+        }
+        this.email = email;
     }
 
     /**

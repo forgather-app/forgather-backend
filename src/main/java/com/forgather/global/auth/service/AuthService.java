@@ -18,14 +18,12 @@ import com.forgather.domain.term.model.TermType;
 import com.forgather.domain.term.repository.HostTermHistoryRepository;
 import com.forgather.domain.term.repository.TermRepository;
 import com.forgather.global.auth.client.AppleAuthClient;
-import com.forgather.global.auth.client.KakaoAuthClient;
 import com.forgather.global.auth.dto.AppleIdToken;
 import com.forgather.global.auth.dto.AppleLoginConfirmRequest;
 import com.forgather.global.auth.dto.AppleTokenResponse;
 import com.forgather.global.auth.dto.HostResponse;
 import com.forgather.global.auth.dto.KakaoIdToken;
 import com.forgather.global.auth.dto.KakaoLoginConfirmRequest;
-import com.forgather.global.auth.dto.KakaoLoginTokenResponse;
 import com.forgather.global.auth.dto.LoginResponse;
 import com.forgather.global.auth.dto.OnboardingRequest;
 import com.forgather.global.auth.model.Host;
@@ -48,17 +46,12 @@ public class AuthService {
 
     private final JwtParser jwtParser;
     private final JwtTokenProvider jwtTokenProvider;
-    private final KakaoAuthClient kakaoAuthClient;
     private final KakaoHostRepository kakaoHostRepository;
     private final HostRepository hostRepository;
     private final TermRepository termRepository;
     private final HostTermHistoryRepository hostTermHistoryRepository;
     private final AppleHostRepository appleHostRepository;
     private final AppleAuthClient appleAuthClient;
-
-    public KakaoLoginTokenResponse getKakaoLoginToken() {
-        return new KakaoLoginTokenResponse(kakaoAuthClient.getKakaoClientId());
-    }
 
     @Transactional
     public LoginResponse kakaoLoginConfirm(KakaoLoginConfirmRequest request) {
@@ -68,14 +61,22 @@ public class AuthService {
         return LoginResponse.of(accessToken, refreshToken);
     }
 
+    /**
+     * 기존 회원은 재로그인할 때마다 id token의 이메일로 갱신한다.
+     * 이메일 저장 이전에 가입한 회원의 빈 이메일을 별도 배치 없이 점진적으로 채우기 위함이다.
+     */
     private KakaoHost toKakaoHost(KakaoLoginConfirmRequest request) {
         KakaoIdToken idToken = jwtParser.parseKakaoIdToken(request.idToken());
         Optional<KakaoHost> kakaoHost = kakaoHostRepository.findByUserId(idToken.sub());
-        return kakaoHost.orElseGet(() -> {
-            Host host = hostRepository.save(new Host(idToken.nickname(), idToken.picture()));
-            KakaoHost newKakaoHost = new KakaoHost(host, idToken.sub());
-            return kakaoHostRepository.save(newKakaoHost);
-        });
+        if (kakaoHost.isPresent()) {
+            KakaoHost existingKakaoHost = kakaoHost.get();
+            existingKakaoHost.getHost().updateEmail(idToken.email());
+            return existingKakaoHost;
+        }
+
+        Host host = hostRepository.save(new Host(idToken.nickname(), idToken.email()));
+        KakaoHost newKakaoHost = new KakaoHost(host, idToken.sub());
+        return kakaoHostRepository.save(newKakaoHost);
     }
 
     @Transactional
@@ -100,7 +101,7 @@ public class AuthService {
             return existingAppleHost;
         }
 
-        Host host = new Host(fullName, null, idToken.email());
+        Host host = new Host(fullName, idToken.email());
         hostRepository.save(host);
         return appleHostRepository.save(new AppleHost(host, idToken.sub(), appleRefreshToken));
     }

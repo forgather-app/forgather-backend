@@ -151,7 +151,7 @@ graph TD
 | `ProductService` | 작품 CRUD (최대 3개 제한) | ContentsStorage |
 | `GuestBookService` | 방명록 CRUD, 권한 검증 | ContentsStorage |
 | `UploadService` | 파일 업로드, Presigned URL 발급 | ContentsStorage, SignedUrlIssuer |
-| `AuthService` | OAuth 로그인, 토큰 갱신 | JwtTokenProvider, KakaoAuthClient |
+| `AuthService` | OAuth 로그인, 토큰 갱신 | JwtParser, JwtTokenProvider, AppleAuthClient |
 
 ### 트랜잭션 경계
 
