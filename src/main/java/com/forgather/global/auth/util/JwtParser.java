@@ -20,6 +20,7 @@ import com.forgather.global.auth.client.SocialProvider;
 import com.forgather.global.auth.dto.AppleIdToken;
 import com.forgather.global.auth.dto.KakaoIdToken;
 import com.forgather.global.config.AppleProperties;
+import com.forgather.global.config.KakaoProperties;
 import com.forgather.global.exception.JwtParseException;
 
 import io.jsonwebtoken.Claims;
@@ -34,11 +35,14 @@ public class JwtParser {
     private final ObjectMapper objectMapper;
     private final SocialAuthClient socialAuthClient;
     private final AppleProperties appleProperties;
+    private final KakaoProperties kakaoProperties;
 
-    public KakaoIdToken parseKakaoIdToken(String idToken) {
+    public KakaoIdToken parseKakaoIdToken(String idToken, String rawNonce) {
         try {
             Claims claims = parseClaims(idToken, SocialProvider.KAKAO);
-            return objectMapper.convertValue(claims, KakaoIdToken.class);
+            KakaoIdToken kakaoIdToken = objectMapper.convertValue(claims, KakaoIdToken.class);
+            validateKakaoIdToken(kakaoIdToken, rawNonce);
+            return kakaoIdToken;
         } catch (JsonProcessingException | IllegalArgumentException e) {
             throw new JwtParseException("Kakao ID Token 형식이 유효하지 않습니다.", HttpStatus.UNAUTHORIZED, e);
         }
@@ -87,6 +91,37 @@ public class JwtParser {
         }
     }
 
+    /**
+     * 카카오 콘솔에서 닉네임과 카카오계정(이메일)을 필수 동의로 설정했으므로 두 클레임이 항상 존재한다고 보고 검증한다.
+     * nonce는 애플과 동일하게, 클라이언트가 원본을 SHA-256 해싱해 카카오에 전달했다고 보고 해시를 대조한다.
+     */
+    private void validateKakaoIdToken(KakaoIdToken idToken, String rawNonce) {
+        if (!kakaoProperties.getIssuer().equals(idToken.iss())) {
+            throw new JwtParseException("Kakao issuer가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED);
+        }
+        if (!kakaoProperties.isAllowedAudience(idToken.aud())) {
+            throw new JwtParseException("Kakao audience가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED);
+        }
+        if (idToken.exp() == null) {
+            throw new JwtParseException("Kakao token 만료 시간이 없습니다.", HttpStatus.UNAUTHORIZED);
+        }
+        if (!StringUtils.hasText(idToken.sub())) {
+            throw new JwtParseException("Kakao 사용자 식별자가 없습니다.", HttpStatus.UNAUTHORIZED);
+        }
+        if (!StringUtils.hasText(idToken.nickname())) {
+            throw new JwtParseException("Kakao 닉네임이 없습니다.", HttpStatus.UNAUTHORIZED);
+        }
+        if (!StringUtils.hasText(idToken.email())) {
+            throw new JwtParseException("Kakao email이 없습니다.", HttpStatus.UNAUTHORIZED);
+        }
+        if (!StringUtils.hasText(rawNonce) || !StringUtils.hasText(idToken.nonce())) {
+            throw new JwtParseException("Kakao nonce가 없습니다.", HttpStatus.UNAUTHORIZED);
+        }
+        if (!hashRawNonce(rawNonce).equals(idToken.nonce())) {
+            throw new JwtParseException("Kakao nonce가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED);
+        }
+    }
+
     private void validateAppleIdToken(AppleIdToken idToken, String rawNonce) {
         if (!appleProperties.getIssuer().equals(idToken.iss())) {
             throw new JwtParseException("Apple issuer가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED);
@@ -119,7 +154,7 @@ public class JwtParser {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             return HexFormat.of().formatHex(digest.digest(rawNonce.getBytes(StandardCharsets.UTF_8)));
         } catch (NoSuchAlgorithmException e) {
-            throw new JwtParseException("Apple nonce hash failed", HttpStatus.INTERNAL_SERVER_ERROR, e);
+            throw new JwtParseException("nonce hash에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e);
         }
     }
 }

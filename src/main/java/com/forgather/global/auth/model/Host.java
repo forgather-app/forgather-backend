@@ -64,20 +64,40 @@ public class Host extends SoftDeleteEntity {
     @Column(name = "anonymized_at")
     private LocalDateTime anonymizedAt;
 
-    public Host(String name, String pictureUrl) {
-        this(name, pictureUrl, null);
+    public Host(String name, String email) {
+        validateRequiredFields(name, email);
+        validateName(name);
+        validateEmail(email);
+        this.name = name;
+        this.email = email;
     }
 
-    public Host(String name, String pictureUrl, String email) {
-        validateName(name);
-        this.name = name;
-        this.pictureUrl = pictureUrl;
-        this.email = email;
+    /**
+     * 익명화 이후나 이메일 저장 이전에 가입한 회원은 email이 비어 있을 수 있어 컬럼은 nullable이지만,
+     * 신규 생성 시점에는 소셜 로그인이 항상 이메일을 제공하므로 필수로 받는다.
+     */
+    private void validateRequiredFields(String name, String email) {
+        if (name == null) {
+            throw new BaseNullPointerException("이름은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+        if (email == null) {
+            throw new BaseNullPointerException("이메일은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
     }
 
     public void updateNickname(String nickname) {
         validateNickname(nickname);
         this.nickname = nickname;
+    }
+
+    /**
+     * 소셜 로그인 시 전달된 이메일로 갱신한다. 이메일이 없으면 기존 값을 유지한다.
+     */
+    public void updateEmail(String email) {
+        if (email == null || email.isBlank() || email.equals(this.email)) {
+            return;
+        }
+        this.email = email;
     }
 
     /**
@@ -140,11 +160,14 @@ public class Host extends SoftDeleteEntity {
     }
 
     private void validateName(String name) {
-        if (name == null) {
-            throw new BaseNullPointerException("이름은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
-        }
         if (name.isBlank()) {
             throw new BaseException("이름은 공백만 입력할 수 없습니다.");
+        }
+    }
+
+    private void validateEmail(String email) {
+        if (email.isBlank()) {
+            throw new BaseException("이메일은 공백만 입력할 수 없습니다.");
         }
     }
 

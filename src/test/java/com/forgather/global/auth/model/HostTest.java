@@ -1,6 +1,7 @@
 package com.forgather.global.auth.model;
 
 import static com.forgather.fixture.HostFixture.createHost;
+import static com.forgather.fixture.HostFixture.createHostWithoutEmail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.forgather.global.exception.BaseException;
+import com.forgather.global.exception.BaseNullPointerException;
 
 class HostTest {
 
@@ -20,7 +22,8 @@ class HostTest {
     void anonymize() {
         // given
         Host host = createHost();
-        host.updateProfile(null, "안녕하세요, 포게더 작가입니다.", "https://forgather.app/", null);
+        host.updateProfile(null, "안녕하세요, 포게더 작가입니다.", "https://forgather.app/",
+            "https://cdn.forgather.app/hosts/1/profile/a.webp");
 
         // when
         host.anonymize();
@@ -35,6 +38,83 @@ class HostTest {
             () -> assertThat(host.getLinkUrl()).isNull(),
             () -> assertThat(host.getAnonymizedAt()).isNotNull()
         );
+    }
+
+    @Nested
+    @DisplayName("생성")
+    class Create {
+
+        @DisplayName("이름이 null이면 예외가 발생한다")
+        @Test
+        void rejectsNullName() {
+            assertThatThrownBy(() -> new Host(null, "posty@forgather.app"))
+                .isInstanceOf(BaseNullPointerException.class)
+                .hasMessageContaining("이름");
+        }
+
+        @DisplayName("이메일이 null이면 예외가 발생한다")
+        @Test
+        void rejectsNullEmail() {
+            assertThatThrownBy(() -> new Host("포스티", null))
+                .isInstanceOf(BaseNullPointerException.class)
+                .hasMessageContaining("이메일");
+        }
+
+        @DisplayName("이름이 공백만이면 예외가 발생한다")
+        @Test
+        void rejectsBlankName() {
+            assertThatThrownBy(() -> new Host(" ", "posty@forgather.app"))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("이름은 공백만");
+        }
+
+        @DisplayName("이메일이 빈 문자열이면 예외가 발생한다")
+        @Test
+        void rejectsEmptyEmail() {
+            assertThatThrownBy(() -> new Host("포스티", ""))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("이메일은 공백만");
+        }
+
+        @DisplayName("이메일이 공백만이면 예외가 발생한다")
+        @Test
+        void rejectsBlankEmail() {
+            assertThatThrownBy(() -> new Host("포스티", " "))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("이메일은 공백만");
+        }
+    }
+
+    @Nested
+    @DisplayName("이메일 갱신")
+    class UpdateEmail {
+
+        @DisplayName("새 이메일이 들어오면 갱신한다")
+        @Test
+        void updatesEmail() {
+            // given
+            Host host = createHostWithoutEmail("포스티");
+
+            // when
+            host.updateEmail("posty@forgather.app");
+
+            // then
+            assertThat(host.getEmail()).isEqualTo("posty@forgather.app");
+        }
+
+        @DisplayName("이메일이 없으면 기존 이메일을 유지한다")
+        @Test
+        void keepsEmailWhenNotProvided() {
+            // given
+            Host host = new Host("포스티", "posty@forgather.app");
+
+            // when
+            host.updateEmail(null);
+            host.updateEmail(" ");
+
+            // then
+            assertThat(host.getEmail()).isEqualTo("posty@forgather.app");
+        }
     }
 
     @Nested

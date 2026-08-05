@@ -131,7 +131,9 @@ class SocialAuthClientTest {
     private SocialAuthClient createSocialAuthClient() {
         return new SocialAuthClient(
             RestClient.create(),
-            new KakaoProperties("client-id", wireMock.baseUrl() + "/kakao/.well-known/jwks.json",
+            new KakaoProperties("test-kakao-native-app-key",
+                "https://kauth.kakao.com",
+                wireMock.baseUrl() + "/kakao/.well-known/jwks.json",
                 "test-admin-key", wireMock.baseUrl() + "/kakao/v1/user/unlink"),
             new GoogleProperties(wireMock.baseUrl() + "/google/.well-known/jwks.json"),
             new AppleProperties(

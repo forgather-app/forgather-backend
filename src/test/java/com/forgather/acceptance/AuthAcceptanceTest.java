@@ -363,7 +363,7 @@ class AuthAcceptanceTest extends AcceptanceTest {
     }
 
     private Host saveHost(String nickname) {
-        Host host = new Host("카카오원본이름", "pictureUrl");
+        Host host = new Host("카카오원본이름", "posty@forgather.app");
         if (nickname != null) {
             host.updateNickname(nickname);
         }

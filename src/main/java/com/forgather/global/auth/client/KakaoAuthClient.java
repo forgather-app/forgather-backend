@@ -29,11 +29,6 @@ public class KakaoAuthClient {
     private final RestClient restClient;
     private final KakaoProperties kakaoProperties;
 
-    @Deprecated(forRemoval = true)
-    public String getKakaoClientId() {
-        return kakaoProperties.getClientId();
-    }
-
     /**
      * 카카오 연결 끊기(unlink)
      * https://developers.kakao.com/docs/latest/ko/kakaologin/rest-api#unlink

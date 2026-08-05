@@ -56,7 +56,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
     void setUp() {
         RestAssuredMockMvc.mockMvc(mockMvc);
 
-        Host newHost = new Host("카카오원본이름", "pictureUrl");
+        Host newHost = new Host("카카오원본이름", "posty@forgather.app");
         newHost.updateNickname("서비스닉네임");
         host = hostRepository.save(newHost);
         token = jwtTokenProvider.generateAccessToken(host.getId());

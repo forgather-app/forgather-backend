@@ -78,9 +78,11 @@ auth:
     login-id: testId
     password: testPw
     nickname: 테스트
+    email: test@forgather.app
 
 kakao:
-  client-id: test-kakao-client-id
+  native-app-key: test-kakao-native-app-key
+  issuer: https://kauth.kakao.com
   jwks-url: http://localhost/kakao/.well-known/jwks.json
   admin-key: test-kakao-admin-key
   unlink-url: http://localhost/kakao/v1/user/unlink
