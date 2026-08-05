@@ -154,7 +154,7 @@ public class JwtParser {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             return HexFormat.of().formatHex(digest.digest(rawNonce.getBytes(StandardCharsets.UTF_8)));
         } catch (NoSuchAlgorithmException e) {
-            throw new JwtParseException("Apple nonce hash failed", HttpStatus.INTERNAL_SERVER_ERROR, e);
+            throw new JwtParseException("nonce hash에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e);
         }
     }
 }
