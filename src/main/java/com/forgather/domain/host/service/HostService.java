@@ -32,7 +32,7 @@ public class HostService {
 
     @Transactional
     public HostProfileResponse updateProfile(Host loginHost, UpdateHostProfileRequest request) {
-        Host host = hostRepository.getByIdOrThrow(loginHost.getId());
+        Host host = hostRepository.getByIdWithLockOrThrow(loginHost.getId());
         host.updateProfile(request.nickname(), request.introduction(), request.linkUrl());
         return HostProfileResponse.of(host, applyPhotoChange(host, request));
     }
