@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.forgather.domain.exhibition.model.ExhibitionHost;
 import com.forgather.domain.exhibition.repository.ExhibitionHostRepository;
+import com.forgather.domain.host.model.HostProfilePhoto;
+import com.forgather.domain.host.repository.HostProfilePhotoRepository;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.service.SpaceService;
 import com.forgather.global.auth.model.Host;
@@ -26,6 +28,7 @@ public class HostDeleteService {
     private final AppleHostRepository appleHostRepository;
     private final SpaceHostRepository spaceHostRepository;
     private final ExhibitionHostRepository exhibitionHostRepository;
+    private final HostProfilePhotoRepository hostProfilePhotoRepository;
     private final SpaceService spaceService;
 
     @Transactional
@@ -34,7 +37,13 @@ public class HostDeleteService {
         deleteSocialAccounts(host);
         deleteSpaces(host);
         deleteExhibitionHosts(host);
+        deleteProfilePhoto(host);
         host.delete();
+    }
+
+    private void deleteProfilePhoto(Host host) {
+        hostProfilePhotoRepository.findByHostAndDeletedAtIsNull(host)
+            .ifPresent(HostProfilePhoto::delete);
     }
 
     /**
