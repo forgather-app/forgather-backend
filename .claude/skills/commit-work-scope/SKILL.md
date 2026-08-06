@@ -70,7 +70,7 @@ git diff --cached --name-status
    - 포함 파일: SocialAuthClient.java, SocialProvider.java, JwtParser.java, application*.yml
    - 이유: provider별 JWKS 조회와 Kakao 연동 변경이 하나의 리팩터링 단위입니다.
 
-2. chore: 소셜 JWKS 공개키 조회 테스트 추가
+2. test: 소셜 JWKS 공개키 조회 테스트 추가
    - 포함 파일: SocialAuthClientTest.java, JwtParserTest.java
    - 이유: 위 리팩터링의 캐시/실패 정책 검증을 분리합니다.
 
@@ -104,7 +104,7 @@ staged 상태에 무관한 파일이 섞여 있으면 그대로 두고, 커밋 �
 커밋 타입은 다음 중 하나만 사용한다.
 
 ```text
-feature | refactor | chore | fix | docs | style | agent | cicd
+feature | refactor | test | chore | fix | docs | style | agent | cicd
 ```
 
 작업 내용은 한국어를 기반으로 작성한다.
@@ -122,7 +122,7 @@ git commit --only \
 
 ```bash
 git commit --only \
-  -m "chore: 소셜 JWKS 공개키 조회 테스트 추가" \
+  -m "test: 소셜 JWKS 공개키 조회 테스트 추가" \
   -m "- provider별 캐시 분리와 실패 정책 검증" \
   -- src/test/java/example/FooTest.java
 ```
