@@ -49,8 +49,11 @@ public record UpdateSpaceRequest(
 
     @Schema(
         description = "스페이스 사진 삭제 여부. 사진을 지울 때만 사용한다. "
-            + "photo를 함께 보내면 무시되며 교체로 동작한다. 삭제할 사진이 없어도 성공한다.",
-        example = "true"
+            + "photo를 함께 보내면 무시되며 교체로 동작한다. 삭제할 사진이 없어도 성공한다. "
+            + "생략하거나 null이면 삭제하지 않는다.",
+        example = "true",
+        defaultValue = "false",
+        nullable = true
     )
     Boolean isDeletePhoto,
 

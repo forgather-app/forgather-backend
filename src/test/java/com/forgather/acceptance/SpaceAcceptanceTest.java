@@ -516,18 +516,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         );
 
         // when
-        ApiResponse<SpaceResponse> result = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
-            .contentType(ContentType.JSON)
-            .body(request)
-            .when()
-            .patch("/spaces/{spaceCode}", space.getCode())
-            .then()
-            .statusCode(HttpStatus.OK.value())
-            .extract()
-            .body()
-            .as(new TypeRef<>() {
-            });
+        ApiResponse<SpaceResponse> result = patchSpace(space, request, HttpStatus.OK);
 
         // then
         assertAll(
@@ -559,18 +548,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         );
 
         // when
-        ApiResponse<SpaceResponse> result = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
-            .contentType(ContentType.JSON)
-            .body(request)
-            .when()
-            .patch("/spaces/{spaceCode}", space.getCode())
-            .then()
-            .statusCode(HttpStatus.OK.value())
-            .extract()
-            .body()
-            .as(new TypeRef<>() {
-            });
+        ApiResponse<SpaceResponse> result = patchSpace(space, request, HttpStatus.OK);
 
         // then
         assertAll(
@@ -688,6 +666,29 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)).isEmpty()
         );
     }
+    
+    @DisplayName("isDeletePhoto를 생략해도 수정에 성공하고 기존 사진이 유지된다.")
+    @Test
+    void updateSpaceWithoutDeletePhotoField() {
+        // given
+        Space space = spaceRepository.save(SpaceFixture.createSpace());
+        spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
+        spaceHostRepository.save(new SpaceHost(space, host));
+
+        String request = """
+            { "name": "이름만 수정" }
+            """;
+
+        // when
+        ApiResponse<SpaceResponse> result = patchSpace(space, request, HttpStatus.OK);
+
+        // then
+        assertAll(
+            () -> assertThat(result.data().name()).isEqualTo("이름만 수정"),
+            () -> assertThat(result.data().spacePhoto().isExists()).isTrue(),
+            () -> assertThat(spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)).isPresent()
+        );
+    }
 
     private ApiResponse<SpaceResponse> patchSpace(Space space, String request, HttpStatus expected) {
         return RestAssuredMockMvc.given()
@@ -717,18 +718,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         );
 
         // when
-        ApiResponse<SpaceResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
-            .contentType(ContentType.JSON)
-            .body(request)
-            .when()
-            .patch("/spaces/{spaceCode}", space.getCode())
-            .then()
-            .statusCode(HttpStatus.OK.value())
-            .extract()
-            .body()
-            .as(new TypeRef<>() {
-            });
+        ApiResponse<SpaceResponse> response = patchSpace(space, request, HttpStatus.OK);
 
         // then
         assertAll(
