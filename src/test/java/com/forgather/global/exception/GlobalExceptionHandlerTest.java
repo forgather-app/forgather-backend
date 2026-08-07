@@ -230,14 +230,6 @@ class GlobalExceptionHandlerTest {
             assertEnvelope(res, 401, "JWT_INVALID", "토큰 파싱 실패");
         }
 
-        @DisplayName("FileUploadException(500) -> 500 / FILE_UPLOAD_FAILED / 영역별 마스킹 메시지")
-        @Test
-        void fileUpload_5xxMasked() throws Exception {
-            Snapshot res = perform(new FileUploadException("S3 PutObject failed: bucket=foo key=bar"));
-
-            assertEnvelope(res, 500, "FILE_UPLOAD_FAILED", "파일 업로드 처리 중 오류가 발생했습니다.");
-        }
-
         @DisplayName("FileDownloadException(500) -> 500 / FILE_DOWNLOAD_FAILED / 영역별 마스킹 메시지")
         @Test
         void fileDownload_5xxMasked() throws Exception {

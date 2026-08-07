@@ -6,7 +6,6 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -22,7 +21,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -39,6 +37,7 @@ import com.forgather.domain.space.dto.FeatureSpacesRequest;
 import com.forgather.domain.space.dto.FeaturedSpacesResponse;
 import com.forgather.domain.space.dto.HostSpaceItemResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
+import com.forgather.domain.space.dto.SpacePhotoRequest;
 import com.forgather.domain.space.dto.SpaceResponse;
 import com.forgather.domain.space.dto.UnfeatureSpacesRequest;
 import com.forgather.domain.space.dto.UpdateSpaceRequest;
@@ -48,6 +47,7 @@ import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpacePhotoRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.domain.ContentsStorage;
+import com.forgather.domain.upload.domain.UploadFileMetadata;
 import com.forgather.fixture.GuestBookCardFixture;
 import com.forgather.fixture.GuestBookCardPhotoFixture;
 import com.forgather.fixture.ProductFixture;
@@ -69,6 +69,9 @@ import io.restassured.module.mockmvc.RestAssuredMockMvc;
 @DisplayName("인수 테스트: Space")
 @AutoConfigureMockMvc
 class SpaceAcceptanceTest extends AcceptanceTest {
+
+    private static final String ROOT_DIRECTORY = "photogather/v2";
+    private static final String UPLOAD_FILE_NAME = "0f8e7d6c-1234-5678-9abc-def012345678.webp";
 
     @Autowired
     private MockMvc mockMvc;
@@ -112,8 +115,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
     @BeforeEach
     void setUp() throws IOException {
         RestAssuredMockMvc.mockMvc(mockMvc);
-        Mockito.when(contentsStorage.upload(any(), any()))
-            .thenReturn("forgather/temp.png");
+        Mockito.when(contentsStorage.getRootDirectory()).thenReturn(ROOT_DIRECTORY);
 
         host = createHost();
         hostRepository.save(host);
@@ -124,22 +126,16 @@ class SpaceAcceptanceTest extends AcceptanceTest {
     @Test
     void createSpace() throws Exception {
         // given
-        MockMultipartFile file = new MockMultipartFile(
-            "file",
-            "test.jpg",
-            "image/jpeg",
-            "test image content".getBytes()
-        );
         String request = objectMapper.writeValueAsString(
             new CreateSpaceRequest("test-space", "description", false, "forgather_official",
-                "forgather@forgather.me", null, null)
+                "forgather@forgather.me", null, null, new SpacePhotoRequest(UPLOAD_FILE_NAME, 102400L))
         );
 
         // when
         ApiResponse<CreateSpaceResponse> response = RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
-            .multiPart("request", request, "application/json")
-            .multiPart("file", file.getOriginalFilename(), file.getBytes(), file.getContentType())
+            .contentType(ContentType.JSON)
+            .body(request)
             .when()
             .post("/spaces")
             .then()
@@ -150,11 +146,57 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             });
 
         // then
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(response.data().spaceCode());
         assertAll(
             () -> assertThat(response.code()).isEqualTo(ResponseCode.SUCCESS),
             () -> assertThat(response.message()).isNull(),
-            () -> assertThat(response.data().spaceCode()).isNotEmpty()
+            () -> assertThat(response.data().spaceCode()).isNotEmpty(),
+            () -> assertThat(spacePhotoRepository.getBySpaceAndDeletedAtIsNullOrEmpty(space).getPath())
+                .isEqualTo(ROOT_DIRECTORY + "/spaces/photos/" + UPLOAD_FILE_NAME)
         );
+    }
+
+    @DisplayName("스페이스 사진 파일명 형식이 올바르지 않으면 스페이스를 생성할 수 없다.")
+    @Test
+    void createSpaceWithInvalidPhotoFileName() throws Exception {
+        // given
+        String request = objectMapper.writeValueAsString(
+            new CreateSpaceRequest("test-space", "description", false, "forgather_official",
+                "forgather@forgather.me", null, null, new SpacePhotoRequest("../../etc/passwd", 102400L))
+        );
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/spaces")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("VALIDATION_FAILED"));
+    }
+
+    @DisplayName("스페이스 사진 크기가 20MB를 초과하면 스페이스를 생성할 수 없다.")
+    @Test
+    void createSpaceWithOversizePhoto() throws Exception {
+        // given
+        String request = objectMapper.writeValueAsString(
+            new CreateSpaceRequest("test-space", "description", false, "forgather_official",
+                "forgather@forgather.me", null, null,
+                new SpacePhotoRequest(UPLOAD_FILE_NAME, UploadFileMetadata.MAX_FILE_SIZE_BYTES + 1))
+        );
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/spaces")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("VALIDATION_FAILED"));
     }
 
     @DisplayName("스페이스 사진이 없는 스페이스를 생성한다.")
@@ -163,13 +205,14 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         String request = objectMapper.writeValueAsString(
             new CreateSpaceRequest("test-space", "description", false, "forgather_official",
-                "forgather@forgather.me", null, null)
+                "forgather@forgather.me", null, null, null)
         );
 
         // when
         ApiResponse<CreateSpaceResponse> response = RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
-            .multiPart("request", request, "application/json")
+            .contentType(ContentType.JSON)
+            .body(request)
             .when()
             .post("/spaces")
             .then()
@@ -193,12 +236,13 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         String request = objectMapper.writeValueAsString(
             new CreateSpaceRequest("test-space", "description", false, "forgather_official",
-                "forgather@forgather.me", null, null)
+                "forgather@forgather.me", null, null, null)
         );
 
         // when & then
         RestAssuredMockMvc.given()
-            .multiPart("request", request, "application/json")
+            .contentType(ContentType.JSON)
+            .body(request)
             .when()
             .post("/spaces")
             .then()
@@ -212,13 +256,14 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         String request = objectMapper.writeValueAsString(
             new CreateSpaceRequest("test-space", "description", false, "forgather_official",
-                "forgather@forgather.me", "https://forgather.me", "포트폴리오")
+                "forgather@forgather.me", "https://forgather.me", "포트폴리오", null)
         );
 
         // when
         ApiResponse<CreateSpaceResponse> created = RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
-            .multiPart("request", request, "application/json")
+            .contentType(ContentType.JSON)
+            .body(request)
             .when()
             .post("/spaces")
             .then()
@@ -252,13 +297,14 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         String request = objectMapper.writeValueAsString(
             new CreateSpaceRequest("test-space", "description", false, "forgather_official",
-                "forgather@forgather.me", "https://forgather.me", null)
+                "forgather@forgather.me", "https://forgather.me", null, null)
         );
 
         // when & then
         RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
-            .multiPart("request", request, "application/json")
+            .contentType(ContentType.JSON)
+            .body(request)
             .when()
             .post("/spaces")
             .then()
@@ -272,13 +318,14 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         String longLinkUrl = "https://forgather.me/" + "a".repeat(300); // 321자 (255 초과, 2048 이하)
         String request = objectMapper.writeValueAsString(
             new CreateSpaceRequest("test-space", "description", false, "forgather_official",
-                "forgather@forgather.me", longLinkUrl, "포트폴리오")
+                "forgather@forgather.me", longLinkUrl, "포트폴리오", null)
         );
 
         // when
         ApiResponse<CreateSpaceResponse> created = RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
-            .multiPart("request", request, "application/json")
+            .contentType(ContentType.JSON)
+            .body(request)
             .when()
             .post("/spaces")
             .then()
@@ -309,13 +356,14 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         String request = objectMapper.writeValueAsString(
             new CreateSpaceRequest("1234567890".repeat(3) + "1", "description", false, "forgather_official",
-                "forgather@forgather.me", null, null)
+                "forgather@forgather.me", null, null, null)
         );
 
         // when & then
         RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
-            .multiPart("request", request, "application/json")
+            .contentType(ContentType.JSON)
+            .body(request)
             .when()
             .post("/spaces")
             .then()
@@ -459,25 +507,19 @@ class SpaceAcceptanceTest extends AcceptanceTest {
     void updateSpace() throws Exception {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
-        spacePhotoRepository.save(new SpacePhoto(space, "original.png", "forgather/uuid.png", 1024L));
+        spacePhotoRepository.save(new SpacePhoto(space, "forgather/uuid.png", 1024L));
         spaceHostRepository.save(new SpaceHost(space, host));
 
-        MockMultipartFile newFile = new MockMultipartFile(
-            "file",
-            "new.jpg",
-            "image/jpeg",
-            "new image content".getBytes()
-        );
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
             "새로운 스페이스", "새로운 설명", false, "forgather_official_new", "forgather_new@forgather.me",
-            "https://forgather.me", "포트폴리오", true)
+            "https://forgather.me", "포트폴리오", true, new SpacePhotoRequest(UPLOAD_FILE_NAME, 102400L))
         );
 
         // when
         ApiResponse<SpaceResponse> result = RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
-            .multiPart("request", request, "application/json")
-            .multiPart("file", newFile.getOriginalFilename(), newFile.getBytes(), newFile.getContentType())
+            .contentType(ContentType.JSON)
+            .body(request)
             .when()
             .patch("/spaces/{spaceCode}", space.getCode())
             .then()
@@ -498,10 +540,90 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(result.data().email()).isEqualTo("forgather_new@forgather.me"),
             () -> assertThat(result.data().linkUrl()).isEqualTo("https://forgather.me"),
             () -> assertThat(result.data().linkName()).isEqualTo("포트폴리오"),
-            () -> assertThat(
-                spacePhotoRepository.getBySpaceAndDeletedAtIsNullOrEmpty(space).getOriginalName()).isEqualTo("new.jpg"),
+            () -> assertThat(spacePhotoRepository.getBySpaceAndDeletedAtIsNullOrEmpty(space).getPath())
+                .isEqualTo(ROOT_DIRECTORY + "/spaces/photos/" + UPLOAD_FILE_NAME),
             () -> assertThat(result.data().guestBookCardCount()).isZero()
         );
+    }
+
+    @DisplayName("삭제 요청만 보내면 스페이스 사진만 삭제된다.")
+    @Test
+    void updateSpaceDeletingOnlyPhoto() throws Exception {
+        // given
+        Space space = spaceRepository.save(SpaceFixture.createSpace());
+        spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
+        spaceHostRepository.save(new SpaceHost(space, host));
+
+        String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
+            null, null, null, null, null, null, null, true, null)
+        );
+
+        // when
+        ApiResponse<SpaceResponse> result = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .patch("/spaces/{spaceCode}", space.getCode())
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+
+        // then
+        assertAll(
+            () -> assertThat(result.data().spacePhoto().isExists()).isFalse(),
+            () -> assertThat(spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)).isEmpty()
+        );
+    }
+
+    @DisplayName("기존 사진이 있는데 삭제 없이 새 사진을 등록할 수 없다.")
+    @Test
+    void updateSpaceWithNewPhotoWithoutDeleting() throws Exception {
+        // given
+        Space space = spaceRepository.save(SpaceFixture.createSpace());
+        spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
+        spaceHostRepository.save(new SpaceHost(space, host));
+
+        String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
+            null, null, null, null, null, null, null, false, new SpacePhotoRequest(UPLOAD_FILE_NAME, 102400L))
+        );
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .patch("/spaces/{spaceCode}", space.getCode())
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("BAD_REQUEST"));
+    }
+
+    @DisplayName("기존 사진이 없는데 삭제를 요청할 수 없다.")
+    @Test
+    void updateSpaceDeletingNotExistingPhoto() throws Exception {
+        // given
+        Space space = spaceRepository.save(SpaceFixture.createSpace());
+        spaceHostRepository.save(new SpaceHost(space, host));
+
+        String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
+            null, null, null, null, null, null, null, true, null)
+        );
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .patch("/spaces/{spaceCode}", space.getCode())
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("BAD_REQUEST"));
     }
 
     @DisplayName("스페이스 이름만 수정한다.")
@@ -513,13 +635,14 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         spaceHostRepository.save(new SpaceHost(space, host));
 
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
-            "새로운 스페이스", null, null, null, null, null, null, false)
+            "새로운 스페이스", null, null, null, null, null, null, false, null)
         );
 
         // when
         ApiResponse<SpaceResponse> response = RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
-            .multiPart("request", request, "application/json")
+            .contentType(ContentType.JSON)
+            .body(request)
             .when()
             .patch("/spaces/{spaceCode}", space.getCode())
             .then()
@@ -553,12 +676,13 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         spaceHostRepository.save(new SpaceHost(space, host));
 
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
-            "새로운 스페이스", null, null, null, null, null, null, false)
+            "새로운 스페이스", null, null, null, null, null, null, false, null)
         );
 
         // when & then
         RestAssuredMockMvc.given()
-            .multiPart("request", request, "application/json")
+            .contentType(ContentType.JSON)
+            .body(request)
             .when()
             .patch("/spaces/{spaceCode}", space.getCode())
             .then()
@@ -577,13 +701,14 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         String otherToken = jwtTokenProvider.generateAccessToken(otherHost.getId());
 
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
-            "새로운 스페이스", null, null, null, null, null, null, false)
+            "새로운 스페이스", null, null, null, null, null, null, false, null)
         );
 
         // when & then
         RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + otherToken)
-            .multiPart("request", request, "application/json")
+            .contentType(ContentType.JSON)
+            .body(request)
             .when()
             .patch("/spaces/{spaceCode}", space.getCode())
             .then()
@@ -979,13 +1104,14 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         Space space = saveSpaceOf(host, "1111111111");
         feature(space.getCode());
         String request = objectMapper.writeValueAsString(
-            new UpdateSpaceRequest("새로운 이름", null, null, null, null, null, null, false)
+            new UpdateSpaceRequest("새로운 이름", null, null, null, null, null, null, false, null)
         );
 
         // when
         RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
-            .multiPart("request", request, "application/json")
+            .contentType(ContentType.JSON)
+            .body(request)
             .when()
             .patch("/spaces/{spaceCode}", space.getCode())
             .then()

@@ -49,6 +49,7 @@ import io.restassured.module.mockmvc.RestAssuredMockMvc;
 class UploadAcceptanceTest extends AcceptanceTest {
 
     private static final String EXHIBITION_SIGNED_URLS_PATH = "/exhibitions/upload/signed-urls";
+    private static final String SPACE_PHOTO_SIGNED_URLS_PATH = "/spaces/photos/upload/signed-urls";
 
     @Autowired
     private MockMvc mockMvc;
@@ -397,6 +398,169 @@ class UploadAcceptanceTest extends AcceptanceTest {
 
         // then
         assertThat(result.code()).isEqualTo(ResponseCode.VALIDATION_FAILED);
+    }
+
+    @DisplayName("스페이스 사진 서명된 url 발급")
+    @Test
+    void issueSpacePhotoSignedUrls() {
+        // given
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
+            new UploadFileRequest("abc.webp", 1024L)
+        ));
+        when(awsS3Cloud.getRootDirectory()).thenReturn("photogather/v2");
+        when(awsS3Cloud.issueSignedUrl(anyString(), anyString(), anyLong())).thenAnswer(invocation -> {
+            String path = invocation.getArgument(0);
+            String contentType = invocation.getArgument(1);
+            long contentLength = invocation.getArgument(2);
+            return "test-prefix-" + path + "-" + contentType + "-" + contentLength + "-test-suffix";
+        });
+
+        // when
+        ApiResponse<IssueSignedUrlResponse> result = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body(request)
+            .when()
+            .post(SPACE_PHOTO_SIGNED_URLS_PATH)
+            .then()
+            .statusCode(200)
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+        Map<String, String> signedUrls = result.data().signedUrls();
+
+        // then
+        assertAll(
+            () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+            () -> assertThat(result.message()).isNull(),
+            () -> assertThat(signedUrls.get("abc.webp"))
+                .isEqualTo("test-prefix-photogather/v2/spaces/photos/abc.webp-image/webp-1024-test-suffix")
+        );
+    }
+
+    /**
+     * 신규 경로 {@code /spaces/photos/upload/signed-urls}는 레거시 {@code /spaces/{spaceCode}/upload/signed-urls}와
+     * 세그먼트 수가 같아 spaceCode="photos"로도 매칭될 수 있는 형태다. Spring이 리터럴 패턴을 우선하므로
+     * 신규 핸들러가 잡히고, 레거시 핸들러는 인증이 없으므로 401이 나온다는 사실로 매핑 우선순위를 고정한다.
+     */
+    @DisplayName("스페이스 사진 발급 경로는 레거시 발급 API보다 우선 매칭된다")
+    @Test
+    void spacePhotoPathTakesPrecedenceOverLegacyPath() {
+        // given
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
+            new UploadFileRequest("abc.webp", 1024L)
+        ));
+
+        // when, then
+        RestAssuredMockMvc.given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body(request)
+            .when()
+            .post(SPACE_PHOTO_SIGNED_URLS_PATH)
+            .then()
+            .statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @DisplayName("스페이스 사진 서명된 url은 한 장만 발급할 수 있다")
+    @Test
+    void rejectSpacePhotoSignedUrlsWhenMultipleFiles() {
+        // given
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
+            new UploadFileRequest("abc.webp", 1024L),
+            new UploadFileRequest("def.webp", 2048L)
+        ));
+
+        // when
+        ApiResponse<Void> result = postSpacePhotoSignedUrlsExpectingBadRequest(request);
+
+        // then
+        assertThat(result.code()).isEqualTo(ResponseCode.BAD_REQUEST);
+    }
+
+    @DisplayName("스페이스 사진 업로드 url 발급 시 형식은 맞지만 지원하지 않는 확장자면 BAD_REQUEST를 반환한다")
+    @ParameterizedTest
+    @ValueSource(strings = {"photo.png", "photo.jpg", "x.gif", "icon.svg", "document.pdf"})
+    void issueSpacePhotoSignedUrlsWithUnsupportedExtension(String unsupportedFileName) {
+        // given
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
+            new UploadFileRequest(unsupportedFileName, 1024L)
+        ));
+
+        // when
+        ApiResponse<Void> result = postSpacePhotoSignedUrlsExpectingBadRequest(request);
+
+        // then
+        assertThat(result.code()).isEqualTo(ResponseCode.BAD_REQUEST);
+    }
+
+    @DisplayName("스페이스 사진 업로드 url 발급 시 파일명 형식이 올바르지 않으면 400(VALIDATION_FAILED)을 반환한다")
+    @ParameterizedTest
+    @ValueSource(strings = {"../../../etc/passwd", "a/b.webp", "a\\b.webp", "noext", "abc.WEBP"})
+    void issueSpacePhotoSignedUrlsWithInvalidFileName(String invalidFileName) {
+        // given
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
+            new UploadFileRequest(invalidFileName, 1024L)
+        ));
+
+        // when
+        ApiResponse<Void> result = postSpacePhotoSignedUrlsExpectingBadRequest(request);
+
+        // then
+        assertThat(result.code()).isEqualTo(ResponseCode.VALIDATION_FAILED);
+    }
+
+    @DisplayName("스페이스 사진 업로드 url 발급 시 업로드 파일 목록이 비어있거나 null이면 400(VALIDATION_FAILED)을 반환한다")
+    @ParameterizedTest
+    @MethodSource("emptyOrNullFileRequests")
+    void issueSpacePhotoSignedUrlsWithEmptyOrNullFileNames(IssuePreSignedUrlRequest request) {
+        // when
+        ApiResponse<Void> result = postSpacePhotoSignedUrlsExpectingBadRequest(request);
+
+        // then
+        assertThat(result.code()).isEqualTo(ResponseCode.VALIDATION_FAILED);
+    }
+
+    @DisplayName("스페이스 사진 업로드 url 발급 시 파일 크기가 0 이하이거나 20MB를 초과하면 400(VALIDATION_FAILED)을 반환한다")
+    @ParameterizedTest
+    @MethodSource("invalidFileSizes")
+    void issueSpacePhotoSignedUrlsWithInvalidSize(long invalidSize) {
+        // given
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
+            new UploadFileRequest("abc.webp", invalidSize)
+        ));
+
+        // when
+        ApiResponse<Void> result = postSpacePhotoSignedUrlsExpectingBadRequest(request);
+
+        // then
+        assertThat(result.code()).isEqualTo(ResponseCode.VALIDATION_FAILED);
+    }
+
+    private static Stream<Named<Long>> invalidFileSizes() {
+        return Stream.of(
+            Named.of("0", 0L),
+            Named.of("음수", -1L),
+            Named.of("20MB 초과", UploadFileMetadata.MAX_FILE_SIZE_BYTES + 1)
+        );
+    }
+
+    private ApiResponse<Void> postSpacePhotoSignedUrlsExpectingBadRequest(IssuePreSignedUrlRequest request) {
+        return RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body(request)
+            .when()
+            .post(SPACE_PHOTO_SIGNED_URLS_PATH)
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
     }
 
     private static Stream<Named<IssuePreSignedUrlRequest>> emptyOrNullFileRequests() {
