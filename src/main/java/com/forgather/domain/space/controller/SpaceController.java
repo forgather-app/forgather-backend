@@ -162,14 +162,14 @@ public class SpaceController {
             + "이미 지정되지 않은 스페이스가 포함되어 있어도 성공 응답을 반환합니다. "
             + "요청 목록에 호스트가 소유하지 않은 스페이스 코드가 하나라도 포함되면 부분 반영 없이 전체가 실패합니다. "
             + "존재하지 않는 코드와 다른 호스트의 코드를 구분하지 않고 400으로 응답합니다."
-            + "성공 시 본문 없이 204로 응답하며, 해제 후 지정 목록이 필요하면 GET /spaces/me 를 조회합니다.")
+            + "성공 시 data 없이 200으로 응답하며, 해제 후 지정 목록이 필요하면 GET /spaces/me 를 조회합니다.")
     @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<Void> unfeatureSpaces(
+    public ResponseEntity<ApiResponse<Void>> unfeatureSpaces(
         @RequestBody @Valid UnfeatureSpacesRequest request,
         @LoginHost Host host
     ) {
         spaceService.unfeatureSpaces(host, request);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success());
     }
 
     @GetMapping("/{spaceCode}/host-check")

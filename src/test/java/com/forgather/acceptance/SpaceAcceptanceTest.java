@@ -3,8 +3,8 @@ package com.forgather.acceptance;
 import static com.forgather.fixture.HostFixture.createHost;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -1055,7 +1055,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         );
     }
 
-    @DisplayName("지정된 스페이스 중 일부만 해제하고 본문 없이 204로 응답한다.")
+    @DisplayName("지정된 스페이스 중 일부만 해제하고 data 없이 200으로 응답한다.")
     @Test
     void unfeatureSpaces() {
         // given
@@ -1071,8 +1071,9 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             .when()
             .delete("/spaces/me/featured")
             .then()
-            .statusCode(HttpStatus.NO_CONTENT.value())
-            .body(emptyOrNullString());
+            .statusCode(HttpStatus.OK.value())
+            .body("code", equalTo("SUCCESS"))
+            .body("data", nullValue());
 
         // then
         assertAll(
@@ -1352,7 +1353,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             .when()
             .delete("/spaces/me/featured")
             .then()
-            .statusCode(HttpStatus.NO_CONTENT.value());
+            .statusCode(HttpStatus.OK.value());
     }
 
     private boolean isFeatured(Space space) {
