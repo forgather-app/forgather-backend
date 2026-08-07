@@ -745,8 +745,8 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             .put("/spaces/me/featured")
             .then()
             .statusCode(HttpStatus.BAD_REQUEST.value())
-            .body("code", equalTo("BAD_REQUEST"))
-            .body("message", containsString("스페이스 코드 목록이 존재하지 않습니다."));
+            .body("code", equalTo("VALIDATION_FAILED"))
+            .body("message", containsString("스페이스 코드는 1개 이상 100개 이하로 요청할 수 있습니다."));
     }
 
     @DisplayName("같은 목록으로 다시 지정해도 지정 상태가 유지된다.")
@@ -1147,8 +1147,8 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             .delete("/spaces/me/featured")
             .then()
             .statusCode(HttpStatus.BAD_REQUEST.value())
-            .body("code", equalTo("BAD_REQUEST"))
-            .body("message", containsString("스페이스 코드 목록이 존재하지 않습니다."));
+            .body("code", equalTo("VALIDATION_FAILED"))
+            .body("message", containsString("스페이스 코드는 1개 이상 100개 이하로 요청할 수 있습니다."));
     }
 
     @DisplayName("해제 목록에 다른 호스트의 스페이스가 섞이면 전체가 실패하고 기존 지정 상태가 유지된다.")
