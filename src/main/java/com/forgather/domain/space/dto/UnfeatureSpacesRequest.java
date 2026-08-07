@@ -9,9 +9,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public record FeatureSpacesRequest(
+public record UnfeatureSpacesRequest(
 
-    @Schema(description = "'지금 축하받고 있는 스페이스'로 지정할 스페이스 코드 목록. 1개 이상 100개 이하. "
+    @Schema(description = "'지금 축하받고 있는 스페이스' 지정을 해제할 스페이스 코드 목록. 1개 이상 100개 이하. "
         + "요청에 포함되지 않은 스페이스의 지정 상태는 변경되지 않습니다.",
         example = "[\"1234567890\", \"0987654321\"]")
     @NotNull

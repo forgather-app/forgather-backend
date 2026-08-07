@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ import com.forgather.domain.space.dto.FeaturedSpacesResponse;
 import com.forgather.domain.space.dto.HostSpaceItemResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
 import com.forgather.domain.space.dto.SpaceResponse;
+import com.forgather.domain.space.dto.UnfeatureSpacesRequest;
 import com.forgather.domain.space.dto.UpdateSpaceRequest;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.model.SpacePhoto;
@@ -230,7 +232,18 @@ public class SpaceService {
     @Transactional
     public FeaturedSpacesResponse featureSpaces(Host host, FeatureSpacesRequest request) {
         validateHostNull(host);
-        Set<String> targetCodes = request.toUniqueSpaceCodes();
+        return FeaturedSpacesResponse.from(
+            changeFeaturedState(host, request.toUniqueSpaceCodes(), Space::feature)
+        );
+    }
+
+    @Transactional
+    public void unfeatureSpaces(Host host, UnfeatureSpacesRequest request) {
+        validateHostNull(host);
+        changeFeaturedState(host, request.toUniqueSpaceCodes(), Space::unfeature);
+    }
+
+    private List<Space> changeFeaturedState(Host host, Set<String> targetCodes, Consumer<Space> action) {
         if (targetCodes.isEmpty()) {
             throw new BaseException("스페이스 코드 목록이 존재하지 않습니다.");
         }
@@ -243,8 +256,8 @@ public class SpaceService {
 
         hostSpaces.stream()
             .filter(space -> targetCodes.contains(space.getCode()))
-            .forEach(Space::feature);
-        return FeaturedSpacesResponse.from(hostSpaces);
+            .forEach(action);
+        return hostSpaces;
     }
 
     private void validateTargetCodes(Set<String> targetCodes, List<Space> spaces) {

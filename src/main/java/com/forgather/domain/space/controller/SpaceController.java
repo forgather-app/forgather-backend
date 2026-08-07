@@ -24,6 +24,7 @@ import com.forgather.domain.space.dto.FeatureSpacesRequest;
 import com.forgather.domain.space.dto.FeaturedSpacesResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
 import com.forgather.domain.space.dto.SpaceResponse;
+import com.forgather.domain.space.dto.UnfeatureSpacesRequest;
 import com.forgather.domain.space.dto.UpdateSpaceRequest;
 import com.forgather.domain.space.service.SpaceService;
 import com.forgather.global.auth.annotation.LoginHost;
@@ -152,6 +153,23 @@ public class SpaceController {
     ) {
         var response = spaceService.featureSpaces(host, request);
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @DeleteMapping("/me/featured")
+    @Operation(summary = "축하받는 스페이스 지정 해제",
+        description = "요청한 스페이스들의 '지금 축하받고 있는 스페이스' 지정을 해제합니다. "
+            + "요청에 포함되지 않은 스페이스의 지정 상태는 변경되지 않습니다."
+            + "이미 지정되지 않은 스페이스가 포함되어 있어도 성공 응답을 반환합니다. "
+            + "요청 목록에 호스트가 소유하지 않은 스페이스 코드가 하나라도 포함되면 부분 반영 없이 전체가 실패합니다. "
+            + "존재하지 않는 코드와 다른 호스트의 코드를 구분하지 않고 400으로 응답합니다."
+            + "성공 시 data 없이 200으로 응답하며, 해제 후 지정 목록이 필요하면 GET /spaces/me 를 조회합니다.")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<Void>> unfeatureSpaces(
+        @RequestBody @Valid UnfeatureSpacesRequest request,
+        @LoginHost Host host
+    ) {
+        spaceService.unfeatureSpaces(host, request);
+        return ResponseEntity.ok(ApiResponse.success());
     }
 
     @GetMapping("/{spaceCode}/host-check")

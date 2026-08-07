@@ -21,6 +21,7 @@ import com.forgather.domain.space.dto.CreateSpaceRequest;
 import com.forgather.domain.space.dto.FeatureSpacesRequest;
 import com.forgather.domain.space.dto.FeaturedSpacesResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
+import com.forgather.domain.space.dto.UnfeatureSpacesRequest;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
@@ -123,7 +124,7 @@ class SpaceServiceTest extends TestOnContainer {
 
         // then
         assertAll(
-            () -> assertThat(response.spaceCodes()).containsExactlyInAnyOrder(first.getCode(), second.getCode()),
+            () -> assertThat(response.featuredSpaceCodes()).containsExactlyInAnyOrder(first.getCode(), second.getCode()),
             () -> assertThat(first.isFeatured()).isTrue(),
             () -> assertThat(second.isFeatured()).isTrue()
         );
@@ -216,7 +217,7 @@ class SpaceServiceTest extends TestOnContainer {
 
         // then
         assertAll(
-            () -> assertThat(response.spaceCodes()).containsExactly(space.getCode()),
+            () -> assertThat(response.featuredSpaceCodes()).containsExactly(space.getCode()),
             () -> assertThat(space.isFeatured()).isTrue()
         );
     }
@@ -304,6 +305,118 @@ class SpaceServiceTest extends TestOnContainer {
 
         // then
         assertThat(space.isFeatured()).isFalse();
+    }
+
+    @DisplayName("일부를 해제하면 해제 대상만 미지정 상태가 된다.")
+    @Test
+    void unfeatureSpaces() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        Space first = saveSpaceOf(host, "1111111111");
+        Space second = saveSpaceOf(host, "2222222222");
+        spaceService.featureSpaces(host, new FeatureSpacesRequest(List.of(first.getCode(), second.getCode())));
+
+        // when
+        spaceService.unfeatureSpaces(host, new UnfeatureSpacesRequest(List.of(first.getCode())));
+
+        // then
+        assertAll(
+            () -> assertThat(first.isFeatured()).isFalse(),
+            () -> assertThat(second.isFeatured()).isTrue()
+        );
+    }
+
+    @DisplayName("해제 요청에 포함되지 않은 스페이스의 지정 상태는 그대로 유지된다.")
+    @Test
+    void unfeatureSpacesKeepsOmittedSpaces() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        Space first = saveSpaceOf(host, "1111111111");
+        Space second = saveSpaceOf(host, "2222222222");
+        spaceService.featureSpaces(host, new FeatureSpacesRequest(List.of(first.getCode(), second.getCode())));
+
+        // when
+        spaceService.unfeatureSpaces(host, new UnfeatureSpacesRequest(List.of(first.getCode())));
+
+        // then
+        assertThat(second.isFeatured()).isTrue();
+    }
+
+    /**
+     * DELETE는 멱등해야 한다. 이미 미지정인 스페이스를 해제해도 실패하지 않아야
+     * 클라이언트가 현재 지정 상태를 몰라도 안전하게 재시도할 수 있다.
+     */
+    @DisplayName("지정되지 않은 스페이스를 해제해도 예외 없이 미지정 상태가 유지된다.")
+    @Test
+    void unfeatureSpacesIsIdempotent() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        Space space = saveSpaceOf(host, "1111111111");
+
+        // when
+        spaceService.unfeatureSpaces(host, new UnfeatureSpacesRequest(List.of(space.getCode())));
+
+        // then
+        assertThat(space.isFeatured()).isFalse();
+    }
+
+    @DisplayName("빈 목록으로 해제를 요청하면 예외를 던진다.")
+    @Test
+    void unfeatureSpacesWithEmptyList() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+
+        // when & then
+        assertThatThrownBy(() -> spaceService.unfeatureSpaces(host, new UnfeatureSpacesRequest(List.of())))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("스페이스 코드 목록이 존재하지 않습니다.");
+    }
+
+    /**
+     * 해제는 "호스트가 가진 스페이스"에만 적용되어야 한다. 남의 스페이스를 목록에 넣어도 꺼지지 않고,
+     * 부분 반영 없이 요청 전체가 실패해 내 기존 지정 상태도 그대로 남아야 한다.
+     */
+    @DisplayName("해제 목록에 다른 호스트의 스페이스가 섞이면 예외를 던지고 양쪽의 지정 상태가 모두 유지된다.")
+    @Test
+    void unfeatureSpacesWithOtherHostSpace() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        Host otherHost = hostRepository.save(HostFixture.createHost());
+        Space featured = saveSpaceOf(host, "1111111111");
+        Space otherSpace = saveSpaceOf(otherHost, "9999999999");
+        spaceService.featureSpaces(host, new FeatureSpacesRequest(List.of(featured.getCode())));
+        spaceService.featureSpaces(otherHost, new FeatureSpacesRequest(List.of(otherSpace.getCode())));
+
+        // when & then
+        assertAll(
+            () -> assertThatThrownBy(() -> spaceService.unfeatureSpaces(
+                host, new UnfeatureSpacesRequest(List.of(featured.getCode(), otherSpace.getCode())))
+            )
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("유효하지 않은 스페이스 코드입니다."),
+
+            () -> assertThat(featured.isFeatured()).isTrue(),
+            () -> assertThat(otherSpace.isFeatured()).isTrue()
+        );
+    }
+
+    @DisplayName("해제 목록에 존재하지 않는 스페이스가 섞이면 예외를 던지고 기존 지정 상태가 유지된다.")
+    @Test
+    void unfeatureSpacesWithNotExistingSpace() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        Space featured = saveSpaceOf(host, "1111111111");
+        spaceService.featureSpaces(host, new FeatureSpacesRequest(List.of(featured.getCode())));
+        String notExistingSpaceCode = "0000000000";
+
+        // when & then
+        assertAll(
+            () -> assertThatThrownBy(() -> spaceService.unfeatureSpaces(
+                host, new UnfeatureSpacesRequest(List.of(featured.getCode(), notExistingSpaceCode))))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("유효하지 않은 스페이스 코드입니다."),
+            () -> assertThat(featured.isFeatured()).isTrue()
+        );
     }
 
     private Space saveSpaceOf(Host owner, String spaceCode) {
