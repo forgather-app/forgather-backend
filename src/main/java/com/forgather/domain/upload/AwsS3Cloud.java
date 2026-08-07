@@ -1,6 +1,5 @@
 package com.forgather.domain.upload;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -8,17 +7,13 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.forgather.domain.model.Photo;
 import com.forgather.domain.upload.domain.ContentsStorage;
-import com.forgather.domain.upload.domain.FilePathGenerator;
-import com.forgather.domain.upload.domain.UploadCategory;
 import com.forgather.global.config.S3Properties;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.Delete;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
@@ -44,25 +39,6 @@ public class AwsS3Cloud implements ContentsStorage {
     private final S3Client s3Client;
     private final S3Properties s3Properties;
     private final S3Presigner s3Presigner;
-
-    @Override
-    public String upload(String spaceCode, MultipartFile file) throws IOException {
-        String path = FilePathGenerator.generateContentsFilePath(s3Properties.getRootDirectory(), spaceCode,
-            UploadCategory.SPACE, file);
-        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-            .bucket(s3Properties.getBucketName())
-            .key(path)
-            .tagging(s3Properties.getTagging())
-            .build();
-        s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.getBytes()));
-
-        log.atDebug()
-            .addKeyValue("spaceCode", spaceCode)
-            .addKeyValue("originalName", file.getOriginalFilename())
-            .addKeyValue("uploadedPath", path)
-            .log("S3 업로드 완료");
-        return path;
-    }
 
     @Override
     public void deletePhotos(List<? extends Photo> deletedPhotos) {
