@@ -89,6 +89,19 @@ public class UploadController {
     }
 
     @SecurityRequirement(name = "bearerAuth")
+    @PostMapping(path = "/spaces/photos/upload/signed-urls")
+    @Operation(summary = "스페이스 사진 업로드 URL 발급",
+        description = "로그인한 호스트가 스페이스 사진 업로드용 presigned URL을 발급받습니다. "
+            + "스페이스 사진은 한 장만 발급할 수 있습니다." + PRESIGN_USAGE_NOTE)
+    public ResponseEntity<ApiResponse<IssueSignedUrlResponse>> issueSpacePhotoSignedUrls(
+        @LoginHost(required = true) Host host,
+        @Valid @RequestBody IssuePreSignedUrlRequest request
+    ) {
+        var response = uploadService.issueSpacePhotoSignedUrls(request);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping(path = "/exhibitions/upload/signed-urls")
     @Operation(summary = "전시 사진 업로드 URL 발급",
         description = "로그인한 호스트가 전시 사진 업로드용 presigned URL을 발급받습니다." + PRESIGN_USAGE_NOTE)

@@ -40,6 +40,16 @@ public class FilePathGenerator {
         return "%s.%s".formatted(uploadFileName, extension);
     }
 
+    public static String generateSpacePhotoFilePath(
+        String rootDirectory,
+        String fileName
+    ) {
+        return "%s/spaces/photos/%s".formatted(
+            rootDirectory,
+            fileName
+        );
+    }
+
     public static String generateExhibitionContentsFilePath(
         String rootDirectory,
         String fileName
