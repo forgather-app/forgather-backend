@@ -16,7 +16,7 @@ public class SpacePhotoFixture {
     }
 
     public static SpacePhoto createSpacePhotoWithSpace(Space space) {
-        return new SpacePhoto(space, "originalName", "path", 1024L);
+        return new SpacePhoto(space, "path", 1024L);
     }
 
     public static SpacePhoto createEmptySpacePhotoWithSpace(Space space) {

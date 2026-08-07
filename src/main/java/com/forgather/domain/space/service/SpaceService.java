@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
 import com.forgather.domain.guestbook.repository.dto.SpaceGuestBookCountDto;
@@ -24,6 +23,7 @@ import com.forgather.domain.space.dto.FeatureSpacesRequest;
 import com.forgather.domain.space.dto.FeaturedSpacesResponse;
 import com.forgather.domain.space.dto.HostSpaceItemResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
+import com.forgather.domain.space.dto.SpacePhotoRequest;
 import com.forgather.domain.space.dto.SpaceResponse;
 import com.forgather.domain.space.dto.UnfeatureSpacesRequest;
 import com.forgather.domain.space.dto.UpdateSpaceRequest;
@@ -31,7 +31,8 @@ import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.model.SpacePhoto;
 import com.forgather.domain.space.repository.SpacePhotoRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
-import com.forgather.domain.upload.service.UploadService;
+import com.forgather.domain.upload.domain.ContentsStorage;
+import com.forgather.domain.upload.domain.FilePathGenerator;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHost;
 import com.forgather.global.auth.repository.SpaceHostRepository;
@@ -51,7 +52,7 @@ public class SpaceService {
 
     private final ProductService productService;
     private final GuestBookService guestBookService;
-    private final UploadService uploadService;
+    private final ContentsStorage contentsStorage;
     private final SpaceRepository spaceRepository;
     private final SpacePhotoRepository spacePhotoRepository;
     private final SpaceHostRepository spaceHostRepository;
@@ -59,16 +60,14 @@ public class SpaceService {
     private final RandomCodeGenerator codeGenerator;
 
     @Transactional
-    public CreateSpaceResponse create(CreateSpaceRequest request, MultipartFile file, Host host) {
+    public CreateSpaceResponse create(CreateSpaceRequest request, Host host) {
         validateHostNull(host);
         String spaceCode = codeGenerator.generate(10);
         Space space = spaceRepository.save(request.toEntity(spaceCode));
         spaceHostRepository.save(new SpaceHost(space, host));
-        if (file == null || file.isEmpty()) {
-            return CreateSpaceResponse.from(space);
+        if (request.photo() != null) {
+            savePhoto(space, request.photo());
         }
-        String path = uploadService.upload(spaceCode, file);
-        spacePhotoRepository.save(new SpacePhoto(space, file.getOriginalFilename(), path, file.getSize()));
         return CreateSpaceResponse.from(space);
     }
 
@@ -79,7 +78,7 @@ public class SpaceService {
     }
 
     @Transactional
-    public SpaceResponse update(String spaceCode, UpdateSpaceRequest request, MultipartFile file, Host host) {
+    public SpaceResponse update(String spaceCode, UpdateSpaceRequest request, Host host) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(space, host);
 
@@ -87,40 +86,46 @@ public class SpaceService {
             request.email(), request.linkUrl(), request.linkName());
 
         if (request.isDeletingPhoto()) {
-            handlePhotoWithDeleteRequest(space, file, spaceCode);
+            handlePhotoWithDeleteRequest(space, request.photo());
         } else {
-            handlePhotoWithoutDeleteRequest(space, file, spaceCode);
+            handlePhotoWithoutDeleteRequest(space, request.photo());
         }
         return createSpaceResponse(space);
     }
 
     /**
-     * 삭제 요청이 없는 경우: 새 파일이 있으면 업로드 (기존 사진이 없어야 함)
+     * 삭제 요청이 없는 경우: 새 사진이 있으면 등록 (기존 사진이 없어야 함)
      */
-    private void handlePhotoWithoutDeleteRequest(Space space, MultipartFile file, String spaceCode) {
-        if (file != null && !file.isEmpty()) {
-            uploadNewPhoto(space, file, spaceCode);
+    private void handlePhotoWithoutDeleteRequest(Space space, SpacePhotoRequest photo) {
+        if (photo != null) {
+            saveNewPhoto(space, photo);
         }
     }
 
     /**
-     * 삭제 요청이 있는 경우: 기존 사진을 삭제하고, 파일이 존재하면 업로드
+     * 삭제 요청이 있는 경우: 기존 사진을 삭제하고, 새 사진이 존재하면 등록
      */
-    private void handlePhotoWithDeleteRequest(Space space, MultipartFile file, String spaceCode) {
+    private void handlePhotoWithDeleteRequest(Space space, SpacePhotoRequest photo) {
         deleteExistingPhoto(space);
-        if (file != null && !file.isEmpty()) {
-            uploadNewPhoto(space, file, spaceCode);
+        if (photo != null) {
+            saveNewPhoto(space, photo);
         }
     }
 
-    private void uploadNewPhoto(Space space, MultipartFile file, String spaceCode) {
+    private void saveNewPhoto(Space space, SpacePhotoRequest photo) {
         spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)
-            .ifPresent(photo -> {
+            .ifPresent(existingPhoto -> {
                 throw new BaseException("스페이스 사진이 이미 존재합니다. 기존 스페이스 사진을 삭제 해주세요.");
             });
 
-        String path = uploadService.upload(spaceCode, file);
-        spacePhotoRepository.save(new SpacePhoto(space, file.getOriginalFilename(), path, file.getSize()));
+        savePhoto(space, photo);
+    }
+
+    private void savePhoto(Space space, SpacePhotoRequest photo) {
+        String path = FilePathGenerator.generateSpacePhotoFilePath(
+            contentsStorage.getRootDirectory(), photo.uploadFileName()
+        );
+        spacePhotoRepository.save(photo.toEntity(space, path));
     }
 
     private void deleteExistingPhoto(Space space) {

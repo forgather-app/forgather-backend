@@ -15,19 +15,19 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SpacePhoto extends Photo {
 
+    private static final String EMPTY_ORIGINAL_NAME = "";
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "space_id", nullable = false)
     private Space space;
 
-    public SpacePhoto(Space space, String originalName, String path, Long capacity) {
+    public SpacePhoto(Space space, String path, Long capacity) {
+        super(EMPTY_ORIGINAL_NAME, path, capacity);
         this.space = space;
-        this.originalName = originalName;
-        this.path = path;
-        this.capacity = capacity;
     }
 
     public static SpacePhoto empty(Space space) {
-        return new SpacePhoto(space, "", "", 0L);
+        return new SpacePhoto(space, "", 0L);
     }
 
     public boolean isExists() {
