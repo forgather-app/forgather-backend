@@ -1,6 +1,7 @@
 package com.forgather.acceptance;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.util.HashMap;
@@ -88,6 +89,88 @@ class HostProfileAcceptanceTest extends AcceptanceTest {
             .get("/hosts/me/profile")
             .then()
             .statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @DisplayName("비로그인 방문자가 호스트 코드로 공개 프로필을 조회한다")
+    @Test
+    void getPublicProfile() {
+        // given
+        Host host = saveHostWithProfile();
+
+        // when
+        ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
+            .accept(ContentType.JSON)
+            .when()
+            .get("/hosts/{hostCode}/profile", host.getCode())
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract();
+
+        // then
+        assertAll(
+            () -> assertThat(response.jsonPath().getString("code")).isEqualTo(ResponseCode.SUCCESS.name()),
+            () -> assertThat(response.jsonPath().getString("data.hostCode")).isEqualTo(host.getCode()),
+            () -> assertThat(response.jsonPath().getString("data.nickname")).isEqualTo("포스티"),
+            () -> assertThat(response.jsonPath().getString("data.introduction")).isEqualTo("안녕하세요, 포게더 작가입니다."),
+            () -> assertThat(response.jsonPath().getString("data.linkUrl")).isEqualTo("https://forgather.app/"),
+            () -> assertThat(response.jsonPath().getString("data.pictureUrl"))
+                .isEqualTo("https://cdn.forgather.app/hosts/1/profile/a.webp"),
+            () -> assertThat(response.jsonPath().getMap("data")).doesNotContainKeys("id", "name", "email")
+        );
+    }
+
+    @DisplayName("프로필을 설정하지 않은 호스트는 닉네임 외 필드가 null이다")
+    @Test
+    void getPublicProfileWithoutOptionalFields() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+
+        // when
+        ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
+            .accept(ContentType.JSON)
+            .when()
+            .get("/hosts/{hostCode}/profile", host.getCode())
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract();
+
+        // then
+        assertAll(
+            () -> assertThat(response.jsonPath().getString("data.nickname")).isEqualTo("포스티"),
+            () -> assertThat(response.jsonPath().getString("data.introduction")).isNull(),
+            () -> assertThat(response.jsonPath().getString("data.linkUrl")).isNull(),
+            () -> assertThat(response.jsonPath().getString("data.pictureUrl")).isNull()
+        );
+    }
+
+    @DisplayName("존재하지 않는 호스트 코드로 조회하면 찾을 수 없다")
+    @Test
+    void getPublicProfileWithUnknownCode() {
+        RestAssuredMockMvc.given()
+            .accept(ContentType.JSON)
+            .when()
+            .get("/hosts/{hostCode}/profile", "zzzzzzzzzz")
+            .then()
+            .statusCode(HttpStatus.NOT_FOUND.value())
+            .body("code", equalTo(ResponseCode.NOT_FOUND.name()));
+    }
+
+    @DisplayName("탈퇴한 호스트의 공개 프로필은 조회할 수 없다")
+    @Test
+    void getPublicProfileOfWithdrawnHost() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        host.delete();
+        hostRepository.save(host);
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .accept(ContentType.JSON)
+            .when()
+            .get("/hosts/{hostCode}/profile", host.getCode())
+            .then()
+            .statusCode(HttpStatus.NOT_FOUND.value())
+            .body("code", equalTo(ResponseCode.NOT_FOUND.name()));
     }
 
     @DisplayName("프로필 전체를 수정한다")
