@@ -85,40 +85,23 @@ public class SpaceService {
         space.update(request.name(), request.description(), request.isPublic(), request.instagramUsername(),
             request.email(), request.linkUrl(), request.linkName());
 
-        if (request.isDeletingPhoto()) {
-            handlePhotoWithDeleteRequest(space, request.photo());
-        } else {
-            handlePhotoWithoutDeleteRequest(space, request.photo());
-        }
+        updatePhoto(space, request);
         return createSpaceResponse(space);
     }
 
     /**
-     * 삭제 요청이 없는 경우: 새 사진이 있으면 등록 (기존 사진이 없어야 함)
+     * 새 사진이 오면 기존 사진 유무와 무관하게 교체하고, 사진 없이 삭제 요청만 오면 삭제한다.
+     * 둘 다 없으면 기존 사진을 그대로 둔다. 세 갈래 모두 기존 상태와 무관하며 멱등하다.
      */
-    private void handlePhotoWithoutDeleteRequest(Space space, SpacePhotoRequest photo) {
-        if (photo != null) {
-            saveNewPhoto(space, photo);
+    private void updatePhoto(Space space, UpdateSpaceRequest request) {
+        if (request.photo() != null) {
+            deleteSpacePhoto(space);
+            savePhoto(space, request.photo());
+            return;
         }
-    }
-
-    /**
-     * 삭제 요청이 있는 경우: 기존 사진을 삭제하고, 새 사진이 존재하면 등록
-     */
-    private void handlePhotoWithDeleteRequest(Space space, SpacePhotoRequest photo) {
-        deleteExistingPhoto(space);
-        if (photo != null) {
-            saveNewPhoto(space, photo);
+        if (request.isDeletingPhoto()) {
+            deleteSpacePhoto(space);
         }
-    }
-
-    private void saveNewPhoto(Space space, SpacePhotoRequest photo) {
-        spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)
-            .ifPresent(existingPhoto -> {
-                throw new BaseException("스페이스 사진이 이미 존재합니다. 기존 스페이스 사진을 삭제 해주세요.");
-            });
-
-        savePhoto(space, photo);
     }
 
     private void savePhoto(Space space, SpacePhotoRequest photo) {
@@ -126,13 +109,6 @@ public class SpaceService {
             contentsStorage.getRootDirectory(), photo.uploadFileName()
         );
         spacePhotoRepository.save(photo.toEntity(space, path));
-    }
-
-    private void deleteExistingPhoto(Space space) {
-        SpacePhoto existingPhoto = spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)
-            .orElseThrow(() -> new BaseException("삭제할 스페이스 사진이 존재하지 않습니다."));
-
-        deleteSpacePhoto(existingPhoto);
     }
 
     private SpaceResponse createSpaceResponse(Space space) {

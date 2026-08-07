@@ -579,9 +579,32 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         );
     }
 
-    @DisplayName("기존 사진이 있는데 삭제 없이 새 사진을 등록할 수 없다.")
+    @DisplayName("기존 사진이 없으면 삭제 요청 없이 새 사진만 보내도 등록된다.")
     @Test
-    void updateSpaceWithNewPhotoWithoutDeleting() throws Exception {
+    void updateSpaceSavesPhotoWithoutDeleteFlagWhenNoExistingPhoto() throws Exception {
+        // given
+        Space space = spaceRepository.save(SpaceFixture.createSpace());
+        spaceHostRepository.save(new SpaceHost(space, host));
+
+        String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
+            null, null, null, null, null, null, null, false, new SpacePhotoRequest(UPLOAD_FILE_NAME, 102400L))
+        );
+
+        // when
+        ApiResponse<SpaceResponse> result = patchSpace(space, request, HttpStatus.OK);
+
+        // then
+        assertAll(
+            () -> assertThat(result.data().spacePhoto().isExists()).isTrue(),
+            () -> assertThat(result.data().spacePhoto().path())
+                .isEqualTo(ROOT_DIRECTORY + "/spaces/photos/" + UPLOAD_FILE_NAME),
+            () -> assertThat(spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)).isPresent()
+        );
+    }
+
+    @DisplayName("기존 사진이 있으면 삭제 요청 없이 새 사진만 보내도 교체된다.")
+    @Test
+    void updateSpaceReplacesPhotoWithoutDeleteFlag() throws Exception {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
@@ -591,19 +614,38 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             null, null, null, null, null, null, null, false, new SpacePhotoRequest(UPLOAD_FILE_NAME, 102400L))
         );
 
-        // when & then
-        RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
-            .contentType(ContentType.JSON)
-            .body(request)
-            .when()
-            .patch("/spaces/{spaceCode}", space.getCode())
-            .then()
-            .statusCode(HttpStatus.BAD_REQUEST.value())
-            .body("code", equalTo("BAD_REQUEST"));
+        // when
+        ApiResponse<SpaceResponse> result = patchSpace(space, request, HttpStatus.OK);
+
+        // then
+        assertAll(
+            () -> assertThat(result.data().spacePhoto().path())
+                .isEqualTo(ROOT_DIRECTORY + "/spaces/photos/" + UPLOAD_FILE_NAME),
+            () -> assertThat(spacePhotoRepository.findAllBySpaceIdInAndDeletedAtIsNull(List.of(space.getId())))
+                .hasSize(1)
+        );
     }
 
-    @DisplayName("기존 사진이 없는데 삭제를 요청할 수 없다.")
+    @DisplayName("기존 사진이 없어도 삭제 요청과 함께 보낸 새 사진이 등록된다.")
+    @Test
+    void updateSpaceSavesPhotoWithDeleteFlagWhenNoExistingPhoto() throws Exception {
+        // given
+        Space space = spaceRepository.save(SpaceFixture.createSpace());
+        spaceHostRepository.save(new SpaceHost(space, host));
+
+        String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
+            null, null, null, null, null, null, null, true, new SpacePhotoRequest(UPLOAD_FILE_NAME, 102400L))
+        );
+
+        // when
+        ApiResponse<SpaceResponse> result = patchSpace(space, request, HttpStatus.OK);
+
+        // then
+        assertThat(result.data().spacePhoto().path())
+            .isEqualTo(ROOT_DIRECTORY + "/spaces/photos/" + UPLOAD_FILE_NAME);
+    }
+
+    @DisplayName("기존 사진이 없는데 삭제를 요청해도 성공한다.")
     @Test
     void updateSpaceDeletingNotExistingPhoto() throws Exception {
         // given
@@ -614,16 +656,52 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             null, null, null, null, null, null, null, true, null)
         );
 
-        // when & then
-        RestAssuredMockMvc.given()
+        // when
+        ApiResponse<SpaceResponse> result = patchSpace(space, request, HttpStatus.OK);
+
+        // then
+        assertAll(
+            () -> assertThat(result.data().spacePhoto().isExists()).isFalse(),
+            () -> assertThat(spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)).isEmpty()
+        );
+    }
+
+    @DisplayName("사진 삭제를 두 번 연속 요청해도 모두 성공한다.")
+    @Test
+    void updateSpaceDeletingPhotoIsIdempotent() throws Exception {
+        // given
+        Space space = spaceRepository.save(SpaceFixture.createSpace());
+        spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
+        spaceHostRepository.save(new SpaceHost(space, host));
+
+        String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
+            null, null, null, null, null, null, null, true, null)
+        );
+
+        // when
+        patchSpace(space, request, HttpStatus.OK);
+        ApiResponse<SpaceResponse> second = patchSpace(space, request, HttpStatus.OK);
+
+        // then
+        assertAll(
+            () -> assertThat(second.data().spacePhoto().isExists()).isFalse(),
+            () -> assertThat(spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)).isEmpty()
+        );
+    }
+
+    private ApiResponse<SpaceResponse> patchSpace(Space space, String request, HttpStatus expected) {
+        return RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
             .contentType(ContentType.JSON)
             .body(request)
             .when()
             .patch("/spaces/{spaceCode}", space.getCode())
             .then()
-            .statusCode(HttpStatus.BAD_REQUEST.value())
-            .body("code", equalTo("BAD_REQUEST"));
+            .statusCode(expected.value())
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
     }
 
     @DisplayName("스페이스 이름만 수정한다.")
