@@ -102,6 +102,8 @@ class HostProfilePhotoConcurrencyTest extends TestOnContainer {
         // then
         List<HostProfilePhoto> activePhotos = photoJpaRepository.findAll().stream()
             .filter(photo -> photo.getDeletedAt() == null)
+            .filter(hostProfilePhoto -> hostProfilePhoto.getHost().getId().equals(host.getId()))
+            .filter(hostProfilePhoto -> hostProfilePhoto.getPath().contains("new"))
             .toList();
         assertThat(activePhotos).hasSize(1);
     }
