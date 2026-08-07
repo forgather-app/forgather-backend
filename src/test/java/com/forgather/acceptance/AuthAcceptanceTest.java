@@ -26,6 +26,7 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.term.model.Term;
 import com.forgather.domain.term.repository.jpa.TermJpaRepository;
+import com.forgather.fixture.HostFixture;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.util.AuthCookieProvider;
 import com.forgather.global.auth.util.JwtTokenProvider;
@@ -363,7 +364,7 @@ class AuthAcceptanceTest extends AcceptanceTest {
     }
 
     private Host saveHost(String nickname) {
-        Host host = new Host("카카오원본이름", "posty@forgather.app");
+        Host host = new Host(HostFixture.randomCode(), "카카오원본이름", "posty@forgather.app");
         if (nickname != null) {
             host.updateNickname(nickname);
         }

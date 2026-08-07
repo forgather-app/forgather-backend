@@ -17,6 +17,8 @@ import com.forgather.global.exception.BaseNullPointerException;
 
 class HostTest {
 
+    private static final String VALID_CODE = "a3f2k9x1qz";
+
     @DisplayName("익명화하면 개인정보가 제거되고 익명화 시각이 기록된다")
     @Test
     void anonymize() {
@@ -47,7 +49,7 @@ class HostTest {
         @DisplayName("이름이 null이면 예외가 발생한다")
         @Test
         void rejectsNullName() {
-            assertThatThrownBy(() -> new Host(null, "posty@forgather.app"))
+            assertThatThrownBy(() -> new Host(VALID_CODE, null, "posty@forgather.app"))
                 .isInstanceOf(BaseNullPointerException.class)
                 .hasMessageContaining("이름");
         }
@@ -55,7 +57,7 @@ class HostTest {
         @DisplayName("이메일이 null이면 예외가 발생한다")
         @Test
         void rejectsNullEmail() {
-            assertThatThrownBy(() -> new Host("포스티", null))
+            assertThatThrownBy(() -> new Host(VALID_CODE, "포스티", null))
                 .isInstanceOf(BaseNullPointerException.class)
                 .hasMessageContaining("이메일");
         }
@@ -63,7 +65,7 @@ class HostTest {
         @DisplayName("이름이 공백만이면 예외가 발생한다")
         @Test
         void rejectsBlankName() {
-            assertThatThrownBy(() -> new Host(" ", "posty@forgather.app"))
+            assertThatThrownBy(() -> new Host(VALID_CODE, " ", "posty@forgather.app"))
                 .isInstanceOf(BaseException.class)
                 .hasMessageContaining("이름은 공백만");
         }
@@ -71,7 +73,7 @@ class HostTest {
         @DisplayName("이메일이 빈 문자열이면 예외가 발생한다")
         @Test
         void rejectsEmptyEmail() {
-            assertThatThrownBy(() -> new Host("포스티", ""))
+            assertThatThrownBy(() -> new Host(VALID_CODE, "포스티", ""))
                 .isInstanceOf(BaseException.class)
                 .hasMessageContaining("이메일은 공백만");
         }
@@ -79,9 +81,25 @@ class HostTest {
         @DisplayName("이메일이 공백만이면 예외가 발생한다")
         @Test
         void rejectsBlankEmail() {
-            assertThatThrownBy(() -> new Host("포스티", " "))
+            assertThatThrownBy(() -> new Host(VALID_CODE, "포스티", " "))
                 .isInstanceOf(BaseException.class)
                 .hasMessageContaining("이메일은 공백만");
+        }
+
+        @DisplayName("공개 코드가 null이면 예외가 발생한다")
+        @Test
+        void rejectsNullCode() {
+            assertThatThrownBy(() -> new Host(null, "포스티", "posty@forgather.app"))
+                .isInstanceOf(BaseNullPointerException.class)
+                .hasMessageContaining("코드");
+        }
+
+        @DisplayName("공개 코드가 10자가 아니면 예외가 발생한다")
+        @Test
+        void rejectsCodeWithInvalidLength() {
+            assertThatThrownBy(() -> new Host("abc", "포스티", "posty@forgather.app"))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("코드는 10자");
         }
     }
 
@@ -106,7 +124,7 @@ class HostTest {
         @Test
         void keepsEmailWhenNotProvided() {
             // given
-            Host host = new Host("포스티", "posty@forgather.app");
+            Host host = new Host(VALID_CODE, "포스티", "posty@forgather.app");
 
             // when
             host.updateEmail(null);

@@ -38,6 +38,7 @@ import com.forgather.global.auth.dto.KakaoIdToken;
 import com.forgather.global.auth.dto.KakaoLoginConfirmRequest;
 import com.forgather.global.auth.dto.LoginResponse;
 import com.forgather.global.auth.dto.OnboardingRequest;
+import com.forgather.fixture.HostFixture;
 import com.forgather.global.auth.model.AppleHost;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.KakaoHost;
@@ -46,6 +47,7 @@ import com.forgather.global.auth.repository.KakaoHostRepository;
 import com.forgather.global.auth.util.JwtParser;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.exception.BaseException;
+import com.forgather.global.util.RandomCodeGenerator;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -86,7 +88,8 @@ class AuthServiceTest {
             termRepository,
             hostTermHistoryRepository,
             appleHostRepository,
-            appleAuthClient
+            appleAuthClient,
+            new RandomCodeGenerator()
         );
     }
 
@@ -129,6 +132,7 @@ class AuthServiceTest {
         assertThat(saved.getRefreshToken()).isEqualTo("apple-refresh-token");
         assertThat(saved.getHost().getName()).isEqualTo("홍길동");
         assertThat(saved.getHost().getEmail()).isEqualTo("apple@example.com");
+        assertThat(saved.getHost().getCode()).matches("[0-9a-z]{10}");
         assertThat(saved.getHost().getPictureUrl()).isNull();
         assertThat(response.accessToken()).isEqualTo("access-token");
         assertThat(response.refreshToken()).isEqualTo("refresh-token");
@@ -145,7 +149,7 @@ class AuthServiceTest {
             "raw-nonce",
             null
         );
-        Host host = new Host("기존사용자", "old@example.com");
+        Host host = new Host(HostFixture.randomCode(), "기존사용자", "old@example.com");
         AppleHost appleHost = new AppleHost(host, "apple-sub", "old-apple-refresh-token");
         when(appleAuthClient.exchangeAuthorizationCode("authorization-code"))
             .thenReturn(appleTokenResponse("new-apple-refresh-token"));

@@ -27,6 +27,7 @@ import com.forgather.domain.exhibition.dto.LocationRequest;
 import com.forgather.domain.exhibition.dto.OperatingHourRequest;
 import com.forgather.domain.exhibition.model.LocationType;
 import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.fixture.HostFixture;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.response.ApiResponse;
@@ -56,7 +57,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
     void setUp() {
         RestAssuredMockMvc.mockMvc(mockMvc);
 
-        Host newHost = new Host("카카오원본이름", "posty@forgather.app");
+        Host newHost = new Host(HostFixture.randomCode(), "카카오원본이름", "posty@forgather.app");
         newHost.updateNickname("서비스닉네임");
         host = hostRepository.save(newHost);
         token = jwtTokenProvider.generateAccessToken(host.getId());
