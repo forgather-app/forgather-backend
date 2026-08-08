@@ -436,7 +436,8 @@ class UploadAcceptanceTest extends AcceptanceTest {
             () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
             () -> assertThat(result.message()).isNull(),
             () -> assertThat(signedUrls.get("abc.webp"))
-                .isEqualTo("test-prefix-photogather/v2/spaces/photos/abc.webp-image/webp-1024-test-suffix")
+                .isEqualTo("test-prefix-photogather/v2/spaces/photos/%d/abc.webp-image/webp-1024-test-suffix"
+                    .formatted(host.getId()))
         );
     }
 
@@ -462,6 +463,54 @@ class UploadAcceptanceTest extends AcceptanceTest {
             .post(SPACE_PHOTO_SIGNED_URLS_PATH)
             .then()
             .statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    /**
+     * 파일명은 클라이언트가 정하므로, 경로 격리가 없으면 다른 호스트가 쓰는 파일명을 그대로 요청해
+     * 같은 객체 키에 대한 PUT URL을 받아 덮어쓸 수 있다. 스페이스 사진 경로는 공개 조회 응답에
+     * 그대로 노출되므로 파일명 추측도 필요 없다. 같은 파일명이라도 호스트별로 키가 갈리는지 고정한다.
+     */
+    @DisplayName("같은 파일명이라도 호스트마다 다른 경로로 발급된다")
+    @Test
+    void issueSpacePhotoSignedUrlsIsolatesByHost() {
+        // given
+        Host otherHost = hostRepository.save(createHost());
+        String otherToken = jwtTokenProvider.generateAccessToken(otherHost.getId());
+        IssuePreSignedUrlRequest request = new IssuePreSignedUrlRequest(List.of(
+            new UploadFileRequest("abc.webp", 1024L)
+        ));
+        when(awsS3Cloud.getRootDirectory()).thenReturn("photogather/v2");
+        when(awsS3Cloud.issueSignedUrl(anyString(), anyString(), anyLong()))
+            .thenAnswer(invocation -> invocation.getArgument(0).toString());
+
+        // when
+        String mine = issueSpacePhotoSignedUrl(token, request);
+        String others = issueSpacePhotoSignedUrl(otherToken, request);
+
+        // then
+        assertAll(
+            () -> assertThat(mine).isEqualTo("photogather/v2/spaces/photos/%d/abc.webp".formatted(host.getId())),
+            () -> assertThat(others)
+                .isEqualTo("photogather/v2/spaces/photos/%d/abc.webp".formatted(otherHost.getId())),
+            () -> assertThat(mine).isNotEqualTo(others)
+        );
+    }
+
+    private String issueSpacePhotoSignedUrl(String accessToken, IssuePreSignedUrlRequest request) {
+        ApiResponse<IssueSignedUrlResponse> result = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + accessToken)
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body(request)
+            .when()
+            .post(SPACE_PHOTO_SIGNED_URLS_PATH)
+            .then()
+            .statusCode(200)
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+        return result.data().signedUrls().get("abc.webp");
     }
 
     @DisplayName("스페이스 사진 서명된 url은 한 장만 발급할 수 있다")

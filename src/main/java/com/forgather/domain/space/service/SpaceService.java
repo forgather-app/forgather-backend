@@ -66,7 +66,7 @@ public class SpaceService {
         Space space = spaceRepository.save(request.toEntity(spaceCode));
         spaceHostRepository.save(new SpaceHost(space, host));
         if (request.photo() != null) {
-            savePhoto(space, request.photo());
+            savePhoto(space, request.photo(), host);
         }
         return CreateSpaceResponse.from(space);
     }
@@ -85,7 +85,7 @@ public class SpaceService {
         space.update(request.name(), request.description(), request.isPublic(), request.instagramUsername(),
             request.email(), request.linkUrl(), request.linkName());
 
-        updatePhoto(space, request);
+        updatePhoto(space, request, host);
         return createSpaceResponse(space);
     }
 
@@ -93,10 +93,10 @@ public class SpaceService {
      * 새 사진이 오면 기존 사진 유무와 무관하게 교체하고, 사진 없이 삭제 요청만 오면 삭제한다.
      * 둘 다 없으면 기존 사진을 그대로 둔다. 세 갈래 모두 기존 상태와 무관하며 멱등하다.
      */
-    private void updatePhoto(Space space, UpdateSpaceRequest request) {
+    private void updatePhoto(Space space, UpdateSpaceRequest request, Host host) {
         if (request.photo() != null) {
             deleteSpacePhoto(space);
-            savePhoto(space, request.photo());
+            savePhoto(space, request.photo(), host);
             return;
         }
         if (request.isDeletingPhoto()) {
@@ -104,9 +104,13 @@ public class SpaceService {
         }
     }
 
-    private void savePhoto(Space space, SpacePhotoRequest photo) {
+    /**
+     * 발급 API와 동일한 규칙으로 경로를 조립한다. hostId 격리는 발급 단계의 보안 규칙이므로
+     * 여기서도 같은 hostId를 써야 실제 업로드된 객체 키와 일치한다.
+     */
+    private void savePhoto(Space space, SpacePhotoRequest photo, Host host) {
         String path = FilePathGenerator.generateSpacePhotoFilePath(
-            contentsStorage.getRootDirectory(), photo.uploadFileName()
+            contentsStorage.getRootDirectory(), host.getId(), photo.uploadFileName()
         );
         spacePhotoRepository.save(photo.toEntity(space, path));
     }

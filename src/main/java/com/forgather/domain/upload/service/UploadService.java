@@ -78,8 +78,11 @@ public class UploadService {
         throw new ForbiddenException("권한이 존재하지 않습니다.");
     }
 
-    public IssueSignedUrlResponse issueSpacePhotoSignedUrls(IssuePreSignedUrlRequest request) {
-        Map.Entry<String, String> signedUrl = signedUrlIssuer.issueForSpacePhoto(request.toUploadFilesData());
+    public IssueSignedUrlResponse issueSpacePhotoSignedUrls(Host host, IssuePreSignedUrlRequest request) {
+        Map.Entry<String, String> signedUrl = signedUrlIssuer.issueForSpacePhoto(
+            request.toUploadFilesData(),
+            host.getId()
+        );
         return new IssueSignedUrlResponse(signedUrl);
     }
 

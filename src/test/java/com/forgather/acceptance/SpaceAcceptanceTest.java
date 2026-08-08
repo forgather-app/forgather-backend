@@ -152,7 +152,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(response.message()).isNull(),
             () -> assertThat(response.data().spaceCode()).isNotEmpty(),
             () -> assertThat(spacePhotoRepository.getBySpaceAndDeletedAtIsNullOrEmpty(space).getPath())
-                .isEqualTo(ROOT_DIRECTORY + "/spaces/photos/" + UPLOAD_FILE_NAME)
+                .isEqualTo(expectedPhotoPath())
         );
     }
 
@@ -530,7 +530,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(result.data().linkUrl()).isEqualTo("https://forgather.me"),
             () -> assertThat(result.data().linkName()).isEqualTo("포트폴리오"),
             () -> assertThat(spacePhotoRepository.getBySpaceAndDeletedAtIsNullOrEmpty(space).getPath())
-                .isEqualTo(ROOT_DIRECTORY + "/spaces/photos/" + UPLOAD_FILE_NAME),
+                .isEqualTo(expectedPhotoPath()),
             () -> assertThat(result.data().guestBookCardCount()).isZero()
         );
     }
@@ -575,7 +575,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         assertAll(
             () -> assertThat(result.data().spacePhoto().isExists()).isTrue(),
             () -> assertThat(result.data().spacePhoto().path())
-                .isEqualTo(ROOT_DIRECTORY + "/spaces/photos/" + UPLOAD_FILE_NAME),
+                .isEqualTo(expectedPhotoPath()),
             () -> assertThat(spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)).isPresent()
         );
     }
@@ -598,7 +598,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // then
         assertAll(
             () -> assertThat(result.data().spacePhoto().path())
-                .isEqualTo(ROOT_DIRECTORY + "/spaces/photos/" + UPLOAD_FILE_NAME),
+                .isEqualTo(expectedPhotoPath()),
             () -> assertThat(spacePhotoRepository.findAllBySpaceIdInAndDeletedAtIsNull(List.of(space.getId())))
                 .hasSize(1)
         );
@@ -620,7 +620,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // then
         assertThat(result.data().spacePhoto().path())
-            .isEqualTo(ROOT_DIRECTORY + "/spaces/photos/" + UPLOAD_FILE_NAME);
+            .isEqualTo(expectedPhotoPath());
     }
 
     @DisplayName("기존 사진이 없는데 삭제를 요청해도 성공한다.")
@@ -688,6 +688,14 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(result.data().spacePhoto().isExists()).isTrue(),
             () -> assertThat(spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)).isPresent()
         );
+    }
+
+    /**
+     * 발급·등록 모두 인증된 hostId로 경로를 격리한다. 격리가 빠지면 클라이언트가 지정한 파일명만으로
+     * 다른 호스트의 객체 키를 겨냥할 수 있으므로, 기대 경로에 hostId가 들어가는지 함께 고정한다.
+     */
+    private String expectedPhotoPath() {
+        return ROOT_DIRECTORY + "/spaces/photos/" + host.getId() + "/" + UPLOAD_FILE_NAME;
     }
 
     private ApiResponse<SpaceResponse> patchSpace(Space space, String request, HttpStatus expected) {

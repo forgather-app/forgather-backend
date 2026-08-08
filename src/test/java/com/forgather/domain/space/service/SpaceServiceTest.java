@@ -110,7 +110,8 @@ class SpaceServiceTest extends TestOnContainer {
         SpacePhoto spacePhoto = spacePhotoRepository.getBySpaceAndDeletedAtIsNullOrEmpty(space);
         assertAll(
             () -> assertThat(spacePhoto.getPath())
-                .isEqualTo("%s/spaces/photos/%s".formatted(contentsStorage.getRootDirectory(), uploadFileName)),
+                .isEqualTo("%s/spaces/photos/%d/%s".formatted(
+                    contentsStorage.getRootDirectory(), host.getId(), uploadFileName)),
             () -> assertThat(spacePhoto.getCapacity()).isEqualTo(102400L),
             () -> assertThat(spacePhoto.getOriginalName()).isEmpty()
         );

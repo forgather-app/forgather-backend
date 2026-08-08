@@ -97,7 +97,7 @@ public class UploadController {
         @LoginHost(required = true) Host host,
         @Valid @RequestBody IssuePreSignedUrlRequest request
     ) {
-        var response = uploadService.issueSpacePhotoSignedUrls(request);
+        var response = uploadService.issueSpacePhotoSignedUrls(host, request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

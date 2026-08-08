@@ -65,14 +65,18 @@ public class SignedUrlIssuer {
         return signedUrls;
     }
 
-    public Map.Entry<String, String> issueForSpacePhoto(List<UploadFileMetadata> uploadFiles) {
+    public Map.Entry<String, String> issueForSpacePhoto(List<UploadFileMetadata> uploadFiles, Long hostId) {
         validateNotEmpty(uploadFiles);
         if (uploadFiles.size() != 1) {
             throw new BaseException("스페이스 사진은 한 장만 업로드할 수 있습니다.");
         }
+        if (hostId == null) {
+            throw new BaseException("호스트 id는 null일 수 없습니다.");
+        }
         UploadFileMetadata uploadFile = uploadFiles.getFirst();
         String filePath = generateSpacePhotoFilePath(
             contentsStorage.getRootDirectory(),
+            hostId,
             uploadFile.getFileName()
         );
         return Map.entry(uploadFile.getFileName(), issueUploadUrl(filePath, uploadFile));
