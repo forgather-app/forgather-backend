@@ -30,6 +30,17 @@ public class HostFixture {
         return host;
     }
 
+    /**
+     * picture_url 컬럼에 값이 남아 있는 기존 회원을 재현한다.
+     * 프로필 사진은 HostProfilePhoto 엔티티로 이관되어 이 컬럼에는 더 이상 값을 쓰지 않으므로,
+     * DB에서 로드된 상태를 리플렉션으로 만든다.
+     */
+    public static Host createHostWithLegacyPictureUrl(String pictureUrl) {
+        Host host = createHost();
+        ReflectionTestUtils.setField(host, "pictureUrl", pictureUrl);
+        return host;
+    }
+
     public static Host createHostWithId(long id) {
         Host host = new Host("포스티", EMAIL);
         ReflectionTestUtils.setField(host, "id", id);

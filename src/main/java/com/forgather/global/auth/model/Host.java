@@ -31,11 +31,10 @@ public class Host extends SoftDeleteEntity {
     private static final int MAX_NICKNAME_LENGTH = 10;
     private static final int MAX_INTRODUCTION_LENGTH = 50;
     private static final int MAX_LINK_URL_LENGTH = 2048;
-    private static final int MAX_PICTURE_URL_LENGTH = 255;
     private static final int NICKNAME_COLUMN_LENGTH = MAX_NICKNAME_LENGTH * 10;
     private static final int INTRODUCTION_COLUMN_LENGTH = MAX_INTRODUCTION_LENGTH * 10;
     private static final String ANONYMIZED_NAME = "탈퇴한 회원";
-    private static final Pattern PROFILE_URL_PATTERN = Pattern.compile(
+    private static final Pattern LINK_URL_PATTERN = Pattern.compile(
         "^https?://[^\\s]+$"
     );
 
@@ -106,9 +105,8 @@ public class Host extends SoftDeleteEntity {
      * @param nickname     닉네임 (최대 10자, 공백만은 불가)
      * @param introduction 한 줄 소개 (최대 50자, 공백만 전달 시 제거)
      * @param linkUrl      링크 URL (http(s), 최대 2048자, 공백만 전달 시 제거)
-     * @param pictureUrl   프로필 사진 URL (http(s), 최대 255자, 공백만 전달 시 제거)
      */
-    public void updateProfile(String nickname, String introduction, String linkUrl, String pictureUrl) {
+    public void updateProfile(String nickname, String introduction, String linkUrl) {
         if (nickname != null) {
             validateNickname(nickname);
             this.nickname = nickname;
@@ -120,10 +118,6 @@ public class Host extends SoftDeleteEntity {
         if (linkUrl != null) {
             validateLinkUrl(linkUrl);
             this.linkUrl = linkUrl.isBlank() ? null : linkUrl;
-        }
-        if (pictureUrl != null) {
-            validatePictureUrl(pictureUrl);
-            this.pictureUrl = pictureUrl.isBlank() ? null : pictureUrl;
         }
     }
 
@@ -142,20 +136,8 @@ public class Host extends SoftDeleteEntity {
         if (linkUrl.length() > MAX_LINK_URL_LENGTH) {
             throw new BaseException("링크 URL은 최대 %d자까지 가능합니다.".formatted(MAX_LINK_URL_LENGTH));
         }
-        if (!PROFILE_URL_PATTERN.matcher(linkUrl).matches()) {
+        if (!LINK_URL_PATTERN.matcher(linkUrl).matches()) {
             throw new BaseException("링크 URL 형식이 올바르지 않습니다.");
-        }
-    }
-
-    private void validatePictureUrl(String pictureUrl) {
-        if (pictureUrl.isBlank()) {
-            return;
-        }
-        if (pictureUrl.length() > MAX_PICTURE_URL_LENGTH) {
-            throw new BaseException("프로필 사진 URL은 최대 %d자까지 가능합니다.".formatted(MAX_PICTURE_URL_LENGTH));
-        }
-        if (!PROFILE_URL_PATTERN.matcher(pictureUrl).matches()) {
-            throw new BaseException("프로필 사진 URL 형식이 올바르지 않습니다.");
         }
     }
 

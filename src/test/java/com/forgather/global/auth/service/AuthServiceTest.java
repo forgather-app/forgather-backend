@@ -25,6 +25,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.forgather.domain.host.repository.HostProfilePhotoRepository;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.term.model.TermType;
 import com.forgather.domain.term.repository.HostTermHistoryRepository;
@@ -74,6 +75,9 @@ class AuthServiceTest {
     @Mock
     private AppleAuthClient appleAuthClient;
 
+    @Mock
+    private HostProfilePhotoRepository hostProfilePhotoRepository;
+
     private AuthService authService;
 
     @BeforeEach
@@ -86,7 +90,8 @@ class AuthServiceTest {
             termRepository,
             hostTermHistoryRepository,
             appleHostRepository,
-            appleAuthClient
+            appleAuthClient,
+            hostProfilePhotoRepository
         );
     }
 

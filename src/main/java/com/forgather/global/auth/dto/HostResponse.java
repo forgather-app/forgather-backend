@@ -1,5 +1,6 @@
 package com.forgather.global.auth.dto;
 
+import com.forgather.domain.host.model.HostProfilePhoto;
 import com.forgather.global.auth.model.Host;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,14 +13,20 @@ public record HostResponse(
     @Schema(description = "호스트 닉네임", example = "홍길동")
     String name,
 
-    @Schema(description = "호스트 프로필 사진 URL", example = "https://example.com/profile.jpg")
-    String pictureUrl,
+    @Schema(description = "호스트 프로필 사진 경로 (미설정 시 null)",
+        example = "photogather/v2/hosts/1/profile/UUID1.webp")
+    String photoPath,
 
     @Schema(description = "온보딩 완료 여부", example = "true")
     boolean onboardingCompleted
 ) {
 
-    public static HostResponse from(Host host, boolean onboardingCompleted) {
-        return new HostResponse(host.getId(), host.getNickname(), host.getPictureUrl(), onboardingCompleted);
+    public static HostResponse of(Host host, HostProfilePhoto photo, boolean onboardingCompleted) {
+        return new HostResponse(
+            host.getId(),
+            host.getNickname(),
+            photo == null ? null : photo.getPath(),
+            onboardingCompleted
+        );
     }
 }

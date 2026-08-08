@@ -1,5 +1,6 @@
 package com.forgather.domain.host.dto;
 
+import com.forgather.domain.host.model.HostProfilePhoto;
 import com.forgather.global.auth.model.Host;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,16 +16,16 @@ public record HostProfileResponse(
     @Schema(description = "링크 URL", example = "https://forgather.app/")
     String linkUrl,
 
-    @Schema(description = "프로필 사진 URL", example = "https://cdn.forgather.app/hosts/1/profile/UUID1.webp")
-    String pictureUrl
+    @Schema(description = "프로필 사진 경로 (미설정 시 null)", example = "photogather/v2/hosts/1/profile/UUID1.webp")
+    String photoPath
 ) {
 
-    public static HostProfileResponse from(Host host) {
+    public static HostProfileResponse of(Host host, HostProfilePhoto photo) {
         return new HostProfileResponse(
             host.getNickname(),
             host.getIntroduction(),
             host.getLinkUrl(),
-            host.getPictureUrl()
+            photo == null ? null : photo.getPath()
         );
     }
 }
