@@ -3,6 +3,8 @@ package com.forgather.domain.product.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 
 import com.forgather.domain.product.model.Product;
@@ -14,6 +16,31 @@ public interface ProductRepository {
     Product save(Product product);
 
     List<Product> findAllBySpaceAndDeletedAtIsNull(Space space);
+
+    /**
+     * 스페이스의 대표 작품(가장 먼저 생성한 작품)을 조회한다.
+     * createdAt이 밀리초 단위라 같은 배치에서 동점이 날 수 있어 id로 tie-break 한다.
+     */
+    Optional<Product> findFirstBySpaceAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(Space space);
+
+    /**
+     * 여러 스페이스의 대표 작품을 한 번에 조회한다. 목록 조회의 N+1을 막기 위한 배치 쿼리다.
+     * createdAt 동점이면 한 스페이스에서 2건 이상 나올 수 있으므로 id 오름차순으로 반환한다.
+     */
+    @Query("""
+        SELECT p
+        FROM Product p
+        WHERE p.space.id IN :spaceIds
+            AND p.deletedAt IS NULL
+            AND p.createdAt = (
+                SELECT MIN(p2.createdAt)
+                FROM Product p2
+                WHERE p2.space = p.space
+                    AND p2.deletedAt IS NULL
+            )
+        ORDER BY p.id ASC
+        """)
+    List<Product> findRepresentativesBySpaceIdIn(@Param("spaceIds") List<Long> spaceIds);
 
     Optional<Product> findBySpaceAndIdAndDeletedAtIsNull(Space space, Long id);
 

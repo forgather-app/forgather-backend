@@ -74,51 +74,49 @@ public class Space extends SoftDeleteEntity {
 
     /**
      * 스페이스를 생성한다.
+     * 필수값은 스페이스 이름뿐이며, 나머지 값은 생략하면 빈 문자열로 저장한다.
      *
      * @param code              스페이스 코드 (필수, 10자)
      * @param name              스페이스 이름 (필수, 최대 30자)
-     * @param description       스페이스 설명 (필수, 최대 200자)
-     * @param isPublic          스페이스 공개 여부 (필수)
-     * @param instagramUsername 인스타그램 아이디 (필수, 최대 30자)
-     * @param email             이메일 (필수, 최대 50자)
+     * @param description       스페이스 설명 (선택, 최대 200자)
+     * @param isPublic          스페이스 공개 여부 (선택, 기본 false)
+     * @param instagramUsername 인스타그램 아이디 (선택, 최대 30자)
+     * @param email             이메일 (선택, 최대 50자)
      * @param linkUrl           소개 링크 URL (선택, 최대 2048자, 표시 이름과 함께 입력)
      * @param linkName          소개 링크 표시 이름 (선택, 최대 30자, URL과 함께 입력)
      */
     public Space(String code, String name, String description, boolean isPublic, String instagramUsername,
         String email, String linkUrl, String linkName) {
-        validateRequiredFields(code, name, description, instagramUsername, email);
+        validateRequiredFields(code, name);
+        // 이 도메인은 '값 없음'을 NULL이 아니라 빈 문자열로 표현한다. 검증 전에 먼저 정규화한다.
+        String newDescription = convertBlankToEmptyString(description);
+        String newInstagramUsername = convertBlankToEmptyString(instagramUsername);
+        String newEmail = convertBlankToEmptyString(email);
+        String newLinkUrl = convertBlankToEmptyString(linkUrl);
+        String newLinkName = convertBlankToEmptyString(linkName);
+
         validateCode(code);
         validateName(name);
-        validateDescription(description);
-        validateInstagramUsername(instagramUsername);
-        validateEmail(email);
-        validateLink(linkUrl, linkName);
+        validateDescription(newDescription);
+        validateInstagramUsername(newInstagramUsername);
+        validateEmail(newEmail);
+        validateLink(newLinkUrl, newLinkName);
         this.code = code;
         this.name = name;
-        this.description = convertBlankToEmptyString(description);
+        this.description = newDescription;
         this.isPublic = isPublic;
-        this.instagramUsername = convertBlankToEmptyString(instagramUsername);
-        this.email = convertBlankToEmptyString(email);
-        this.linkUrl = convertBlankToEmptyString(linkUrl);
-        this.linkName = convertBlankToEmptyString(linkName);
+        this.instagramUsername = newInstagramUsername;
+        this.email = newEmail;
+        this.linkUrl = newLinkUrl;
+        this.linkName = newLinkName;
     }
 
-    private void validateRequiredFields(String code, String name, String description, String instagramUsername,
-        String email) {
+    private void validateRequiredFields(String code, String name) {
         if (code == null) {
             throw new BaseNullPointerException("스페이스 코드는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
         }
         if (name == null) {
             throw new BaseNullPointerException("스페이스 이름은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
-        }
-        if (description == null) {
-            throw new BaseNullPointerException("스페이스 설명은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
-        }
-        if (instagramUsername == null) {
-            throw new BaseNullPointerException("인스타그램 아이디는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
-        }
-        if (email == null) {
-            throw new BaseNullPointerException("이메일은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
         }
     }
 

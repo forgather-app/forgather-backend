@@ -5,7 +5,6 @@ import org.hibernate.validator.constraints.URL;
 import com.forgather.global.validation.TextSize;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 
 public record UpdateSpaceRequest(
@@ -45,28 +44,6 @@ public record UpdateSpaceRequest(
         maxLength = 30,
         nullable = true
     )
-    String linkName,
-
-    @Schema(
-        description = "스페이스 사진 삭제 여부. 사진을 지울 때만 사용한다. "
-            + "photo를 함께 보내면 무시되며 교체로 동작한다. 삭제할 사진이 없어도 성공한다. "
-            + "생략하거나 null이면 삭제하지 않는다.",
-        example = "true",
-        defaultValue = "false",
-        nullable = true
-    )
-    Boolean isDeletePhoto,
-
-    @Schema(
-        description = "새로운 스페이스 사진 (선택). 발급받은 presigned URL로 업로드를 마친 뒤 전달한다. "
-            + "기존 사진이 있으면 교체되고, 없으면 새로 등록된다.",
-        nullable = true
-    )
-    @Valid
-    SpacePhotoRequest photo
+    String linkName
 ) {
-
-    public boolean isDeletingPhoto() {
-        return isDeletePhoto != null && isDeletePhoto;
-    }
 }

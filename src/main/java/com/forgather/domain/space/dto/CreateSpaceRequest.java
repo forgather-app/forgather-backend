@@ -6,7 +6,6 @@ import com.forgather.domain.space.model.Space;
 import com.forgather.global.validation.TextSize;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
@@ -21,7 +20,7 @@ public record CreateSpaceRequest(
     @TextSize(max = 200)
     String description,
 
-    @Schema(description = "스페이스 공개 여부", example = "true")
+    @Schema(description = "스페이스 공개 여부", example = "true", defaultValue = "false")
     boolean isPublic,
 
     @Schema(description = "스페이스 호스트 인스타그램 아이디", example = "forgather_official", maxLength = 30, nullable = true)
@@ -50,11 +49,7 @@ public record CreateSpaceRequest(
         nullable = true
     )
     @TextSize(max = 30)
-    String linkName,
-
-    @Schema(description = "스페이스 사진 (선택). 발급받은 presigned URL로 업로드를 마친 뒤 전달한다.", nullable = true)
-    @Valid
-    SpacePhotoRequest photo
+    String linkName
 ) {
 
     public Space toEntity(String spaceCode) {

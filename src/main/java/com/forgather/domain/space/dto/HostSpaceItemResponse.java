@@ -1,7 +1,7 @@
 package com.forgather.domain.space.dto;
 
+import com.forgather.domain.product.model.ProductPhoto;
 import com.forgather.domain.space.model.Space;
-import com.forgather.domain.space.model.SpacePhoto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -28,10 +28,10 @@ public record HostSpaceItemResponse(
     @Schema(description = "스페이스 소개 링크 표시 이름", example = "포트폴리오")
     String linkName,
 
-    @Schema(description = "스페이스 프로필 사진", example = """
+    @Schema(description = "스페이스 사진 (대표 작품의 첫 번째 사진)", example = """
         {
             "isExists": true,
-            "path": "photogather/v2/spaces/1234567890/space/profile.png"
+            "path": "photogather/v2/spaces/1234567890/PRODUCT/UUID.webp"
         }
         """)
     SpacePhotoResponse spacePhoto,
@@ -48,7 +48,7 @@ public record HostSpaceItemResponse(
 
     public static HostSpaceItemResponse from(
         Space space,
-        SpacePhoto spacePhoto,
+        ProductPhoto spacePhoto,
         Long guestBookCardCount,
         Long unreadGuestBookCount
     ) {
