@@ -52,20 +52,6 @@ public class SpaceController {
         return ResponseEntity.status(CREATED).body(ApiResponse.success(response));
     }
 
-    // 임시: FE ApiResponse 마이그레이션용 raw DTO 버전. v2/main 병합 전 반드시 삭제할 것. (#112)
-    // 헤더 X-API-Version: 1 이 오면 raw DTO, 없으면 위의 기본(ApiResponse) 메서드가 처리한다.
-    @PostMapping(headers = "X-API-Version=1")
-    @Operation(summary = "스페이스 생성 (raw DTO)",
-        description = "운영 호환 raw DTO 응답. X-API-Version: 1 로 호출. (FE 마이그레이션용 임시 버전 — v2/main 병합 전 삭제)")
-    @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<CreateSpaceResponse> createV1(
-        @RequestBody @Valid CreateSpaceRequest request,
-        @LoginHost Host host
-    ) {
-        var response = spaceService.create(request, host);
-        return ResponseEntity.status(CREATED).body(response);
-    }
-
     @GetMapping("/{spaceCode}")
     @Operation(summary = "스페이스 조회", description = "스페이스 코드를 통해 스페이스 정보를 조회합니다.")
     public ResponseEntity<ApiResponse<SpaceResponse>> getSpaceInformation(
@@ -94,21 +80,6 @@ public class SpaceController {
     ) {
         var response = spaceService.update(spaceCode, request, host);
         return ResponseEntity.ok(ApiResponse.success(response));
-    }
-
-    // 임시: FE ApiResponse 마이그레이션용 raw DTO 버전. v2/main 병합 전 반드시 삭제할 것. (#112)
-    // 헤더 X-API-Version: 1 이 오면 raw DTO, 없으면 위의 기본(ApiResponse) 메서드가 처리한다.
-    @PatchMapping(value = "/{spaceCode}", headers = "X-API-Version=1")
-    @Operation(summary = "스페이스 정보 수정 (raw DTO)",
-        description = "운영 호환 raw DTO 응답. X-API-Version: 1 로 호출. (FE 마이그레이션용 임시 버전 — v2/main 병합 전 삭제)")
-    @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<SpaceResponse> updateV1(
-        @PathVariable(name = "spaceCode") String spaceCode,
-        @RequestBody @Valid UpdateSpaceRequest request,
-        @LoginHost Host host
-    ) {
-        var response = spaceService.update(spaceCode, request, host);
-        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/me")
