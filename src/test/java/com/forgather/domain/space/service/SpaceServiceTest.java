@@ -66,8 +66,6 @@ class SpaceServiceTest extends TestOnContainer {
             invalidSpaceName,
             "description",
             true,
-            "forgather_official",
-            "forgather@forgather.me",
             null,
             null
         );
@@ -88,8 +86,6 @@ class SpaceServiceTest extends TestOnContainer {
             "test-space",
             "description",
             true,
-            "forgather_official",
-            "forgather@forgather.me",
             null,
             null
         );

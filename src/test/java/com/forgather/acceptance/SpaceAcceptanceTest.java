@@ -125,8 +125,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
     void createSpace() throws Exception {
         // given
         String request = objectMapper.writeValueAsString(
-            new CreateSpaceRequest("test-space", "description", false, "forgather_official",
-                "forgather@forgather.me", null, null)
+            new CreateSpaceRequest("test-space", "description", false, null, null)
         );
 
         // when
@@ -221,8 +220,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
     void createSpaceWithoutLogin() throws Exception {
         // given
         String request = objectMapper.writeValueAsString(
-            new CreateSpaceRequest("test-space", "description", false, "forgather_official",
-                "forgather@forgather.me", null, null)
+            new CreateSpaceRequest("test-space", "description", false, null, null)
         );
 
         // when & then
@@ -241,8 +239,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
     void createSpaceWithLink() throws Exception {
         // given
         String request = objectMapper.writeValueAsString(
-            new CreateSpaceRequest("test-space", "description", false, "forgather_official",
-                "forgather@forgather.me", "https://forgather.me", "포트폴리오")
+            new CreateSpaceRequest("test-space", "description", false, "https://forgather.me", "포트폴리오")
         );
 
         // when
@@ -282,8 +279,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
     void createSpaceWithOnlyLinkUrl() throws Exception {
         // given
         String request = objectMapper.writeValueAsString(
-            new CreateSpaceRequest("test-space", "description", false, "forgather_official",
-                "forgather@forgather.me", "https://forgather.me", null)
+            new CreateSpaceRequest("test-space", "description", false, "https://forgather.me", null)
         );
 
         // when & then
@@ -303,8 +299,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         String longLinkUrl = "https://forgather.me/" + "a".repeat(300); // 321자 (255 초과, 2048 이하)
         String request = objectMapper.writeValueAsString(
-            new CreateSpaceRequest("test-space", "description", false, "forgather_official",
-                "forgather@forgather.me", longLinkUrl, "포트폴리오")
+            new CreateSpaceRequest("test-space", "description", false, longLinkUrl, "포트폴리오")
         );
 
         // when
@@ -341,8 +336,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
     void createSpaceWithOverLengthName() throws Exception {
         // given
         String request = objectMapper.writeValueAsString(
-            new CreateSpaceRequest("1234567890".repeat(3) + "1", "description", false, "forgather_official",
-                "forgather@forgather.me", null, null)
+            new CreateSpaceRequest("1234567890".repeat(3) + "1", "description", false, null, null)
         );
 
         // when & then
@@ -603,8 +597,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         spaceHostRepository.save(new SpaceHost(space, host));
 
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
-            "새로운 스페이스", "새로운 설명", false, "forgather_official_new", "forgather_new@forgather.me",
-            "https://forgather.me", "포트폴리오")
+            "새로운 스페이스", "새로운 설명", false, "https://forgather.me", "포트폴리오")
         );
 
         // when
@@ -617,8 +610,6 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(result.data().name()).isEqualTo("새로운 스페이스"),
             () -> assertThat(result.data().description()).isEqualTo("새로운 설명"),
             () -> assertThat(result.data().isPublic()).isFalse(),
-            () -> assertThat(result.data().instagramUsername()).isEqualTo("forgather_official_new"),
-            () -> assertThat(result.data().email()).isEqualTo("forgather_new@forgather.me"),
             () -> assertThat(result.data().linkUrl()).isEqualTo("https://forgather.me"),
             () -> assertThat(result.data().linkName()).isEqualTo("포트폴리오"),
             () -> assertThat(result.data().guestBookCardCount()).isZero()
@@ -698,7 +689,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         ProductPhoto firstPhoto = saveProductPhoto(product, 1);
 
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
-            "새로운 스페이스", null, null, null, null, null, null)
+            "새로운 스페이스", null, null, null, null)
         );
 
         // when
@@ -711,8 +702,6 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(response.data().name()).isEqualTo("새로운 스페이스"),
             () -> assertThat(response.data().description()).isEqualTo("description"),
             () -> assertThat(response.data().isPublic()).isTrue(),
-            () -> assertThat(response.data().instagramUsername()).isEqualTo("instagramUsername"),
-            () -> assertThat(response.data().email()).isEqualTo("email@forgather.me"),
             () -> assertThat(response.data().spacePhoto().path()).isEqualTo(firstPhoto.getPath()),
 
             () -> verify(contentsStorage, never()).deletePhotos(anyList())
@@ -728,7 +717,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         spaceHostRepository.save(new SpaceHost(space, host));
 
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
-            "새로운 스페이스", null, null, null, null, null, null)
+            "새로운 스페이스", null, null, null, null)
         );
 
         // when & then
@@ -753,7 +742,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         String otherToken = jwtTokenProvider.generateAccessToken(otherHost.getId());
 
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
-            "새로운 스페이스", null, null, null, null, null, null)
+            "새로운 스페이스", null, null, null, null)
         );
 
         // when & then
@@ -1178,7 +1167,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         Space space = saveSpaceOf(host, "1111111111");
         feature(space.getCode());
         String request = objectMapper.writeValueAsString(
-            new UpdateSpaceRequest("새로운 이름", null, null, null, null, null, null)
+            new UpdateSpaceRequest("새로운 이름", null, null, null, null)
         );
 
         // when

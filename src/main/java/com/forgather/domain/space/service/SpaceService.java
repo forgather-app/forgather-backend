@@ -81,8 +81,8 @@ public class SpaceService {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(space, host);
 
-        space.update(request.name(), request.description(), request.isPublic(), request.instagramUsername(),
-            request.email(), request.linkUrl(), request.linkName());
+        space.update(request.name(), request.description(), request.isPublic(), request.linkUrl(),
+            request.linkName());
 
         return createSpaceResponse(space);
     }

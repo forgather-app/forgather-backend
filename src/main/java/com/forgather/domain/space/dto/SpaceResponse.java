@@ -22,12 +22,6 @@ public record SpaceResponse(
     @Schema(description = "스페이스 공개여부", example = "true")
     boolean isPublic,
 
-    @Schema(description = "스페이스 호스트 인스타그램 아이디", example = "forgather_official")
-    String instagramUsername,
-
-    @Schema(description = "스페이스 호스트 이메일", example = "forgather@forgather.me")
-    String email,
-
     @Schema(description = "스페이스 소개 링크 URL", example = "https://forgather.app")
     String linkUrl,
 
@@ -53,8 +47,6 @@ public record SpaceResponse(
             space.getName(),
             space.getDescription(),
             space.isPublic(),
-            space.getInstagramUsername(),
-            space.getEmail(),
             space.getLinkUrl(),
             space.getLinkName(),
             SpacePhotoResponse.from(spacePhoto),
