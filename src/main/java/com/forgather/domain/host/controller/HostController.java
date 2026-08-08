@@ -19,6 +19,7 @@ import com.forgather.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -45,7 +46,7 @@ public class HostController {
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<HostProfileResponse>> updateProfile(
         @LoginHost Host host,
-        @RequestBody UpdateHostProfileRequest request
+        @Valid @RequestBody UpdateHostProfileRequest request
     ) {
         var response = hostService.updateProfile(host, request);
         return ResponseEntity.ok(ApiResponse.success(response));

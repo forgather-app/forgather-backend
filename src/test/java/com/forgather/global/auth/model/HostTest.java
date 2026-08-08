@@ -1,6 +1,7 @@
 package com.forgather.global.auth.model;
 
 import static com.forgather.fixture.HostFixture.createHost;
+import static com.forgather.fixture.HostFixture.createHostWithLegacyPictureUrl;
 import static com.forgather.fixture.HostFixture.createHostWithoutEmail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -23,9 +24,8 @@ class HostTest {
     @Test
     void anonymize() {
         // given
-        Host host = createHost();
-        host.updateProfile(null, "안녕하세요, 포게더 작가입니다.", "https://forgather.app/",
-            "https://cdn.forgather.app/hosts/1/profile/a.webp");
+        Host host = createHostWithLegacyPictureUrl("https://cdn.forgather.app/hosts/1/profile/a.webp");
+        host.updateProfile(null, "안녕하세요, 포게더 작가입니다.", "https://forgather.app/");
 
         // when
         host.anonymize();
@@ -139,22 +139,20 @@ class HostTest {
     @DisplayName("프로필 수정")
     class UpdateProfile {
 
-        @DisplayName("닉네임, 한 줄 소개, 링크, 프로필 사진을 모두 변경한다")
+        @DisplayName("닉네임, 한 줄 소개, 링크를 모두 변경한다")
         @Test
         void updateProfile() {
             // given
             Host host = createHost();
 
             // when
-            host.updateProfile("새닉네임", "안녕하세요, 포게더 작가입니다.", "https://forgather.app/",
-                "https://cdn.forgather.app/hosts/1/profile/a.webp");
+            host.updateProfile("새닉네임", "안녕하세요, 포게더 작가입니다.", "https://forgather.app/");
 
             // then
             assertAll(
                 () -> assertThat(host.getNickname()).isEqualTo("새닉네임"),
                 () -> assertThat(host.getIntroduction()).isEqualTo("안녕하세요, 포게더 작가입니다."),
-                () -> assertThat(host.getLinkUrl()).isEqualTo("https://forgather.app/"),
-                () -> assertThat(host.getPictureUrl()).isEqualTo("https://cdn.forgather.app/hosts/1/profile/a.webp")
+                () -> assertThat(host.getLinkUrl()).isEqualTo("https://forgather.app/")
             );
         }
 
@@ -163,36 +161,34 @@ class HostTest {
         void ignoresNullFields() {
             // given
             Host host = createHost();
-            host.updateProfile("닉네임", "소개", "https://forgather.app/", "https://cdn.forgather.app/a.webp");
+            host.updateProfile("닉네임", "소개", "https://forgather.app/");
 
             // when
-            host.updateProfile(null, null, null, null);
+            host.updateProfile(null, null, null);
 
             // then
             assertAll(
                 () -> assertThat(host.getNickname()).isEqualTo("닉네임"),
                 () -> assertThat(host.getIntroduction()).isEqualTo("소개"),
-                () -> assertThat(host.getLinkUrl()).isEqualTo("https://forgather.app/"),
-                () -> assertThat(host.getPictureUrl()).isEqualTo("https://cdn.forgather.app/a.webp")
+                () -> assertThat(host.getLinkUrl()).isEqualTo("https://forgather.app/")
             );
         }
 
-        @DisplayName("빈 문자열로 전달된 한 줄 소개, 링크, 프로필 사진은 제거된다")
+        @DisplayName("빈 문자열로 전달된 한 줄 소개, 링크는 제거된다")
         @Test
         void clearsBlankFields() {
             // given
             Host host = createHost();
-            host.updateProfile("닉네임", "소개", "https://forgather.app/", "https://cdn.forgather.app/a.webp");
+            host.updateProfile("닉네임", "소개", "https://forgather.app/");
 
             // when
-            host.updateProfile(null, " ", " ", " ");
+            host.updateProfile(null, " ", " ");
 
             // then
             assertAll(
                 () -> assertThat(host.getNickname()).isEqualTo("닉네임"),
                 () -> assertThat(host.getIntroduction()).isNull(),
-                () -> assertThat(host.getLinkUrl()).isNull(),
-                () -> assertThat(host.getPictureUrl()).isNull()
+                () -> assertThat(host.getLinkUrl()).isNull()
             );
         }
 
@@ -203,7 +199,7 @@ class HostTest {
             Host host = createHost();
 
             // when & then
-            assertThatThrownBy(() -> host.updateProfile(" ", null, null, null))
+            assertThatThrownBy(() -> host.updateProfile(" ", null, null))
                 .isInstanceOf(BaseException.class)
                 .hasMessageContaining("닉네임은 공백만 입력할 수 없습니다");
         }
@@ -215,7 +211,7 @@ class HostTest {
             Host host = createHost();
 
             // when
-            host.updateProfile("가나다라마바사아자차", null, null, null);
+            host.updateProfile("가나다라마바사아자차", null, null);
 
             // then
             assertThat(host.getNickname()).isEqualTo("가나다라마바사아자차");
@@ -228,7 +224,7 @@ class HostTest {
             Host host = createHost();
 
             // when & then
-            assertThatThrownBy(() -> host.updateProfile("가나다라마바사아자차카", null, null, null))
+            assertThatThrownBy(() -> host.updateProfile("가나다라마바사아자차카", null, null))
                 .isInstanceOf(BaseException.class)
                 .hasMessageContaining("닉네임은 최대 10자까지 입력 가능합니다");
         }
@@ -241,7 +237,7 @@ class HostTest {
             String emojiNickname = "🧑‍🧑‍🧒‍🧒".repeat(10);
 
             // when
-            host.updateProfile(emojiNickname, null, null, null);
+            host.updateProfile(emojiNickname, null, null);
 
             // then
             assertThat(host.getNickname()).isEqualTo(emojiNickname);
@@ -254,7 +250,7 @@ class HostTest {
             Host host = createHost();
 
             // when
-            host.updateProfile(null, "가".repeat(50), null, null);
+            host.updateProfile(null, "가".repeat(50), null);
 
             // then
             assertThat(host.getIntroduction()).isEqualTo("가".repeat(50));
@@ -267,7 +263,7 @@ class HostTest {
             Host host = createHost();
 
             // when & then
-            assertThatThrownBy(() -> host.updateProfile(null, "가".repeat(51), null, null))
+            assertThatThrownBy(() -> host.updateProfile(null, "가".repeat(51), null))
                 .isInstanceOf(BaseException.class)
                 .hasMessageContaining("한 줄 소개는 최대 50자까지 입력 가능합니다");
         }
@@ -279,7 +275,7 @@ class HostTest {
             Host host = createHost();
 
             // when & then
-            assertThatThrownBy(() -> host.updateProfile(null, null, "forgather.app", null))
+            assertThatThrownBy(() -> host.updateProfile(null, null, "forgather.app"))
                 .isInstanceOf(BaseException.class)
                 .hasMessageContaining("링크 URL 형식이 올바르지 않습니다");
         }
@@ -292,35 +288,11 @@ class HostTest {
             String longLinkUrl = "https://" + "a".repeat(2041);
 
             // when & then
-            assertThatThrownBy(() -> host.updateProfile(null, null, longLinkUrl, null))
+            assertThatThrownBy(() -> host.updateProfile(null, null, longLinkUrl))
                 .isInstanceOf(BaseException.class)
                 .hasMessageContaining("링크 URL은 최대 2048자까지 가능합니다");
         }
 
-        @DisplayName("프로필 사진 URL이 http(s) 형식이 아니면 예외가 발생한다")
-        @Test
-        void rejectsInvalidPictureUrl() {
-            // given
-            Host host = createHost();
-
-            // when & then
-            assertThatThrownBy(() -> host.updateProfile(null, null, null, "cdn.forgather.app/a.webp"))
-                .isInstanceOf(BaseException.class)
-                .hasMessageContaining("프로필 사진 URL 형식이 올바르지 않습니다");
-        }
-
-        @DisplayName("프로필 사진 URL이 255자를 초과하면 예외가 발생한다")
-        @Test
-        void rejectsPictureUrlOverMaxLength() {
-            // given
-            Host host = createHost();
-            String longPictureUrl = "https://" + "a".repeat(248);
-
-            // when & then
-            assertThatThrownBy(() -> host.updateProfile(null, null, null, longPictureUrl))
-                .isInstanceOf(BaseException.class)
-                .hasMessageContaining("프로필 사진 URL은 최대 255자까지 가능합니다");
-        }
     }
 
     @DisplayName("닉네임을 10자 초과로 변경하면 예외가 발생한다")

@@ -16,7 +16,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.forgather.domain.host.model.HostProfilePhoto;
+import com.forgather.domain.host.repository.HostProfilePhotoRepository;
 import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.upload.domain.ContentsStorage;
 import com.forgather.fixture.HostFixture;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.util.JwtTokenProvider;
@@ -38,6 +41,12 @@ class HostProfileAcceptanceTest extends AcceptanceTest {
     private HostRepository hostRepository;
 
     @Autowired
+    private HostProfilePhotoRepository photoRepository;
+
+    @Autowired
+    private ContentsStorage contentsStorage;
+
+    @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
     @BeforeEach
@@ -47,9 +56,16 @@ class HostProfileAcceptanceTest extends AcceptanceTest {
 
     private Host saveHostWithProfile() {
         Host host = HostFixture.createHost();
-        host.updateProfile("포스티", "안녕하세요, 포게더 작가입니다.", "https://forgather.app/",
-            "https://cdn.forgather.app/hosts/1/profile/a.webp");
+        host.updateProfile("포스티", "안녕하세요, 포게더 작가입니다.", "https://forgather.app/");
         return hostRepository.save(host);
+    }
+
+    private HostProfilePhoto saveProfilePhoto(Host host, String uploadFileName) {
+        return photoRepository.save(new HostProfilePhoto(photoPath(host, uploadFileName), 1024L, host));
+    }
+
+    private String photoPath(Host host, String uploadFileName) {
+        return "%s/hosts/%d/profile/%s".formatted(contentsStorage.getRootDirectory(), host.getId(), uploadFileName);
     }
 
     @DisplayName("내 프로필을 조회한다")
@@ -57,6 +73,7 @@ class HostProfileAcceptanceTest extends AcceptanceTest {
     void getProfile() {
         // given
         Host host = saveHostWithProfile();
+        saveProfilePhoto(host, "a.webp");
         String token = jwtTokenProvider.generateAccessToken(host.getId());
 
         // when
@@ -75,8 +92,8 @@ class HostProfileAcceptanceTest extends AcceptanceTest {
             () -> assertThat(response.jsonPath().getString("data.nickname")).isEqualTo("포스티"),
             () -> assertThat(response.jsonPath().getString("data.introduction")).isEqualTo("안녕하세요, 포게더 작가입니다."),
             () -> assertThat(response.jsonPath().getString("data.linkUrl")).isEqualTo("https://forgather.app/"),
-            () -> assertThat(response.jsonPath().getString("data.pictureUrl"))
-                .isEqualTo("https://cdn.forgather.app/hosts/1/profile/a.webp")
+            () -> assertThat(response.jsonPath().getString("data.photoPath"))
+                .isEqualTo(photoPath(host, "a.webp"))
         );
     }
 
@@ -96,6 +113,7 @@ class HostProfileAcceptanceTest extends AcceptanceTest {
     void getPublicProfile() {
         // given
         Host host = saveHostWithProfile();
+        saveProfilePhoto(host, "a.webp");
 
         // when
         ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
@@ -113,8 +131,7 @@ class HostProfileAcceptanceTest extends AcceptanceTest {
             () -> assertThat(response.jsonPath().getString("data.nickname")).isEqualTo("포스티"),
             () -> assertThat(response.jsonPath().getString("data.introduction")).isEqualTo("안녕하세요, 포게더 작가입니다."),
             () -> assertThat(response.jsonPath().getString("data.linkUrl")).isEqualTo("https://forgather.app/"),
-            () -> assertThat(response.jsonPath().getString("data.pictureUrl"))
-                .isEqualTo("https://cdn.forgather.app/hosts/1/profile/a.webp"),
+            () -> assertThat(response.jsonPath().getString("data.photoPath")).isEqualTo(photoPath(host, "a.webp")),
             () -> assertThat(response.jsonPath().getMap("data")).doesNotContainKeys("id", "name", "email")
         );
     }
@@ -139,7 +156,7 @@ class HostProfileAcceptanceTest extends AcceptanceTest {
             () -> assertThat(response.jsonPath().getString("data.nickname")).isEqualTo("포스티"),
             () -> assertThat(response.jsonPath().getString("data.introduction")).isNull(),
             () -> assertThat(response.jsonPath().getString("data.linkUrl")).isNull(),
-            () -> assertThat(response.jsonPath().getString("data.pictureUrl")).isNull()
+            () -> assertThat(response.jsonPath().getString("data.photoPath")).isNull()
         );
     }
 
@@ -189,7 +206,7 @@ class HostProfileAcceptanceTest extends AcceptanceTest {
                 "nickname", "새닉네임",
                 "introduction", "새로운 한 줄 소개",
                 "linkUrl", "https://forgather.app/new",
-                "pictureUrl", "https://cdn.forgather.app/hosts/1/profile/b.webp"
+                "photo", Map.of("uploadFileName", "b.webp", "capacity", 1024)
             ))
             .when()
             .patch("/hosts/me/profile")
@@ -203,27 +220,32 @@ class HostProfileAcceptanceTest extends AcceptanceTest {
         assertAll(
             () -> assertThat(response.jsonPath().getString("code")).isEqualTo(ResponseCode.SUCCESS.name()),
             () -> assertThat(response.jsonPath().getString("data.nickname")).isEqualTo("새닉네임"),
+            () -> assertThat(response.jsonPath().getString("data.photoPath")).isEqualTo(photoPath(host, "b.webp")),
             () -> assertThat(savedHost.getNickname()).isEqualTo("새닉네임"),
             () -> assertThat(savedHost.getIntroduction()).isEqualTo("새로운 한 줄 소개"),
             () -> assertThat(savedHost.getLinkUrl()).isEqualTo("https://forgather.app/new"),
-            () -> assertThat(savedHost.getPictureUrl()).isEqualTo("https://cdn.forgather.app/hosts/1/profile/b.webp")
+            () -> assertThat(photoRepository.findByHostAndDeletedAtIsNull(savedHost))
+                .get()
+                .extracting(HostProfilePhoto::getPath)
+                .isEqualTo(photoPath(host, "b.webp"))
         );
     }
 
-    @DisplayName("전달하지 않은 필드는 유지되고, 빈 문자열 필드는 제거된다")
+    @DisplayName("전달하지 않은 필드는 유지되고, 빈 문자열 필드와 삭제 요청한 사진은 제거된다")
     @Test
     void updateProfilePartially() {
         // given
         Host host = saveHostWithProfile();
+        saveProfilePhoto(host, "a.webp");
         String token = jwtTokenProvider.generateAccessToken(host.getId());
 
         Map<String, Object> request = new HashMap<>();
         request.put("introduction", "");
         request.put("linkUrl", "");
-        request.put("pictureUrl", "");
+        request.put("isDeletePhoto", true);
 
         // when
-        RestAssuredMockMvc.given()
+        ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
             .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
@@ -231,17 +253,38 @@ class HostProfileAcceptanceTest extends AcceptanceTest {
             .when()
             .patch("/hosts/me/profile")
             .then()
-            .statusCode(HttpStatus.OK.value());
+            .statusCode(HttpStatus.OK.value())
+            .extract();
 
         // then
         Host savedHost = hostRepository.getByIdOrThrow(host.getId());
 
         assertAll(
+            () -> assertThat(response.jsonPath().getString("data.photoPath")).isNull(),
             () -> assertThat(savedHost.getNickname()).isEqualTo("포스티"),
             () -> assertThat(savedHost.getIntroduction()).isNull(),
             () -> assertThat(savedHost.getLinkUrl()).isNull(),
-            () -> assertThat(savedHost.getPictureUrl()).isNull()
+            () -> assertThat(photoRepository.findByHostAndDeletedAtIsNull(savedHost)).isEmpty()
         );
+    }
+
+    @DisplayName("업로드 파일명 형식이 올바르지 않으면 프로필 수정에 실패한다")
+    @Test
+    void rejectUpdateWhenInvalidUploadFileName() {
+        // given
+        Host host = saveHostWithProfile();
+        String token = jwtTokenProvider.generateAccessToken(host.getId());
+
+        // when & then
+        RestAssuredMockMvc.given()
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body(Map.of("photo", Map.of("uploadFileName", "hosts/a.webp", "capacity", 1024)))
+            .when()
+            .patch("/hosts/me/profile")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value());
     }
 
     @DisplayName("닉네임이 10자를 초과하면 프로필 수정에 실패한다")

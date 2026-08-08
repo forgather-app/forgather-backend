@@ -21,6 +21,8 @@ import com.forgather.global.auth.client.AppleAuthClient;
 import com.forgather.global.auth.dto.AppleIdToken;
 import com.forgather.global.auth.dto.AppleLoginConfirmRequest;
 import com.forgather.global.auth.dto.AppleTokenResponse;
+import com.forgather.domain.host.model.HostProfilePhoto;
+import com.forgather.domain.host.repository.HostProfilePhotoRepository;
 import com.forgather.global.auth.dto.HostResponse;
 import com.forgather.global.auth.dto.KakaoIdToken;
 import com.forgather.global.auth.dto.KakaoLoginConfirmRequest;
@@ -55,6 +57,7 @@ public class AuthService {
     private final HostTermHistoryRepository hostTermHistoryRepository;
     private final AppleHostRepository appleHostRepository;
     private final AppleAuthClient appleAuthClient;
+    private final HostProfilePhotoRepository hostProfilePhotoRepository;
     private final RandomCodeGenerator codeGenerator;
 
     @Transactional
@@ -121,7 +124,11 @@ public class AuthService {
     }
 
     public HostResponse getCurrentUser(Host host) {
-        return HostResponse.from(host, isOnboardingCompleted(host));
+        return HostResponse.of(host, findProfilePhoto(host), isOnboardingCompleted(host));
+    }
+
+    private HostProfilePhoto findProfilePhoto(Host host) {
+        return hostProfilePhotoRepository.findByHostAndDeletedAtIsNull(host).orElse(null);
     }
 
     @Transactional
@@ -141,7 +148,7 @@ public class AuthService {
             .toList();
         hostTermHistoryRepository.saveAll(hostTermHistories);
 
-        return HostResponse.from(host, true);
+        return HostResponse.of(host, findProfilePhoto(host), true);
     }
 
     private boolean isOnboardingCompleted(Host host) {
