@@ -38,19 +38,23 @@ public class HostService {
     }
 
     /**
-     * 사진 필드가 모두 비어 있으면 기존 사진을 유지한다.
-     * 새 사진이 전달되면 기존 사진을 삭제하고 교체하며, 삭제 요청만 있으면 제거한다.
+     * 새 사진이 전달되면 기존 사진을 삭제하고 교체한다.
+     * 삭제 요청만 있으면 제거한다.
+     * 그 외에는 기존 사진을 유지한다.
      */
     private HostProfilePhoto applyPhotoChange(Host host, UpdateHostProfileRequest request) {
         Optional<HostProfilePhoto> existingPhoto = findActivePhoto(host);
-        if (request.photo() == null && !request.isDeletingPhoto()) {
-            return existingPhoto.orElse(null);
+        RegisterHostProfilePhotoRequest newPhoto = request.photo();
+
+        if (newPhoto != null) {
+            existingPhoto.ifPresent(HostProfilePhoto::delete);
+            return hostProfilePhotoRepository.save(newPhoto.toEntity(buildPhotoPath(host, newPhoto), host));
         }
-        existingPhoto.ifPresent(HostProfilePhoto::delete);
-        if (request.photo() == null) {
+        if (request.isDeletingPhoto()) {
+            existingPhoto.ifPresent(HostProfilePhoto::delete);
             return null;
         }
-        return hostProfilePhotoRepository.save(request.photo().toEntity(buildPhotoPath(host, request.photo()), host));
+        return existingPhoto.orElse(null);
     }
 
     private Optional<HostProfilePhoto> findActivePhoto(Host host) {
