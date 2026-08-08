@@ -52,7 +52,7 @@ public class ProductService {
         List<SimpleProductResponse> productResponses = products.stream()
             .map(product -> new SimpleProductResponse(
                 product,
-                productPhotoRepository.findFirstByProductAndDeletedAtIsNull(product).orElse(null))
+                productPhotoRepository.findFirstByProductAndDeletedAtIsNullOrderBySortOrderAsc(product).orElse(null))
             ).toList();
         return new ProductsResponse(productResponses);
     }

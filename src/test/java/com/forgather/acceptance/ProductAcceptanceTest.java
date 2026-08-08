@@ -22,8 +22,12 @@ import com.forgather.domain.product.dto.ProductsResponse;
 import com.forgather.domain.product.dto.RegisterProductPhotoRequest;
 import com.forgather.domain.product.dto.RegisterProductRequest;
 import com.forgather.domain.product.dto.UpdateProductRequest;
+import com.forgather.domain.product.model.Product;
+import com.forgather.domain.product.model.ProductPhoto;
+import com.forgather.domain.product.repository.ProductPhotoRepository;
 import com.forgather.domain.product.repository.ProductRepository;
 import com.forgather.domain.space.model.Space;
+import com.forgather.fixture.ProductFixture;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.AwsS3Cloud;
@@ -60,6 +64,9 @@ class ProductAcceptanceTest extends AcceptanceTest {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private ProductPhotoRepository productPhotoRepository;
 
     @MockitoBean
     private AwsS3Cloud awsS3Cloud;
@@ -140,6 +147,36 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.data().products().get(0).firstPhoto().path()).endsWith(
                     "/spaces/1234567890/product/file1.png"),
                 () -> assertThat(result.data().products().get(0).firstPhoto().order()).isEqualTo(1)
+            );
+        }
+
+        @DisplayName("사진이 저장된 순서와 무관하게 정렬 순서가 가장 앞선 사진을 첫 번째 사진으로 반환한다")
+        @Test
+        void returnFirstPhotoBySortOrder() {
+            // given
+            Product product = productRepository.save(ProductFixture.createProductWithSpace(space));
+            productPhotoRepository.save(new ProductPhoto(product, "photo3", "path/third.webp", 1024L, 3));
+            productPhotoRepository.save(new ProductPhoto(product, "photo2", "path/second.webp", 1024L, 2));
+            productPhotoRepository.save(new ProductPhoto(product, "photo1", "path/first.webp", 1024L, 1));
+
+            // when
+            ApiResponse<ProductsResponse> result = RestAssuredMockMvc.given()
+                .header("X-API-Version", "3")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+            // then
+            assertAll(
+                () -> assertThat(result.data().products().getFirst().firstPhoto().order()).isEqualTo(1),
+                () -> assertThat(result.data().products().getFirst().firstPhoto().path())
+                    .isEqualTo("path/first.webp")
             );
         }
 
