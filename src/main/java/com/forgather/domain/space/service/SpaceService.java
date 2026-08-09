@@ -3,9 +3,11 @@ package com.forgather.domain.space.service;
 import static com.forgather.domain.guestbook.model.VisibilityStatus.VISIBLE;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -99,7 +101,7 @@ public class SpaceService {
      */
     private ProductPhoto findRepresentativePhoto(Space space) {
         return productRepository.findFirstBySpaceAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(space)
-            .flatMap(productPhotoRepository::findFirstByProductAndDeletedAtIsNullOrderBySortOrderAsc)
+            .flatMap(productPhotoRepository::findFirstByProductAndDeletedAtIsNullOrderBySortOrderAscIdAsc)
             .orElse(null);
     }
 
@@ -202,11 +204,13 @@ public class SpaceService {
         Map<Long, Long> spaceIdByProductId = representatives.entrySet().stream()
             .collect(Collectors.toMap(entry -> entry.getValue().getId(), Map.Entry::getKey));
 
-        return productPhotoRepository.findFirstPhotosByProductIdIn(List.copyOf(spaceIdByProductId.keySet()))
+        return productPhotoRepository.findAllByProductIdInAndDeletedAtIsNull(List.copyOf(spaceIdByProductId.keySet()))
             .stream()
             .collect(Collectors.toMap(
                 photo -> spaceIdByProductId.get(photo.getProduct().getId()),
-                photo -> photo
+                photo -> photo,
+                BinaryOperator.minBy(Comparator.comparingInt(ProductPhoto::getSortOrder)
+                    .thenComparing(ProductPhoto::getId))
             ));
     }
 

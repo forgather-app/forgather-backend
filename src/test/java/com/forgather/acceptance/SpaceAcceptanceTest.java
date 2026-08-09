@@ -651,6 +651,14 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         );
     }
 
+    private ProductPhoto saveProductPhoto(Product product, int sortOrder, String pathSuffix) {
+        return productPhotoRepository.save(
+            new ProductPhoto(product, "original.webp",
+                "path/%d-%d-%s.webp".formatted(product.getId(), sortOrder, pathSuffix),
+                1024L, sortOrder)
+        );
+    }
+
     private ApiResponse<SpaceResponse> getSpace(String spaceCode) {
         return RestAssuredMockMvc.given()
             .header("Authorization", "Bearer " + token)
@@ -817,6 +825,23 @@ class SpaceAcceptanceTest extends AcceptanceTest {
                 .isEqualTo(space2FirstPhoto.getPath()),
             () -> assertThat(findByCode(spaces, withoutProduct.getCode()).spacePhoto().isExists()).isFalse()
         );
+    }
+
+    @DisplayName("대표 작품에 같은 정렬 순서의 사진이 있어도 스페이스 목록을 조회한다.")
+    @Test
+    void getSpacesWithTiedSortOrderPhotos() {
+        // given: 검증을 우회해 동점 데이터를 주입한다. (동시 수정 등으로 발생 가능한 오염 상태)
+        Space space = saveSpaceOf(host, "1111111111");
+        Product product = productRepository.save(ProductFixture.createProductWithSpace(space));
+        ProductPhoto first = saveProductPhoto(product, 1, "first");
+        saveProductPhoto(product, 1, "tied");
+
+        // when
+        List<HostSpaceItemResponse> spaces = getMySpaces();
+
+        // then: id가 가장 작은 사진이 대표다.
+        assertThat(findByCode(spaces, space.getCode()).spacePhoto().path())
+            .isEqualTo(first.getPath());
     }
 
     @DisplayName("여러 스페이스를 축하받는 스페이스로 한 번에 지정하고 지정된 코드 목록을 응답한다.")
