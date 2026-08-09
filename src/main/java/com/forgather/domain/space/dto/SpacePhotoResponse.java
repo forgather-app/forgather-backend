@@ -9,7 +9,7 @@ public record SpacePhotoResponse(
     @Schema(description = "스페이스 사진 존재 여부", example = "true")
     boolean isExists,
 
-    @Schema(description = "스페이스 사진 경로", example = "photogather/v2/spaces/1234567890/PRODUCT/UUID.webp")
+    @Schema(description = "스페이스 사진 경로", example = "photogather/v2/spaces/1234567890/product/UUID.webp")
     String path
 ) {
 

@@ -31,7 +31,7 @@ public record HostSpaceItemResponse(
     @Schema(description = "스페이스 사진 (대표 작품의 첫 번째 사진)", example = """
         {
             "isExists": true,
-            "path": "photogather/v2/spaces/1234567890/PRODUCT/UUID.webp"
+            "path": "photogather/v2/spaces/1234567890/product/UUID.webp"
         }
         """)
     SpacePhotoResponse spacePhoto,
