@@ -27,8 +27,7 @@ import lombok.NoArgsConstructor;
 @Inheritance(strategy = InheritanceType.JOINED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Host extends SoftDeleteEntity {
-
-    private static final int CODE_LENGTH = 10;
+    public static final int CODE_LENGTH = 10;
     private static final int MAX_NICKNAME_LENGTH = 10;
     private static final int MAX_INTRODUCTION_LENGTH = 50;
     private static final int MAX_LINK_URL_LENGTH = 2048;
@@ -37,6 +36,9 @@ public class Host extends SoftDeleteEntity {
     private static final String ANONYMIZED_NAME = "탈퇴한 회원";
     private static final Pattern LINK_URL_PATTERN = Pattern.compile(
         "^https?://[^\\s]+$"
+    );
+    private static final Pattern CODE_PATTERN = Pattern.compile(
+        "^[0-9a-z]{" + CODE_LENGTH + "}$"
     );
 
     @Id
@@ -96,10 +98,13 @@ public class Host extends SoftDeleteEntity {
         }
     }
 
+    /**
+     * RandomCodeGenerator가 만드는 형식과 동일한 계약을 강제한다.
+     * DB 컬럼에는 CHECK 제약이 없어 이 검증이 유일한 방어선이다.
+     */
     private void validateCode(String code) {
-        if (code.length() != CODE_LENGTH) {
-            throw new BaseException("호스트 코드는 %d자여야 합니다. code.length: %d"
-                .formatted(CODE_LENGTH, code.length()));
+        if (!CODE_PATTERN.matcher(code).matches()) {
+            throw new BaseException("호스트 코드는 영문 소문자와 숫자 %d자여야 합니다.".formatted(CODE_LENGTH));
         }
     }
 

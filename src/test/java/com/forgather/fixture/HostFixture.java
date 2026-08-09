@@ -8,7 +8,6 @@ import com.forgather.global.util.RandomCodeGenerator;
 public class HostFixture {
 
     private static final String EMAIL = "posty@forgather.app";
-    private static final int CODE_LENGTH = 10;
     private static final RandomCodeGenerator CODE_GENERATOR = new RandomCodeGenerator();
 
     /**
@@ -16,7 +15,7 @@ public class HostFixture {
      * createHostWithCode로 원하는 값을 직접 지정한다.
      */
     public static String randomCode() {
-        return CODE_GENERATOR.generate(CODE_LENGTH);
+        return CODE_GENERATOR.generate(Host.CODE_LENGTH);
     }
 
     public static Host createHost() {

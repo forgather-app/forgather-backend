@@ -31,8 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class DevAuthService {
 
-    private static final int HOST_CODE_LENGTH = 10;
-
     private final DevLoginProperties devLoginProperties;
     private final JwtTokenProvider jwtTokenProvider;
     private final KakaoHostRepository kakaoHostRepository;
@@ -77,7 +75,7 @@ public class DevAuthService {
 
     private KakaoHost createOnboardedHost(String userId) {
         Host host = hostRepository.save(new Host(
-            codeGenerator.generate(HOST_CODE_LENGTH),
+            codeGenerator.generate(Host.CODE_LENGTH),
             devLoginProperties.getNickname(),
             devLoginProperties.getEmail()));
         KakaoHost savedKakaoHost = kakaoHostRepository.save(new KakaoHost(host, userId));

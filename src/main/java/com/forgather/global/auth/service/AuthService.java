@@ -47,8 +47,6 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class AuthService {
 
-    private static final int HOST_CODE_LENGTH = 10;
-
     private final JwtParser jwtParser;
     private final JwtTokenProvider jwtTokenProvider;
     private final KakaoHostRepository kakaoHostRepository;
@@ -82,7 +80,7 @@ public class AuthService {
         }
 
         Host host = hostRepository.save(
-            new Host(codeGenerator.generate(HOST_CODE_LENGTH), idToken.nickname(), idToken.email()));
+            new Host(codeGenerator.generate(Host.CODE_LENGTH), idToken.nickname(), idToken.email()));
         KakaoHost newKakaoHost = new KakaoHost(host, idToken.sub());
         return kakaoHostRepository.save(newKakaoHost);
     }
@@ -109,7 +107,7 @@ public class AuthService {
             return existingAppleHost;
         }
 
-        Host host = new Host(codeGenerator.generate(HOST_CODE_LENGTH), fullName, idToken.email());
+        Host host = new Host(codeGenerator.generate(Host.CODE_LENGTH), fullName, idToken.email());
         hostRepository.save(host);
         return appleHostRepository.save(new AppleHost(host, idToken.sub(), appleRefreshToken));
     }

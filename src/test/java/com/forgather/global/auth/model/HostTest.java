@@ -99,7 +99,20 @@ class HostTest {
         void rejectsCodeWithInvalidLength() {
             assertThatThrownBy(() -> new Host("abc", "포스티", "posty@forgather.app"))
                 .isInstanceOf(BaseException.class)
-                .hasMessageContaining("코드는 10자");
+                .hasMessageContaining("영문 소문자와 숫자 10자");
+        }
+
+        @DisplayName("공개 코드에 영문 소문자와 숫자 외의 문자가 있으면 예외가 발생한다")
+        @Test
+        void rejectsCodeWithDisallowedCharacters() {
+            assertAll(
+                () -> assertThatThrownBy(() -> new Host("AAAAAAAAAA", "포스티", "posty@forgather.app"))
+                    .isInstanceOf(BaseException.class)
+                    .hasMessageContaining("영문 소문자와 숫자 10자"),
+                () -> assertThatThrownBy(() -> new Host("//////////", "포스티", "posty@forgather.app"))
+                    .isInstanceOf(BaseException.class)
+                    .hasMessageContaining("영문 소문자와 숫자 10자")
+            );
         }
     }
 
