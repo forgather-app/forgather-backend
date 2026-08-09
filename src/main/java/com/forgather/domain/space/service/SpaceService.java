@@ -187,7 +187,7 @@ public class SpaceService {
      * 대표 작품이 없거나 대표 작품에 사진이 없는 스페이스는 결과에서 빠지므로, 호출부는 null을 사진 없음으로 다룬다.
      */
     private Map<Long, ProductPhoto> findRepresentativePhotos(List<Long> spaceIds) {
-        Map<Long, Product> representatives = productRepository.findRepresentativesBySpaceIdIn(spaceIds)
+        Map<Long, Product> representatives = productRepository.findEarliestCreatedPerSpace(spaceIds)
             .stream()
             .collect(Collectors.toMap(
                 product -> product.getSpace().getId(),

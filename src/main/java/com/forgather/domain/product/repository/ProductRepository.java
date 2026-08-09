@@ -24,8 +24,8 @@ public interface ProductRepository {
     Optional<Product> findFirstBySpaceAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(Space space);
 
     /**
-     * 여러 스페이스의 대표 작품을 한 번에 조회한다. 목록 조회의 N+1을 막기 위한 배치 쿼리다.
-     * createdAt 동점이면 한 스페이스에서 2건 이상 나올 수 있으므로 id 오름차순으로 반환한다.
+     * 여러 스페이스에서 각각 가장 먼저 생성된 작품을 한 번에 조회한다. 목록 조회의 N+1을 막기 위한 배치 쿼리다.
+     * createdAt 동점이면 한 스페이스에서 2건 이상 나오므로 대표 작품 확정(id tie-break)은 호출부 책임이다.
      */
     @Query("""
         SELECT p
@@ -40,7 +40,7 @@ public interface ProductRepository {
             )
         ORDER BY p.id ASC
         """)
-    List<Product> findRepresentativesBySpaceIdIn(@Param("spaceIds") List<Long> spaceIds);
+    List<Product> findEarliestCreatedPerSpace(@Param("spaceIds") List<Long> spaceIds);
 
     Optional<Product> findBySpaceAndIdAndDeletedAtIsNull(Space space, Long id);
 
