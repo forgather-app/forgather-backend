@@ -8,8 +8,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -250,6 +252,45 @@ class AuthServiceTest {
             () -> assertThat(savedKakaoHost.getHost().getNickname()).isNull(),
             () -> assertThat(savedKakaoHost.getHost().getEmail()).isEqualTo("kakao@example.com")
         );
+    }
+
+    @DisplayName("호스트 코드가 이미 사용 중이면 새 코드로 다시 시도한다")
+    @Test
+    void regeneratesHostCodeWhenAlreadyUsed() {
+        // given
+        KakaoIdToken idToken = kakaoIdToken("카카오닉네임", "kakao@example.com");
+        when(jwtParser.parseKakaoIdToken("id-token", "raw-nonce")).thenReturn(idToken);
+        when(kakaoHostRepository.findByUserId("kakao-user-id")).thenReturn(Optional.empty());
+        when(hostRepository.existsByCode(anyString())).thenReturn(true, true, false);
+        when(hostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(kakaoHostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(jwtTokenProvider.generateAccessToken(nullable(Long.class))).thenReturn("access-token");
+        when(jwtTokenProvider.generateRefreshToken(nullable(Long.class))).thenReturn("refresh-token");
+
+        // when
+        authService.kakaoLoginConfirm(kakaoLoginConfirmRequest());
+
+        // then
+        ArgumentCaptor<KakaoHost> captor = ArgumentCaptor.forClass(KakaoHost.class);
+        verify(kakaoHostRepository).save(captor.capture());
+        assertThat(captor.getValue().getHost().getCode()).matches("[0-9a-z]{10}");
+        verify(hostRepository, times(3)).existsByCode(anyString());
+    }
+
+    @DisplayName("호스트 코드가 계속 사용 중이면 가입에 실패한다")
+    @Test
+    void failsWhenEveryHostCodeAttemptIsUsed() {
+        // given
+        KakaoIdToken idToken = kakaoIdToken("카카오닉네임", "kakao@example.com");
+        when(jwtParser.parseKakaoIdToken("id-token", "raw-nonce")).thenReturn(idToken);
+        when(kakaoHostRepository.findByUserId("kakao-user-id")).thenReturn(Optional.empty());
+        when(hostRepository.existsByCode(anyString())).thenReturn(true);
+
+        // when & then
+        assertThatThrownBy(() -> authService.kakaoLoginConfirm(kakaoLoginConfirmRequest()))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("호스트 코드를 생성하지 못했습니다");
+        verify(hostRepository, never()).save(any());
     }
 
     @DisplayName("기존 카카오 회원이 재로그인하면 id token의 email로 Host email을 채운다")
