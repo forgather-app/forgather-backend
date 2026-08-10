@@ -121,7 +121,9 @@ public class AuthService {
                 return code;
             }
         }
-        throw new BaseException("호스트 코드를 생성하지 못했습니다. 시도 횟수: %d".formatted(MAX_HOST_CODE_ATTEMPTS));
+        throw new BaseException(
+            "호스트 코드를 생성하지 못했습니다. 시도 횟수: %d".formatted(MAX_HOST_CODE_ATTEMPTS),
+            HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     public LoginResponse refresh(String refreshToken) {

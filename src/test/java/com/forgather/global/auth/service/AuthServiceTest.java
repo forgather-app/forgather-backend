@@ -26,6 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 
 import com.forgather.domain.host.repository.HostProfilePhotoRepository;
 import com.forgather.domain.space.repository.HostRepository;
@@ -289,7 +290,9 @@ class AuthServiceTest {
         // when & then
         assertThatThrownBy(() -> authService.kakaoLoginConfirm(kakaoLoginConfirmRequest()))
             .isInstanceOf(BaseException.class)
-            .hasMessageContaining("호스트 코드를 생성하지 못했습니다");
+            .hasMessageContaining("호스트 코드를 생성하지 못했습니다")
+            .satisfies(thrown -> assertThat(((BaseException)thrown).getStatusCode())
+                .isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value()));
         verify(hostRepository, never()).save(any());
     }
 
