@@ -11,19 +11,19 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.forgather.container.TestOnContainer;
 import com.forgather.domain.space.dto.CreateSpaceRequest;
+import com.forgather.domain.space.dto.CreateSpaceResponse;
 import com.forgather.domain.space.dto.FeatureSpacesRequest;
 import com.forgather.domain.space.dto.FeaturedSpacesResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
 import com.forgather.domain.space.dto.UnfeatureSpacesRequest;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.space.repository.SpacePhotoRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
@@ -40,15 +40,18 @@ class SpaceServiceTest extends TestOnContainer {
 
     private final SpaceService spaceService;
     private final SpaceRepository spaceRepository;
+    private final SpacePhotoRepository spacePhotoRepository;
     private final HostRepository hostRepository;
     private final SpaceHostRepository spaceHostRepository;
 
     @Autowired
-    public SpaceServiceTest(SpaceService spaceService, SpaceRepository spaceRepository, HostRepository hostRepository,
+    public SpaceServiceTest(SpaceService spaceService, SpaceRepository spaceRepository,
+        SpacePhotoRepository spacePhotoRepository, HostRepository hostRepository,
         SpaceHostRepository spaceHostRepository
     ) {
         this.spaceService = spaceService;
         this.spaceRepository = spaceRepository;
+        this.spacePhotoRepository = spacePhotoRepository;
         this.hostRepository = hostRepository;
         this.spaceHostRepository = spaceHostRepository;
     }
@@ -63,18 +66,36 @@ class SpaceServiceTest extends TestOnContainer {
             invalidSpaceName,
             "description",
             true,
-            "forgather_official",
-            "forgather@forgather.me",
             null,
             null
         );
-        MultipartFile file = new MockMultipartFile("temp.png", new byte[] {});
 
         // when & then
         assertAll(
-            () -> assertThatException().isThrownBy(() -> spaceService.create(request, file, host)),
+            () -> assertThatException().isThrownBy(() -> spaceService.create(request, host)),
             () -> assertThat(spaceRepository.findAllByDeletedAtIsNull()).isEmpty()
         );
+    }
+
+    @DisplayName("스페이스를 생성해도 스페이스 사진은 저장하지 않는다.")
+    @Test
+    void createSpaceDoesNotSavePhoto() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        CreateSpaceRequest request = new CreateSpaceRequest(
+            "test-space",
+            "description",
+            true,
+            null,
+            null
+        );
+
+        // when
+        CreateSpaceResponse response = spaceService.create(request, host);
+
+        // then
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(response.spaceCode());
+        assertThat(spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)).isEmpty();
     }
 
     @DisplayName("호스트의 스페이스 목록 조회 시 논리 삭제된 스페이스는 조회하지 않는다")

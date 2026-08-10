@@ -206,9 +206,6 @@ public class GlobalExceptionHandler {
         if (e instanceof JwtBaseException) {
             return ResponseCode.JWT_INVALID;
         }
-        if (e instanceof FileUploadException) {
-            return ResponseCode.FILE_UPLOAD_FAILED;
-        }
         if (e instanceof FileDownloadException) {
             return ResponseCode.FILE_DOWNLOAD_FAILED;
         }

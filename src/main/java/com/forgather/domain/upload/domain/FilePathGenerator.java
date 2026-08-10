@@ -1,10 +1,5 @@
 package com.forgather.domain.upload.domain;
 
-import java.util.UUID;
-
-import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
-
 public class FilePathGenerator {
 
     private FilePathGenerator() {
@@ -25,19 +20,20 @@ public class FilePathGenerator {
         );
     }
 
-    public static String generateContentsFilePath(
+    /**
+     * 스페이스 생성 시점에는 spaceCode가 없으므로 인증된 hostId로 경로를 격리한다.
+     * 격리가 없으면 클라이언트가 지정한 파일명만으로 다른 호스트의 객체 키를 겨냥해 덮어쓸 수 있다.
+     */
+    public static String generateSpacePhotoFilePath(
         String rootDirectory,
-        String spaceCode,
-        UploadCategory category,
-        MultipartFile file
+        Long hostId,
+        String fileName
     ) {
-        return generateContentsFilePath(rootDirectory, spaceCode, category, makeUploadFileName(file));
-    }
-
-    private static String makeUploadFileName(MultipartFile file) {
-        String uploadFileName = UUID.randomUUID().toString();
-        String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
-        return "%s.%s".formatted(uploadFileName, extension);
+        return "%s/spaces/photos/%d/%s".formatted(
+            rootDirectory,
+            hostId,
+            fileName
+        );
     }
 
     public static String generateExhibitionContentsFilePath(

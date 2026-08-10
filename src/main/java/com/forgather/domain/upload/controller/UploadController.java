@@ -88,6 +88,21 @@ public class UploadController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @Deprecated
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping(path = "/spaces/photos/upload/signed-urls")
+    @Operation(summary = "스페이스 사진 업로드 URL 발급 (deprecated)",
+        description = "[Deprecated] 스페이스 사진은 더 이상 별도로 업로드하지 않습니다. "
+            + "스페이스 사진은 대표 작품의 첫 번째 사진을 사용하므로 이 API를 호출하지 마세요. "
+            + "향후 기획 변경에 대비해 엔드포인트만 남겨둡니다." + PRESIGN_USAGE_NOTE)
+    public ResponseEntity<ApiResponse<IssueSignedUrlResponse>> issueSpacePhotoSignedUrls(
+        @LoginHost(required = true) Host host,
+        @Valid @RequestBody IssuePreSignedUrlRequest request
+    ) {
+        var response = uploadService.issueSpacePhotoSignedUrls(host, request);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping(path = "/exhibitions/upload/signed-urls")
     @Operation(summary = "전시 사진 업로드 URL 발급",

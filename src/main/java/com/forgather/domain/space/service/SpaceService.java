@@ -3,19 +3,24 @@ package com.forgather.domain.space.service;
 import static com.forgather.domain.guestbook.model.VisibilityStatus.VISIBLE;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
 import com.forgather.domain.guestbook.repository.dto.SpaceGuestBookCountDto;
 import com.forgather.domain.guestbook.service.GuestBookService;
+import com.forgather.domain.product.model.Product;
+import com.forgather.domain.product.model.ProductPhoto;
+import com.forgather.domain.product.repository.ProductPhotoRepository;
+import com.forgather.domain.product.repository.ProductRepository;
 import com.forgather.domain.product.service.ProductService;
 import com.forgather.domain.space.dto.CheckSpaceHostResponse;
 import com.forgather.domain.space.dto.CreateSpaceRequest;
@@ -31,7 +36,6 @@ import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.model.SpacePhoto;
 import com.forgather.domain.space.repository.SpacePhotoRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
-import com.forgather.domain.upload.service.UploadService;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHost;
 import com.forgather.global.auth.repository.SpaceHostRepository;
@@ -51,24 +55,20 @@ public class SpaceService {
 
     private final ProductService productService;
     private final GuestBookService guestBookService;
-    private final UploadService uploadService;
     private final SpaceRepository spaceRepository;
     private final SpacePhotoRepository spacePhotoRepository;
     private final SpaceHostRepository spaceHostRepository;
     private final GuestBookCardRepository guestBookCardRepository;
+    private final ProductRepository productRepository;
+    private final ProductPhotoRepository productPhotoRepository;
     private final RandomCodeGenerator codeGenerator;
 
     @Transactional
-    public CreateSpaceResponse create(CreateSpaceRequest request, MultipartFile file, Host host) {
+    public CreateSpaceResponse create(CreateSpaceRequest request, Host host) {
         validateHostNull(host);
         String spaceCode = codeGenerator.generate(10);
         Space space = spaceRepository.save(request.toEntity(spaceCode));
         spaceHostRepository.save(new SpaceHost(space, host));
-        if (file == null || file.isEmpty()) {
-            return CreateSpaceResponse.from(space);
-        }
-        String path = uploadService.upload(spaceCode, file);
-        spacePhotoRepository.save(new SpacePhoto(space, file.getOriginalFilename(), path, file.getSize()));
         return CreateSpaceResponse.from(space);
     }
 
@@ -79,62 +79,30 @@ public class SpaceService {
     }
 
     @Transactional
-    public SpaceResponse update(String spaceCode, UpdateSpaceRequest request, MultipartFile file, Host host) {
+    public SpaceResponse update(String spaceCode, UpdateSpaceRequest request, Host host) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(space, host);
 
-        space.update(request.name(), request.description(), request.isPublic(), request.instagramUsername(),
-            request.email(), request.linkUrl(), request.linkName());
+        space.update(request.name(), request.description(), request.isPublic(), request.linkUrl(),
+            request.linkName());
 
-        if (request.isDeletingPhoto()) {
-            handlePhotoWithDeleteRequest(space, file, spaceCode);
-        } else {
-            handlePhotoWithoutDeleteRequest(space, file, spaceCode);
-        }
         return createSpaceResponse(space);
-    }
-
-    /**
-     * 삭제 요청이 없는 경우: 새 파일이 있으면 업로드 (기존 사진이 없어야 함)
-     */
-    private void handlePhotoWithoutDeleteRequest(Space space, MultipartFile file, String spaceCode) {
-        if (file != null && !file.isEmpty()) {
-            uploadNewPhoto(space, file, spaceCode);
-        }
-    }
-
-    /**
-     * 삭제 요청이 있는 경우: 기존 사진을 삭제하고, 파일이 존재하면 업로드
-     */
-    private void handlePhotoWithDeleteRequest(Space space, MultipartFile file, String spaceCode) {
-        deleteExistingPhoto(space);
-        if (file != null && !file.isEmpty()) {
-            uploadNewPhoto(space, file, spaceCode);
-        }
-    }
-
-    private void uploadNewPhoto(Space space, MultipartFile file, String spaceCode) {
-        spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)
-            .ifPresent(photo -> {
-                throw new BaseException("스페이스 사진이 이미 존재합니다. 기존 스페이스 사진을 삭제 해주세요.");
-            });
-
-        String path = uploadService.upload(spaceCode, file);
-        spacePhotoRepository.save(new SpacePhoto(space, file.getOriginalFilename(), path, file.getSize()));
-    }
-
-    private void deleteExistingPhoto(Space space) {
-        SpacePhoto existingPhoto = spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)
-            .orElseThrow(() -> new BaseException("삭제할 스페이스 사진이 존재하지 않습니다."));
-
-        deleteSpacePhoto(existingPhoto);
     }
 
     private SpaceResponse createSpaceResponse(Space space) {
         Long guestBookCardCount =
             guestBookCardRepository.countBySpaceAndVisibilityStatusAndDeletedAtIsNull(space, VISIBLE);
-        SpacePhoto spacePhoto = spacePhotoRepository.getBySpaceAndDeletedAtIsNullOrEmpty(space);
-        return SpaceResponse.from(space, spacePhoto, guestBookCardCount);
+        return SpaceResponse.from(space, findRepresentativePhoto(space), guestBookCardCount);
+    }
+
+    /**
+     * 스페이스 사진은 대표 작품의 첫 번째 사진이다.
+     * 작품이 없거나 대표 작품에 사진이 없으면 null을 반환하고, 기본 사진 노출은 클라이언트가 담당한다.
+     */
+    private ProductPhoto findRepresentativePhoto(Space space) {
+        return productRepository.findFirstBySpaceAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(space)
+            .flatMap(productPhotoRepository::findFirstByProductAndDeletedAtIsNullOrderBySortOrderAscIdAsc)
+            .orElse(null);
     }
 
     @Transactional
@@ -201,24 +169,49 @@ public class SpaceService {
                 spaceIds, VISIBLE, false)
         );
 
-        Map<Long, SpacePhoto> spacePhotos = spacePhotoRepository.findAllBySpaceIdInAndDeletedAtIsNull(spaceIds)
-            .stream()
-            .collect(Collectors.toMap(
-                spacePhoto -> spacePhoto.getSpace().getId(),
-                spacePhoto -> spacePhoto)
-            );
+        Map<Long, ProductPhoto> spacePhotos = findRepresentativePhotos(spaceIds);
 
         return spaceHosts.stream()
             .map(spaceHost -> {
                 Space space = spaceHost.getSpace();
                 return HostSpaceItemResponse.from(
                     space,
-                    spacePhotos.getOrDefault(space.getId(), SpacePhoto.empty(space)),
+                    spacePhotos.get(space.getId()),
                     guestBookCardCounts.getOrDefault(space.getId(), 0L),
                     unreadGuestBookCounts.getOrDefault(space.getId(), 0L)
                 );
             })
             .toList();
+    }
+
+    /**
+     * 스페이스별 대표 작품의 첫 번째 사진을 스페이스 수와 무관하게 쿼리 2회로 조회한다.
+     * 대표 작품이 없거나 대표 작품에 사진이 없는 스페이스는 결과에서 빠지므로, 호출부는 null을 사진 없음으로 다룬다.
+     */
+    private Map<Long, ProductPhoto> findRepresentativePhotos(List<Long> spaceIds) {
+        Map<Long, Product> representatives = productRepository.findEarliestCreatedPerSpace(spaceIds)
+            .stream()
+            .collect(Collectors.toMap(
+                product -> product.getSpace().getId(),
+                product -> product,
+                // createdAt이 동점이면 한 스페이스에서 여러 건이 온다. id 오름차순으로 조회하므로 먼저 온 것이 대표다.
+                (representative, later) -> representative
+            ));
+        if (representatives.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<Long, Long> spaceIdByProductId = representatives.entrySet().stream()
+            .collect(Collectors.toMap(entry -> entry.getValue().getId(), Map.Entry::getKey));
+
+        return productPhotoRepository.findAllByProductIdInAndDeletedAtIsNull(List.copyOf(spaceIdByProductId.keySet()))
+            .stream()
+            .collect(Collectors.toMap(
+                photo -> spaceIdByProductId.get(photo.getProduct().getId()),
+                photo -> photo,
+                BinaryOperator.minBy(Comparator.comparingInt(ProductPhoto::getSortOrder)
+                    .thenComparing(ProductPhoto::getId))
+            ));
     }
 
     private Map<Long, Long> toCountBySpaceId(List<SpaceGuestBookCountDto> counts) {

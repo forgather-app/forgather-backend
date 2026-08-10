@@ -2,9 +2,7 @@ package com.forgather.domain.space.controller;
 
 import static org.springframework.http.HttpStatus.CREATED;
 
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -13,9 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.forgather.domain.space.dto.CheckSpaceHostResponse;
 import com.forgather.domain.space.dto.CreateSpaceRequest;
@@ -32,9 +28,6 @@ import com.forgather.global.auth.model.Host;
 import com.forgather.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -48,35 +41,15 @@ public class SpaceController {
 
     private final SpaceService spaceService;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping
     @Operation(summary = "스페이스 생성", description = "새로운 스페이스를 생성합니다.")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<CreateSpaceResponse>> create(
-        @Parameter(description = "스페이스 생성 정보 (JSON, text/plain)", required = true,
-            content = @Content(schema = @Schema(implementation = CreateSpaceRequest.class)))
-        @RequestPart("request") @Validated CreateSpaceRequest request,
-        @RequestPart(value = "file", required = false) MultipartFile file,
+        @RequestBody @Valid CreateSpaceRequest request,
         @LoginHost Host host
     ) {
-        var response = spaceService.create(request, file, host);
+        var response = spaceService.create(request, host);
         return ResponseEntity.status(CREATED).body(ApiResponse.success(response));
-    }
-
-    // 임시: FE ApiResponse 마이그레이션용 raw DTO 버전. v2/main 병합 전 반드시 삭제할 것. (#112)
-    // 헤더 X-API-Version: 1 이 오면 raw DTO, 없으면 위의 기본(ApiResponse) 메서드가 처리한다.
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, headers = "X-API-Version=1")
-    @Operation(summary = "스페이스 생성 (raw DTO)",
-        description = "운영 호환 raw DTO 응답. X-API-Version: 1 로 호출. (FE 마이그레이션용 임시 버전 — v2/main 병합 전 삭제)")
-    @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<CreateSpaceResponse> createV1(
-        @Parameter(description = "스페이스 생성 정보 (JSON, text/plain)", required = true,
-            content = @Content(schema = @Schema(implementation = CreateSpaceRequest.class)))
-        @RequestPart("request") @Validated CreateSpaceRequest request,
-        @RequestPart(value = "file", required = false) MultipartFile file,
-        @LoginHost Host host
-    ) {
-        var response = spaceService.create(request, file, host);
-        return ResponseEntity.status(CREATED).body(response);
     }
 
     @GetMapping("/{spaceCode}")
@@ -97,37 +70,16 @@ public class SpaceController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping(value = "/{spaceCode}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping("/{spaceCode}")
     @Operation(summary = "스페이스 정보 수정", description = "해당 스페이스 코드의 정보를 수정합니다.")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<SpaceResponse>> update(
         @PathVariable(name = "spaceCode") String spaceCode,
-        @Parameter(description = "스페이스 수정 정보 (JSON, text/plain)", required = true,
-            content = @Content(schema = @Schema(implementation = UpdateSpaceRequest.class)))
-        @RequestPart("request") @Validated UpdateSpaceRequest request,
-        @RequestPart(value = "file", required = false) MultipartFile file,
+        @RequestBody @Valid UpdateSpaceRequest request,
         @LoginHost Host host
     ) {
-        var response = spaceService.update(spaceCode, request, file, host);
+        var response = spaceService.update(spaceCode, request, host);
         return ResponseEntity.ok(ApiResponse.success(response));
-    }
-
-    // 임시: FE ApiResponse 마이그레이션용 raw DTO 버전. v2/main 병합 전 반드시 삭제할 것. (#112)
-    // 헤더 X-API-Version: 1 이 오면 raw DTO, 없으면 위의 기본(ApiResponse) 메서드가 처리한다.
-    @PatchMapping(value = "/{spaceCode}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, headers = "X-API-Version=1")
-    @Operation(summary = "스페이스 정보 수정 (raw DTO)",
-        description = "운영 호환 raw DTO 응답. X-API-Version: 1 로 호출. (FE 마이그레이션용 임시 버전 — v2/main 병합 전 삭제)")
-    @SecurityRequirement(name = "bearerAuth")
-    public ResponseEntity<SpaceResponse> updateV1(
-        @PathVariable(name = "spaceCode") String spaceCode,
-        @Parameter(description = "스페이스 수정 정보 (JSON, text/plain)", required = true,
-            content = @Content(schema = @Schema(implementation = UpdateSpaceRequest.class)))
-        @RequestPart("request") @Validated UpdateSpaceRequest request,
-        @RequestPart(value = "file", required = false) MultipartFile file,
-        @LoginHost Host host
-    ) {
-        var response = spaceService.update(spaceCode, request, file, host);
-        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/me")

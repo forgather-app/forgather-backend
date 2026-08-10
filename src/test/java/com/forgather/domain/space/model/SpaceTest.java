@@ -26,40 +26,44 @@ class SpaceTest {
 
         // when & then
         assertThatCode(
-            () -> new Space(spaceCode, name, "", false, "", "", "", "")
+            () -> new Space(spaceCode, name, "", false, "", "")
         ).doesNotThrowAnyException();
     }
 
-    @DisplayName("설명, 인스타그램 아이디, 이메일, 링크는 공백인 경우 빈 문자열로 저장한다.")
+    @DisplayName("설명, 링크는 공백인 경우 빈 문자열로 저장한다.")
     @Test
     void createSpaceWithBlank() {
         // given
         String description = "  ";
-        String instagramUsername = "  ";
-        String email = "  ";
         String linkUrl = "  ";
         String linkName = "  ";
 
         // when
-        Space space = new Space("1234567890", "나의 졸업전시", description, false, instagramUsername, email, linkUrl,
-            linkName);
+        Space space = new Space("1234567890", "나의 졸업전시", description, false, linkUrl, linkName);
 
         // then
         assertAll(
             () -> assertThat(space.getDescription()).isEmpty(),
-            () -> assertThat(space.getInstagramUsername()).isEmpty(),
-            () -> assertThat(space.getEmail()).isEmpty(),
             () -> assertThat(space.getLinkUrl()).isEmpty(),
             () -> assertThat(space.getLinkName()).isEmpty()
         );
+    }
+
+    @DisplayName("설명은 입력하지 않아도(null) 스페이스를 생성할 수 있고, 빈 문자열로 저장한다.")
+    @Test
+    void createSpaceWithoutDescription() {
+        // given & when
+        Space space = new Space("1234567890", "나의 졸업전시", null, false, null, null);
+
+        // then
+        assertThat(space.getDescription()).isEmpty();
     }
 
     @DisplayName("링크는 입력하지 않아도(null) 스페이스를 생성할 수 있고, 빈 문자열로 저장한다.")
     @Test
     void createSpaceWithoutLink() {
         // given & when
-        Space space = new Space("1234567890", "나의 졸업전시", "설명", false, "forgather_official",
-            "forgather@forgather.me", null, null);
+        Space space = new Space("1234567890", "나의 졸업전시", "설명", false, null, null);
 
         // then
         assertAll(
@@ -72,8 +76,7 @@ class SpaceTest {
     @Test
     void createSpaceWithLink() {
         // given & when
-        Space space = new Space("1234567890", "나의 졸업전시", "설명", false, "forgather_official",
-            "forgather@forgather.me", "https://forgather.me", "포트폴리오");
+        Space space = new Space("1234567890", "나의 졸업전시", "설명", false, "https://forgather.me", "포트폴리오");
 
         // then
         assertAll(
@@ -90,7 +93,7 @@ class SpaceTest {
 
         // when & then
         assertThatThrownBy(
-            () -> new Space(null, name, null, false, null, null, null, null)
+            () -> new Space(null, name, null, false, null, null)
         ).isInstanceOf(BaseNullPointerException.class)
             .hasMessageContaining("스페이스 코드");
     }
@@ -103,7 +106,7 @@ class SpaceTest {
 
         // when & then
         assertThatThrownBy(
-            () -> new Space(code, null, null, false, null, null, null, null)
+            () -> new Space(code, null, null, false, null, null)
         ).isInstanceOf(BaseNullPointerException.class)
             .hasMessageContaining("스페이스 이름");
     }
@@ -116,12 +119,10 @@ class SpaceTest {
         // 가족 이모지, length 11
         String name = "👨‍👩‍👧‍👦".repeat(30);
         String description = "스페이스 설명";
-        String instagramUsername = "forgather_official";
-        String email = "forgather@forgather.me";
 
         // when & then
         assertThatCode(
-            () -> new Space(spaceCode, name, description, false, instagramUsername, email, "", "")
+            () -> new Space(spaceCode, name, description, false, "", "")
         ).doesNotThrowAnyException();
     }
 
@@ -132,12 +133,10 @@ class SpaceTest {
     void spaceNameValidationTest(String invalidName) {
         // given
         String description = "스페이스 설명";
-        String instagramUsername = "forgather_official";
-        String email = "forgather@forgather.me";
 
         // when & then
         assertThatThrownBy(
-            () -> new Space("1234567890", invalidName, description, false, instagramUsername, email, "", "")
+            () -> new Space("1234567890", invalidName, description, false, "", "")
         ).isInstanceOf(BaseException.class)
             .hasMessageContaining("스페이스 이름");
     }
@@ -148,12 +147,10 @@ class SpaceTest {
         // given
         String name = "스페이스";
         String description = "스페이스 설명";
-        String instagramUsername = "forgather_official";
-        String email = "forgather@forgather.me";
 
         // when & then
         assertThatThrownBy(
-            () -> new Space("123456789", name, description, false, instagramUsername, email, "", "")
+            () -> new Space("123456789", name, description, false, "", "")
         ).isInstanceOf(BaseException.class)
             .hasMessageContaining("스페이스 코드");
     }
@@ -164,58 +161,11 @@ class SpaceTest {
         // given
         String name = "스페이스";
         String description = getString(201); // 201자
-        String instagramUsername = "forgather_official";
-        String email = "forgather@forgather.me";
 
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", name, description, false, instagramUsername, email, "", ""))
+        assertThatThrownBy(() -> new Space("1234567890", name, description, false, "", ""))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("스페이스 설명");
-    }
-
-    @DisplayName("인스타그램 아이디는 최대 30자까지 가능하다.")
-    @Test
-    void spaceInstagramUsernameValidationTest() {
-        // given
-        String name = "스페이스";
-        String description = "스페이스 설명";
-        String instagramUsername = getString(31);
-        String email = "forgather@forgather.me";
-
-        // when & then
-        assertThatThrownBy(() -> new Space("1234567890", name, description, false, instagramUsername, email, "", ""))
-            .isInstanceOf(BaseException.class)
-            .hasMessageContaining("인스타그램 아이디");
-    }
-
-    @DisplayName("이메일은 최대 50자까지 가능하다.")
-    @Test
-    void spaceEmailValidationTest() {
-        // given
-        String name = "스페이스";
-        String description = "스페이스 설명";
-        String instagramUsername = "forgather_official";
-        String email = getString(51);
-
-        // when & then
-        assertThatThrownBy(() -> new Space("1234567890", name, description, false, instagramUsername, email, "", ""))
-            .isInstanceOf(BaseException.class)
-            .hasMessageContaining("이메일");
-    }
-
-    @DisplayName("이메일은 올바른 형식을 따라야한다.")
-    @ValueSource(strings = {"invalid", "@invalid.com", "@", "invalid@invalid"})
-    @ParameterizedTest
-    void spaceEmailPatternValidationTest(String email) {
-        // given
-        String name = "스페이스";
-        String description = "스페이스 설명";
-        String instagramUsername = "forgather_official";
-
-        // when & then
-        assertThatThrownBy(() -> new Space("1234567890", name, description, false, instagramUsername, email, "", ""))
-            .isInstanceOf(BaseException.class)
-            .hasMessageContaining("이메일 형식");
     }
 
     @DisplayName("링크 URL만 입력하고 표시 이름이 없으면 예외를 던진다.")
@@ -224,8 +174,8 @@ class SpaceTest {
     @ValueSource(strings = {" "})
     void spaceLinkWithoutNameValidationTest(String blankName) {
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, "forgather_official",
-            "forgather@forgather.me", "https://forgather.me", blankName))
+        assertThatThrownBy(
+            () -> new Space("1234567890", "스페이스", "설명", false, "https://forgather.me", blankName))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("함께 입력");
     }
@@ -236,8 +186,7 @@ class SpaceTest {
     @ValueSource(strings = {" "})
     void spaceLinkWithoutUrlValidationTest(String blankUrl) {
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, "forgather_official",
-            "forgather@forgather.me", blankUrl, "포트폴리오"))
+        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, blankUrl, "포트폴리오"))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("함께 입력");
     }
@@ -247,8 +196,7 @@ class SpaceTest {
     @ParameterizedTest
     void spaceLinkUrlPatternValidationTest(String invalidUrl) {
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, "forgather_official",
-            "forgather@forgather.me", invalidUrl, "포트폴리오"))
+        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, invalidUrl, "포트폴리오"))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("링크 URL 형식");
     }
@@ -260,8 +208,7 @@ class SpaceTest {
         String tooLongUrl = "https://forgather.me/" + getString(2048);
 
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, "forgather_official",
-            "forgather@forgather.me", tooLongUrl, "포트폴리오"))
+        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, tooLongUrl, "포트폴리오"))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("링크 URL은 최대");
     }
@@ -273,8 +220,8 @@ class SpaceTest {
         String tooLongName = getString(31);
 
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, "forgather_official",
-            "forgather@forgather.me", "https://forgather.me", tooLongName))
+        assertThatThrownBy(
+            () -> new Space("1234567890", "스페이스", "설명", false, "https://forgather.me", tooLongName))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("링크 표시 이름은 최대");
     }
@@ -283,19 +230,16 @@ class SpaceTest {
     @Test
     void updateSpaceName() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me", "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
 
         // when
-        space.update("새로운 스페이스", null, null, null, null, null, null);
+        space.update("새로운 스페이스", null, null, null, null);
 
         // then
         assertAll(
             () -> assertThat(space.getName()).isEqualTo("새로운 스페이스"),
             () -> assertThat(space.getDescription()).isEqualTo("스페이스 설명"),
-            () -> assertThat(space.isPublic()).isFalse(),
-            () -> assertThat(space.getInstagramUsername()).isEqualTo("forgather_official"),
-            () -> assertThat(space.getEmail()).isEqualTo("forgather@forgather.me")
+            () -> assertThat(space.isPublic()).isFalse()
         );
     }
 
@@ -303,19 +247,16 @@ class SpaceTest {
     @Test
     void updateSpaceDescription() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me", "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
 
         // when
-        space.update(null, "새로운 스페이스 설명", null, null, null, null, null);
+        space.update(null, "새로운 스페이스 설명", null, null, null);
 
         // then
         assertAll(
             () -> assertThat(space.getName()).isEqualTo("스페이스"),
             () -> assertThat(space.getDescription()).isEqualTo("새로운 스페이스 설명"),
-            () -> assertThat(space.isPublic()).isFalse(),
-            () -> assertThat(space.getInstagramUsername()).isEqualTo("forgather_official"),
-            () -> assertThat(space.getEmail()).isEqualTo("forgather@forgather.me")
+            () -> assertThat(space.isPublic()).isFalse()
         );
     }
 
@@ -323,59 +264,16 @@ class SpaceTest {
     @Test
     void updateSpaceIsPublic() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me", "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
 
         // when
-        space.update(null, null, true, null, null, null, null);
+        space.update(null, null, true, null, null);
 
         // then
         assertAll(
             () -> assertThat(space.getName()).isEqualTo("스페이스"),
             () -> assertThat(space.getDescription()).isEqualTo("스페이스 설명"),
-            () -> assertThat(space.isPublic()).isTrue(),
-            () -> assertThat(space.getInstagramUsername()).isEqualTo("forgather_official"),
-            () -> assertThat(space.getEmail()).isEqualTo("forgather@forgather.me")
-        );
-    }
-
-    @DisplayName("스페이스 인스타그램 아이디를 수정할 수 있다.")
-    @Test
-    void updateSpaceInstagramUsername() {
-        // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me", "", "");
-
-        // when
-        space.update(null, null, null, "forgather_official_new", null, null, null);
-
-        // then
-        assertAll(
-            () -> assertThat(space.getName()).isEqualTo("스페이스"),
-            () -> assertThat(space.getDescription()).isEqualTo("스페이스 설명"),
-            () -> assertThat(space.isPublic()).isFalse(),
-            () -> assertThat(space.getInstagramUsername()).isEqualTo("forgather_official_new"),
-            () -> assertThat(space.getEmail()).isEqualTo("forgather@forgather.me")
-        );
-    }
-
-    @DisplayName("스페이스 이메일을 수정할 수 있다.")
-    @Test
-    void updateSpaceEmail() {
-        // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me", "", "");
-
-        // when
-        space.update(null, null, null, null, "forgather_new@forgather.me", null, null);
-
-        // then
-        assertAll(
-            () -> assertThat(space.getName()).isEqualTo("스페이스"),
-            () -> assertThat(space.getDescription()).isEqualTo("스페이스 설명"),
-            () -> assertThat(space.isPublic()).isFalse(),
-            () -> assertThat(space.getInstagramUsername()).isEqualTo("forgather_official"),
-            () -> assertThat(space.getEmail()).isEqualTo("forgather_new@forgather.me")
+            () -> assertThat(space.isPublic()).isTrue()
         );
     }
 
@@ -383,11 +281,10 @@ class SpaceTest {
     @Test
     void updateSpaceLink() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me", "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
 
         // when
-        space.update(null, null, null, null, null, "https://forgather.me", "포트폴리오");
+        space.update(null, null, null, "https://forgather.me", "포트폴리오");
 
         // then
         assertAll(
@@ -400,11 +297,10 @@ class SpaceTest {
     @Test
     void updateSpaceLinkToEmpty() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me", "https://forgather.me", "포트폴리오");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "https://forgather.me", "포트폴리오");
 
         // when
-        space.update(null, null, null, null, null, "", "");
+        space.update(null, null, null, "", "");
 
         // then
         assertAll(
@@ -417,11 +313,10 @@ class SpaceTest {
     @Test
     void updateSpaceLinkUrlOnly() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me", "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
 
         // when & then
-        assertThatThrownBy(() -> space.update(null, null, null, null, null, "https://forgather.me", null))
+        assertThatThrownBy(() -> space.update(null, null, null, "https://forgather.me", null))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("함께 입력");
     }
@@ -430,8 +325,7 @@ class SpaceTest {
     @Test
     void createSpaceIsNotFeatured() {
         // given & when
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me", "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
 
         // then
         assertThat(space.isFeatured()).isFalse();
@@ -441,8 +335,7 @@ class SpaceTest {
     @Test
     void feature() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me", "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
 
         // when
         space.feature();
@@ -455,8 +348,7 @@ class SpaceTest {
     @Test
     void featureIsIdempotent() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me", "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
         space.feature();
 
         // when
@@ -470,8 +362,7 @@ class SpaceTest {
     @Test
     void unfeature() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me", "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
         space.feature();
 
         // when
@@ -485,8 +376,7 @@ class SpaceTest {
     @Test
     void unfeatureIsIdempotent() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me", "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
 
         // when
         space.unfeature();
@@ -503,8 +393,7 @@ class SpaceTest {
     @Test
     void deleteUnfeatures() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me", "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
         space.feature();
 
         // when
@@ -521,8 +410,7 @@ class SpaceTest {
     @Test
     void deleteIsIdempotent() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me", "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
         space.feature();
         space.delete();
         var deletedAt = space.getDeletedAt();
@@ -546,12 +434,11 @@ class SpaceTest {
     @Test
     void updateDoesNotChangeFeatured() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "forgather_official",
-            "forgather@forgather.me", "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
         space.feature();
 
         // when
-        space.update("새 이름", "새 설명", true, "new_official", "new@forgather.me", "https://forgather.me", "포트폴리오");
+        space.update("새 이름", "새 설명", true, "https://forgather.me", "포트폴리오");
 
         // then
         assertThat(space.isFeatured()).isTrue();
