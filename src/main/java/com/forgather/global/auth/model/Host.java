@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
 @Inheritance(strategy = InheritanceType.JOINED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Host extends SoftDeleteEntity {
-
+    public static final int CODE_LENGTH = 10;
     private static final int MAX_NICKNAME_LENGTH = 10;
     private static final int MAX_INTRODUCTION_LENGTH = 50;
     private static final int MAX_LINK_URL_LENGTH = 2048;
@@ -37,10 +37,19 @@ public class Host extends SoftDeleteEntity {
     private static final Pattern LINK_URL_PATTERN = Pattern.compile(
         "^https?://[^\\s]+$"
     );
+    private static final Pattern CODE_PATTERN = Pattern.compile(
+        "^[0-9a-z]{" + CODE_LENGTH + "}$"
+    );
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    /**
+     * 외부에 노출하는 공개 식별자. 순차 PK(id) 대신 이 값을 URL에 사용한다.
+     */
+    @Column(name = "code", nullable = false, length = CODE_LENGTH)
+    private String code;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -63,10 +72,12 @@ public class Host extends SoftDeleteEntity {
     @Column(name = "anonymized_at")
     private LocalDateTime anonymizedAt;
 
-    public Host(String name, String email) {
-        validateRequiredFields(name, email);
+    public Host(String code, String name, String email) {
+        validateRequiredFields(code, name, email);
+        validateCode(code);
         validateName(name);
         validateEmail(email);
+        this.code = code;
         this.name = name;
         this.email = email;
     }
@@ -75,12 +86,25 @@ public class Host extends SoftDeleteEntity {
      * 익명화 이후나 이메일 저장 이전에 가입한 회원은 email이 비어 있을 수 있어 컬럼은 nullable이지만,
      * 신규 생성 시점에는 소셜 로그인이 항상 이메일을 제공하므로 필수로 받는다.
      */
-    private void validateRequiredFields(String name, String email) {
+    private void validateRequiredFields(String code, String name, String email) {
+        if (code == null) {
+            throw new BaseNullPointerException("호스트 코드는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
         if (name == null) {
             throw new BaseNullPointerException("이름은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
         }
         if (email == null) {
             throw new BaseNullPointerException("이메일은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * RandomCodeGenerator가 만드는 형식과 동일한 계약을 강제한다.
+     * DB 컬럼에는 CHECK 제약이 없어 이 검증이 유일한 방어선이다.
+     */
+    private void validateCode(String code) {
+        if (!CODE_PATTERN.matcher(code).matches()) {
+            throw new BaseException("호스트 코드는 영문 소문자와 숫자 %d자여야 합니다.".formatted(CODE_LENGTH));
         }
     }
 

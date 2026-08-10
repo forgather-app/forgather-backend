@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.forgather.domain.host.dto.HostProfileResponse;
+import com.forgather.domain.host.dto.PublicHostProfileResponse;
 import com.forgather.domain.host.dto.RegisterHostProfilePhotoRequest;
 import com.forgather.domain.host.dto.UpdateHostProfileRequest;
 import com.forgather.domain.host.model.HostProfilePhoto;
@@ -28,6 +29,12 @@ public class HostService {
     @Transactional(readOnly = true)
     public HostProfileResponse getProfile(Host loginHost) {
         return HostProfileResponse.of(loginHost, findActivePhoto(loginHost).orElse(null));
+    }
+
+    @Transactional(readOnly = true)
+    public PublicHostProfileResponse getPublicProfile(String hostCode) {
+        Host host = hostRepository.getActiveByCodeOrThrow(hostCode);
+        return PublicHostProfileResponse.of(host, findActivePhoto(host).orElse(null));
     }
 
     @Transactional

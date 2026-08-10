@@ -38,6 +38,7 @@ import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.UnauthorizedException;
+import com.forgather.global.util.RandomCodeGenerator;
 
 import lombok.RequiredArgsConstructor;
 
@@ -45,6 +46,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AuthService {
+
+    private static final int MAX_HOST_CODE_ATTEMPTS = 5;
 
     private final JwtParser jwtParser;
     private final JwtTokenProvider jwtTokenProvider;
@@ -55,6 +58,7 @@ public class AuthService {
     private final AppleHostRepository appleHostRepository;
     private final AppleAuthClient appleAuthClient;
     private final HostProfilePhotoRepository hostProfilePhotoRepository;
+    private final RandomCodeGenerator codeGenerator;
 
     @Transactional
     public LoginResponse kakaoLoginConfirm(KakaoLoginConfirmRequest request) {
@@ -77,7 +81,8 @@ public class AuthService {
             return existingKakaoHost;
         }
 
-        Host host = hostRepository.save(new Host(idToken.nickname(), idToken.email()));
+        Host host = hostRepository.save(
+            new Host(generateUnusedHostCode(), idToken.nickname(), idToken.email()));
         KakaoHost newKakaoHost = new KakaoHost(host, idToken.sub());
         return kakaoHostRepository.save(newKakaoHost);
     }
@@ -104,9 +109,21 @@ public class AuthService {
             return existingAppleHost;
         }
 
-        Host host = new Host(fullName, idToken.email());
+        Host host = new Host(generateUnusedHostCode(), fullName, idToken.email());
         hostRepository.save(host);
         return appleHostRepository.save(new AppleHost(host, idToken.sub(), appleRefreshToken));
+    }
+
+    private String generateUnusedHostCode() {
+        for (int attempt = 0; attempt < MAX_HOST_CODE_ATTEMPTS; attempt++) {
+            String code = codeGenerator.generate(Host.CODE_LENGTH);
+            if (!hostRepository.existsByCode(code)) {
+                return code;
+            }
+        }
+        throw new BaseException(
+            "호스트 코드를 생성하지 못했습니다. 시도 횟수: %d".formatted(MAX_HOST_CODE_ATTEMPTS),
+            HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     public LoginResponse refresh(String refreshToken) {

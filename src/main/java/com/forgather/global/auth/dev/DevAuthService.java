@@ -19,6 +19,7 @@ import com.forgather.global.auth.repository.KakaoHostRepository;
 import com.forgather.global.auth.service.AuthService;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.exception.UnauthorizedException;
+import com.forgather.global.util.RandomCodeGenerator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,7 @@ public class DevAuthService {
     private final HostRepository hostRepository;
     private final TermRepository termRepository;
     private final AuthService authService;
+    private final RandomCodeGenerator codeGenerator;
 
     @Transactional
     public LoginResponse login(DevLoginRequest request) {
@@ -72,8 +74,10 @@ public class DevAuthService {
     }
 
     private KakaoHost createOnboardedHost(String userId) {
-        Host host = hostRepository.save(
-            new Host(devLoginProperties.getNickname(), devLoginProperties.getEmail()));
+        Host host = hostRepository.save(new Host(
+            codeGenerator.generate(Host.CODE_LENGTH),
+            devLoginProperties.getNickname(),
+            devLoginProperties.getEmail()));
         KakaoHost savedKakaoHost = kakaoHostRepository.save(new KakaoHost(host, userId));
         completeOnboarding(savedKakaoHost.getHost());
         return savedKakaoHost;

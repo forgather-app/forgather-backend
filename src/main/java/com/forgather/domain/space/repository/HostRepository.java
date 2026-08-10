@@ -22,6 +22,10 @@ public interface HostRepository {
 
     Optional<Host> findByIdAndDeletedAtIsNull(Long id);
 
+    Optional<Host> findByCodeAndDeletedAtIsNull(String code);
+
+    boolean existsByCode(String code);
+
     /**
      * 호스트 행에 배타 락(SELECT ... FOR UPDATE)을 걸어 조회한다.
      * 프로필 사진처럼 호스트당 한 건만 유지해야 하는 자식 엔티티를 변경할 때,
@@ -48,6 +52,18 @@ public interface HostRepository {
         }
         return findWithLockById(id)
             .orElseThrow(() -> new NotFoundException("존재하지 않는 호스트입니다. id: " + id));
+    }
+
+    /**
+     * 탈퇴하지 않은 호스트를 공개 코드로 조회한다.
+     * 탈퇴한 호스트와 존재하지 않는 코드를 구분하지 않아 존재 여부가 드러나지 않는다.
+     */
+    default Host getActiveByCodeOrThrow(String code) {
+        if (code == null) {
+            throw new BaseNullPointerException("호스트 코드는 null일 수 없습니다.");
+        }
+        return findByCodeAndDeletedAtIsNull(code)
+            .orElseThrow(() -> new NotFoundException("존재하지 않는 호스트입니다. code: " + code));
     }
 }
 
