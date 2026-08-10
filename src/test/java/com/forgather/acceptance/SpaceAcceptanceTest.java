@@ -373,8 +373,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
             () -> assertThat(result.message()).isNull(),
             () -> assertThat(result.data().spaceCode()).isEqualTo(space.getCode()),
-            () -> assertThat(result.data().spacePhoto().isExists()).isTrue(),
-            () -> assertThat(result.data().spacePhoto().path()).isEqualTo(firstPhoto.getPath()),
+            () -> assertThat(result.data().spacePhotoPath()).isEqualTo(firstPhoto.getPath()),
             () -> assertThat(result.data().guestBookCardCount()).isEqualTo(2)
         );
     }
@@ -390,10 +389,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         ApiResponse<SpaceResponse> result = getSpace(space.getCode());
 
         // then
-        assertAll(
-            () -> assertThat(result.data().spacePhoto().isExists()).isFalse(),
-            () -> assertThat(result.data().spacePhoto().path()).isEmpty()
-        );
+        assertThat(result.data().spacePhotoPath()).isNull();
     }
 
     @DisplayName("스페이스 사진은 대표 작품(먼저 생성한 작품)의 첫 번째 사진이다.")
@@ -412,7 +408,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         ApiResponse<SpaceResponse> result = getSpace(space.getCode());
 
         // then
-        assertThat(result.data().spacePhoto().path()).isEqualTo(representativeFirstPhoto.getPath());
+        assertThat(result.data().spacePhotoPath()).isEqualTo(representativeFirstPhoto.getPath());
     }
 
     @DisplayName("사진 순서가 뒤섞여 저장되어도 정렬 순서가 가장 앞선 사진을 스페이스 사진으로 응답한다.")
@@ -430,7 +426,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         ApiResponse<SpaceResponse> result = getSpace(space.getCode());
 
         // then
-        assertThat(result.data().spacePhoto().path()).isEqualTo(firstPhoto.getPath());
+        assertThat(result.data().spacePhotoPath()).isEqualTo(firstPhoto.getPath());
     }
 
     @DisplayName("대표 작품에 사진이 없으면 사진이 없는 것으로 응답한다.")
@@ -447,7 +443,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         ApiResponse<SpaceResponse> result = getSpace(space.getCode());
 
         // then
-        assertThat(result.data().spacePhoto().isExists()).isFalse();
+        assertThat(result.data().spacePhotoPath()).isNull();
     }
 
     @DisplayName("대표 작품이 삭제되면 다음 작품의 첫 번째 사진이 스페이스 사진이 된다.")
@@ -472,7 +468,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         ApiResponse<SpaceResponse> result = getSpace(space.getCode());
 
         // then
-        assertThat(result.data().spacePhoto().path()).isEqualTo(laterFirstPhoto.getPath());
+        assertThat(result.data().spacePhotoPath()).isEqualTo(laterFirstPhoto.getPath());
     }
 
     @DisplayName("스페이스 사진 데이터가 남아 있어도 응답에는 반영하지 않는다.")
@@ -488,7 +484,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // then
         assertAll(
-            () -> assertThat(result.data().spacePhoto().isExists()).isFalse(),
+            () -> assertThat(result.data().spacePhotoPath()).isNull(),
             () -> assertThat(spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)).isPresent()
         );
     }
@@ -638,7 +634,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // then
         assertAll(
             () -> assertThat(result.data().name()).isEqualTo("이름만 수정"),
-            () -> assertThat(result.data().spacePhoto().isExists()).isFalse(),
+            () -> assertThat(result.data().spacePhotoPath()).isNull(),
             // 사진 필드를 무시하므로 기존 space_photo 행에도 손대지 않는다.
             () -> assertThat(spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)).isPresent()
         );
@@ -710,7 +706,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(response.data().name()).isEqualTo("새로운 스페이스"),
             () -> assertThat(response.data().description()).isEqualTo("description"),
             () -> assertThat(response.data().isPublic()).isTrue(),
-            () -> assertThat(response.data().spacePhoto().path()).isEqualTo(firstPhoto.getPath()),
+            () -> assertThat(response.data().spacePhotoPath()).isEqualTo(firstPhoto.getPath()),
 
             () -> verify(contentsStorage, never()).deletePhotos(anyList())
         );
@@ -790,11 +786,11 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(spaces.getFirst().spaceCode()).isEqualTo(space2.getCode()),
             () -> assertThat(spaces.getFirst().guestBookCardCount()).isZero(),
             // space2에는 작품이 없으므로 사진이 없다.
-            () -> assertThat(spaces.getFirst().spacePhoto().isExists()).isFalse(),
+            () -> assertThat(spaces.getFirst().spacePhotoPath()).isNull(),
 
             () -> assertThat(spaces.getLast().spaceCode()).isEqualTo(space1.getCode()),
             () -> assertThat(spaces.getLast().guestBookCardCount()).isOne(),
-            () -> assertThat(spaces.getLast().spacePhoto().path()).isEqualTo(space1FirstPhoto.getPath())
+            () -> assertThat(spaces.getLast().spacePhotoPath()).isEqualTo(space1FirstPhoto.getPath())
         );
     }
 
@@ -819,11 +815,11 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // then
         assertAll(
-            () -> assertThat(findByCode(spaces, space1.getCode()).spacePhoto().path())
+            () -> assertThat(findByCode(spaces, space1.getCode()).spacePhotoPath())
                 .isEqualTo(space1FirstPhoto.getPath()),
-            () -> assertThat(findByCode(spaces, space2.getCode()).spacePhoto().path())
+            () -> assertThat(findByCode(spaces, space2.getCode()).spacePhotoPath())
                 .isEqualTo(space2FirstPhoto.getPath()),
-            () -> assertThat(findByCode(spaces, withoutProduct.getCode()).spacePhoto().isExists()).isFalse()
+            () -> assertThat(findByCode(spaces, withoutProduct.getCode()).spacePhotoPath()).isNull()
         );
     }
 
@@ -840,7 +836,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         List<HostSpaceItemResponse> spaces = getMySpaces();
 
         // then: id가 가장 작은 사진이 대표다.
-        assertThat(findByCode(spaces, space.getCode()).spacePhoto().path())
+        assertThat(findByCode(spaces, space.getCode()).spacePhotoPath())
             .isEqualTo(first.getPath());
     }
 

@@ -16,10 +16,7 @@ public record HostSpaceResponse(
                "isPublic": true,
                "linkUrl": "https://forgather.app",
                "linkName": "포트폴리오",
-               "spacePhoto": {
-                 "isExists": true,
-                 "path": "photogather/v2/spaces/1234567890/space/profile.png"
-               },
+               "spacePhotoPath": "photogather/v2/spaces/1234567890/product/UUID.webp",
                "guestBookCardCount": 15,
                "unreadGuestBookCount": 6,
                "isFeatured": true
@@ -32,10 +29,7 @@ public record HostSpaceResponse(
               "isPublic": true,
               "linkUrl": "",
               "linkName": "",
-              "spacePhoto": {
-                "isExists": false,
-                "path": ""
-              },
+              "spacePhotoPath": null,
               "guestBookCardCount": 0,
               "unreadGuestBookCount": 0,
               "isFeatured": false
