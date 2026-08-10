@@ -22,5 +22,12 @@ SET h.`code` = LOWER(HEX(RANDOM_BYTES(5)));
 -- 4) 제약 확정: UNIQUE는 백필 뒤에 건다. 먼저 걸면 2)에서 충돌 시 전체가 롤백되어 재시도할 여지가 없다.
 CREATE UNIQUE INDEX `UX_host_code` ON `host` (`code`);
 
+-- 5) NOT NULL + 임시 DEFAULT
+--    블루/그린 배포에서 이 마이그레이션은 새 슬롯 부팅 시점(ApplicationStart)에 커밋되지만,
+--    nginx 전환은 다음 훅(ValidateService)이라 그 사이 트래픽은 code를 모르는 구 버전 jar가 받는다.
+--    구 버전 Hibernate는 INSERT에서 code를 통째로 빼는데, DEFAULT가 없어 신규 가입이 전부 실패하게 된다.
+--
+--    ADD COLUMN에 표현식 DEFAULT를 붙이면 기존 행을 채우는 값이 레플리카와 갈려 ERROR 1674로 거부된다.
+--    2)에서 백필을 끝낸 뒤 MODIFY에 DEFAULT를 붙인다.
 ALTER TABLE `host`
-    MODIFY COLUMN `code` VARCHAR(10) NOT NULL;
+    MODIFY COLUMN `code` VARCHAR(10) NOT NULL DEFAULT (LOWER(HEX(RANDOM_BYTES(5))));
