@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
 import com.forgather.domain.guestbook.repository.dto.SpaceGuestBookCountDto;
 import com.forgather.domain.guestbook.service.GuestBookService;
+import com.forgather.domain.host.model.HostProfilePhoto;
+import com.forgather.domain.host.repository.HostProfilePhotoRepository;
 import com.forgather.domain.product.model.Product;
 import com.forgather.domain.product.model.ProductPhoto;
 import com.forgather.domain.product.repository.ProductPhotoRepository;
@@ -29,6 +31,7 @@ import com.forgather.domain.space.dto.FeatureSpacesRequest;
 import com.forgather.domain.space.dto.FeaturedSpacesResponse;
 import com.forgather.domain.space.dto.HostSpaceItemResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
+import com.forgather.domain.space.dto.SpaceHostInfoResponse;
 import com.forgather.domain.space.dto.SpaceResponse;
 import com.forgather.domain.space.dto.UnfeatureSpacesRequest;
 import com.forgather.domain.space.dto.UpdateSpaceRequest;
@@ -61,6 +64,7 @@ public class SpaceService {
     private final GuestBookCardRepository guestBookCardRepository;
     private final ProductRepository productRepository;
     private final ProductPhotoRepository productPhotoRepository;
+    private final HostProfilePhotoRepository hostProfilePhotoRepository;
     private final RandomCodeGenerator codeGenerator;
 
     @Transactional
@@ -92,7 +96,21 @@ public class SpaceService {
     private SpaceResponse createSpaceResponse(Space space) {
         Long guestBookCardCount =
             guestBookCardRepository.countBySpaceAndVisibilityStatusAndDeletedAtIsNull(space, VISIBLE);
-        return SpaceResponse.from(space, findRepresentativePhoto(space), guestBookCardCount);
+        return SpaceResponse.from(space, findRepresentativePhoto(space), guestBookCardCount, findHostInfo(space));
+    }
+
+    /**
+     * 스페이스의 호스트 정보를 조회한다. 연결된 호스트가 없으면 null을 반환한다.
+     */
+    private SpaceHostInfoResponse findHostInfo(Space space) {
+        return spaceHostRepository.findBySpaceAndDeletedAtIsNullWithHost(space)
+            .map(SpaceHost::getHost)
+            .map(host -> SpaceHostInfoResponse.of(host, findActiveProfilePhoto(host)))
+            .orElse(null);
+    }
+
+    private HostProfilePhoto findActiveProfilePhoto(Host host) {
+        return hostProfilePhotoRepository.findByHostAndDeletedAtIsNull(host).orElse(null);
     }
 
     /**

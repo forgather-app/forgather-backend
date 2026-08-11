@@ -1,6 +1,7 @@
 package com.forgather.acceptance;
 
 import static com.forgather.fixture.HostFixture.createHost;
+import static com.forgather.fixture.HostFixture.createHostWithoutNickname;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -28,6 +29,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.repository.GuestBookCardPhotoRepository;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
+import com.forgather.domain.host.model.HostProfilePhoto;
+import com.forgather.domain.host.repository.HostProfilePhotoRepository;
 import com.forgather.domain.product.model.Product;
 import com.forgather.domain.product.model.ProductPhoto;
 import com.forgather.domain.product.repository.ProductPhotoRepository;
@@ -91,6 +94,9 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
     @Autowired
     private GuestBookCardPhotoRepository guestBookCardPhotoRepository;
+
+    @Autowired
+    private HostProfilePhotoRepository hostProfilePhotoRepository;
 
     @Autowired
     private ProductRepository productRepository;
@@ -374,7 +380,10 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(result.message()).isNull(),
             () -> assertThat(result.data().spaceCode()).isEqualTo(space.getCode()),
             () -> assertThat(result.data().spacePhotoPath()).isEqualTo(firstPhoto.getPath()),
-            () -> assertThat(result.data().guestBookCardCount()).isEqualTo(2)
+            () -> assertThat(result.data().guestBookCardCount()).isEqualTo(2),
+            () -> assertThat(result.data().host().code()).isEqualTo(host.getCode()),
+            () -> assertThat(result.data().host().nickname()).isEqualTo(host.getNickname()),
+            () -> assertThat(result.data().host().photoPath()).isNull()
         );
     }
 
@@ -487,6 +496,79 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(result.data().spacePhotoPath()).isNull(),
             () -> assertThat(spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)).isPresent()
         );
+    }
+
+    @DisplayName("로그인 없이 스페이스를 상세 조회해도 호스트 정보를 응답한다.")
+    @Test
+    void getSpaceHostInfoWithoutLogin() {
+        // given
+        Space space = spaceRepository.save(SpaceFixture.createSpace());
+        spaceHostRepository.save(new SpaceHost(space, host));
+
+        // when
+        ApiResponse<SpaceResponse> result = RestAssuredMockMvc.given()
+            .when()
+            .get("/spaces/{spaceCode}", space.getCode())
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+
+        // then
+        assertAll(
+            () -> assertThat(result.data().host().code()).isEqualTo(host.getCode()),
+            () -> assertThat(result.data().host().nickname()).isEqualTo(host.getNickname())
+        );
+    }
+
+    @DisplayName("호스트가 프로필 사진을 등록했으면 스페이스 상세 조회에 사진 경로를 함께 응답한다.")
+    @Test
+    void getSpaceHostInfoWithProfilePhoto() {
+        // given
+        Space space = spaceRepository.save(SpaceFixture.createSpace());
+        spaceHostRepository.save(new SpaceHost(space, host));
+        HostProfilePhoto profilePhoto = hostProfilePhotoRepository.save(new HostProfilePhoto(
+            "%s/hosts/%d/profile/%s".formatted(ROOT_DIRECTORY, host.getId(), UPLOAD_FILE_NAME), 1024L, host));
+
+        // when
+        ApiResponse<SpaceResponse> result = getSpace(space.getCode());
+
+        // then
+        assertThat(result.data().host().photoPath()).isEqualTo(profilePhoto.getPath());
+    }
+
+    @DisplayName("호스트가 닉네임과 프로필 사진을 설정하지 않았으면 호스트 정보의 해당 값을 null로 응답한다.")
+    @Test
+    void getSpaceHostInfoWithoutNicknameAndPhoto() {
+        // given
+        Host hostWithoutNickname = hostRepository.save(createHostWithoutNickname());
+        Space space = spaceRepository.save(SpaceFixture.createSpace());
+        spaceHostRepository.save(new SpaceHost(space, hostWithoutNickname));
+
+        // when
+        ApiResponse<SpaceResponse> result = getSpace(space.getCode());
+
+        // then
+        assertAll(
+            () -> assertThat(result.data().host().code()).isEqualTo(hostWithoutNickname.getCode()),
+            () -> assertThat(result.data().host().nickname()).isNull(),
+            () -> assertThat(result.data().host().photoPath()).isNull()
+        );
+    }
+
+    @DisplayName("연결된 호스트가 없는 스페이스는 호스트 정보를 null로 응답한다.")
+    @Test
+    void getSpaceHostInfoWithoutSpaceHost() {
+        // given
+        Space space = spaceRepository.save(SpaceFixture.createSpace());
+
+        // when
+        ApiResponse<SpaceResponse> result = getSpace(space.getCode());
+
+        // then
+        assertThat(result.data().host()).isNull();
     }
 
     @DisplayName("스페이스를 삭제한다.")
@@ -608,7 +690,8 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(result.data().isPublic()).isFalse(),
             () -> assertThat(result.data().linkUrl()).isEqualTo("https://forgather.me"),
             () -> assertThat(result.data().linkName()).isEqualTo("포트폴리오"),
-            () -> assertThat(result.data().guestBookCardCount()).isZero()
+            () -> assertThat(result.data().guestBookCardCount()).isZero(),
+            () -> assertThat(result.data().host().code()).isEqualTo(host.getCode())
         );
     }
 

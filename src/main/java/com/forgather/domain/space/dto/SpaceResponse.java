@@ -33,10 +33,15 @@ public record SpaceResponse(
     String spacePhotoPath,
 
     @Schema(description = "스페이스 방명록 카드 개수", example = "15")
-    Long guestBookCardCount
+    Long guestBookCardCount,
+
+    @Schema(description = "스페이스 호스트 정보 (스페이스에 가장 먼저 연결된 호스트). 연결된 호스트가 없으면 null이다.",
+        nullable = true)
+    SpaceHostInfoResponse host
 ) {
 
-    public static SpaceResponse from(Space space, ProductPhoto spacePhoto, Long guestBookCardCount) {
+    public static SpaceResponse from(Space space, ProductPhoto spacePhoto, Long guestBookCardCount,
+        SpaceHostInfoResponse host) {
         return new SpaceResponse(
             space.getId(),
             space.getCode(),
@@ -46,7 +51,8 @@ public record SpaceResponse(
             space.getLinkUrl(),
             space.getLinkName(),
             (spacePhoto == null) ? null : spacePhoto.getPath(),
-            guestBookCardCount
+            guestBookCardCount,
+            host
         );
     }
 }
