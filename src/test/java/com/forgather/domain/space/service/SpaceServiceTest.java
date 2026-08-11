@@ -126,7 +126,7 @@ class SpaceServiceTest extends TestOnContainer {
         spaceService.delete(space.getCode(), host);
 
         // when & then
-        assertThatThrownBy(() -> spaceService.getSpaceInformation(space.getCode()))
+        assertThatThrownBy(() -> spaceService.getSpaceInformation(space.getCode(), null))
             .isInstanceOf(NotFoundException.class)
             .hasMessageContaining("존재하지 않는 스페이스입니다.");
     }

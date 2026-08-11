@@ -262,16 +262,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             .as(new TypeRef<>() {
             });
 
-        ApiResponse<SpaceResponse> result = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
-            .when()
-            .get("/spaces/{spaceCode}", created.data().spaceCode())
-            .then()
-            .statusCode(HttpStatus.OK.value())
-            .extract()
-            .body()
-            .as(new TypeRef<>() {
-            });
+        ApiResponse<SpaceResponse> result = getSpace(created.data().spaceCode());
 
         // then
         assertAll(
@@ -322,16 +313,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             .as(new TypeRef<>() {
             });
 
-        ApiResponse<SpaceResponse> result = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
-            .when()
-            .get("/spaces/{spaceCode}", created.data().spaceCode())
-            .then()
-            .statusCode(HttpStatus.OK.value())
-            .extract()
-            .body()
-            .as(new TypeRef<>() {
-            });
+        ApiResponse<SpaceResponse> result = getSpace(created.data().spaceCode());
 
         // then
         assertThat(result.data().linkUrl()).isEqualTo(longLinkUrl);
@@ -506,15 +488,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         spaceHostRepository.save(new SpaceHost(space, host));
 
         // when
-        ApiResponse<SpaceResponse> result = RestAssuredMockMvc.given()
-            .when()
-            .get("/spaces/{spaceCode}", space.getCode())
-            .then()
-            .statusCode(HttpStatus.OK.value())
-            .extract()
-            .body()
-            .as(new TypeRef<>() {
-            });
+        ApiResponse<SpaceResponse> result = getSpaceWithoutLogin(space.getCode());
 
         // then
         assertAll(
@@ -569,6 +543,69 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // then
         assertThat(result.data().host()).isNull();
+    }
+
+    @DisplayName("비공개 스페이스를 비로그인으로 조회하면 방명록 개수를 0으로 응답한다.")
+    @Test
+    void getPrivateSpaceGuestBookCountWithoutLogin() {
+        // given
+        Space space = spaceRepository.save(SpaceFixture.createPrivateSpace());
+        spaceHostRepository.save(new SpaceHost(space, host));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "nickname", "방명록"));
+
+        // when
+        ApiResponse<SpaceResponse> result = getSpaceWithoutLogin(space.getCode());
+
+        // then
+        assertThat(result.data().guestBookCardCount()).isZero();
+    }
+
+    @DisplayName("비공개 스페이스를 호스트가 아닌 사용자가 조회하면 방명록 개수를 0으로 응답한다.")
+    @Test
+    void getPrivateSpaceGuestBookCountWithOtherHost() {
+        // given
+        Space space = spaceRepository.save(SpaceFixture.createPrivateSpace());
+        spaceHostRepository.save(new SpaceHost(space, host));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "nickname", "방명록"));
+        Host otherHost = hostRepository.save(createHost());
+        String otherToken = jwtTokenProvider.generateAccessToken(otherHost.getId());
+
+        // when
+        ApiResponse<SpaceResponse> result = getSpace(space.getCode(), otherToken);
+
+        // then
+        assertThat(result.data().guestBookCardCount()).isZero();
+    }
+
+    @DisplayName("비공개 스페이스도 호스트 본인이 조회하면 방명록 개수를 실제 값으로 응답한다.")
+    @Test
+    void getPrivateSpaceGuestBookCountWithSpaceHost() {
+        // given
+        Space space = spaceRepository.save(SpaceFixture.createPrivateSpace());
+        spaceHostRepository.save(new SpaceHost(space, host));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "nickname1", "방명록1"));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "nickname2", "방명록2"));
+
+        // when
+        ApiResponse<SpaceResponse> result = getSpace(space.getCode());
+
+        // then
+        assertThat(result.data().guestBookCardCount()).isEqualTo(2);
+    }
+
+    @DisplayName("공개 스페이스는 비로그인으로 조회해도 방명록 개수를 실제 값으로 응답한다.")
+    @Test
+    void getPublicSpaceGuestBookCountWithoutLogin() {
+        // given
+        Space space = spaceRepository.save(SpaceFixture.createSpace());
+        spaceHostRepository.save(new SpaceHost(space, host));
+        guestBookCardRepository.save(GuestBookCardFixture.createGuestBookCard(space, "nickname", "방명록"));
+
+        // when
+        ApiResponse<SpaceResponse> result = getSpaceWithoutLogin(space.getCode());
+
+        // then
+        assertThat(result.data().guestBookCardCount()).isOne();
     }
 
     @DisplayName("스페이스를 삭제한다.")
@@ -739,8 +776,24 @@ class SpaceAcceptanceTest extends AcceptanceTest {
     }
 
     private ApiResponse<SpaceResponse> getSpace(String spaceCode) {
+        return getSpace(spaceCode, token);
+    }
+
+    private ApiResponse<SpaceResponse> getSpace(String spaceCode, String accessToken) {
         return RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .header("Authorization", "Bearer " + accessToken)
+            .when()
+            .get("/spaces/{spaceCode}", spaceCode)
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+    }
+
+    private ApiResponse<SpaceResponse> getSpaceWithoutLogin(String spaceCode) {
+        return RestAssuredMockMvc.given()
             .when()
             .get("/spaces/{spaceCode}", spaceCode)
             .then()

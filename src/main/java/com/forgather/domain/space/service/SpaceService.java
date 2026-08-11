@@ -77,9 +77,9 @@ public class SpaceService {
     }
 
     @Transactional(readOnly = true)
-    public SpaceResponse getSpaceInformation(String spaceCode) {
+    public SpaceResponse getSpaceInformation(String spaceCode, Host loginHost) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
-        return createSpaceResponse(space);
+        return createSpaceResponse(space, loginHost);
     }
 
     @Transactional
@@ -90,13 +90,32 @@ public class SpaceService {
         space.update(request.name(), request.description(), request.isPublic(), request.linkUrl(),
             request.linkName());
 
-        return createSpaceResponse(space);
+        return createSpaceResponse(space, host);
     }
 
-    private SpaceResponse createSpaceResponse(Space space) {
-        Long guestBookCardCount =
-            guestBookCardRepository.countBySpaceAndVisibilityStatusAndDeletedAtIsNull(space, VISIBLE);
-        return SpaceResponse.from(space, findRepresentativePhoto(space), guestBookCardCount, findHostInfo(space));
+    private SpaceResponse createSpaceResponse(Space space, Host viewer) {
+        return SpaceResponse.from(
+            space,
+            findRepresentativePhoto(space),
+            resolveGuestBookCardCount(space, viewer),
+            findHostInfo(space)
+        );
+    }
+
+    /**
+     * 비공개 스페이스의 방명록 개수는 해당 스페이스의 호스트에게만 실제 값을 노출한다.
+     * 비로그인이거나 호스트가 아니면 0으로 응답한다.
+     */
+    private Long resolveGuestBookCardCount(Space space, Host viewer) {
+        if (space.isPublic() || isSpaceHost(space, viewer)) {
+            return guestBookCardRepository.countBySpaceAndVisibilityStatusAndDeletedAtIsNull(space, VISIBLE);
+        }
+        return 0L;
+    }
+
+    private boolean isSpaceHost(Space space, Host viewer) {
+        return viewer != null
+            && spaceHostRepository.findBySpaceAndHostAndDeletedAtIsNull(space, viewer).isPresent();
     }
 
     /**
