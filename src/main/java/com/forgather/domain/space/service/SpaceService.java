@@ -31,12 +31,15 @@ import com.forgather.domain.space.dto.FeatureSpacesRequest;
 import com.forgather.domain.space.dto.FeaturedSpacesResponse;
 import com.forgather.domain.space.dto.HostSpaceItemResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
+import com.forgather.domain.space.dto.PublicHostSpaceItemResponse;
+import com.forgather.domain.space.dto.PublicHostSpacesResponse;
 import com.forgather.domain.space.dto.SpaceHostInfoResponse;
 import com.forgather.domain.space.dto.SpaceResponse;
 import com.forgather.domain.space.dto.UnfeatureSpacesRequest;
 import com.forgather.domain.space.dto.UpdateSpaceRequest;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.model.SpacePhoto;
+import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpacePhotoRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.global.auth.model.Host;
@@ -58,6 +61,7 @@ public class SpaceService {
 
     private final ProductService productService;
     private final GuestBookService guestBookService;
+    private final HostRepository hostRepository;
     private final SpaceRepository spaceRepository;
     private final SpacePhotoRepository spacePhotoRepository;
     private final SpaceHostRepository spaceHostRepository;
@@ -257,6 +261,43 @@ public class SpaceService {
                 SpaceGuestBookCountDto::spaceId,
                 SpaceGuestBookCountDto::guestBookCount)
             );
+    }
+
+    @Transactional(readOnly = true)
+    public PublicHostSpacesResponse getPublicHostSpaces(String hostCode, Host loginHost) {
+        Host host = hostRepository.getActiveByCodeOrThrow(hostCode);
+        List<SpaceHost> spaceHosts =
+            spaceHostRepository.findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host);
+        if (spaceHosts.isEmpty()) {
+            return new PublicHostSpacesResponse(Collections.emptyList());
+        }
+
+        List<Space> spaces = spaceHosts.stream()
+            .map(SpaceHost::getSpace)
+            .toList();
+        List<Long> spaceIds = spaces.stream()
+            .map(Space::getId)
+            .toList();
+        Map<Long, Long> guestBookCardCounts = toCountBySpaceId(
+            guestBookCardRepository.countBySpaceIdInAndVisibilityStatusAndDeletedAtIsNull(spaceIds, VISIBLE));
+        Map<Long, ProductPhoto> spacePhotos = findRepresentativePhotos(spaceIds);
+
+        boolean isOwner = host.equals(loginHost);
+        List<PublicHostSpaceItemResponse> items = spaces.stream()
+            .map(space -> PublicHostSpaceItemResponse.from(
+                space,
+                spacePhotos.get(space.getId()),
+                maskGuestBookCardCount(space, isOwner, guestBookCardCounts.getOrDefault(space.getId(), 0L))
+            ))
+            .toList();
+        return new PublicHostSpacesResponse(items);
+    }
+
+    private Long maskGuestBookCardCount(Space space, boolean isOwner, Long guestBookCardCount) {
+        if (space.isPublic() || isOwner) {
+            return guestBookCardCount;
+        }
+        return 0L;
     }
 
     @Transactional
