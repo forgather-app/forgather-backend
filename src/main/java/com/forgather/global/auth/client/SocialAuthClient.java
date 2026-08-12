@@ -107,7 +107,7 @@ public class SocialAuthClient {
         try {
             keyCaches.put(provider, fetchKeys(provider));
         } catch (Exception e) {
-            log.error("Failed to update social public keys. provider={}", provider, e);
+            log.warn("Failed to update social public keys. provider={}", provider, e);
         }
     }
 

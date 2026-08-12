@@ -29,7 +29,7 @@ public class HostAnonymizeService {
     public int anonymizeExpiredHosts() {
         LocalDateTime threshold = LocalDateTime.now().minusDays(RETENTION_DAYS);
         List<Host> hosts = hostRepository.findAllByDeletedAtBeforeAndAnonymizedAtIsNull(threshold);
-        log.info("탈퇴 회원 익명화 시작. 대상: {}건", hosts.size());
+        log.info("탈퇴 회원 익명화 시작");
         for (Host host : hosts) {
             host.anonymize();
         }
