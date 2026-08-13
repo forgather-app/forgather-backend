@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/hosts/{hostCode}/spaces")
-@Tag(name = "Space: 스페이스", description = "스페이스 관련 API")
+@Tag(name = "Space: 스페이스", description = "누구나 호출 가능한 호스트 스페이스 API")
 public class PublicHostSpaceController {
 
     private final SpaceService spaceService;
