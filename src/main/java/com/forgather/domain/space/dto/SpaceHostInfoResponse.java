@@ -10,7 +10,7 @@ public record SpaceHostInfoResponse(
     @Schema(description = "호스트 공개 코드", example = "a3f2k9x1qz")
     String code,
 
-    @Schema(description = "호스트 닉네임 (미설정 시 null)", example = "포스티", nullable = true)
+    @Schema(description = "호스트 닉네임", example = "포스티")
     String nickname,
 
     @Schema(description = "호스트 프로필 사진 경로 (미설정 시 null)",
