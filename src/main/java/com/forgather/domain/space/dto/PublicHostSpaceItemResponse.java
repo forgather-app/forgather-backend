@@ -25,7 +25,7 @@ public record PublicHostSpaceItemResponse(
         example = "15")
     Long guestBookCardCount,
 
-    @Schema(description = "스페이스 공개여부", example = "true")
+    @Schema(description = "방명록 공개여부", example = "true")
     boolean isPublic
 ) {
 
