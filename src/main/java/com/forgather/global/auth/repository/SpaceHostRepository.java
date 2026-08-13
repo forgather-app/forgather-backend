@@ -28,6 +28,20 @@ public interface SpaceHostRepository {
         """)
     List<SpaceHost> findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(@Param("host") Host host);
 
+    /**
+     * 스페이스당 호스트는 1명이라는 전제의 단건 조회다.
+     * 호스트를 1:N으로 확장하면 결과가 2건 이상이 되어 조회가 실패하므로 이 메서드를 함께 바꿔야 한다.
+     */
+    @Query("""
+        SELECT sh
+        FROM SpaceHost sh
+            JOIN FETCH sh.host h
+        WHERE sh.space = :space
+            AND h.deletedAt IS NULL
+            AND sh.deletedAt IS NULL
+        """)
+    Optional<SpaceHost> findBySpaceAndDeletedAtIsNullWithHost(@Param("space") Space space);
+
     Optional<SpaceHost> findBySpaceAndHostAndDeletedAtIsNull(Space space, Host host);
 
     default SpaceHost getBySpaceAndHostAndDeletedAtIsNullOrThrow(Space space, Host host) {

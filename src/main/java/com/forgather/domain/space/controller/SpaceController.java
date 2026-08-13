@@ -53,10 +53,14 @@ public class SpaceController {
     }
 
     @GetMapping("/{spaceCode}")
-    @Operation(summary = "스페이스 조회", description = "스페이스 코드를 통해 스페이스 정보를 조회합니다.")
+    @Operation(summary = "스페이스 조회", description = "스페이스 코드를 통해 스페이스 정보를 조회합니다. "
+        + "비공개 스페이스의 방명록 개수는 해당 스페이스의 호스트에게만 실제 값을 응답하고, "
+        + "비로그인 사용자거나 호스트가 아니면 null(개수 비공개)로 응답합니다.")
     public ResponseEntity<ApiResponse<SpaceResponse>> getSpaceInformation(
-        @PathVariable(name = "spaceCode") String spaceCode) {
-        var response = spaceService.getSpaceInformation(spaceCode);
+        @PathVariable(name = "spaceCode") String spaceCode,
+        @LoginHost(required = false) Host loginHost
+    ) {
+        var response = spaceService.getSpaceInformation(spaceCode, loginHost);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

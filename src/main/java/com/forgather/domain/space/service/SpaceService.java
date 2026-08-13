@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
 import com.forgather.domain.guestbook.repository.dto.SpaceGuestBookCountDto;
 import com.forgather.domain.guestbook.service.GuestBookService;
+import com.forgather.domain.host.model.HostProfilePhoto;
+import com.forgather.domain.host.repository.HostProfilePhotoRepository;
 import com.forgather.domain.product.model.Product;
 import com.forgather.domain.product.model.ProductPhoto;
 import com.forgather.domain.product.repository.ProductPhotoRepository;
@@ -29,11 +31,15 @@ import com.forgather.domain.space.dto.FeatureSpacesRequest;
 import com.forgather.domain.space.dto.FeaturedSpacesResponse;
 import com.forgather.domain.space.dto.HostSpaceItemResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
+import com.forgather.domain.space.dto.PublicHostSpaceItemResponse;
+import com.forgather.domain.space.dto.PublicHostSpacesResponse;
+import com.forgather.domain.space.dto.SpaceHostInfoResponse;
 import com.forgather.domain.space.dto.SpaceResponse;
 import com.forgather.domain.space.dto.UnfeatureSpacesRequest;
 import com.forgather.domain.space.dto.UpdateSpaceRequest;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.model.SpacePhoto;
+import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpacePhotoRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.global.auth.model.Host;
@@ -55,12 +61,14 @@ public class SpaceService {
 
     private final ProductService productService;
     private final GuestBookService guestBookService;
+    private final HostRepository hostRepository;
     private final SpaceRepository spaceRepository;
     private final SpacePhotoRepository spacePhotoRepository;
     private final SpaceHostRepository spaceHostRepository;
     private final GuestBookCardRepository guestBookCardRepository;
     private final ProductRepository productRepository;
     private final ProductPhotoRepository productPhotoRepository;
+    private final HostProfilePhotoRepository hostProfilePhotoRepository;
     private final RandomCodeGenerator codeGenerator;
 
     @Transactional
@@ -73,9 +81,9 @@ public class SpaceService {
     }
 
     @Transactional(readOnly = true)
-    public SpaceResponse getSpaceInformation(String spaceCode) {
+    public SpaceResponse getSpaceInformation(String spaceCode, Host loginHost) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
-        return createSpaceResponse(space);
+        return createSpaceResponse(space, loginHost);
     }
 
     @Transactional
@@ -86,13 +94,45 @@ public class SpaceService {
         space.update(request.name(), request.description(), request.isPublic(), request.linkUrl(),
             request.linkName());
 
-        return createSpaceResponse(space);
+        return createSpaceResponse(space, host);
     }
 
-    private SpaceResponse createSpaceResponse(Space space) {
-        Long guestBookCardCount =
-            guestBookCardRepository.countBySpaceAndVisibilityStatusAndDeletedAtIsNull(space, VISIBLE);
-        return SpaceResponse.from(space, findRepresentativePhoto(space), guestBookCardCount);
+    private SpaceResponse createSpaceResponse(Space space, Host viewer) {
+        return SpaceResponse.from(
+            space,
+            findRepresentativePhoto(space),
+            resolveGuestBookCardCount(space, viewer),
+            getHostInfo(space)
+        );
+    }
+
+    /**
+     * 비공개 스페이스의 방명록 개수는 해당 스페이스의 호스트에게만 실제 값을 노출한다.
+     * 비로그인이거나 호스트가 아니면 개수 비공개를 의미하는 null로 응답한다.
+     */
+    private Long resolveGuestBookCardCount(Space space, Host viewer) {
+        if (space.isPublic() || isSpaceHost(space, viewer)) {
+            return guestBookCardRepository.countBySpaceAndVisibilityStatusAndDeletedAtIsNull(space, VISIBLE);
+        }
+        return null;
+    }
+
+    private boolean isSpaceHost(Space space, Host viewer) {
+        return viewer != null
+            && spaceHostRepository.findBySpaceAndHostAndDeletedAtIsNull(space, viewer).isPresent();
+    }
+
+    private SpaceHostInfoResponse getHostInfo(Space space) {
+        return spaceHostRepository.findBySpaceAndDeletedAtIsNullWithHost(space)
+            .map(SpaceHost::getHost)
+            .map(host -> SpaceHostInfoResponse.of(host, findActiveProfilePhoto(host)))
+            .orElseThrow(() -> new BaseNullPointerException(
+                "[데이터 정합성 위반] 스페이스 호스트가 존재하지 않습니다. spaceId: " + space.getId())
+            );
+    }
+
+    private HostProfilePhoto findActiveProfilePhoto(Host host) {
+        return hostProfilePhotoRepository.findByHostAndDeletedAtIsNull(host).orElse(null);
     }
 
     /**
@@ -220,6 +260,47 @@ public class SpaceService {
                 SpaceGuestBookCountDto::spaceId,
                 SpaceGuestBookCountDto::guestBookCount)
             );
+    }
+
+    @Transactional(readOnly = true)
+    public PublicHostSpacesResponse getPublicHostSpaces(String hostCode, Host loginHost) {
+        Host host = hostRepository.getActiveByCodeOrThrow(hostCode);
+        List<SpaceHost> spaceHosts =
+            spaceHostRepository.findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host);
+        if (spaceHosts.isEmpty()) {
+            return new PublicHostSpacesResponse(Collections.emptyList());
+        }
+
+        List<Space> spaces = spaceHosts.stream()
+            .map(SpaceHost::getSpace)
+            .toList();
+        List<Long> spaceIds = spaces.stream()
+            .map(Space::getId)
+            .toList();
+        Map<Long, Long> guestBookCardCounts = toCountBySpaceId(
+            guestBookCardRepository.countBySpaceIdInAndVisibilityStatusAndDeletedAtIsNull(spaceIds, VISIBLE));
+        Map<Long, ProductPhoto> spacePhotos = findRepresentativePhotos(spaceIds);
+
+        boolean isOwner = host.equals(loginHost);
+        List<PublicHostSpaceItemResponse> items = spaces.stream()
+            .map(space -> PublicHostSpaceItemResponse.from(
+                space,
+                spacePhotos.get(space.getId()),
+                maskGuestBookCardCount(space, isOwner, guestBookCardCounts.getOrDefault(space.getId(), 0L))
+            ))
+            .toList();
+        return new PublicHostSpacesResponse(items);
+    }
+
+    /**
+     * 비공개 스페이스의 방명록 개수는 호스트 본인에게만 실제 값을 노출한다.
+     * 그 외에는 개수 비공개를 의미하는 null로 응답한다.
+     */
+    private Long maskGuestBookCardCount(Space space, boolean isOwner, Long guestBookCardCount) {
+        if (space.isPublic() || isOwner) {
+            return guestBookCardCount;
+        }
+        return null;
     }
 
     @Transactional
