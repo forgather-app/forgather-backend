@@ -12,7 +12,6 @@ import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -126,6 +125,25 @@ class SocialAuthClientTest {
 
         // then
         assertThat(publicKey.getEncoded()).isEqualTo(rotatedJwk.publicKey().getEncoded());
+    }
+
+    @DisplayName("kid가 없어 갱신을 시도했으나 실패하면 서버 에러로 처리한다")
+    @Test
+    void getPublicKey_refreshFailsOnKidMiss_throwsInternalServerError() throws Exception {
+        // given
+        RsaJwk oldJwk = createRsaJwk("old-key");
+        stubJwks("/kakao/.well-known/jwks.json", oldJwk);
+        SocialAuthClient socialAuthClient = createSocialAuthClient();
+        wireMock.resetAll();
+        stubJwksFailure("/kakao/.well-known/jwks.json");
+
+        // then
+        assertThatThrownBy(() -> socialAuthClient.getPublicKey(SocialProvider.KAKAO, "rotated-key"))
+            .isInstanceOf(JwtBaseException.class)
+            .hasMessageContaining("Failed to refresh JWKS")
+            .satisfies(exception ->
+                assertThat(((JwtBaseException)exception).getStatusCode())
+                    .isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value()));
     }
 
     private SocialAuthClient createSocialAuthClient() {
