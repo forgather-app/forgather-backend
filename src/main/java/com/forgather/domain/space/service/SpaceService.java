@@ -102,7 +102,7 @@ public class SpaceService {
             space,
             findRepresentativePhoto(space),
             resolveGuestBookCardCount(space, viewer),
-            findHostInfo(space)
+            getHostInfo(space)
         );
     }
 
@@ -122,14 +122,13 @@ public class SpaceService {
             && spaceHostRepository.findBySpaceAndHostAndDeletedAtIsNull(space, viewer).isPresent();
     }
 
-    /**
-     * 스페이스의 호스트 정보를 조회한다. 연결된 호스트가 없으면 null을 반환한다.
-     */
-    private SpaceHostInfoResponse findHostInfo(Space space) {
+    private SpaceHostInfoResponse getHostInfo(Space space) {
         return spaceHostRepository.findBySpaceAndDeletedAtIsNullWithHost(space)
             .map(SpaceHost::getHost)
             .map(host -> SpaceHostInfoResponse.of(host, findActiveProfilePhoto(host)))
-            .orElse(null);
+            .orElseThrow(() -> new BaseNullPointerException(
+                "[데이터 정합성 위반] 스페이스 호스트가 존재하지 않습니다. spaceId: " + space.getId())
+            );
     }
 
     private HostProfilePhoto findActiveProfilePhoto(Host host) {

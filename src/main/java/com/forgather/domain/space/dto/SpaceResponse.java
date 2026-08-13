@@ -35,8 +35,7 @@ public record SpaceResponse(
     @Schema(description = "스페이스 방명록 카드 개수", example = "15")
     Long guestBookCardCount,
 
-    @Schema(description = "스페이스 호스트 정보 (스페이스에 가장 먼저 연결된 호스트). 연결된 호스트가 없으면 null이다.",
-        nullable = true)
+    @Schema(description = "스페이스 호스트 정보")
     SpaceHostInfoResponse host
 ) {
 

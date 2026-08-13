@@ -1,7 +1,6 @@
 package com.forgather.acceptance;
 
 import static com.forgather.fixture.HostFixture.createHost;
-import static com.forgather.fixture.HostFixture.createHostWithoutNickname;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -513,36 +512,36 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         assertThat(result.data().host().photoPath()).isEqualTo(profilePhoto.getPath());
     }
 
-    @DisplayName("호스트가 닉네임과 프로필 사진을 설정하지 않았으면 호스트 정보의 해당 값을 null로 응답한다.")
+    @DisplayName("호스트가 프로필 사진을 등록하지 않았으면 호스트 정보의 사진 경로를 null로 응답한다.")
     @Test
-    void getSpaceHostInfoWithoutNicknameAndPhoto() {
+    void getSpaceHostInfoWithoutProfilePhoto() {
         // given
-        Host hostWithoutNickname = hostRepository.save(createHostWithoutNickname());
         Space space = spaceRepository.save(SpaceFixture.createSpace());
-        spaceHostRepository.save(new SpaceHost(space, hostWithoutNickname));
+        spaceHostRepository.save(new SpaceHost(space, host));
 
         // when
         ApiResponse<SpaceResponse> result = getSpace(space.getCode());
 
         // then
         assertAll(
-            () -> assertThat(result.data().host().code()).isEqualTo(hostWithoutNickname.getCode()),
-            () -> assertThat(result.data().host().nickname()).isNull(),
+            () -> assertThat(result.data().host().nickname()).isEqualTo(host.getNickname()),
             () -> assertThat(result.data().host().photoPath()).isNull()
         );
     }
 
-    @DisplayName("연결된 호스트가 없는 스페이스는 호스트 정보를 null로 응답한다.")
+    @DisplayName("연결된 호스트가 없는 스페이스를 조회하면 데이터 정합성 위반으로 서버 에러를 응답한다.")
     @Test
     void getSpaceHostInfoWithoutSpaceHost() {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpace());
 
-        // when
-        ApiResponse<SpaceResponse> result = getSpace(space.getCode());
-
-        // then
-        assertThat(result.data().host()).isNull();
+        // when & then
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .when()
+            .get("/spaces/{spaceCode}", space.getCode())
+            .then()
+            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
     }
 
     @DisplayName("비공개 스페이스를 비로그인으로 조회하면 방명록 개수를 0으로 응답한다.")

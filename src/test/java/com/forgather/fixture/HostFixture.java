@@ -24,13 +24,6 @@ public class HostFixture {
         return host;
     }
 
-    /**
-     * 온보딩 전이라 닉네임을 아직 설정하지 않은 회원을 재현한다.
-     */
-    public static Host createHostWithoutNickname() {
-        return new Host(randomCode(), "포스티", EMAIL);
-    }
-
     public static Host createHostWithName(String name) {
         Host host = new Host(randomCode(), name, EMAIL);
         host.updateNickname(name);
