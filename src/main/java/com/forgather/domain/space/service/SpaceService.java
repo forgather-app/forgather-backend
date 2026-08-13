@@ -108,13 +108,13 @@ public class SpaceService {
 
     /**
      * 비공개 스페이스의 방명록 개수는 해당 스페이스의 호스트에게만 실제 값을 노출한다.
-     * 비로그인이거나 호스트가 아니면 0으로 응답한다.
+     * 비로그인이거나 호스트가 아니면 개수 비공개를 의미하는 null로 응답한다.
      */
     private Long resolveGuestBookCardCount(Space space, Host viewer) {
         if (space.isPublic() || isSpaceHost(space, viewer)) {
             return guestBookCardRepository.countBySpaceAndVisibilityStatusAndDeletedAtIsNull(space, VISIBLE);
         }
-        return 0L;
+        return null;
     }
 
     private boolean isSpaceHost(Space space, Host viewer) {
@@ -292,11 +292,15 @@ public class SpaceService {
         return new PublicHostSpacesResponse(items);
     }
 
+    /**
+     * 비공개 스페이스의 방명록 개수는 호스트 본인에게만 실제 값을 노출한다.
+     * 그 외에는 개수 비공개를 의미하는 null로 응답한다.
+     */
     private Long maskGuestBookCardCount(Space space, boolean isOwner, Long guestBookCardCount) {
         if (space.isPublic() || isOwner) {
             return guestBookCardCount;
         }
-        return 0L;
+        return null;
     }
 
     @Transactional

@@ -32,7 +32,8 @@ public record SpaceResponse(
         example = "photogather/v2/spaces/1234567890/product/UUID.webp", nullable = true)
     String spacePhotoPath,
 
-    @Schema(description = "스페이스 방명록 카드 개수", example = "15")
+    @Schema(description = "스페이스 방명록 카드 개수. 비공개 스페이스는 호스트 본인에게만 실제 값을 응답하고 그 외에는 null(개수 비공개)로 응답한다.",
+        example = "15", nullable = true)
     Long guestBookCardCount,
 
     @Schema(description = "스페이스 호스트 정보")

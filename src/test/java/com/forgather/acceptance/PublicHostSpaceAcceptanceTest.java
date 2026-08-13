@@ -143,7 +143,7 @@ class PublicHostSpaceAcceptanceTest extends AcceptanceTest {
             .body("code", equalTo(ResponseCode.NOT_FOUND.name()));
     }
 
-    @DisplayName("비로그인으로 조회하면 비공개 스페이스도 목록에 포함하되 방명록 개수는 0으로 응답한다.")
+    @DisplayName("비로그인으로 조회하면 비공개 스페이스도 목록에 포함하되 방명록 개수는 null(개수 비공개)로 응답한다.")
     @Test
     void getPublicHostSpacesMasksPrivateSpaceCount() {
         // given
@@ -161,7 +161,7 @@ class PublicHostSpaceAcceptanceTest extends AcceptanceTest {
         assertAll(
             () -> assertThat(spaces).hasSize(2),
             () -> assertThat(findByCode(spaces, privateSpace.getCode()).isPublic()).isFalse(),
-            () -> assertThat(findByCode(spaces, privateSpace.getCode()).guestBookCardCount()).isZero(),
+            () -> assertThat(findByCode(spaces, privateSpace.getCode()).guestBookCardCount()).isNull(),
             () -> assertThat(findByCode(spaces, publicSpace.getCode()).guestBookCardCount()).isOne()
         );
     }
@@ -183,7 +183,7 @@ class PublicHostSpaceAcceptanceTest extends AcceptanceTest {
         assertThat(findByCode(spaces, privateSpace.getCode()).guestBookCardCount()).isEqualTo(2);
     }
 
-    @DisplayName("호스트가 아닌 사용자가 조회하면 비공개 스페이스의 방명록 개수를 0으로 응답한다.")
+    @DisplayName("호스트가 아닌 사용자가 조회하면 비공개 스페이스의 방명록 개수를 null(개수 비공개)로 응답한다.")
     @Test
     void getPublicHostSpacesWithOtherHostToken() {
         // given
@@ -197,7 +197,7 @@ class PublicHostSpaceAcceptanceTest extends AcceptanceTest {
         List<PublicHostSpaceItemResponse> spaces = getSpacesWithToken(host.getCode(), otherToken);
 
         // then
-        assertThat(findByCode(spaces, privateSpace.getCode()).guestBookCardCount()).isZero();
+        assertThat(findByCode(spaces, privateSpace.getCode()).guestBookCardCount()).isNull();
     }
 
     @DisplayName("논리 삭제된 스페이스는 목록에서 제외한다.")

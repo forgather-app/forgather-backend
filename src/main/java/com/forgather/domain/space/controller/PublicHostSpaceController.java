@@ -29,7 +29,7 @@ public class PublicHostSpaceController {
         description = "호스트 코드로 해당 호스트의 스페이스 목록을 조회합니다. 로그인이 필요하지 않습니다. "
             + "존재하지 않는 코드와 탈퇴한 호스트를 구분하지 않고 404로 응답합니다. "
             + "비공개 스페이스도 목록에 포함하며, 방명록 개수는 호스트 본인에게만 실제 값을 응답하고 "
-            + "비로그인 사용자거나 호스트가 아니면 0으로 응답합니다. 기본 정렬은 최신 생성 순입니다.")
+            + "비로그인 사용자거나 호스트가 아니면 null(개수 비공개)로 응답합니다. 기본 정렬은 최신 생성 순입니다.")
     public ResponseEntity<ApiResponse<PublicHostSpacesResponse>> getPublicHostSpaces(
         @PathVariable(name = "hostCode") String hostCode,
         @LoginHost(required = false) Host loginHost

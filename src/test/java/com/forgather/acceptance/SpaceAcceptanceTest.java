@@ -544,7 +544,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
     }
 
-    @DisplayName("비공개 스페이스를 비로그인으로 조회하면 방명록 개수를 0으로 응답한다.")
+    @DisplayName("비공개 스페이스를 비로그인으로 조회하면 방명록 개수를 null(개수 비공개)로 응답한다.")
     @Test
     void getPrivateSpaceGuestBookCountWithoutLogin() {
         // given
@@ -556,10 +556,10 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         ApiResponse<SpaceResponse> result = getSpaceWithoutLogin(space.getCode());
 
         // then
-        assertThat(result.data().guestBookCardCount()).isZero();
+        assertThat(result.data().guestBookCardCount()).isNull();
     }
 
-    @DisplayName("비공개 스페이스를 호스트가 아닌 사용자가 조회하면 방명록 개수를 0으로 응답한다.")
+    @DisplayName("비공개 스페이스를 호스트가 아닌 사용자가 조회하면 방명록 개수를 null(개수 비공개)로 응답한다.")
     @Test
     void getPrivateSpaceGuestBookCountWithOtherHost() {
         // given
@@ -573,7 +573,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         ApiResponse<SpaceResponse> result = getSpace(space.getCode(), otherToken);
 
         // then
-        assertThat(result.data().guestBookCardCount()).isZero();
+        assertThat(result.data().guestBookCardCount()).isNull();
     }
 
     @DisplayName("비공개 스페이스도 호스트 본인이 조회하면 방명록 개수를 실제 값으로 응답한다.")
