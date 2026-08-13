@@ -58,7 +58,7 @@ public class SocialAuthClient {
             synchronized (getKeyUpdateLock(provider)) {
                 keys = keyCaches.get(provider);
                 if (keys == null || keys.isEmpty()) {
-                    updateKeys(provider);
+                    refreshKeys(provider);
                     keys = keyCaches.get(provider);
                 }
             }
@@ -80,7 +80,7 @@ public class SocialAuthClient {
                 }
             }
 
-            updateKeys(provider);
+            refreshKeys(provider);
             refreshedKeys = keyCaches.get(provider);
         }
 
@@ -103,11 +103,27 @@ public class SocialAuthClient {
             .map(this::toPublicKey);
     }
 
+    /**
+     * 배치 갱신용. 실패해도 기존 캐시로 검증이 계속되므로 전파하지 않는다.
+     */
     public void updateKeys(SocialProvider provider) {
+        try {
+            refreshKeys(provider);
+        } catch (Exception e) {
+            log.warn("Failed to update social public keys. provider={}", provider, e);
+        }
+    }
+
+    /**
+     * 토큰 검증 경로용. 갱신 실패는 최신 키를 확인할 수 없다는 뜻이므로 서버 오류로 전파한다.
+     */
+    private void refreshKeys(SocialProvider provider) {
         try {
             keyCaches.put(provider, fetchKeys(provider));
         } catch (Exception e) {
-            log.warn("Failed to update social public keys. provider={}", provider, e);
+            throw new JwtBaseException(
+                "Failed to refresh JWKS for provider: %s".formatted(provider),
+                HttpStatus.INTERNAL_SERVER_ERROR, e);
         }
     }
 
