@@ -49,12 +49,17 @@ public class SocialRevokeService {
     @Transactional
     public void retryFailedRevokes() {
         List<SocialRevokeFailLog> failLogs = socialRevokeFailLogRepository.findAllByCompletedAtIsNull();
+        log.info("소셜 연결 해제 재시도 시작. 대상: {}건", failLogs.size());
+        int completedCount = 0;
         for (SocialRevokeFailLog failLog : failLogs) {
-            retry(failLog);
+            if (retry(failLog)) {
+                completedCount++;
+            }
         }
+        log.info("소셜 연결 해제 재시도 완료. 처리: {}건", completedCount);
     }
 
-    private void retry(SocialRevokeFailLog failLog) {
+    private boolean retry(SocialRevokeFailLog failLog) {
         try {
             switch (failLog.getProvider()) {
                 case KAKAO -> kakaoAuthClient.unlink(failLog.getSocialUserId());
@@ -62,10 +67,12 @@ public class SocialRevokeService {
                 default -> throw new IllegalStateException("지원하지 않는 provider입니다. provider: " + failLog.getProvider());
             }
             failLog.complete();
+            return true;
         } catch (Exception e) {
             failLog.increaseFailCount();
             log.warn("소셜 연결 해제 재시도 실패. provider: {}, socialUserId: {}, failCount: {}",
                 failLog.getProvider(), failLog.getSocialUserId(), failLog.getFailCount(), e);
+            return false;
         }
     }
 }
