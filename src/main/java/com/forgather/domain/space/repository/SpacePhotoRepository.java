@@ -14,6 +14,11 @@ public interface SpacePhotoRepository {
 
     List<SpacePhoto> findAllBySpaceIdInAndDeletedAtIsNull(List<Long> spaceIds);
 
+    /**
+     * soft delete된 행을 포함해 여러 스페이스의 모든 사진을 조회한다.
+     */
+    List<SpacePhoto> findAllBySpaceIn(List<Space> spaces);
+
     default SpacePhoto getBySpaceAndDeletedAtIsNullOrEmpty(Space space) {
         return findBySpaceAndDeletedAtIsNull(space)
             .orElse(SpacePhoto.empty(space));

@@ -44,6 +44,16 @@ public interface SpaceHostRepository {
 
     Optional<SpaceHost> findBySpaceAndHostAndDeletedAtIsNull(Space space, Host host);
 
+    /**
+     * soft delete된 연결·스페이스를 포함해 호스트의 모든 스페이스를 조회한다.
+     */
+    @Query("""
+        SELECT sh.space
+        FROM SpaceHost sh
+        WHERE sh.host = :host
+        """)
+    List<Space> findAllSpacesByHost(@Param("host") Host host);
+
     default SpaceHost getBySpaceAndHostAndDeletedAtIsNullOrThrow(Space space, Host host) {
         if (space == null) {
             throw new BaseNullPointerException("스페이스는 null일 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
