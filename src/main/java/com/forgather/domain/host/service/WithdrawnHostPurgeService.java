@@ -53,12 +53,22 @@ public class WithdrawnHostPurgeService {
     private boolean purge(Host host, LocalDateTime now) {
         try {
             List<Photo> photos = hostPhotoFinder.findAllIncludingDeleted(host);
-            contentsStorage.deletePhotos(photos);
+            contentsStorage.deletePhotos(filterStoredPhotos(photos));
             hostAnonymizeService.anonymize(host.getId(), now);
             return true;
         } catch (Exception e) {
             log.warn("탈퇴 회원 purge 실패. hostId: {}", host.getId(), e);
             return false;
         }
+    }
+
+    /**
+     * path가 빈 행(SpacePhoto.empty 등)은 저장소 객체가 없어 삭제 요청에서 제외한다.
+     * 저장소 삭제 대상만 거르는 필터이며, 익명화는 path와 무관하게 전체 행을 대상으로 한다.
+     */
+    private List<Photo> filterStoredPhotos(List<Photo> photos) {
+        return photos.stream()
+            .filter(photo -> photo.getPath() != null && !photo.getPath().isBlank())
+            .toList();
     }
 }

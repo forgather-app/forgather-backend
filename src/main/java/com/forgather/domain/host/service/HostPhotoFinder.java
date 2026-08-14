@@ -35,10 +35,7 @@ public class HostPhotoFinder {
         List<Photo> photos = new ArrayList<>();
         photos.addAll(hostProfilePhotoRepository.findAllByHost(host));
         photos.addAll(findAllSpacePhotos(host));
-        // SpacePhoto.empty()처럼 path가 빈 행은 저장소 객체가 없어 파기 대상에서 제외한다
-        return photos.stream()
-            .filter(photo -> photo.getPath() != null && !photo.getPath().isBlank())
-            .toList();
+        return photos;
     }
 
     private List<Photo> findAllSpacePhotos(Host host) {
