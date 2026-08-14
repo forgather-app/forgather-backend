@@ -1,6 +1,8 @@
 package com.forgather.domain.host.service;
 
 import static com.forgather.fixture.HostFixture.createHostWithName;
+import static com.forgather.fixture.SpaceFixture.createSpace;
+import static com.forgather.fixture.SpaceHostFixture.createSpaceHostWithSpaceAndHost;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
@@ -23,6 +25,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.forgather.domain.host.model.HostProfilePhoto;
 import com.forgather.domain.model.Photo;
+import com.forgather.domain.space.model.Space;
+import com.forgather.domain.space.model.SpacePhoto;
 import com.forgather.fake.FakeContentStorage;
 import com.forgather.global.auth.model.Host;
 
@@ -91,6 +95,27 @@ class WithdrawnHostPurgeServiceTest {
             () -> assertThat(purgedCount).isZero(),
             () -> assertThat(contentsStorage.getDeletedPaths()).isEmpty(),
             () -> assertThat(host.getAnonymizedAt()).isNull()
+        );
+    }
+
+    @DisplayName("path가 빈 사진은 저장소 삭제에서 제외하고 파일명 익명화에는 포함한다")
+    @Test
+    void anonymizeEmptyPathPhotoWithoutStorageDeletion() {
+        // given
+        Host host = saveHostDeletedDaysAgo("만료회원", 31);
+        Space space = entityManager.persist(createSpace());
+        entityManager.persist(createSpaceHostWithSpaceAndHost(space, host));
+        SpacePhoto emptyPathPhoto = entityManager.persist(SpacePhoto.empty(space));
+        saveDeletedProfilePhoto(host, "profile-path");
+
+        // when
+        int purgedCount = withdrawnHostPurgeService.purgeExpiredHosts();
+
+        // then
+        assertAll(
+            () -> assertThat(purgedCount).isEqualTo(1),
+            () -> assertThat(contentsStorage.getDeletedPaths()).containsExactly("profile-path"),
+            () -> assertThat(emptyPathPhoto.getOriginalName()).isEqualTo("익명화된 파일명")
         );
     }
 

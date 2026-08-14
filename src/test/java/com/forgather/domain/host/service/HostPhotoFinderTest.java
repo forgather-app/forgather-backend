@@ -113,9 +113,9 @@ class HostPhotoFinderTest {
         assertThat(photos).isEmpty();
     }
 
-    @DisplayName("path가 빈 사진은 저장소 객체가 없으므로 제외한다")
+    @DisplayName("path가 빈 사진 행도 수집한다")
     @Test
-    void excludeEmptyPathPhotos() {
+    void includeEmptyPathPhotos() {
         // given
         Space emptyPhotoSpace = createSpace();
         Host host = saveHostWithSpace("탈퇴회원", emptyPhotoSpace);
@@ -130,6 +130,6 @@ class HostPhotoFinderTest {
         List<Photo> photos = hostPhotoFinder.findAllIncludingDeleted(host);
 
         // then
-        assertThat(photos).extracting(Photo::getPath).containsExactly("space-path");
+        assertThat(photos).extracting(Photo::getPath).containsExactlyInAnyOrder("", "space-path");
     }
 }
