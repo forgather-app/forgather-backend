@@ -157,7 +157,7 @@ public class AuthService {
         validateRejectedTermsAreOptional(rejectedTerms);
         validateRequiredTermTypes(agreedTerms);
         validateNoDuplicatedTypeDecision(agreedTerms, rejectedTerms);
-        validateAllTermTypesDecided(agreedTerms, rejectedTerms);
+        validateAllLatestTermsDecided(agreedTerms, rejectedTerms);
 
         Host host = hostRepository.getByIdOrThrow(loginHost.getId());
         validateOnboardingNotCompleted(host);
@@ -204,17 +204,19 @@ public class AuthService {
     }
 
     /**
-     * 모든 약관 타입에 대해 동의 또는 거절 결정이 명시되어야 한다.
+     * 타입별 최신 약관 전체에 대해 동의 또는 거절 결정이 명시되어야 한다.
      */
-    private void validateAllTermTypesDecided(List<Term> agreedTerms, List<Term> rejectedTerms) {
-        Set<TermType> latestTypes = toTermTypes(termRepository.findLatestTerms());
-        Set<TermType> decidedTypes = Stream.concat(agreedTerms.stream(), rejectedTerms.stream())
-            .map(Term::getType)
+    private void validateAllLatestTermsDecided(List<Term> agreedTerms, List<Term> rejectedTerms) {
+        Set<Long> latestTermIds = termRepository.findLatestTerms().stream()
+            .map(Term::getId)
             .collect(Collectors.toSet());
-        if (!decidedTypes.equals(latestTypes)) {
+        Set<Long> decidedTermIds = Stream.concat(agreedTerms.stream(), rejectedTerms.stream())
+            .map(Term::getId)
+            .collect(Collectors.toSet());
+        if (!decidedTermIds.equals(latestTermIds)) {
             throw new BaseException(
-                "모든 약관 타입에 대한 동의 또는 거절이 필요합니다. latestTypes: %s, decidedTypes: %s"
-                    .formatted(latestTypes, decidedTypes));
+                "타입별 최신 약관 전체에 대한 동의 또는 거절이 필요합니다. latestTermIds: %s, decidedTermIds: %s"
+                    .formatted(latestTermIds, decidedTermIds));
         }
     }
 
