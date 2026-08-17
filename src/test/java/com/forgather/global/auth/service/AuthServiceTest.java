@@ -486,9 +486,9 @@ class AuthServiceTest {
     @Test
     void failOnboardingWhenOptionalTermDecisionIsMissing() {
         // given
-        Term serviceTerm = createServiceTerm("1.0.0", "service");
-        Term privacyTerm = createPrivacyTerm("1.0.0", "privacy");
-        Term marketingTerm = createMarketingTerm("1.0.0", "marketing");
+        Term serviceTerm = termWithId(createServiceTerm("1.0.0", "service"), 1L);
+        Term privacyTerm = termWithId(createPrivacyTerm("1.0.0", "privacy"), 2L);
+        Term marketingTerm = termWithId(createMarketingTerm("1.0.0", "marketing"), 3L);
         OnboardingRequest request = new OnboardingRequest("kjyyjk", List.of(1L, 2L), null);
         when(termRepository.findByIdInAndDeletedAtIsNull(List.of(1L, 2L)))
             .thenReturn(List.of(serviceTerm, privacyTerm));
@@ -497,7 +497,47 @@ class AuthServiceTest {
         // when & then
         assertThatThrownBy(() -> authService.submitOnboarding(createHost(), request))
             .isInstanceOf(BaseException.class)
-            .hasMessageContaining("모든 약관 타입에 대한 동의 또는 거절이 필요합니다.");
+            .hasMessageContaining("타입별 최신 약관 전체에 대한 동의 또는 거절이 필요합니다.");
+    }
+
+    @DisplayName("최신 버전이 아닌 구버전 약관 ID를 제출하면 온보딩에 실패한다")
+    @Test
+    void failOnboardingWhenOutdatedTermIdSubmitted() {
+        // given
+        Term oldServiceTerm = termWithId(createServiceTerm("0.9.0", "old service"), 1L);
+        Term latestServiceTerm = termWithId(createServiceTerm("1.0.0", "latest service"), 4L);
+        Term privacyTerm = termWithId(createPrivacyTerm("1.0.0", "privacy"), 2L);
+        Term marketingTerm = termWithId(createMarketingTerm("1.0.0", "marketing"), 3L);
+        OnboardingRequest request = new OnboardingRequest("kjyyjk", List.of(1L, 2L), List.of(3L));
+        when(termRepository.findByIdInAndDeletedAtIsNull(List.of(1L, 2L)))
+            .thenReturn(List.of(oldServiceTerm, privacyTerm));
+        when(termRepository.findByIdInAndDeletedAtIsNull(List.of(3L))).thenReturn(List.of(marketingTerm));
+        when(termRepository.findLatestTerms()).thenReturn(List.of(latestServiceTerm, privacyTerm, marketingTerm));
+
+        // when & then
+        assertThatThrownBy(() -> authService.submitOnboarding(createHost(), request))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("타입별 최신 약관 전체에 대한 동의 또는 거절이 필요합니다.");
+    }
+
+    @DisplayName("같은 타입의 구버전과 최신 버전 약관을 함께 제출하면 온보딩에 실패한다")
+    @Test
+    void failOnboardingWhenBothOutdatedAndLatestTermSubmitted() {
+        // given
+        Term oldServiceTerm = termWithId(createServiceTerm("0.9.0", "old service"), 1L);
+        Term latestServiceTerm = termWithId(createServiceTerm("1.0.0", "latest service"), 4L);
+        Term privacyTerm = termWithId(createPrivacyTerm("1.0.0", "privacy"), 2L);
+        Term marketingTerm = termWithId(createMarketingTerm("1.0.0", "marketing"), 3L);
+        OnboardingRequest request = new OnboardingRequest("kjyyjk", List.of(1L, 2L, 4L), List.of(3L));
+        when(termRepository.findByIdInAndDeletedAtIsNull(List.of(1L, 2L, 4L)))
+            .thenReturn(List.of(oldServiceTerm, privacyTerm, latestServiceTerm));
+        when(termRepository.findByIdInAndDeletedAtIsNull(List.of(3L))).thenReturn(List.of(marketingTerm));
+        when(termRepository.findLatestTerms()).thenReturn(List.of(latestServiceTerm, privacyTerm, marketingTerm));
+
+        // when & then
+        assertThatThrownBy(() -> authService.submitOnboarding(createHost(), request))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("타입별 최신 약관 전체에 대한 동의 또는 거절이 필요합니다.");
     }
 
     @DisplayName("최초 온보딩에서 선택 약관을 거절하면 거절 이력을 저장한다")

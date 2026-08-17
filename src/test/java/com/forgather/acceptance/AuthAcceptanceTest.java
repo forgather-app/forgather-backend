@@ -472,6 +472,38 @@ class AuthAcceptanceTest extends AcceptanceTest {
         );
     }
 
+    @DisplayName("최신 버전이 아닌 구버전 약관 ID로 온보딩 제출하면 실패한다")
+    @Test
+    void rejectOnboardingWhenOutdatedTermIdSubmitted() {
+        // given
+        Host host = saveHost(null);
+        String token = jwtTokenProvider.generateAccessToken(host.getId());
+        Term oldServiceTerm = termJpaRepository.save(createServiceTerm("0.9.0", "old service"));
+        termJpaRepository.save(createServiceTerm("1.0.0", "latest service"));
+        Term privacyTerm = termJpaRepository.save(createPrivacyTerm("1.0.0", "privacy"));
+        Term marketingTerm = termJpaRepository.save(createMarketingTerm("1.0.0", "marketing"));
+
+        // when
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(Map.of(
+                "nickname", "포개더",
+                "agreedTermIds", List.of(oldServiceTerm.getId(), privacyTerm.getId()),
+                "rejectedTermIds", List.of(marketingTerm.getId())
+            ))
+            .when()
+            .post("/auth/onboarding")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value());
+
+        // then
+        assertAll(
+            () -> assertThat(hostRepository.getByIdOrThrow(host.getId()).getNickname()).isNull(),
+            () -> assertThat(countAgreeHistories(host.getId())).isZero()
+        );
+    }
+
     @DisplayName("필수 약관을 거절하면 온보딩 제출에 실패한다")
     @Test
     void rejectOnboardingWhenRequiredTermIsRejected() {
