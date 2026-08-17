@@ -1,11 +1,13 @@
 package com.forgather.global.auth.service;
 
 import static com.forgather.domain.term.model.HostTermHistoryAction.AGREE;
+import static com.forgather.domain.term.model.HostTermHistoryAction.REJECT;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -37,6 +39,7 @@ import com.forgather.global.auth.util.JwtParser;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
+import com.forgather.global.exception.ConflictException;
 import com.forgather.global.exception.UnauthorizedException;
 import com.forgather.global.util.RandomCodeGenerator;
 
@@ -149,18 +152,76 @@ public class AuthService {
             throw new BaseNullPointerException("동의 약관 목록은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
         }
 
-        List<Term> submittedTerms = getActiveTermsByIds(request.agreedTermIds());
-        validateRequiredTermTypes(submittedTerms);
+        List<Term> agreedTerms = getActiveTermsByIds(request.agreedTermIds());
+        List<Term> rejectedTerms = getActiveTermsByIds(request.rejectedTermIds());
+        validateRejectedTermsAreOptional(rejectedTerms);
+        validateRequiredTermTypes(agreedTerms);
+        validateNoDuplicatedTypeDecision(agreedTerms, rejectedTerms);
+        validateAllTermTypesDecided(agreedTerms, rejectedTerms);
 
         Host host = hostRepository.getByIdOrThrow(loginHost.getId());
+        validateOnboardingNotCompleted(host);
         host.updateNickname(request.nickname());
 
-        List<HostTermHistory> hostTermHistories = submittedTerms.stream()
-            .map(term -> new HostTermHistory(host, term, AGREE))
+        List<HostTermHistory> hostTermHistories = Stream.concat(
+                agreedTerms.stream().map(term -> new HostTermHistory(host, term, AGREE)),
+                rejectedTerms.stream().map(term -> new HostTermHistory(host, term, REJECT)))
             .toList();
         hostTermHistoryRepository.saveAll(hostTermHistories);
 
         return HostResponse.of(host, findProfilePhoto(host), true);
+    }
+
+    /**
+     * 온보딩 재호출이 REJECT 이력을 append해 기존 동의를 조용히 뒤집는 것을 막는다.
+     * 동의/철회 상태 변경은 별도 토글 API의 책임이다.
+     */
+    private void validateOnboardingNotCompleted(Host host) {
+        if (isOnboardingCompleted(host)) {
+            throw new ConflictException("이미 온보딩이 완료된 호스트입니다. hostId: " + host.getId());
+        }
+    }
+
+    private void validateRejectedTermsAreOptional(List<Term> rejectedTerms) {
+        Set<TermType> rejectedRequiredTypes = rejectedTerms.stream()
+            .map(Term::getType)
+            .filter(TermType::isRequired)
+            .collect(Collectors.toSet());
+        if (!rejectedRequiredTypes.isEmpty()) {
+            throw new BaseException("필수 약관은 거절할 수 없습니다. rejectedRequiredTypes: " + rejectedRequiredTypes);
+        }
+    }
+
+    private void validateNoDuplicatedTypeDecision(List<Term> agreedTerms, List<Term> rejectedTerms) {
+        Set<TermType> agreedTypes = toTermTypes(agreedTerms);
+        Set<TermType> duplicatedTypes = toTermTypes(rejectedTerms).stream()
+            .filter(agreedTypes::contains)
+            .collect(Collectors.toSet());
+        if (!duplicatedTypes.isEmpty()) {
+            throw new BaseException(
+                "같은 타입의 약관을 동의와 거절에 함께 보낼 수 없습니다. duplicatedTypes: " + duplicatedTypes);
+        }
+    }
+
+    /**
+     * 모든 약관 타입에 대해 동의 또는 거절 결정이 명시되어야 한다.
+     */
+    private void validateAllTermTypesDecided(List<Term> agreedTerms, List<Term> rejectedTerms) {
+        Set<TermType> latestTypes = toTermTypes(termRepository.findLatestTerms());
+        Set<TermType> decidedTypes = Stream.concat(agreedTerms.stream(), rejectedTerms.stream())
+            .map(Term::getType)
+            .collect(Collectors.toSet());
+        if (!decidedTypes.equals(latestTypes)) {
+            throw new BaseException(
+                "모든 약관 타입에 대한 동의 또는 거절이 필요합니다. latestTypes: %s, decidedTypes: %s"
+                    .formatted(latestTypes, decidedTypes));
+        }
+    }
+
+    private Set<TermType> toTermTypes(List<Term> terms) {
+        return terms.stream()
+            .map(Term::getType)
+            .collect(Collectors.toSet());
     }
 
     private boolean isOnboardingCompleted(Host host) {
@@ -185,9 +246,9 @@ public class AuthService {
         return terms;
     }
 
-    private void validateRequiredTermTypes(List<Term> submittedTerms) {
+    private void validateRequiredTermTypes(List<Term> agreedTerms) {
         Set<TermType> requiredTypes = TermType.requiredTypes();
-        Set<TermType> submittedTypes = submittedTerms.stream()
+        Set<TermType> submittedTypes = agreedTerms.stream()
             .map(Term::getType)
             .collect(Collectors.toSet());
         if (!submittedTypes.containsAll(requiredTypes)) {

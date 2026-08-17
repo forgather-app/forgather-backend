@@ -89,7 +89,8 @@ public class AuthController {
 
     @PostMapping("/onboarding")
     @Operation(summary = "온보딩 완료",
-        description = "서비스 닉네임과 약관 동의 이력을 함께 저장합니다.")
+        description = "서비스 닉네임과 약관 동의 이력을 함께 저장합니다. " +
+            "이미 온보딩이 완료된 호스트가 다시 호출하면 409 Conflict를 반환합니다.")
     public ResponseEntity<ApiResponse<HostResponse>> submitOnboarding(
         @LoginHost Host host,
         @RequestBody OnboardingRequest request

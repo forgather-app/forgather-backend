@@ -3,6 +3,8 @@ package com.forgather.global.auth.dev;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -86,13 +88,17 @@ public class DevAuthService {
     /**
      * 실제 온보딩과 상태가 갈라지지 않도록 AuthService.submitOnboarding을 그대로 재사용한다.
      * 최초 생성 시에만 호출되므로 약관 동의 이력이 중복 저장되지 않는다.
+     * 온보딩은 모든 약관 타입에 대한 결정을 요구하므로 선택 약관은 거절로 명시한다.
      */
     private void completeOnboarding(Host host) {
-        List<Long> requiredTermIds = termRepository.findLatestTerms()
+        Map<Boolean, List<Long>> termIdsByRequired = termRepository.findLatestTerms()
             .stream()
-            .filter(term -> term.getType().isRequired())
-            .map(Term::getId)
-            .toList();
-        authService.submitOnboarding(host, new OnboardingRequest(devLoginProperties.getNickname(), requiredTermIds));
+            .collect(Collectors.partitioningBy(
+                term -> term.getType().isRequired(),
+                Collectors.mapping(Term::getId, Collectors.toList())));
+        authService.submitOnboarding(host, new OnboardingRequest(
+            devLoginProperties.getNickname(),
+            termIdsByRequired.get(true),
+            termIdsByRequired.get(false)));
     }
 }
