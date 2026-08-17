@@ -48,6 +48,10 @@ public class HostTermHistory extends SoftDeleteEntity {
         this.action = action;
     }
 
+    public boolean isAgreeAction() {
+        return action == HostTermHistoryAction.AGREE;
+    }
+
     private void validateRequiredFields(Host host, Term term, HostTermHistoryAction action) {
         if (host == null) {
             throw new BaseNullPointerException("약관 동의 이력의 호스트는 null일 수 없습니다.");

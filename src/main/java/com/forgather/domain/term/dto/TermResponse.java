@@ -33,7 +33,7 @@ public record TermResponse(
             term.getId(),
             term.getType().name(),
             term.getName(),
-            term.getVersion(),
+            term.getVersion().getValue(),
             term.getContent(),
             term.getType().isRequired(),
             term.getSortOrder()
