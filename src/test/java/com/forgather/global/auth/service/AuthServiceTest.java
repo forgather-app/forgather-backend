@@ -2,7 +2,6 @@ package com.forgather.global.auth.service;
 
 import static com.forgather.domain.term.model.HostTermHistoryAction.AGREE;
 import static com.forgather.domain.term.model.HostTermHistoryAction.REJECT;
-import static com.forgather.fixture.HostFixture.createHost;
 import static com.forgather.fixture.HostFixture.createHostWithId;
 import static com.forgather.fixture.HostFixture.createHostWithoutEmail;
 import static com.forgather.fixture.TermFixture.createMarketingTerm;
@@ -375,7 +374,7 @@ class AuthServiceTest {
         when(termRepository.findByIdInAndDeletedAtIsNull(agreedTermIds)).thenReturn(List.of());
 
         // when, then
-        assertThatThrownBy(() -> authService.submitOnboarding(createHost(), request))
+        assertThatThrownBy(() -> authService.submitOnboarding(onboardingHost(), request))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("존재하지 않거나 삭제된 약관 ID가 포함되어 있습니다.");
     }
@@ -390,7 +389,7 @@ class AuthServiceTest {
             .thenReturn(List.of(createPrivacyTerm("1.0.0", "content")));
 
         // when, then
-        assertThatThrownBy(() -> authService.submitOnboarding(createHost(), request))
+        assertThatThrownBy(() -> authService.submitOnboarding(onboardingHost(), request))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("필수 약관 동의가 누락되었습니다.");
     }
@@ -459,7 +458,7 @@ class AuthServiceTest {
         when(termRepository.findByIdInAndDeletedAtIsNull(List.of(1L))).thenReturn(List.of(serviceTerm));
 
         // when & then
-        assertThatThrownBy(() -> authService.submitOnboarding(createHost(), request))
+        assertThatThrownBy(() -> authService.submitOnboarding(onboardingHost(), request))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("필수 약관은 거절할 수 없습니다.");
     }
@@ -477,7 +476,7 @@ class AuthServiceTest {
         when(termRepository.findByIdInAndDeletedAtIsNull(List.of(3L))).thenReturn(List.of(marketingTerm));
 
         // when & then
-        assertThatThrownBy(() -> authService.submitOnboarding(createHost(), request))
+        assertThatThrownBy(() -> authService.submitOnboarding(onboardingHost(), request))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("같은 타입의 약관을 동의와 거절에 함께 보낼 수 없습니다.");
     }
@@ -495,7 +494,7 @@ class AuthServiceTest {
         when(termRepository.findLatestTerms()).thenReturn(List.of(serviceTerm, privacyTerm, marketingTerm));
 
         // when & then
-        assertThatThrownBy(() -> authService.submitOnboarding(createHost(), request))
+        assertThatThrownBy(() -> authService.submitOnboarding(onboardingHost(), request))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("타입별 최신 약관 전체에 대한 동의 또는 거절이 필요합니다.");
     }
@@ -515,7 +514,7 @@ class AuthServiceTest {
         when(termRepository.findLatestTerms()).thenReturn(List.of(latestServiceTerm, privacyTerm, marketingTerm));
 
         // when & then
-        assertThatThrownBy(() -> authService.submitOnboarding(createHost(), request))
+        assertThatThrownBy(() -> authService.submitOnboarding(onboardingHost(), request))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("타입별 최신 약관 전체에 대한 동의 또는 거절이 필요합니다.");
     }
@@ -535,7 +534,7 @@ class AuthServiceTest {
         when(termRepository.findLatestTerms()).thenReturn(List.of(latestServiceTerm, privacyTerm, marketingTerm));
 
         // when & then
-        assertThatThrownBy(() -> authService.submitOnboarding(createHost(), request))
+        assertThatThrownBy(() -> authService.submitOnboarding(onboardingHost(), request))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("타입별 최신 약관 전체에 대한 동의 또는 거절이 필요합니다.");
     }
@@ -553,7 +552,7 @@ class AuthServiceTest {
             .thenReturn(List.of(serviceTerm, privacyTerm));
         when(termRepository.findByIdInAndDeletedAtIsNull(List.of(3L))).thenReturn(List.of(marketingTerm));
         when(termRepository.findLatestTerms()).thenReturn(List.of(serviceTerm, privacyTerm, marketingTerm));
-        when(hostRepository.getByIdOrThrow(1L)).thenReturn(host);
+        when(hostRepository.getByIdWithLockOrThrow(1L)).thenReturn(host);
 
         // when
         authService.submitOnboarding(host, request);
@@ -575,15 +574,8 @@ class AuthServiceTest {
         // given
         Host host = createHostWithId(1L);
         host.updateNickname("포개더");
-        Term serviceTerm = termWithId(createServiceTerm("1.0.0", "service"), 1L);
-        Term privacyTerm = termWithId(createPrivacyTerm("1.0.0", "privacy"), 2L);
-        Term marketingTerm = termWithId(createMarketingTerm("1.0.0", "marketing"), 3L);
         OnboardingRequest request = new OnboardingRequest("포개더", List.of(1L, 2L), List.of(3L));
-        when(termRepository.findByIdInAndDeletedAtIsNull(List.of(1L, 2L)))
-            .thenReturn(List.of(serviceTerm, privacyTerm));
-        when(termRepository.findByIdInAndDeletedAtIsNull(List.of(3L))).thenReturn(List.of(marketingTerm));
-        when(termRepository.findLatestTerms()).thenReturn(List.of(serviceTerm, privacyTerm, marketingTerm));
-        when(hostRepository.getByIdOrThrow(1L)).thenReturn(host);
+        when(hostRepository.getByIdWithLockOrThrow(1L)).thenReturn(host);
         when(hostTermHistoryRepository.findAgreedTermTypesByHostId(1L)).thenReturn(TermType.requiredTypes());
 
         // when & then
@@ -591,6 +583,15 @@ class AuthServiceTest {
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("이미 온보딩이 완료된 호스트입니다. hostId: 1");
         verify(hostTermHistoryRepository, never()).saveAll(any());
+    }
+
+    /**
+     * 온보딩은 호스트 행 락 조회를 가장 먼저 수행하므로, 약관 검증 실패 케이스도 락 조회 스텁이 필요하다.
+     */
+    private Host onboardingHost() {
+        Host host = createHostWithId(1L);
+        when(hostRepository.getByIdWithLockOrThrow(1L)).thenReturn(host);
+        return host;
     }
 
     private Term termWithId(Term term, long id) {

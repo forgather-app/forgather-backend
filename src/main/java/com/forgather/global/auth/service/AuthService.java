@@ -146,11 +146,18 @@ public class AuthService {
         return hostProfilePhotoRepository.findByHostAndDeletedAtIsNull(host).orElse(null);
     }
 
+    /**
+     * 완료 검사와 이력 저장 사이에 동시 요청이 끼어들면 두 요청 모두 미완료로 읽고 각각 이력을 남길 수 있다.
+     * 호스트 행에 배타 락을 걸어 동시 온보딩을 직렬화한다.
+     */
     @Transactional
     public HostResponse submitOnboarding(Host loginHost, OnboardingRequest request) {
         if (request.agreedTermIds() == null) {
             throw new BaseNullPointerException("동의 약관 목록은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
         }
+
+        Host host = hostRepository.getByIdWithLockOrThrow(loginHost.getId());
+        validateOnboardingNotCompleted(host);
 
         List<Term> agreedTerms = getActiveTermsByIds(request.agreedTermIds());
         List<Term> rejectedTerms = getActiveTermsByIds(request.rejectedTermIds());
@@ -159,8 +166,6 @@ public class AuthService {
         validateNoDuplicatedTypeDecision(agreedTerms, rejectedTerms);
         validateAllLatestTermsDecided(agreedTerms, rejectedTerms);
 
-        Host host = hostRepository.getByIdOrThrow(loginHost.getId());
-        validateOnboardingNotCompleted(host);
         host.updateNickname(request.nickname());
 
         List<HostTermHistory> hostTermHistories = Stream.concat(
