@@ -9,6 +9,7 @@ spring:
     password:
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: create-drop
     show-sql: true

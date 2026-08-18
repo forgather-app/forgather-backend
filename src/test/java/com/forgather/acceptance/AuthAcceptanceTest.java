@@ -363,6 +363,205 @@ class AuthAcceptanceTest extends AcceptanceTest {
         );
     }
 
+    @DisplayName("선택 약관을 거절하고 온보딩하면 거절 이력을 저장한다")
+    @Test
+    void submitOnboardingWithRejectedTerm() {
+        // given
+        Host host = saveHost(null);
+        String token = jwtTokenProvider.generateAccessToken(host.getId());
+        Term serviceTerm = termJpaRepository.save(createServiceTerm("1.0.0", "service"));
+        Term privacyTerm = termJpaRepository.save(createPrivacyTerm("1.0.0", "privacy"));
+        Term marketingTerm = termJpaRepository.save(createMarketingTerm("1.0.0", "marketing"));
+
+        // when
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body(Map.of(
+                "nickname", "포개더",
+                "agreedTermIds", List.of(serviceTerm.getId(), privacyTerm.getId()),
+                "rejectedTermIds", List.of(marketingTerm.getId())
+            ))
+            .when()
+            .post("/auth/onboarding")
+            .then()
+            .statusCode(HttpStatus.OK.value());
+
+        // then
+        assertAll(
+            () -> assertThat(countAgreeHistories(host.getId())).isEqualTo(2),
+            () -> assertThat(countHistories(host.getId(), "REJECT")).isEqualTo(1)
+        );
+    }
+
+    @DisplayName("이미 온보딩이 완료된 사용자가 거절로 재온보딩하면 실패하고 기존 동의를 유지한다")
+    @Test
+    void rejectReonboardingWhenOnboardingIsAlreadyCompleted() {
+        // given
+        Host host = saveHost("포개더");
+        String token = jwtTokenProvider.generateAccessToken(host.getId());
+        Term serviceTerm = termJpaRepository.save(createServiceTerm("1.0.0", "service"));
+        Term privacyTerm = termJpaRepository.save(createPrivacyTerm("1.0.0", "privacy"));
+        Term marketingTerm = termJpaRepository.save(createMarketingTerm("1.0.0", "marketing"));
+        insertAgreeHistory(host.getId(), serviceTerm.getId());
+        insertAgreeHistory(host.getId(), privacyTerm.getId());
+        insertAgreeHistory(host.getId(), marketingTerm.getId());
+
+        // when
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body(Map.of(
+                "nickname", "포개더",
+                "agreedTermIds", List.of(serviceTerm.getId(), privacyTerm.getId()),
+                "rejectedTermIds", List.of(marketingTerm.getId())
+            ))
+            .when()
+            .post("/auth/onboarding")
+            .then()
+            .statusCode(HttpStatus.CONFLICT.value())
+            .body("code", equalTo(ResponseCode.CONFLICT.name()));
+
+        ExtractableResponse<MockMvcResponse> myTermsResponse = RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .accept(ContentType.JSON)
+            .when()
+            .get("/terms/me")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract();
+
+        // then
+        assertAll(
+            () -> assertThat(countHistories(host.getId(), "REJECT")).isZero(),
+            () -> assertThat(countAgreeHistories(host.getId())).isEqualTo(3),
+            () -> assertThat(myTermsResponse.jsonPath()
+                .getBoolean("data.find { it.type == 'MARKETING' }.isAgreed")).isTrue()
+        );
+    }
+
+    @DisplayName("선택 약관에 대한 결정이 없으면 온보딩 제출에 실패한다")
+    @Test
+    void rejectOnboardingWhenOptionalTermDecisionIsMissing() {
+        // given
+        Host host = saveHost(null);
+        String token = jwtTokenProvider.generateAccessToken(host.getId());
+        Term serviceTerm = termJpaRepository.save(createServiceTerm("1.0.0", "service"));
+        Term privacyTerm = termJpaRepository.save(createPrivacyTerm("1.0.0", "privacy"));
+        termJpaRepository.save(createMarketingTerm("1.0.0", "marketing"));
+
+        // when
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(Map.of(
+                "nickname", "포개더",
+                "agreedTermIds", List.of(serviceTerm.getId(), privacyTerm.getId())
+            ))
+            .when()
+            .post("/auth/onboarding")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value());
+
+        // then
+        assertAll(
+            () -> assertThat(hostRepository.getByIdOrThrow(host.getId()).getNickname()).isNull(),
+            () -> assertThat(countAgreeHistories(host.getId())).isZero()
+        );
+    }
+
+    @DisplayName("최신 버전이 아닌 구버전 약관 ID로 온보딩 제출하면 실패한다")
+    @Test
+    void rejectOnboardingWhenOutdatedTermIdSubmitted() {
+        // given
+        Host host = saveHost(null);
+        String token = jwtTokenProvider.generateAccessToken(host.getId());
+        Term oldServiceTerm = termJpaRepository.save(createServiceTerm("0.9.0", "old service"));
+        termJpaRepository.save(createServiceTerm("1.0.0", "latest service"));
+        Term privacyTerm = termJpaRepository.save(createPrivacyTerm("1.0.0", "privacy"));
+        Term marketingTerm = termJpaRepository.save(createMarketingTerm("1.0.0", "marketing"));
+
+        // when
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(Map.of(
+                "nickname", "포개더",
+                "agreedTermIds", List.of(oldServiceTerm.getId(), privacyTerm.getId()),
+                "rejectedTermIds", List.of(marketingTerm.getId())
+            ))
+            .when()
+            .post("/auth/onboarding")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value());
+
+        // then
+        assertAll(
+            () -> assertThat(hostRepository.getByIdOrThrow(host.getId()).getNickname()).isNull(),
+            () -> assertThat(countAgreeHistories(host.getId())).isZero()
+        );
+    }
+
+    @DisplayName("필수 약관을 거절하면 온보딩 제출에 실패한다")
+    @Test
+    void rejectOnboardingWhenRequiredTermIsRejected() {
+        // given
+        Host host = saveHost(null);
+        String token = jwtTokenProvider.generateAccessToken(host.getId());
+        Term serviceTerm = termJpaRepository.save(createServiceTerm("1.0.0", "service"));
+        Term privacyTerm = termJpaRepository.save(createPrivacyTerm("1.0.0", "privacy"));
+        Term marketingTerm = termJpaRepository.save(createMarketingTerm("1.0.0", "marketing"));
+
+        // when
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(Map.of(
+                "nickname", "포개더",
+                "agreedTermIds", List.of(serviceTerm.getId(), marketingTerm.getId()),
+                "rejectedTermIds", List.of(privacyTerm.getId())
+            ))
+            .when()
+            .post("/auth/onboarding")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value());
+
+        // then
+        assertThat(countAgreeHistories(host.getId())).isZero();
+    }
+
+    @DisplayName("삭제된 약관을 거절 목록에 보내면 온보딩 제출에 실패한다")
+    @Test
+    void rejectOnboardingWhenRejectedTermIsDeleted() {
+        // given
+        Host host = saveHost(null);
+        String token = jwtTokenProvider.generateAccessToken(host.getId());
+        Term serviceTerm = termJpaRepository.save(createServiceTerm("1.0.0", "service"));
+        Term privacyTerm = termJpaRepository.save(createPrivacyTerm("1.0.0", "privacy"));
+        Term marketingTerm = termJpaRepository.save(createMarketingTerm("1.0.0", "marketing"));
+        marketingTerm.delete();
+        termJpaRepository.save(marketingTerm);
+
+        // when
+        RestAssuredMockMvc.given()
+            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON)
+            .body(Map.of(
+                "nickname", "포개더",
+                "agreedTermIds", List.of(serviceTerm.getId(), privacyTerm.getId()),
+                "rejectedTermIds", List.of(marketingTerm.getId())
+            ))
+            .when()
+            .post("/auth/onboarding")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value());
+
+        // then
+        assertThat(countAgreeHistories(host.getId())).isZero();
+    }
+
     private Host saveHost(String nickname) {
         Host host = new Host(HostFixture.randomCode(), "카카오원본이름", "posty@forgather.app");
         if (nickname != null) {
@@ -387,10 +586,15 @@ class AuthAcceptanceTest extends AcceptanceTest {
     }
 
     private int countAgreeHistories(Long hostId) {
+        return countHistories(hostId, "AGREE");
+    }
+
+    private int countHistories(Long hostId, String action) {
         Integer count = jdbcTemplate.queryForObject(
-            "SELECT COUNT(*) FROM host_term_history WHERE host_id = ? AND action = 'AGREE' AND deleted_at IS NULL",
+            "SELECT COUNT(*) FROM host_term_history WHERE host_id = ? AND action = ? AND deleted_at IS NULL",
             Integer.class,
-            hostId
+            hostId,
+            action
         );
         return count == null ? 0 : count;
     }
