@@ -12,10 +12,6 @@ public record UpdateProductRequest(
     @TextSize(max = 50)
     String title,
 
-    @Schema(description = "작품 카테고리", example = "Chair", maxLength = 20)
-    @TextSize(max = 20)
-    String category,
-
     @Schema(description = "작가명", example = "히비노카프카", maxLength = 35)
     @TextSize(max = 35)
     String authorName,

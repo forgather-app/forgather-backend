@@ -77,7 +77,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
 
     private RegisterProductRequest registerRequest = new RegisterProductRequest(
         "title",
-        "category",
         "authorName",
         "description",
         "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
@@ -135,12 +134,10 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.message()).isNull(),
                 () -> assertThat(result.data().products().get(0).id()).isEqualTo(registerResponse1.id()),
                 () -> assertThat(result.data().products().get(0).title()).isEqualTo(registerResponse1.title()),
-                () -> assertThat(result.data().products().get(0).category()).isEqualTo(registerResponse1.category()),
                 () -> assertThat(result.data().products().get(0).videoUrl()).isEqualTo(registerResponse1.videoUrl()),
 
                 () -> assertThat(result.data().products().get(1).id()).isEqualTo(registerResponse2.id()),
                 () -> assertThat(result.data().products().get(1).title()).isEqualTo(registerResponse2.title()),
-                () -> assertThat(result.data().products().get(1).category()).isEqualTo(registerResponse2.category()),
                 () -> assertThat(result.data().products().get(1).videoUrl()).isEqualTo(registerResponse2.videoUrl()),
 
                 () -> assertThat(result.data().products().get(0).firstPhoto().originalName()).isEqualTo("photo1"),
@@ -232,7 +229,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.message()).isNull(),
                 () -> assertThat(result.data().id()).isEqualTo(registerResponse.id()),
                 () -> assertThat(result.data().title()).isEqualTo(registerResponse.title()),
-                () -> assertThat(result.data().category()).isEqualTo(registerResponse.category()),
                 () -> assertThat(result.data().authorName()).isEqualTo(registerResponse.authorName()),
                 () -> assertThat(result.data().description()).isEqualTo(registerResponse.description()),
                 () -> assertThat(result.data().videoUrl()).isEqualTo(registerResponse.videoUrl()),
@@ -293,7 +289,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(response.message()).isNull(),
                 () -> assertThat(response.data().id()).isNotNull(),
                 () -> assertThat(response.data().title()).isEqualTo(registerRequest.title()),
-                () -> assertThat(response.data().category()).isEqualTo(registerRequest.category()),
                 () -> assertThat(response.data().authorName()).isEqualTo(registerRequest.authorName()),
                 () -> assertThat(response.data().description()).isEqualTo(registerRequest.description()),
                 () -> assertThat(response.data().videoUrl()).isEqualTo(registerRequest.videoUrl()),
@@ -362,7 +357,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
             // given
             RegisterProductRequest registerRequest = new RegisterProductRequest(
                 "title",
-                "category",
                 "authorName",
                 "1234567890".repeat(200),
                 "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
@@ -388,7 +382,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
             // given
             RegisterProductRequest request = new RegisterProductRequest(
                 "title",
-                "category",
                 "authorName",
                 null,
                 "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
@@ -425,7 +418,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
             // given
             RegisterProductRequest request = new RegisterProductRequest(
                 "1234567890".repeat(5) + "1",
-                "category",
                 "authorName",
                 "description",
                 "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
@@ -495,7 +487,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
             UpdateProductRequest request = new UpdateProductRequest(
                 "foovar1",
                 null,
-                null,
                 "description",
                 "https://youtu.be/aaa",
                 true,
@@ -528,7 +519,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.message()).isNull(),
                 () -> assertThat(result.data().id()).isEqualTo(registerResponse.id()),
                 () -> assertThat(result.data().title()).isEqualTo(request.title()),
-                () -> assertThat(result.data().category()).isEqualTo(registerResponse.category()),
                 () -> assertThat(result.data().authorName()).isEqualTo(registerResponse.authorName()),
                 () -> assertThat(result.data().description()).isEqualTo(request.description()),
                 () -> assertThat(result.data().videoUrl()).isEqualTo(request.videoUrl()),
@@ -555,7 +545,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
             ProductResponse registerResponse = registerProductV3();
             UpdateProductRequest request = new UpdateProductRequest(
                 "foovar1",
-                null,
                 null,
                 "description",
                 "https://youtu.be/aaa",
@@ -587,7 +576,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
             Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
             UpdateProductRequest request = new UpdateProductRequest(
                 "foovar1",
-                null,
                 null,
                 "description",
                 "https://youtu.be/aaa",
@@ -621,7 +609,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
             Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
             UpdateProductRequest request = new UpdateProductRequest(
                 "foovar1",
-                null,
                 null,
                 "description",
                 "https://youtu.be/aaa",

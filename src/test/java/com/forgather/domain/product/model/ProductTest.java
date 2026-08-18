@@ -1,11 +1,10 @@
 package com.forgather.domain.product.model;
 
 import static com.forgather.fixture.ProductFixture.createProductWithAuthorName;
-import static com.forgather.fixture.ProductFixture.createProductWithCategory;
 import static com.forgather.fixture.ProductFixture.createProductWithDescription;
 import static com.forgather.fixture.ProductFixture.createProductWithSpace;
 import static com.forgather.fixture.ProductFixture.createProductWithTitle;
-import static com.forgather.fixture.ProductFixture.createProductWithTitleCategoryAuthorNameDescription;
+import static com.forgather.fixture.ProductFixture.createProductWithTitleAuthorNameDescription;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -39,16 +38,6 @@ class ProductTest {
             .hasMessageContaining("작품명은 null일 수 없습니다.");
     }
 
-    @DisplayName("작품 카테고리가 null이면 빈 문자열로 저장한다")
-    @Test
-    void saveEmptyStringWhenCategoryIsNull() {
-        // when
-        Product result = createProductWithCategory(null);
-
-        // then
-        assertThat(result.getCategory()).isEqualTo("");
-    }
-
     @DisplayName("작가명이 null이면 빈 문자열로 저장한다")
     @Test
     void saveEmptyStringWhenAuthorNameIsNull() {
@@ -73,7 +62,7 @@ class ProductTest {
     @Test
     void saveEmptyStringWhenVideoUrlIsNull() {
         // when
-        Product result = createProductWithTitleCategoryAuthorNameDescription("title", "category", "authorName",
+        Product result = createProductWithTitleAuthorNameDescription("title", "authorName",
             "description", null, true);
 
         // then
@@ -84,8 +73,8 @@ class ProductTest {
     @Test
     void saveFalseWhenIsVideoAfterPhotoIsNull() {
         // when
-        Product result = createProductWithTitleCategoryAuthorNameDescription("title", "category",
-            "authorName", "description", "https://youtu.be/WdppQtgN6TM?si=ZrY0t4IUeKbGSI7D", null);
+        Product result = createProductWithTitleAuthorNameDescription("title", "authorName",
+            "description", "https://youtu.be/WdppQtgN6TM?si=ZrY0t4IUeKbGSI7D", null);
 
         // then
         assertThat(result.isVideoAfterPhoto()).isFalse();
@@ -122,40 +111,6 @@ class ProductTest {
 
         // when, then
         assertThatCode(() -> createProductWithTitle(title)).doesNotThrowAnyException();
-    }
-
-    @DisplayName("작품 카테고리는 공백일 수 있다")
-    @ValueSource(strings = {"", " "})
-    @ParameterizedTest
-    void categoryCanBeBlank(String category) {
-        // when
-        Product result = createProductWithCategory(category);
-
-        // then
-        assertThat(result.getCategory()).isEqualTo("");
-    }
-
-    @DisplayName("작품 카테고리의 길이가 20자를 초과하면 예외를 던진다")
-    @Test
-    void throwExceptionWhenExceedCategoryLength() {
-        // given
-        String category = "0123456789".repeat(2) + 1;
-
-        // when, then
-        assertThatThrownBy(() -> createProductWithCategory(category))
-            .isInstanceOf(BaseException.class)
-            .hasMessageContaining("작품 카테고리는 최대");
-    }
-
-    @DisplayName("작품 카테고리는 이모지를 한 글자로 간주해 20자까지 입력 가능하다")
-    @ValueSource(strings = {"😀", "👦", "👨", "‍👩‍", "‍👦", "‍👩‍👧‍", "👨‍👩‍👧", "👨‍👩‍👧‍👦"})
-    @ParameterizedTest
-    void countEmojiAsOneCharAtCategory(String emoji) {
-        // given
-        String category = emoji.repeat(19) + "c";
-
-        // when, then
-        assertThatCode(() -> createProductWithCategory(category)).doesNotThrowAnyException();
     }
 
     @DisplayName("작가명은 공백일 수 있다")
@@ -231,21 +186,19 @@ class ProductTest {
     void update1() {
         // given
         String title = "title";
-        String category = "category";
         String authorName = "authorName";
         String description = "description";
         String videoUrl = "https://youtu.be/WdppQtgN6TM?si=ZrY0t4IUeKbGSI7D";
         boolean isVideoAfterPhoto = true;
-        Product product = createProductWithTitleCategoryAuthorNameDescription(title, category, authorName,
+        Product product = createProductWithTitleAuthorNameDescription(title, authorName,
             description, videoUrl, isVideoAfterPhoto);
 
         // when
-        product.update("foovar1", null, null, "foovar2", null, false);
+        product.update("foovar1", null, "foovar2", null, false);
 
         // then
         assertAll(
             () -> assertThat(product.getTitle()).isEqualTo("foovar1"),
-            () -> assertThat(product.getCategory()).isEqualTo(category),
             () -> assertThat(product.getAuthorName()).isEqualTo(authorName),
             () -> assertThat(product.getDescription()).isEqualTo("foovar2"),
             () -> assertThat(product.getVideoUrl()).isEqualTo(videoUrl),
@@ -258,52 +211,24 @@ class ProductTest {
     void update2() {
         // given
         String title = "title";
-        String category = "category";
         String authorName = "authorName";
         String description = "description";
         String videoUrl = "https://youtu.be/WdppQtgN6TM?si=ZrY0t4IUeKbGSI7D";
         boolean isVideoAfterPhoto = true;
-        Product product = createProductWithTitleCategoryAuthorNameDescription(title, category, authorName,
+        Product product = createProductWithTitleAuthorNameDescription(title, authorName,
             description, videoUrl, isVideoAfterPhoto);
 
         // when
-        product.update(null, "foovar1", "foovar2", null,
+        product.update(null, "foovar1", null,
             "https://youtu.be/nw4Ij9yq-1A?si=4Q6nhk6QTPQL8pEc", null);
 
         // then
         assertAll(
             () -> assertThat(product.getTitle()).isEqualTo(title),
-            () -> assertThat(product.getCategory()).isEqualTo("foovar1"),
-            () -> assertThat(product.getAuthorName()).isEqualTo("foovar2"),
+            () -> assertThat(product.getAuthorName()).isEqualTo("foovar1"),
             () -> assertThat(product.getDescription()).isEqualTo(description),
             () -> assertThat(product.getVideoUrl()).isEqualTo("https://youtu.be/nw4Ij9yq-1A?si=4Q6nhk6QTPQL8pEc"),
             () -> assertThat(product.isVideoAfterPhoto()).isEqualTo(isVideoAfterPhoto)
-        );
-    }
-
-    @DisplayName("작품 카테고리를 빈 문자열로 수정한다")
-    @ValueSource(strings = {"", " "})
-    @ParameterizedTest
-    void canUpdateCategoryToBlank(String updateCategory) {
-        // given
-        String title = "title";
-        String category = "category";
-        String authorName = "authorName";
-        String description = "description";
-        String videoUrl = "https://youtu.be/WdppQtgN6TM?si=ZrY0t4IUeKbGSI7D";
-        boolean isVideoAfterPhoto = true;
-        Product product = createProductWithTitleCategoryAuthorNameDescription(title, category, authorName,
-            description, videoUrl, isVideoAfterPhoto);
-
-        // when
-        product.update("foovar1", updateCategory, null, "foovar2", null, null);
-
-        // then
-        assertAll(
-            () -> assertThat(product.getTitle()).isEqualTo("foovar1"),
-            () -> assertThat(product.getCategory()).isEqualTo(""),
-            () -> assertThat(product.getAuthorName()).isEqualTo(authorName),
-            () -> assertThat(product.getDescription()).isEqualTo("foovar2")
         );
     }
 
@@ -313,21 +238,19 @@ class ProductTest {
     void updateAuthorNameToBlank(String updateAuthorName) {
         // given
         String title = "title";
-        String category = "category";
         String authorName = "authorName";
         String description = "description";
         String videoUrl = "https://youtu.be/WdppQtgN6TM?si=ZrY0t4IUeKbGSI7D";
         boolean isVideoAfterPhoto = true;
-        Product product = createProductWithTitleCategoryAuthorNameDescription(title, category, authorName,
-            description,  videoUrl, isVideoAfterPhoto);
+        Product product = createProductWithTitleAuthorNameDescription(title, authorName,
+            description, videoUrl, isVideoAfterPhoto);
 
         // when
-        product.update("foovar1", null, updateAuthorName, "foovar2", null, null);
+        product.update("foovar1", updateAuthorName, "foovar2", null, null);
 
         // then
         assertAll(
             () -> assertThat(product.getTitle()).isEqualTo("foovar1"),
-            () -> assertThat(product.getCategory()).isEqualTo(category),
             () -> assertThat(product.getAuthorName()).isEqualTo(""),
             () -> assertThat(product.getDescription()).isEqualTo("foovar2")
         );
@@ -339,21 +262,19 @@ class ProductTest {
     void updateDescriptionToBlank(String updateDescription) {
         // given
         String title = "title";
-        String category = "category";
         String authorName = "authorName";
         String description = "description";
         String videoUrl = "https://youtu.be/WdppQtgN6TM?si=ZrY0t4IUeKbGSI7D";
         boolean isVideoAfterPhoto = true;
-        Product product = createProductWithTitleCategoryAuthorNameDescription(title, category, authorName,
+        Product product = createProductWithTitleAuthorNameDescription(title, authorName,
             description, videoUrl, isVideoAfterPhoto);
 
         // when
-        product.update("foovar1", null, null, updateDescription, null, null);
+        product.update("foovar1", null, updateDescription, null, null);
 
         // then
         assertAll(
             () -> assertThat(product.getTitle()).isEqualTo("foovar1"),
-            () -> assertThat(product.getCategory()).isEqualTo(category),
             () -> assertThat(product.getAuthorName()).isEqualTo(authorName),
             () -> assertThat(product.getDescription()).isEqualTo("")
         );

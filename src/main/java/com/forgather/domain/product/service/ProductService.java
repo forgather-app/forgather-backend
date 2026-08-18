@@ -99,7 +99,7 @@ public class ProductService {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(host, space);
         Product product = productRepository.getBySpaceAndIdAndDeletedAtIsNullOrThrow(space, productId);
-        product.update(request.title(), request.category(), request.authorName(), request.description(),
+        product.update(request.title(), request.authorName(), request.description(),
             request.videoUrl(), request.isVideoAfterPhoto());
 
         // 삭제 사진 db 및 클라우드 삭제
