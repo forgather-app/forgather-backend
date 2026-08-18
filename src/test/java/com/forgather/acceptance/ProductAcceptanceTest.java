@@ -328,9 +328,9 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 .statusCode(201);
         }
 
-        @DisplayName("작품 3개를 초과해서 등록하면 예외를 던진다")
+        @DisplayName("작품 개수 제한 없이 3개를 초과해서 등록할 수 있다")
         @Test
-        void throwExceptionWhenProductExceedMaxCount() {
+        void registerProductsWithoutMaxCountLimit() {
             // given
             registerProductV3();
             registerProductV3();
@@ -346,9 +346,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 .when()
                 .post("/spaces/%s/products".formatted(space.getCode()))
                 .then()
-                .statusCode(400)
-                .body("code", equalTo("BAD_REQUEST"))
-                .body("message", containsString("작품은 3개까지만 등록 가능"));
+                .statusCode(201);
         }
 
         @DisplayName("작품 설명을 2000자까지 작성할 수 있다")

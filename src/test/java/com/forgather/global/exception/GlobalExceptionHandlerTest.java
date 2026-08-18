@@ -250,9 +250,9 @@ class GlobalExceptionHandlerTest {
         @DisplayName("BaseException 직접 throw (default 400) -> 400 / BAD_REQUEST")
         @Test
         void baseException_default400() throws Exception {
-            Snapshot res = perform(new BaseException("작품은 3개까지만 등록 가능합니다."));
+            Snapshot res = perform(new BaseException("작품명은 공백만 입력할 수 없습니다."));
 
-            assertEnvelope(res, 400, "BAD_REQUEST", "작품은 3개까지만 등록 가능합니다.");
+            assertEnvelope(res, 400, "BAD_REQUEST", "작품명은 공백만 입력할 수 없습니다.");
         }
 
         @DisplayName("BaseException(401) 직접 throw -> 401 / UNAUTHORIZED (status와 code 일치)")
