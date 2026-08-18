@@ -23,7 +23,7 @@ public record PublicHostProfileResponse(
     @Schema(description = "링크 URL", example = "https://forgather.app/")
     String linkUrl,
 
-    @Schema(description = "프로필 사진 경로 (미설정 시 null)", example = "photogather/v2/hosts/1/profile/UUID1.webp")
+    @Schema(description = "프로필 사진 경로 (미설정 시 null)", example = "images/prod/hosts/1/profile/UUID1.webp")
     String photoPath
 ) {
 
