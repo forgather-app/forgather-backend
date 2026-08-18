@@ -93,12 +93,7 @@ public class AuthController {
             "stateless JWT 구조이므로 서버 측에서 발급된 토큰을 무효화하지는 않습니다. " +
             "클라이언트가 보관 중인 토큰은 직접 폐기해야 합니다.")
     public ResponseEntity<ApiResponse<Void>> logout() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.SET_COOKIE, authCookieProvider.expireAccessTokenCookie().toString());
-        headers.add(HttpHeaders.SET_COOKIE, authCookieProvider.expireRefreshTokenCookie().toString());
-        return ResponseEntity.ok()
-            .headers(headers)
-            .body(ApiResponse.success());
+        return createExpiredCookieResponse();
     }
 
     @PostMapping("/onboarding")
@@ -120,12 +115,7 @@ public class AuthController {
             "탈퇴 후 같은 소셜 계정으로 다시 로그인하면 신규 가입으로 처리됩니다.")
     public ResponseEntity<ApiResponse<Void>> withdraw(@LoginHost Host host) {
         withdrawService.withdraw(host);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.SET_COOKIE, authCookieProvider.expireAccessTokenCookie().toString());
-        headers.add(HttpHeaders.SET_COOKIE, authCookieProvider.expireRefreshTokenCookie().toString());
-        return ResponseEntity.ok()
-            .headers(headers)
-            .body(ApiResponse.success());
+        return createExpiredCookieResponse();
     }
 
     private String resolveRefreshToken(RefreshRequest request, String refreshTokenCookie) {
@@ -136,6 +126,15 @@ public class AuthController {
             return refreshTokenCookie;
         }
         throw new UnauthorizedException("리프레시 토큰이 필요합니다.");
+    }
+
+    private ResponseEntity<ApiResponse<Void>> createExpiredCookieResponse() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, authCookieProvider.expireAccessTokenCookie().toString());
+        headers.add(HttpHeaders.SET_COOKIE, authCookieProvider.expireRefreshTokenCookie().toString());
+        return ResponseEntity.ok()
+            .headers(headers)
+            .body(ApiResponse.success());
     }
 
     private ResponseEntity<ApiResponse<LoginResponse>> createTokenResponse(LoginResponse response) {
