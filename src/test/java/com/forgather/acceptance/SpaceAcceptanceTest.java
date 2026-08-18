@@ -362,9 +362,29 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(result.data().spaceCode()).isEqualTo(space.getCode()),
             () -> assertThat(result.data().spacePhotoPath()).isEqualTo(firstPhoto.getPath()),
             () -> assertThat(result.data().guestBookCardCount()).isEqualTo(2),
+            () -> assertThat(result.data().isFeatured()).isFalse(),
             () -> assertThat(result.data().host().code()).isEqualTo(host.getCode()),
             () -> assertThat(result.data().host().nickname()).isEqualTo(host.getNickname()),
             () -> assertThat(result.data().host().photoPath()).isNull()
+        );
+    }
+
+    @DisplayName("'지금 축하받고 있는 스페이스'로 지정된 스페이스를 상세 조회하면 isFeatured가 true로 응답한다.")
+    @Test
+    void getFeaturedSpaceInformation() {
+        // given
+        Space space = spaceRepository.save(SpaceFixture.createSpace());
+        spaceHostRepository.save(new SpaceHost(space, host));
+        feature(space.getCode());
+
+        // when
+        ApiResponse<SpaceResponse> result = getSpace(space.getCode());
+
+        // then
+        assertAll(
+            () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+            () -> assertThat(result.data().spaceCode()).isEqualTo(space.getCode()),
+            () -> assertThat(result.data().isFeatured()).isTrue()
         );
     }
 
