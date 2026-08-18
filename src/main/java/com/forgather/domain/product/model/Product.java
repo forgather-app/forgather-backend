@@ -25,6 +25,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Product extends SoftDeleteEntity {
 
+    private static final int MAX_TITLE_LENGTH = 50;
+    private static final int MAX_CATEGORY_LENGTH = 20;
+    private static final int MAX_AUTHOR_NAME_LENGTH = 35;
+    private static final int MAX_DESCRIPTION_LENGTH = 2000;
+    private static final int MAX_VIDEO_URL_LENGTH = 512;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -42,7 +48,7 @@ public class Product extends SoftDeleteEntity {
     @Column(name = "author_name", nullable = false)
     private String authorName;
 
-    @Column(name = "description", length = 2000, nullable = false)
+    @Column(name = "description", length = MAX_DESCRIPTION_LENGTH, nullable = false)
     private String description;
 
     @Column(name = "video_url", nullable = false)
@@ -142,32 +148,32 @@ public class Product extends SoftDeleteEntity {
         if (title.isBlank()) {
             throw new BaseException("작품명은 공백만 입력할 수 없습니다.");
         }
-        if (TextLengthCounter.count(title) > 50) {
-            throw new BaseException("작품명은 최대 50자까지 입력 가능합니다.");
+        if (TextLengthCounter.count(title) > MAX_TITLE_LENGTH) {
+            throw new BaseException("작품명은 최대 %d자까지 입력 가능합니다.".formatted(MAX_TITLE_LENGTH));
         }
     }
 
     private void validateCategory(String category) {
-        if (TextLengthCounter.count(category) > 20) {
-            throw new BaseException("작품 카테고리는 최대 20자까지 입력 가능합니다.");
+        if (TextLengthCounter.count(category) > MAX_CATEGORY_LENGTH) {
+            throw new BaseException("작품 카테고리는 최대 %d자까지 입력 가능합니다.".formatted(MAX_CATEGORY_LENGTH));
         }
     }
 
     private void validateAuthorName(String authorName) {
-        if (TextLengthCounter.count(authorName) > 35) {
-            throw new BaseException("작가명은 최대 35자까지 입력 가능합니다.");
+        if (TextLengthCounter.count(authorName) > MAX_AUTHOR_NAME_LENGTH) {
+            throw new BaseException("작가명은 최대 %d자까지 입력 가능합니다.".formatted(MAX_AUTHOR_NAME_LENGTH));
         }
     }
 
     private void validateDescription(String description) {
-        if (TextLengthCounter.count(description) > 2000) {
-            throw new BaseException("작품 설명은 최대 2000자까지 입력 가능합니다.");
+        if (TextLengthCounter.count(description) > MAX_DESCRIPTION_LENGTH) {
+            throw new BaseException("작품 설명은 최대 %d자까지 입력 가능합니다.".formatted(MAX_DESCRIPTION_LENGTH));
         }
     }
 
     private void validateVideoUrl(String videoUrl) {
-        if (TextLengthCounter.count(videoUrl) > 512) {
-            throw new BaseException("임베드 영상 링크는 최대 512자까지 입력 가능합니다.");
+        if (TextLengthCounter.count(videoUrl) > MAX_VIDEO_URL_LENGTH) {
+            throw new BaseException("임베드 영상 링크는 최대 %d자까지 입력 가능합니다.".formatted(MAX_VIDEO_URL_LENGTH));
         }
     }
 
