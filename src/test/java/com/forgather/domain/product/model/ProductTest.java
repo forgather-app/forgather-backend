@@ -39,31 +39,56 @@ class ProductTest {
             .hasMessageContaining("작품명은 null일 수 없습니다.");
     }
 
-    @DisplayName("작품 카테고리가 null이면 예외를 던진다")
+    @DisplayName("작품 카테고리가 null이면 빈 문자열로 저장한다")
     @Test
-    void throwExceptionWhenCategoryIsNull() {
-        // when, then
-        assertThatThrownBy(() -> createProductWithCategory(null))
-            .isInstanceOf(BaseNullPointerException.class)
-            .hasMessageContaining("작품 카테고리는 null일 수 없습니다.");
+    void saveEmptyStringWhenCategoryIsNull() {
+        // when
+        Product result = createProductWithCategory(null);
+
+        // then
+        assertThat(result.getCategory()).isEqualTo("");
     }
 
-    @DisplayName("작가명이 null이면 예외를 던진다")
+    @DisplayName("작가명이 null이면 빈 문자열로 저장한다")
     @Test
-    void throwExceptionWhenAuthorNameIsNull() {
-        // when, then
-        assertThatThrownBy(() -> createProductWithAuthorName(null))
-            .isInstanceOf(BaseNullPointerException.class)
-            .hasMessageContaining("작가명은 null일 수 없습니다.");
+    void saveEmptyStringWhenAuthorNameIsNull() {
+        // when
+        Product result = createProductWithAuthorName(null);
+
+        // then
+        assertThat(result.getAuthorName()).isEqualTo("");
     }
 
-    @DisplayName("작품 설명이 null이면 예외를 던진다")
+    @DisplayName("작품 설명이 null이면 빈 문자열로 저장한다")
     @Test
-    void throwExceptionWhenDescriptionIsNull() {
-        // when, then
-        assertThatThrownBy(() -> createProductWithDescription(null))
-            .isInstanceOf(BaseNullPointerException.class)
-            .hasMessageContaining("작품 설명은 null일 수 없습니다.");
+    void saveEmptyStringWhenDescriptionIsNull() {
+        // when
+        Product result = createProductWithDescription(null);
+
+        // then
+        assertThat(result.getDescription()).isEqualTo("");
+    }
+
+    @DisplayName("임베드 영상 링크가 null이면 빈 문자열로 저장한다")
+    @Test
+    void saveEmptyStringWhenVideoUrlIsNull() {
+        // when
+        Product result = createProductWithTitleCategoryAuthorNameDescription("title", "category", "authorName",
+            "description", null, true);
+
+        // then
+        assertThat(result.getVideoUrl()).isEqualTo("");
+    }
+
+    @DisplayName("임베드 영상 위치가 null이면 false로 저장한다")
+    @Test
+    void saveFalseWhenIsVideoAfterPhotoIsNull() {
+        // when
+        Product result = createProductWithTitleCategoryAuthorNameDescription("title", "category",
+            "authorName", "description", "https://youtu.be/WdppQtgN6TM?si=ZrY0t4IUeKbGSI7D", null);
+
+        // then
+        assertThat(result.isVideoAfterPhoto()).isFalse();
     }
 
     @DisplayName("작품명이 공백이면 예외를 던진다")
@@ -167,14 +192,15 @@ class ProductTest {
         assertThatCode(() -> createProductWithAuthorName(authorName)).doesNotThrowAnyException();
     }
 
-    @DisplayName("작품 설명이 공백이면 예외를 던진다")
+    @DisplayName("작품 설명은 공백일 수 있다")
     @ValueSource(strings = {"", " "})
     @ParameterizedTest
-    void throwExceptionWhenBlankDescription(String description) {
-        // when, then
-        assertThatThrownBy(() -> createProductWithDescription(description))
-            .isInstanceOf(BaseException.class)
-            .hasMessageContaining("작품 설명은 공백만 입력할 수 없습니다.");
+    void descriptionCanBeBlank(String description) {
+        // when
+        Product result = createProductWithDescription(description);
+
+        // then
+        assertThat(result.getDescription()).isEqualTo("");
     }
 
     @DisplayName("작품 설명의 길이가 2000자를 초과하면 예외를 던진다")
@@ -304,6 +330,32 @@ class ProductTest {
             () -> assertThat(product.getCategory()).isEqualTo(category),
             () -> assertThat(product.getAuthorName()).isEqualTo(""),
             () -> assertThat(product.getDescription()).isEqualTo("foovar2")
+        );
+    }
+
+    @DisplayName("작품 설명을 빈 문자열로 수정한다")
+    @ValueSource(strings = {"", " "})
+    @ParameterizedTest
+    void updateDescriptionToBlank(String updateDescription) {
+        // given
+        String title = "title";
+        String category = "category";
+        String authorName = "authorName";
+        String description = "description";
+        String videoUrl = "https://youtu.be/WdppQtgN6TM?si=ZrY0t4IUeKbGSI7D";
+        boolean isVideoAfterPhoto = true;
+        Product product = createProductWithTitleCategoryAuthorNameDescription(title, category, authorName,
+            description, videoUrl, isVideoAfterPhoto);
+
+        // when
+        product.update("foovar1", null, null, updateDescription, null, null);
+
+        // then
+        assertAll(
+            () -> assertThat(product.getTitle()).isEqualTo("foovar1"),
+            () -> assertThat(product.getCategory()).isEqualTo(category),
+            () -> assertThat(product.getAuthorName()).isEqualTo(authorName),
+            () -> assertThat(product.getDescription()).isEqualTo("")
         );
     }
 }

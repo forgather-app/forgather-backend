@@ -382,6 +382,43 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 .statusCode(201);
         }
 
+        @DisplayName("작품 설명 없이 작품을 등록하면 빈 문자열로 저장된다")
+        @Test
+        void registerWithoutDescription() {
+            // given
+            RegisterProductRequest request = new RegisterProductRequest(
+                "title",
+                "category",
+                "authorName",
+                null,
+                "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
+                false,
+                List.of()
+            );
+
+            // when
+            ApiResponse<ProductResponse> response = RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "3")
+                .body(request)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(201)
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+            // then
+            assertAll(
+                () -> assertThat(response.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(response.data().description()).isEqualTo("")
+            );
+        }
+
         @DisplayName("작품명이 50자를 초과하면 검증에 실패한다")
         @Test
         void throwExceptionWhenTitleExceedMaxLength() {
