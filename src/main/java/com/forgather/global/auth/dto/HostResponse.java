@@ -14,7 +14,7 @@ public record HostResponse(
     String name,
 
     @Schema(description = "호스트 프로필 사진 경로 (미설정 시 null)",
-        example = "photogather/v2/hosts/1/profile/UUID1.webp")
+        example = "images/prod/hosts/1/profile/UUID1.webp")
     String photoPath,
 
     @Schema(description = "온보딩 완료 여부", example = "true")

@@ -14,7 +14,7 @@ public record SpaceHostInfoResponse(
     String nickname,
 
     @Schema(description = "호스트 프로필 사진 경로 (미설정 시 null)",
-        example = "photogather/v2/hosts/1/profile/UUID1.webp", nullable = true)
+        example = "images/prod/hosts/1/profile/UUID1.webp", nullable = true)
     String photoPath
 ) {
 

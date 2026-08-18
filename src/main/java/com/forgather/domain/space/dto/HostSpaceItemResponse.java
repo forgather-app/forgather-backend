@@ -29,7 +29,7 @@ public record HostSpaceItemResponse(
     String linkName,
 
     @Schema(description = "스페이스 사진 경로 (대표 작품의 첫 번째 사진). 작품이 없거나 대표 작품에 사진이 없으면 null이며, 기본 사진 노출은 클라이언트가 담당한다.",
-        example = "photogather/v2/spaces/1234567890/product/UUID.webp", nullable = true)
+        example = "images/prod/spaces/1234567890/product/UUID.webp", nullable = true)
     String spacePhotoPath,
 
     @Schema(description = "스페이스 방명록 카드 개수", example = "15")

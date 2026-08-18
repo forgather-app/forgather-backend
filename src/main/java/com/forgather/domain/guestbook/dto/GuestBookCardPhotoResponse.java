@@ -11,7 +11,7 @@ public record GuestBookCardPhotoResponse(
     @Schema(description = "사진 원본명", example = "photo1.jpg")
     String originalName,
 
-    @Schema(description = "사진 업로드 경로", example = "photogather/v2/spaces/1234567890/guestbook/abc.jpg")
+    @Schema(description = "사진 업로드 경로", example = "images/prod/spaces/1234567890/guestbook/abc.jpg")
     String path
 ) {
 
