@@ -36,6 +36,9 @@ public record SpaceResponse(
         example = "15", nullable = true)
     Long guestBookCardCount,
 
+    @Schema(description = "'지금 축하받고 있는 스페이스'로 지정되었는지 여부", example = "true")
+    boolean isFeatured,
+
     @Schema(description = "스페이스 호스트 정보")
     SpaceHostInfoResponse host
 ) {
@@ -52,6 +55,7 @@ public record SpaceResponse(
             space.getLinkName(),
             (spacePhoto == null) ? null : spacePhoto.getPath(),
             guestBookCardCount,
+            space.isFeatured(),
             host
         );
     }
