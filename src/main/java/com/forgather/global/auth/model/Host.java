@@ -2,11 +2,13 @@ package com.forgather.global.auth.model;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.springframework.http.HttpStatus;
 
 import com.forgather.domain.model.SoftDeleteEntity;
+import com.forgather.domain.term.model.TermType;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.util.TextLengthCounter;
@@ -208,6 +210,13 @@ public class Host extends SoftDeleteEntity {
         return nickname != null
             && !nickname.isBlank()
             && TextLengthCounter.count(nickname) <= MAX_NICKNAME_LENGTH;
+    }
+
+    /**
+     * 온보딩 완료 여부를 판정한다. 닉네임이 유효하고 필수 약관에 모두 동의한 상태여야 한다.
+     */
+    public boolean isOnboardingCompleted(Set<TermType> agreedTermTypes) {
+        return hasValidNickname() && agreedTermTypes.containsAll(TermType.requiredTypes());
     }
 
     @Override

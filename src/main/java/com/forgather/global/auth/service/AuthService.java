@@ -139,7 +139,8 @@ public class AuthService {
     }
 
     public HostResponse getCurrentUser(Host host) {
-        return HostResponse.of(host, findProfilePhoto(host), isOnboardingCompleted(host));
+        Set<TermType> agreedTypes = hostTermHistoryRepository.findAgreedTermTypesByHostId(host.getId());
+        return HostResponse.of(host, findProfilePhoto(host), host.isOnboardingCompleted(agreedTypes));
     }
 
     private HostProfilePhoto findProfilePhoto(Host host) {
@@ -182,7 +183,8 @@ public class AuthService {
      * 동의/철회 상태 변경은 별도 토글 API의 책임이다.
      */
     private void validateOnboardingNotCompleted(Host host) {
-        if (isOnboardingCompleted(host)) {
+        Set<TermType> agreedTypes = hostTermHistoryRepository.findAgreedTermTypesByHostId(host.getId());
+        if (host.isOnboardingCompleted(agreedTypes)) {
             throw new ConflictException("이미 온보딩이 완료된 호스트입니다. hostId: " + host.getId());
         }
     }
@@ -229,14 +231,6 @@ public class AuthService {
         return terms.stream()
             .map(Term::getType)
             .collect(Collectors.toSet());
-    }
-
-    private boolean isOnboardingCompleted(Host host) {
-        if (!host.hasValidNickname()) {
-            return false;
-        }
-        Set<TermType> agreedTypes = hostTermHistoryRepository.findAgreedTermTypesByHostId(host.getId());
-        return agreedTypes.containsAll(TermType.requiredTypes());
     }
 
     private List<Term> getActiveTermsByIds(List<Long> termIds) {
