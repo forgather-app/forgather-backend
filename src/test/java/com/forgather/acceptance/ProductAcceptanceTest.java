@@ -410,6 +410,43 @@ class ProductAcceptanceTest extends AcceptanceTest {
             );
         }
 
+        @DisplayName("멀티 코드포인트 이모지로만 이루어진 작품명 50자를 등록할 수 있다")
+        @Test
+        void registerWithMultiCodePointEmojiTitle() {
+            // given
+            String title = "👨‍👩‍👧‍👦".repeat(50); // grapheme 50자, 코드포인트 350개
+            RegisterProductRequest request = new RegisterProductRequest(
+                title,
+                "authorName",
+                "description",
+                "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
+                false,
+                List.of()
+            );
+
+            // when
+            ApiResponse<ProductResponse> response = RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "3")
+                .body(request)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(201)
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+            // then
+            assertAll(
+                () -> assertThat(response.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(response.data().title()).isEqualTo(title)
+            );
+        }
+
         @DisplayName("작품명이 50자를 초과하면 검증에 실패한다")
         @Test
         void throwExceptionWhenTitleExceedMaxLength() {

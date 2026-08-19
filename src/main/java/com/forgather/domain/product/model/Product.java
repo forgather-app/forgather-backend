@@ -29,6 +29,8 @@ public class Product extends SoftDeleteEntity {
     private static final int MAX_AUTHOR_NAME_LENGTH = 35;
     private static final int MAX_DESCRIPTION_LENGTH = 2000;
     private static final int MAX_VIDEO_URL_LENGTH = 512;
+    // 컬럼 길이는 grapheme 검증 한도 × 10 (RGI 표준 최장 이모지 = 10 코드포인트)
+    private static final int TITLE_COLUMN_LENGTH = MAX_TITLE_LENGTH * 10;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,7 +40,7 @@ public class Product extends SoftDeleteEntity {
     @JoinColumn(name = "space_id", nullable = false)
     private Space space;
 
-    @Column(name = "title", nullable = false)
+    @Column(name = "title", nullable = false, length = TITLE_COLUMN_LENGTH)
     private String title;
 
     @Column(name = "author_name", nullable = false)
