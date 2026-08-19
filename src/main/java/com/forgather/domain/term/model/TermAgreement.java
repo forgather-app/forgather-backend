@@ -32,9 +32,30 @@ public class TermAgreement {
         }
     }
 
+    /**
+     * 선택 약관은 거절·철회·이력 없음을 "사용자가 원치 않은 것"으로 보고 다시 묻지 않는다.
+     * 마지막 액션이 동의였는데 개정으로 무효화된 경우에만 재동의를 권유한다.
+     */
+    public boolean isReagreementRequired() {
+        if (isAgreed()) {
+            return false;
+        }
+        if (latestTerm.isRequiredType()) {
+            return true;
+        }
+        return isLastActionAgree();
+    }
+
     public boolean isAgreed() {
-        return isAgreeAction()
+        return isLastActionAgree()
             && latestTerm.isAgreedVersionValid(lastHistory.getTerm().getVersion());
+    }
+
+    /**
+     * 이력이 존재하고 그중 마지막 액션이 AGREE인지 판정한다.
+     */
+    public boolean isLastActionAgree() {
+        return lastHistory != null && lastHistory.isAgreeAction();
     }
 
     public LocalDateTime getAgreedAt() {
@@ -42,23 +63,5 @@ public class TermAgreement {
             return null;
         }
         return lastHistory.getCreatedAt();
-    }
-
-    /**
-     * 선택 약관은 거절·철회·이력 없음을 "사용자가 원치 않은 것"으로 보고 다시 묻지 않는다.
-     * 동의 의사가 있었는데 개정으로 무효화된 경우에만 재동의를 권유한다.
-     */
-    public boolean isReagreementRequired() {
-        if (isAgreed()) {
-            return false;
-        }
-        if (latestTerm.getType().isRequired()) {
-            return true;
-        }
-        return isAgreeAction();
-    }
-
-    private boolean isAgreeAction() {
-        return lastHistory != null && lastHistory.isAgreeAction();
     }
 }

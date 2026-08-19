@@ -94,7 +94,7 @@ public class DevAuthService {
         Map<Boolean, List<Long>> termIdsByRequired = termRepository.findLatestTerms()
             .stream()
             .collect(Collectors.partitioningBy(
-                term -> term.getType().isRequired(),
+                Term::isRequiredType,
                 Collectors.mapping(Term::getId, Collectors.toList())));
         authService.submitOnboarding(host, new OnboardingRequest(
             devLoginProperties.getNickname(),

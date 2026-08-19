@@ -49,7 +49,7 @@ public record TermAgreementResponse(
             latestTerm.getName(),
             latestTerm.getVersion().getValue(),
             latestTerm.getContent(),
-            latestTerm.getType().isRequired(),
+            latestTerm.isRequiredType(),
             latestTerm.getSortOrder(),
             agreement.isAgreed(),
             agreement.getAgreedAt(),
