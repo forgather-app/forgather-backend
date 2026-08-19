@@ -8,11 +8,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.forgather.domain.term.model.TermType;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
 
@@ -306,6 +308,50 @@ class HostTest {
                 .hasMessageContaining("링크 URL은 최대 2048자까지 가능합니다");
         }
 
+    }
+
+    @Nested
+    @DisplayName("온보딩 완료 판정")
+    class IsOnboardingCompleted {
+
+        @DisplayName("닉네임이 유효하고 필수 약관에 모두 동의했으면 온보딩 완료다")
+        @Test
+        void completedWhenNicknameAndAllRequiredTermsAgreed() {
+            // given
+            Host host = createHost();
+
+            // when
+            boolean result = host.isOnboardingCompleted(TermType.requiredTypes());
+
+            // then
+            assertThat(result).isTrue();
+        }
+
+        @DisplayName("닉네임이 없으면 필수 약관에 모두 동의했어도 온보딩 미완료다")
+        @Test
+        void notCompletedWithoutNickname() {
+            // given
+            Host host = new Host(VALID_CODE, "포스티", "posty@forgather.app");
+
+            // when
+            boolean result = host.isOnboardingCompleted(TermType.requiredTypes());
+
+            // then
+            assertThat(result).isFalse();
+        }
+
+        @DisplayName("필수 약관 중 일부만 동의했으면 온보딩 미완료다")
+        @Test
+        void notCompletedWhenSomeRequiredTermNotAgreed() {
+            // given
+            Host host = createHost();
+
+            // when
+            boolean result = host.isOnboardingCompleted(Set.of(TermType.SERVICE, TermType.MARKETING));
+
+            // then
+            assertThat(result).isFalse();
+        }
     }
 
     @DisplayName("닉네임을 10자 초과로 변경하면 예외가 발생한다")

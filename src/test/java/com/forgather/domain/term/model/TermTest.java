@@ -148,4 +148,33 @@ class TermTest {
             );
         }
     }
+
+    @Nested
+    @DisplayName("필수 약관 판정")
+    class RequiredTypeJudgement {
+
+        @DisplayName("유형이 필수면 필수 약관이다")
+        @Test
+        void requiredWhenTypeIsRequired() {
+            // given
+            Term serviceTerm = new Term(TermType.SERVICE, "서비스 이용약관", "1.0.0", "1.0.0", "내용", 1);
+            Term privacyTerm = new Term(TermType.PRIVACY, "개인정보 수집 동의", "1.0.0", "1.0.0", "내용", 2);
+
+            // when & then
+            assertAll(
+                () -> assertThat(serviceTerm.isRequiredType()).isTrue(),
+                () -> assertThat(privacyTerm.isRequiredType()).isTrue()
+            );
+        }
+
+        @DisplayName("유형이 선택이면 필수 약관이 아니다")
+        @Test
+        void notRequiredWhenTypeIsOptional() {
+            // given
+            Term marketingTerm = new Term(TermType.MARKETING, "마케팅 정보 수신 동의", "1.0.0", "1.0.0", "내용", 3);
+
+            // when & then
+            assertThat(marketingTerm.isRequiredType()).isFalse();
+        }
+    }
 }
