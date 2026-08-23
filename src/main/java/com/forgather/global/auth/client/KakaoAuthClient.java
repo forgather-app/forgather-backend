@@ -13,6 +13,7 @@ import org.springframework.web.client.RestClientResponseException;
 
 import com.forgather.global.config.KakaoProperties;
 import com.forgather.global.exception.BaseException;
+import com.forgather.global.exception.ExternalApiException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -51,9 +52,20 @@ public class KakaoAuthClient {
                 .retrieve()
                 .toBodilessEntity();
         } catch (RestClientResponseException e) {
-            throw new BaseException("Kakao unlink에 실패했습니다.", HttpStatus.BAD_GATEWAY, e);
+            throw toKakaoUnlinkException(e);
         } catch (RestClientException e) {
-            throw new BaseException("Kakao 서버에 연결할 수 없습니다.", HttpStatus.BAD_GATEWAY, e);
+            throw new ExternalApiException("Kakao 서버에 연결할 수 없습니다.", e);
         }
+    }
+
+    /**
+     * 4xx는 admin key 오류나 잘못된 target_id 등 우리 쪽 문제이므로 500으로 남긴다.
+     * 5xx만 외부 장애로 분류한다.
+     */
+    private BaseException toKakaoUnlinkException(RestClientResponseException exception) {
+        if (exception.getStatusCode().is5xxServerError()) {
+            return new ExternalApiException("Kakao 서버에 장애가 발생했습니다.", exception);
+        }
+        return new BaseException("Kakao unlink에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, exception);
     }
 }

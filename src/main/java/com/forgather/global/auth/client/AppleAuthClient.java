@@ -16,6 +16,7 @@ import com.forgather.global.auth.dto.AppleTokenResponse;
 import com.forgather.global.auth.util.AppleClientSecretProvider;
 import com.forgather.global.config.AppleProperties;
 import com.forgather.global.exception.BaseException;
+import com.forgather.global.exception.ExternalApiException;
 
 @Component
 public class AppleAuthClient {
@@ -60,7 +61,7 @@ public class AppleAuthClient {
         } catch (RestClientResponseException e) {
             throw toAppleTokenException(e);
         } catch (RestClientException e) {
-            throw new BaseException("Apple token 서버에 연결할 수 없습니다.", HttpStatus.BAD_GATEWAY, e);
+            throw new ExternalApiException("Apple token 서버에 연결할 수 없습니다.", e);
         }
     }
 
@@ -83,9 +84,9 @@ public class AppleAuthClient {
                 .retrieve()
                 .toBodilessEntity();
         } catch (RestClientResponseException e) {
-            throw new BaseException("Apple token revoke에 실패했습니다.", HttpStatus.BAD_GATEWAY, e);
+            throw toAppleRevokeException(e);
         } catch (RestClientException e) {
-            throw new BaseException("Apple token 서버에 연결할 수 없습니다.", HttpStatus.BAD_GATEWAY, e);
+            throw new ExternalApiException("Apple token 서버에 연결할 수 없습니다.", e);
         }
     }
 
@@ -95,11 +96,14 @@ public class AppleAuthClient {
             || !StringUtils.hasText(response.refreshToken())
             || !StringUtils.hasText(response.idToken())
             || response.expiresIn() == null) {
-            throw new BaseException("Apple token 응답이 올바르지 않습니다.", HttpStatus.BAD_GATEWAY);
+            throw new ExternalApiException("Apple token 응답이 올바르지 않습니다.");
         }
     }
 
     private BaseException toAppleTokenException(RestClientResponseException exception) {
+        if (exception.getStatusCode().is5xxServerError()) {
+            return new ExternalApiException("Apple token 서버에 장애가 발생했습니다.", exception);
+        }
         String error = parseError(exception.getResponseBodyAsString());
         return switch (error) {
             case "invalid_grant" ->
@@ -112,6 +116,17 @@ public class AppleAuthClient {
                 new BaseException("Apple token 서버 인증에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, exception);
             default -> new BaseException("Apple token 교환에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, exception);
         };
+    }
+
+    /**
+     * 4xx는 client_secret 설정 오류나 저장된 refresh token이 잘못된 우리 쪽 문제이므로 500으로 남긴다.
+     * 5xx만 외부 장애로 분류한다.
+     */
+    private BaseException toAppleRevokeException(RestClientResponseException exception) {
+        if (exception.getStatusCode().is5xxServerError()) {
+            return new ExternalApiException("Apple token 서버에 장애가 발생했습니다.", exception);
+        }
+        return new BaseException("Apple token revoke에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, exception);
     }
 
     private String parseError(String responseBody) {

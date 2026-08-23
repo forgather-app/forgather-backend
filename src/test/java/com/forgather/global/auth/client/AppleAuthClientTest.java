@@ -27,8 +27,10 @@ import com.forgather.global.auth.dto.AppleTokenResponse;
 import com.forgather.global.auth.util.AppleClientSecretProvider;
 import com.forgather.global.config.AppleProperties;
 import com.forgather.global.exception.BaseException;
+import com.forgather.global.exception.ExternalApiException;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.http.Fault;
 
 class AppleAuthClientTest {
 
@@ -126,6 +128,72 @@ class AppleAuthClientTest {
             .isEqualTo(500);
     }
 
+    @DisplayName("Apple token 서버가 5xx를 반환하면 외부 서비스 장애 예외를 던진다")
+    @Test
+    void exchangeAuthorizationCodeWithServerError() {
+        // given
+        wireMock.stubFor(post(urlEqualTo("/auth/token"))
+            .willReturn(aResponse()
+                .withStatus(503)
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE)
+                .withBody("<html>Service Unavailable</html>")));
+
+        // when & then
+        assertThatThrownBy(() -> appleAuthClient.exchangeAuthorizationCode("authorization-code"))
+            .isInstanceOf(ExternalApiException.class)
+            .extracting("statusCode")
+            .isEqualTo(503);
+    }
+
+    @DisplayName("Apple token 서버 연결에 실패하면 재시도 없이 외부 서비스 장애 예외를 던진다")
+    @Test
+    void exchangeAuthorizationCodeWithConnectionFailure() {
+        // given
+        wireMock.stubFor(post(urlEqualTo("/auth/token"))
+            .willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)));
+
+        // when & then
+        assertThatThrownBy(() -> appleAuthClient.exchangeAuthorizationCode("authorization-code"))
+            .isInstanceOf(ExternalApiException.class)
+            .extracting("statusCode")
+            .isEqualTo(503);
+        wireMock.verify(1, postRequestedFor(urlEqualTo("/auth/token")));
+    }
+
+    @DisplayName("Apple revoke가 4xx로 실패하면 우리 쪽 오류로 500을 던진다")
+    @Test
+    void revokeWithClientError() {
+        // given
+        wireMock.stubFor(post(urlEqualTo("/auth/revoke"))
+            .willReturn(aResponse()
+                .withStatus(400)
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .withBody("""
+                    {"error":"invalid_client"}
+                    """)));
+
+        // when & then
+        assertThatThrownBy(() -> appleAuthClient.revoke("apple-refresh-token"))
+            .isInstanceOf(BaseException.class)
+            .isNotInstanceOf(ExternalApiException.class)
+            .extracting("statusCode")
+            .isEqualTo(500);
+    }
+
+    @DisplayName("Apple revoke가 5xx로 실패하면 외부 서비스 장애 예외를 던진다")
+    @Test
+    void revokeWithServerError() {
+        // given
+        wireMock.stubFor(post(urlEqualTo("/auth/revoke"))
+            .willReturn(aResponse().withStatus(500)));
+
+        // when & then
+        assertThatThrownBy(() -> appleAuthClient.revoke("apple-refresh-token"))
+            .isInstanceOf(ExternalApiException.class)
+            .extracting("statusCode")
+            .isEqualTo(503);
+    }
+
     private AppleProperties appleProperties() throws Exception {
         return new AppleProperties(
             wireMock.baseUrl() + "/auth/keys",
@@ -135,7 +203,7 @@ class AppleAuthClientTest {
             "test-key-id",
             toPem(generateEcKeyPair()),
             wireMock.baseUrl() + "/auth/token",
-            "https://appleid.apple.com/auth/revoke"
+            wireMock.baseUrl() + "/auth/revoke"
         );
     }
 
