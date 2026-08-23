@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.term.model.HostTermHistory;
@@ -44,13 +45,16 @@ import com.forgather.global.exception.UnauthorizedException;
 import com.forgather.global.util.RandomCodeGenerator;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AuthService {
 
     private static final int MAX_HOST_CODE_ATTEMPTS = 5;
+    private static final String DEFAULT_APPLE_HOST_NAME = "Apple 사용자";
 
     private final JwtParser jwtParser;
     private final JwtTokenProvider jwtTokenProvider;
@@ -112,9 +116,23 @@ public class AuthService {
             return existingAppleHost;
         }
 
-        Host host = new Host(generateUnusedHostCode(), fullName, idToken.email());
+        Host host = new Host(generateUnusedHostCode(), resolveAppleName(fullName, idToken.sub()), idToken.email());
         hostRepository.save(host);
         return appleHostRepository.save(new AppleHost(host, idToken.sub(), appleRefreshToken));
+    }
+
+    /**
+     * Apple은 최초 동의 시점에만 이름을 내려준다. 최초 로그인이 Host 저장 전에 실패했거나
+     * 연결 해제 없이 탈퇴한 뒤 재가입하면 Apple 매핑만 남아 이후 로그인에서 이름을 받을 수 없다.
+     * 가입을 막으면 사용자가 직접 Apple 연결을 해제하기 전까지 영구히 로그인할 수 없으므로
+     * 기본 이름으로 대체한다. 사용자에게 보이는 이름은 온보딩에서 받는 nickname이라 영향이 없다.
+     */
+    private String resolveAppleName(String fullName, String userId) {
+        if (StringUtils.hasText(fullName)) {
+            return fullName;
+        }
+        log.warn("Apple 신규 가입에 이름이 없어 기본 이름으로 대체합니다. userId: {}", userId);
+        return DEFAULT_APPLE_HOST_NAME;
     }
 
     private String generateUnusedHostCode() {
