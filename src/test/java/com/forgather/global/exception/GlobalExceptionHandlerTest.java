@@ -208,6 +208,15 @@ class GlobalExceptionHandlerTest {
 
             assertEnvelope(res, 401, "UNAUTHORIZED", "로그인이 필요합니다");
         }
+
+        @DisplayName("ExternalApiException -> 503 / EXTERNAL_API_UNAVAILABLE / 재시도 안내 메시지 (5xx 마스킹을 타지 않음)")
+        @Test
+        void externalApi() throws Exception {
+            Snapshot res = perform(new ExternalApiException("Apple token 서버에 연결할 수 없습니다."));
+
+            assertEnvelope(res, 503, "EXTERNAL_API_UNAVAILABLE",
+                "외부 서비스 일시 장애로 요청에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+        }
     }
 
     @Nested

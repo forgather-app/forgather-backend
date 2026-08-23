@@ -180,6 +180,21 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * 외부 서비스 일시 장애 -> warn
+     * 우리 서버 결함이 아니므로 error로 올리지 않되, 원인 추적을 위해 stack trace는 남긴다.
+     * 응답은 5xx 마스킹 대신 재시도를 안내하는 고정 문구를 쓴다.
+     */
+    @ExceptionHandler(ExternalApiException.class)
+    public ResponseEntity<ApiResponse<Void>> handleExternalApiException(ExternalApiException e) {
+        logExternalApiWarning(e);
+        return ResponseEntity.status(e.getStatusCode())
+            .contentType(APPLICATION_JSON)
+            .body(ApiResponse.error(
+                ResponseCode.EXTERNAL_API_UNAVAILABLE,
+                "외부 서비스 일시 장애로 요청에 실패했습니다. 잠시 후 다시 시도해 주세요."));
+    }
+
+    /**
      * 핸들링 되지 않은 커스텀 비즈니스 예외
      * 4XX -> info
      * 5XX -> error
@@ -272,5 +287,9 @@ public class GlobalExceptionHandler {
 
     private void logServerError(Exception e) {
         log.atError().setCause(e).log("{}: {}", e.getClass().getSimpleName(), e.getMessage());
+    }
+
+    private void logExternalApiWarning(Exception e) {
+        log.atWarn().setCause(e).log("{}: {}", e.getClass().getSimpleName(), e.getMessage());
     }
 }
