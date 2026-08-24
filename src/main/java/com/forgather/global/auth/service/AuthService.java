@@ -21,6 +21,7 @@ import com.forgather.domain.term.model.TermType;
 import com.forgather.domain.term.repository.HostTermHistoryRepository;
 import com.forgather.domain.term.repository.TermRepository;
 import com.forgather.global.auth.client.AppleAuthClient;
+import com.forgather.global.auth.client.SocialProvider;
 import com.forgather.global.auth.dto.AppleIdToken;
 import com.forgather.global.auth.dto.AppleLoginConfirmRequest;
 import com.forgather.global.auth.dto.AppleTokenResponse;
@@ -90,6 +91,7 @@ public class AuthService {
 
         Host host = hostRepository.save(
             new Host(generateUnusedHostCode(), idToken.nickname(), idToken.email()));
+        logNewHost(SocialProvider.KAKAO, host);
         KakaoHost newKakaoHost = new KakaoHost(host, idToken.sub());
         return kakaoHostRepository.save(newKakaoHost);
     }
@@ -116,8 +118,9 @@ public class AuthService {
             return existingAppleHost;
         }
 
-        Host host = new Host(generateUnusedHostCode(), resolveAppleName(fullName, idToken.sub()), idToken.email());
+        Host host = new Host(generateUnusedHostCode(), resolveAppleName(fullName), idToken.email());
         hostRepository.save(host);
+        logNewHost(SocialProvider.APPLE, host);
         return appleHostRepository.save(new AppleHost(host, idToken.sub(), appleRefreshToken));
     }
 
@@ -127,12 +130,20 @@ public class AuthService {
      * 가입을 막으면 사용자가 직접 Apple 연결을 해제하기 전까지 영구히 로그인할 수 없으므로
      * 기본 이름으로 대체한다. 사용자에게 보이는 이름은 온보딩에서 받는 nickname이라 영향이 없다.
      */
-    private String resolveAppleName(String fullName, String userId) {
+    private String resolveAppleName(String fullName) {
         if (StringUtils.hasText(fullName)) {
             return fullName;
         }
-        log.warn("Apple 신규 가입에 이름이 없어 기본 이름으로 대체합니다. userId: {}", userId);
+        log.warn("Apple 신규 가입에 이름이 없어 기본 이름으로 대체합니다.");
         return DEFAULT_APPLE_HOST_NAME;
+    }
+
+    /**
+     * 신규 가입은 운영 지표이자 Apple 이름 fallback의 후속 결과 확인 지점이다.
+     * 소셜 사용자 식별자 대신 재가입 시 새로 발급되는 host code를 남긴다.
+     */
+    private void logNewHost(SocialProvider provider, Host host) {
+        log.info("신규 회원 가입 완료. provider: {}, hostCode: {}", provider, host.getCode());
     }
 
     private String generateUnusedHostCode() {
