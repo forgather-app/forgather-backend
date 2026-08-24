@@ -112,4 +112,8 @@ public class Term extends SoftDeleteEntity {
     public boolean isAgreedVersionValid(TermVersion agreedVersion) {
         return agreedVersion.isAtLeast(minAgreedVersion);
     }
+
+    public boolean isRequiredType() {
+        return type.isRequired();
+    }
 }
