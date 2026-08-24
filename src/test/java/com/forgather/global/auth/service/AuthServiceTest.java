@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,14 +29,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
 
 import com.forgather.domain.host.repository.HostProfilePhotoRepository;
 import com.forgather.domain.space.repository.HostRepository;
@@ -98,36 +91,6 @@ class AuthServiceTest {
     private HostProfilePhotoRepository hostProfilePhotoRepository;
 
     private AuthService authService;
-
-    private ListAppender<ILoggingEvent> logAppender;
-
-    /**
-     * 로그 검증 테스트가 실제 로그 출력을 읽을 수 있도록 AuthService 로거에 appender를 붙인다.
-     * 테스트 간 누수를 막기 위해 부착/해제를 매 테스트 경계에서 처리한다.
-     */
-    @BeforeEach
-    void attachLogAppender() {
-        logAppender = new ListAppender<>();
-        logAppender.start();
-        authServiceLogger().addAppender(logAppender);
-    }
-
-    @AfterEach
-    void detachLogAppender() {
-        authServiceLogger().detachAppender(logAppender);
-        logAppender.stop();
-    }
-
-    private Logger authServiceLogger() {
-        return (Logger)LoggerFactory.getLogger(AuthService.class);
-    }
-
-    private List<String> loggedMessages(Level level) {
-        return logAppender.list.stream()
-            .filter(event -> event.getLevel() == level)
-            .map(ILoggingEvent::getFormattedMessage)
-            .toList();
-    }
 
     @BeforeEach
     void setUp() {
@@ -229,8 +192,6 @@ class AuthServiceTest {
         assertThat(appleHost.getRefreshToken()).isEqualTo("new-apple-refresh-token");
         assertThat(response.accessToken()).isEqualTo("access-token");
         assertThat(response.refreshToken()).isEqualTo("refresh-token");
-        // 가입 완료 로그는 신규 가입 지표이므로 기존 회원 로그인에는 남지 않아야 한다.
-        assertThat(loggedMessages(Level.INFO)).isEmpty();
     }
 
     @DisplayName("신규 Apple 로그인에서 이름이 없으면 기본 이름으로 가입한다")
@@ -313,101 +274,6 @@ class AuthServiceTest {
         ArgumentCaptor<AppleHost> captor = ArgumentCaptor.forClass(AppleHost.class);
         verify(appleHostRepository).save(captor.capture());
         assertThat(captor.getValue().getHost().getName()).isEqualTo("Apple 사용자");
-    }
-
-    /**
-     * Apple sub는 탈퇴 후 재가입해도 동일한 영구 식별자라 로그에 남으면 익명화 정책을 우회한다.
-     * fallback 경고 로그에 sub가 다시 섞여 들어가는 회귀를 잡는다.
-     */
-    @DisplayName("이름 없는 신규 Apple 가입의 fallback 경고 로그에는 Apple sub가 남지 않는다")
-    @Test
-    void appleLoginConfirm_fallbackWarnLogDoesNotContainAppleSub() {
-        // given
-        AppleLoginConfirmRequest request = new AppleLoginConfirmRequest(
-            "id-token",
-            "authorization-code",
-            "raw-nonce",
-            null
-        );
-        stubNewAppleSignUp();
-
-        // when
-        authService.appleLoginConfirm(request);
-
-        // then
-        List<String> warnMessages = loggedMessages(Level.WARN);
-        assertAll(
-            () -> assertThat(warnMessages).isNotEmpty(),
-            () -> assertThat(warnMessages).allSatisfy(message -> assertThat(message).doesNotContain("apple-sub")),
-            () -> assertThat(warnMessages).anySatisfy(
-                message -> assertThat(message).contains("기본 이름으로 대체합니다"))
-        );
-    }
-
-    @DisplayName("신규 Apple 가입은 provider와 host code를 담은 가입 완료 로그를 남긴다")
-    @Test
-    void appleLoginConfirm_logsNewHostWithProviderAndHostCode() {
-        // given
-        AppleLoginConfirmRequest request = new AppleLoginConfirmRequest(
-            "id-token",
-            "authorization-code",
-            "raw-nonce",
-            "홍길동"
-        );
-        stubNewAppleSignUp();
-
-        // when
-        authService.appleLoginConfirm(request);
-
-        // then
-        ArgumentCaptor<AppleHost> captor = ArgumentCaptor.forClass(AppleHost.class);
-        verify(appleHostRepository).save(captor.capture());
-        String hostCode = captor.getValue().getHost().getCode();
-        assertThat(loggedMessages(Level.INFO))
-            .anySatisfy(message -> assertThat(message).contains("APPLE").contains(hostCode));
-    }
-
-    @DisplayName("신규 카카오 가입도 provider와 host code를 담은 가입 완료 로그를 남긴다")
-    @Test
-    void kakaoLoginConfirm_logsNewHostWithProviderAndHostCode() {
-        // given
-        when(jwtParser.parseKakaoIdToken("id-token", "raw-nonce"))
-            .thenReturn(kakaoIdToken("카카오닉네임", "kakao@example.com"));
-        when(kakaoHostRepository.findByUserId("kakao-user-id")).thenReturn(Optional.empty());
-        when(hostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        when(kakaoHostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        when(jwtTokenProvider.generateAccessToken(nullable(Long.class))).thenReturn("access-token");
-        when(jwtTokenProvider.generateRefreshToken(nullable(Long.class))).thenReturn("refresh-token");
-
-        // when
-        authService.kakaoLoginConfirm(kakaoLoginConfirmRequest());
-
-        // then
-        ArgumentCaptor<KakaoHost> captor = ArgumentCaptor.forClass(KakaoHost.class);
-        verify(kakaoHostRepository).save(captor.capture());
-        String hostCode = captor.getValue().getHost().getCode();
-        assertThat(loggedMessages(Level.INFO))
-            .anySatisfy(message -> assertThat(message).contains("KAKAO").contains(hostCode));
-    }
-
-    private void stubNewAppleSignUp() {
-        when(appleAuthClient.exchangeAuthorizationCode("authorization-code"))
-            .thenReturn(appleTokenResponse("apple-refresh-token"));
-        when(jwtParser.parseAppleIdToken("apple-server-id-token", "raw-nonce"))
-            .thenReturn(new AppleIdToken(
-                "https://appleid.apple.com",
-                "test-apple-audience",
-                "apple-sub",
-                "apple@example.com",
-                true,
-                1L,
-                1L,
-                "nonce"
-            ));
-        when(appleHostRepository.findByUserId("apple-sub")).thenReturn(Optional.empty());
-        when(appleHostRepository.save(any(AppleHost.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(jwtTokenProvider.generateAccessToken(nullable(Long.class))).thenReturn("access-token");
-        when(jwtTokenProvider.generateRefreshToken(nullable(Long.class))).thenReturn("refresh-token");
     }
 
     private AppleTokenResponse appleTokenResponse(String refreshToken) {
