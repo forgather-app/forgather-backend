@@ -12,9 +12,6 @@ public record SimpleProductResponse(
     @Schema(description = "작품명", example = "고귀한 의자")
     String title,
 
-    @Schema(description = "작품 카테고리", example = "Chair")
-    String category,
-
     @Schema(description = "임베드 영상 링크", example = "https://youtu.be/lkuAxAVgAX0")
     String videoUrl,
 
@@ -25,7 +22,6 @@ public record SimpleProductResponse(
     public SimpleProductResponse(Product product, ProductPhoto firstPhoto) {
         this(product.getId(),
             product.getTitle(),
-            product.getCategory(),
             product.getVideoUrl(),
             (firstPhoto != null) ? new ProductPhotoResponse(firstPhoto) : null
         );

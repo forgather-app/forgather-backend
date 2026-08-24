@@ -77,7 +77,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
 
     private RegisterProductRequest registerRequest = new RegisterProductRequest(
         "title",
-        "category",
         "authorName",
         "description",
         "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
@@ -135,12 +134,10 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.message()).isNull(),
                 () -> assertThat(result.data().products().get(0).id()).isEqualTo(registerResponse1.id()),
                 () -> assertThat(result.data().products().get(0).title()).isEqualTo(registerResponse1.title()),
-                () -> assertThat(result.data().products().get(0).category()).isEqualTo(registerResponse1.category()),
                 () -> assertThat(result.data().products().get(0).videoUrl()).isEqualTo(registerResponse1.videoUrl()),
 
                 () -> assertThat(result.data().products().get(1).id()).isEqualTo(registerResponse2.id()),
                 () -> assertThat(result.data().products().get(1).title()).isEqualTo(registerResponse2.title()),
-                () -> assertThat(result.data().products().get(1).category()).isEqualTo(registerResponse2.category()),
                 () -> assertThat(result.data().products().get(1).videoUrl()).isEqualTo(registerResponse2.videoUrl()),
 
                 () -> assertThat(result.data().products().get(0).firstPhoto().originalName()).isEqualTo("photo1"),
@@ -232,7 +229,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.message()).isNull(),
                 () -> assertThat(result.data().id()).isEqualTo(registerResponse.id()),
                 () -> assertThat(result.data().title()).isEqualTo(registerResponse.title()),
-                () -> assertThat(result.data().category()).isEqualTo(registerResponse.category()),
                 () -> assertThat(result.data().authorName()).isEqualTo(registerResponse.authorName()),
                 () -> assertThat(result.data().description()).isEqualTo(registerResponse.description()),
                 () -> assertThat(result.data().videoUrl()).isEqualTo(registerResponse.videoUrl()),
@@ -293,7 +289,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(response.message()).isNull(),
                 () -> assertThat(response.data().id()).isNotNull(),
                 () -> assertThat(response.data().title()).isEqualTo(registerRequest.title()),
-                () -> assertThat(response.data().category()).isEqualTo(registerRequest.category()),
                 () -> assertThat(response.data().authorName()).isEqualTo(registerRequest.authorName()),
                 () -> assertThat(response.data().description()).isEqualTo(registerRequest.description()),
                 () -> assertThat(response.data().videoUrl()).isEqualTo(registerRequest.videoUrl()),
@@ -333,9 +328,9 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 .statusCode(201);
         }
 
-        @DisplayName("작품 3개를 초과해서 등록하면 예외를 던진다")
+        @DisplayName("작품 개수 제한 없이 3개를 초과해서 등록할 수 있다")
         @Test
-        void throwExceptionWhenProductExceedMaxCount() {
+        void registerProductsWithoutMaxCountLimit() {
             // given
             registerProductV3();
             registerProductV3();
@@ -351,9 +346,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 .when()
                 .post("/spaces/%s/products".formatted(space.getCode()))
                 .then()
-                .statusCode(400)
-                .body("code", equalTo("BAD_REQUEST"))
-                .body("message", containsString("작품은 3개까지만 등록 가능"));
+                .statusCode(201);
         }
 
         @DisplayName("작품 설명을 2000자까지 작성할 수 있다")
@@ -362,7 +355,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
             // given
             RegisterProductRequest registerRequest = new RegisterProductRequest(
                 "title",
-                "category",
                 "authorName",
                 "1234567890".repeat(200),
                 "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
@@ -382,13 +374,85 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 .statusCode(201);
         }
 
+        @DisplayName("작품 설명 없이 작품을 등록하면 빈 문자열로 저장된다")
+        @Test
+        void registerWithoutDescription() {
+            // given
+            RegisterProductRequest request = new RegisterProductRequest(
+                "title",
+                "authorName",
+                null,
+                "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
+                false,
+                List.of()
+            );
+
+            // when
+            ApiResponse<ProductResponse> response = RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "3")
+                .body(request)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(201)
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+            // then
+            assertAll(
+                () -> assertThat(response.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(response.data().description()).isEqualTo("")
+            );
+        }
+
+        @DisplayName("멀티 코드포인트 이모지로만 이루어진 작품명 50자를 등록할 수 있다")
+        @Test
+        void registerWithMultiCodePointEmojiTitle() {
+            // given
+            String title = "👨‍👩‍👧‍👦".repeat(50); // grapheme 50자, 코드포인트 350개
+            RegisterProductRequest request = new RegisterProductRequest(
+                title,
+                "authorName",
+                "description",
+                "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
+                false,
+                List.of()
+            );
+
+            // when
+            ApiResponse<ProductResponse> response = RestAssuredMockMvc.given()
+                .header("Authorization", "Bearer " + accessToken)
+                .header("X-API-Version", "3")
+                .body(request)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(201)
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+            // then
+            assertAll(
+                () -> assertThat(response.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(response.data().title()).isEqualTo(title)
+            );
+        }
+
         @DisplayName("작품명이 50자를 초과하면 검증에 실패한다")
         @Test
         void throwExceptionWhenTitleExceedMaxLength() {
             // given
             RegisterProductRequest request = new RegisterProductRequest(
                 "1234567890".repeat(5) + "1",
-                "category",
                 "authorName",
                 "description",
                 "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
@@ -458,7 +522,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
             UpdateProductRequest request = new UpdateProductRequest(
                 "foovar1",
                 null,
-                null,
                 "description",
                 "https://youtu.be/aaa",
                 true,
@@ -491,7 +554,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.message()).isNull(),
                 () -> assertThat(result.data().id()).isEqualTo(registerResponse.id()),
                 () -> assertThat(result.data().title()).isEqualTo(request.title()),
-                () -> assertThat(result.data().category()).isEqualTo(registerResponse.category()),
                 () -> assertThat(result.data().authorName()).isEqualTo(registerResponse.authorName()),
                 () -> assertThat(result.data().description()).isEqualTo(request.description()),
                 () -> assertThat(result.data().videoUrl()).isEqualTo(request.videoUrl()),
@@ -518,7 +580,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
             ProductResponse registerResponse = registerProductV3();
             UpdateProductRequest request = new UpdateProductRequest(
                 "foovar1",
-                null,
                 null,
                 "description",
                 "https://youtu.be/aaa",
@@ -550,7 +611,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
             Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
             UpdateProductRequest request = new UpdateProductRequest(
                 "foovar1",
-                null,
                 null,
                 "description",
                 "https://youtu.be/aaa",
@@ -584,7 +644,6 @@ class ProductAcceptanceTest extends AcceptanceTest {
             Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
             UpdateProductRequest request = new UpdateProductRequest(
                 "foovar1",
-                null,
                 null,
                 "description",
                 "https://youtu.be/aaa",

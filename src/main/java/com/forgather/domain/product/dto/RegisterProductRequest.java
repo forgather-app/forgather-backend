@@ -15,16 +15,11 @@ public record RegisterProductRequest(
     @TextSize(max = 50)
     String title,
 
-    @Schema(description = "작품 카테고리", example = "Chair", maxLength = 20)
-    @TextSize(max = 20)
-    String category,
-
     @Schema(description = "작가명", example = "검은수염", maxLength = 35)
     @TextSize(max = 35)
     String authorName,
 
     @Schema(description = "작품 설명", example = "150 x 200 x 200\n\n매우 고귀한 의자입니다.\n조심해서 다뤄주세요.", maxLength = 2000)
-    @NotBlank
     @TextSize(max = 2000)
     String description,
 
@@ -58,6 +53,6 @@ public record RegisterProductRequest(
 ) {
 
     public Product toEntity(Space space) {
-        return new Product(space, title, category, authorName, description, videoUrl, isVideoAfterPhoto);
+        return new Product(space, title, authorName, description, videoUrl, isVideoAfterPhoto);
     }
 }

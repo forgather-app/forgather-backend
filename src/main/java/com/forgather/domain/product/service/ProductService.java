@@ -24,7 +24,6 @@ import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.domain.ContentsStorage;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.repository.SpaceHostRepository;
-import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.ForbiddenException;
 
@@ -33,8 +32,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Service
 public class ProductService {
-
-    private static final int PRODUCTS_MAX_COUNT = 3;
 
     private final ProductRepository productRepository;
     private final ProductPhotoRepository productPhotoRepository;
@@ -69,7 +66,6 @@ public class ProductService {
     public ProductResponse register(Host host, String spaceCode, RegisterProductRequest request) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(host, space);
-        validateExceedProductMaxCount(space);
         Product product = productRepository.save(request.toEntity(space));
 
         ProductPhotos productPhotos = new ProductPhotos();
@@ -86,20 +82,13 @@ public class ProductService {
         return new ProductResponse(product, productPhotos.getAll());
     }
 
-    private void validateExceedProductMaxCount(Space space) {
-        Long count = productRepository.countBySpaceAndDeletedAtIsNull(space);
-        if (count >= PRODUCTS_MAX_COUNT) {
-            throw new BaseException("작품은 3개까지만 등록 가능합니다. spaceCode: " + space.getCode());
-        }
-    }
-
     @Transactional
     public ProductResponse update(Host host, String spaceCode, Long productId, UpdateProductRequest request) {
         // Product 정보 수정
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(host, space);
         Product product = productRepository.getBySpaceAndIdAndDeletedAtIsNullOrThrow(space, productId);
-        product.update(request.title(), request.category(), request.authorName(), request.description(),
+        product.update(request.title(), request.authorName(), request.description(),
             request.videoUrl(), request.isVideoAfterPhoto());
 
         // 삭제 사진 db 및 클라우드 삭제
