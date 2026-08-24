@@ -138,10 +138,6 @@ public class AuthService {
         return DEFAULT_APPLE_HOST_NAME;
     }
 
-    /**
-     * 신규 가입은 운영 지표이자 Apple 이름 fallback의 후속 결과 확인 지점이다.
-     * 소셜 사용자 식별자 대신 재가입 시 새로 발급되는 host code를 남긴다.
-     */
     private void logNewHost(SocialProvider provider, Host host) {
         log.info("신규 회원 가입 완료. provider: {}, hostCode: {}", provider, host.getCode());
     }
