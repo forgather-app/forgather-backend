@@ -57,10 +57,12 @@ public class TermService {
 
     @Transactional
     public TermAgreementResponse agreeTerm(Host loginHost, Long termId) {
+        // 락을 첫 조회로 둬야 스냅샷이 락 획득 이후에 확정된다.
+        // 앞에 일반 조회가 오면 그 시점 스냅샷이 고정돼, 락을 기다리는 동안 커밋된 이력을 보지 못한다.
+        Host host = hostRepository.getByIdWithLockOrThrow(loginHost.getId());
+
         Term term = termRepository.getByIdAndDeletedAtIsNullOrThrow(termId);
         validateLatestTerm(term);
-
-        Host host = hostRepository.getByIdWithLockOrThrow(loginHost.getId());
         validateOnboardingCompleted(host);
 
         TermAgreement agreement = getTermAgreement(host, term);
@@ -74,11 +76,11 @@ public class TermService {
 
     @Transactional
     public TermAgreementResponse withdrawTerm(Host loginHost, Long termId) {
+        Host host = hostRepository.getByIdWithLockOrThrow(loginHost.getId());
+
         Term term = termRepository.getByIdAndDeletedAtIsNullOrThrow(termId);
         validateLatestTerm(term);
         validateWithdrawable(term);
-
-        Host host = hostRepository.getByIdWithLockOrThrow(loginHost.getId());
         validateOnboardingCompleted(host);
 
         TermAgreement agreement = getTermAgreement(host, term);
