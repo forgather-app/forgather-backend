@@ -194,9 +194,9 @@ class AuthServiceTest {
         assertThat(response.refreshToken()).isEqualTo("refresh-token");
     }
 
-    @DisplayName("신규 Apple 로그인에서 이름이 없으면 실패한다")
+    @DisplayName("신규 Apple 로그인에서 이름이 없으면 기본 이름으로 가입한다")
     @Test
-    void appleLoginConfirm_newAppleHostRequiresFullName() {
+    void appleLoginConfirm_fallsBackToDefaultNameWhenFullNameMissing() {
         // given
         AppleLoginConfirmRequest request = new AppleLoginConfirmRequest(
             "id-token",
@@ -218,11 +218,62 @@ class AuthServiceTest {
                 "nonce"
             ));
         when(appleHostRepository.findByUserId("apple-sub")).thenReturn(Optional.empty());
+        when(appleHostRepository.save(any(AppleHost.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(jwtTokenProvider.generateAccessToken(nullable(Long.class))).thenReturn("access-token");
+        when(jwtTokenProvider.generateRefreshToken(nullable(Long.class))).thenReturn("refresh-token");
 
-        // when, then
-        assertThatThrownBy(() -> authService.appleLoginConfirm(request))
-            .isInstanceOf(BaseException.class)
-            .hasMessageContaining("이름");
+        // when
+        LoginResponse response = authService.appleLoginConfirm(request);
+
+        // then
+        ArgumentCaptor<AppleHost> captor = ArgumentCaptor.forClass(AppleHost.class);
+        verify(appleHostRepository).save(captor.capture());
+        AppleHost saved = captor.getValue();
+        assertAll(
+            () -> assertThat(saved.getHost().getName()).isEqualTo("Apple 사용자"),
+            () -> assertThat(saved.getHost().getEmail()).isEqualTo("apple@example.com"),
+            () -> assertThat(saved.getHost().getCode()).matches("[0-9a-z]{10}"),
+            () -> assertThat(saved.getUserId()).isEqualTo("apple-sub"),
+            () -> assertThat(saved.getRefreshToken()).isEqualTo("apple-refresh-token"),
+            () -> assertThat(response.accessToken()).isEqualTo("access-token")
+        );
+    }
+
+    @DisplayName("신규 Apple 로그인에서 이름이 공백뿐이면 기본 이름으로 가입한다")
+    @Test
+    void appleLoginConfirm_fallsBackToDefaultNameWhenFullNameBlank() {
+        // given
+        AppleLoginConfirmRequest request = new AppleLoginConfirmRequest(
+            "id-token",
+            "authorization-code",
+            "raw-nonce",
+            "   "
+        );
+        when(appleAuthClient.exchangeAuthorizationCode("authorization-code"))
+            .thenReturn(appleTokenResponse("apple-refresh-token"));
+        when(jwtParser.parseAppleIdToken("apple-server-id-token", "raw-nonce"))
+            .thenReturn(new AppleIdToken(
+                "https://appleid.apple.com",
+                "test-apple-audience",
+                "apple-sub",
+                "apple@example.com",
+                true,
+                1L,
+                1L,
+                "nonce"
+            ));
+        when(appleHostRepository.findByUserId("apple-sub")).thenReturn(Optional.empty());
+        when(appleHostRepository.save(any(AppleHost.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(jwtTokenProvider.generateAccessToken(nullable(Long.class))).thenReturn("access-token");
+        when(jwtTokenProvider.generateRefreshToken(nullable(Long.class))).thenReturn("refresh-token");
+
+        // when
+        authService.appleLoginConfirm(request);
+
+        // then
+        ArgumentCaptor<AppleHost> captor = ArgumentCaptor.forClass(AppleHost.class);
+        verify(appleHostRepository).save(captor.capture());
+        assertThat(captor.getValue().getHost().getName()).isEqualTo("Apple 사용자");
     }
 
     private AppleTokenResponse appleTokenResponse(String refreshToken) {
