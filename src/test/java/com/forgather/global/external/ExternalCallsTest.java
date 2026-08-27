@@ -135,6 +135,21 @@ class ExternalCallsTest {
             .isEqualTo(FailureType.CONNECTION_FAILED);
     }
 
+    @DisplayName("응답을 역직렬화할 수 없으면 MALFORMED_RESPONSE로 분류한다")
+    @Test
+    void malformedResponse() {
+        // given
+        stub(aResponse()
+            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN_VALUE)
+            .withBody("not json"));
+
+        // when & then
+        assertThatThrownBy(() -> ExternalCalls.execute(OPERATION, () -> call(Map.class)))
+            .isInstanceOf(ExternalApiException.class)
+            .extracting("type")
+            .isEqualTo(FailureType.MALFORMED_RESPONSE);
+    }
+
     private void stub(ResponseDefinitionBuilder response) {
         wireMock.stubFor(get(urlEqualTo("/probe")).willReturn(response));
     }
