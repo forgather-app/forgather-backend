@@ -239,18 +239,6 @@ class GlobalExceptionHandlerTest {
 
             assertEnvelope(res, 401, "UNAUTHORIZED", "소셜 로그인 인증에 실패했습니다. 다시 로그인해 주세요.");
         }
-
-        // 마이그레이션이 끝나지 않은 클라이언트가 쓰는 레거시 생성자 경로.
-        // Task 9에서 레거시 생성자와 핸들러의 null 방어가 제거될 때 이 테스트도 함께 삭제한다.
-        @DisplayName("레거시 생성자 경로(operation 없음) -> NPE 없이 503 / EXTERNAL_API_UNAVAILABLE")
-        @Test
-        @SuppressWarnings("removal")
-        void externalLegacyWithoutOperation() throws Exception {
-            Snapshot res = perform(new ExternalApiException("Apple token 서버에 연결할 수 없습니다."));
-
-            assertEnvelope(res, 503, "EXTERNAL_API_UNAVAILABLE",
-                "외부 서비스 일시 장애로 요청에 실패했습니다. 잠시 후 다시 시도해 주세요.");
-        }
     }
 
     @Nested

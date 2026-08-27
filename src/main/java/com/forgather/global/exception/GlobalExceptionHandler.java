@@ -22,7 +22,6 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.forgather.global.external.ExternalApiException;
-import com.forgather.global.external.ExternalOperation;
 import com.forgather.global.external.FailureType;
 import com.forgather.global.response.ApiResponse;
 import com.forgather.global.response.ResponseCode;
@@ -197,13 +196,10 @@ public class GlobalExceptionHandler {
     }
 
     private void logExternalApi(ExternalApiException e) {
-        // Task 9에서 제거할 레거시 생성자로 만든 예외는 operation이 없다.
-        // 마이그레이션이 끝나지 않은 클라이언트의 예외가 여기 도달할 수 있으므로 방어한다.
-        ExternalOperation operation = e.getOperation();
         log.atLevel(e.getLogLevel())
             .setCause(e)
-            .addKeyValue("service", operation == null ? "UNKNOWN" : operation.service().name())
-            .addKeyValue("operation", operation == null ? "unknown" : operation.name())
+            .addKeyValue("service", e.getOperation().service().name())
+            .addKeyValue("operation", e.getOperation().name())
             .addKeyValue("failureType", e.getType().name())
             .log("{}: {}", e.getClass().getSimpleName(), e.getMessage());
     }

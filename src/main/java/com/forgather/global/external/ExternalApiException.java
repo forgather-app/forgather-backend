@@ -44,24 +44,6 @@ public class ExternalApiException extends BaseException {
     }
 
     /**
-     * @deprecated 신규 코드는 {@link #fromStatus} 또는 {@link #fromIo}를 쓴다.
-     * 마이그레이션이 끝나면 제거한다.
-     */
-    @Deprecated(forRemoval = true)
-    public ExternalApiException(String message) {
-        this(null, FailureType.UPSTREAM_ERROR, null, message, null);
-    }
-
-    /**
-     * @deprecated 신규 코드는 {@link #fromStatus} 또는 {@link #fromIo}를 쓴다.
-     * 마이그레이션이 끝나면 제거한다.
-     */
-    @Deprecated(forRemoval = true)
-    public ExternalApiException(String message, Throwable cause) {
-        this(null, FailureType.UPSTREAM_ERROR, null, message, cause);
-    }
-
-    /**
      * 상태코드만 보고 분류한다. provider별 본문 규약은 각 클라이언트가 2차로 세분화한다.
      * 모르는 4xx를 CALLER_ERROR(error)로 두는 것은 의도적이다 — 우리 결함이 조용히 묻히지 않게 한다.
      */
@@ -108,7 +90,7 @@ public class ExternalApiException extends BaseException {
     }
 
     public boolean isRetryable() {
-        return operation != null && type.retryable(operation.idempotent());
+        return type.retryable(operation.idempotent());
     }
 
     public Level getLogLevel() {
