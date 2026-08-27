@@ -8,27 +8,34 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestClientResponseException;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.global.config.KakaoProperties;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.external.ExternalApiException;
+import com.forgather.global.external.ExternalCalls;
+import com.forgather.global.external.ExternalOperation;
+import com.forgather.global.external.FailureType;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 카카오 인증 관련 클라이언트
  * https://developers.kakao.com/docs/latest/ko/kakaologin/rest-api
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class KakaoAuthClient {
 
     private static final String ADMIN_KEY_PREFIX = "KakaoAK ";
+    private static final int ALREADY_UNLINKED_CODE = -101;
 
     private final RestClient restClient;
     private final KakaoProperties kakaoProperties;
+    private final ObjectMapper objectMapper;
 
     /**
      * 카카오 연결 끊기(unlink)
@@ -44,28 +51,46 @@ public class KakaoAuthClient {
         form.add("target_id", userId);
 
         try {
-            restClient.post()
-                .uri(kakaoProperties.getUnlinkUrl())
-                .header(HttpHeaders.AUTHORIZATION, ADMIN_KEY_PREFIX + kakaoProperties.getAdminKey())
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(form)
-                .retrieve()
-                .toBodilessEntity();
-        } catch (RestClientResponseException e) {
-            throw toKakaoUnlinkException(e);
-        } catch (RestClientException e) {
-            throw new ExternalApiException("Kakao 서버에 연결할 수 없습니다.", e);
+            ExternalCalls.execute(ExternalOperation.KAKAO_UNLINK, () ->
+                restClient.post()
+                    .uri(kakaoProperties.getUnlinkUrl())
+                    .header(HttpHeaders.AUTHORIZATION, ADMIN_KEY_PREFIX + kakaoProperties.getAdminKey())
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(form)
+                    .retrieve()
+                    .toBodilessEntity());
+        } catch (ExternalApiException e) {
+            absorbOrRethrow(e, userId);
         }
     }
 
     /**
-     * 4xx는 admin key 오류나 잘못된 target_id 등 우리 쪽 문제이므로 500으로 남긴다.
-     * 5xx만 외부 장애로 분류한다.
+     * -101은 이미 앱과 연결이 끊긴 사용자로 unlink의 목적이 이미 달성된 상태다.
+     * <p>
+     * 단 잘못된 admin key로도 동일하게 -101이 발생한다(user_id가 앱 스코프이므로).
+     * 전 건이 조용히 성공 처리되는 상황을 감지할 수 있도록 info 로그에 kv를 남긴다.
      */
-    private BaseException toKakaoUnlinkException(RestClientResponseException exception) {
-        if (exception.getStatusCode().is5xxServerError()) {
-            return new ExternalApiException("Kakao 서버에 장애가 발생했습니다.", exception);
+    private void absorbOrRethrow(ExternalApiException exception, String userId) {
+        if (exception.getType() == FailureType.CALLER_ERROR && isAlreadyUnlinked(exception.getResponseBody())) {
+            log.atInfo()
+                .addKeyValue("service", "KAKAO")
+                .addKeyValue("operation", "unlink")
+                .addKeyValue("result", "alreadyUnlinked")
+                .log("Kakao unlink 대상이 이미 해제되어 있습니다. userId: {}", userId);
+            return;
         }
-        return new BaseException("Kakao unlink에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, exception);
+        throw exception;
+    }
+
+    private boolean isAlreadyUnlinked(String responseBody) {
+        if (!StringUtils.hasText(responseBody)) {
+            return false;
+        }
+        try {
+            JsonNode code = objectMapper.readTree(responseBody).get("code");
+            return code != null && code.asInt() == ALREADY_UNLINKED_CODE;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
