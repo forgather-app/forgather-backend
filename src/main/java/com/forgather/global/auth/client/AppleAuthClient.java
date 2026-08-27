@@ -7,8 +7,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestClientResponseException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.global.auth.dto.AppleTokenErrorResponse;
@@ -17,6 +15,9 @@ import com.forgather.global.auth.util.AppleClientSecretProvider;
 import com.forgather.global.config.AppleProperties;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.external.ExternalApiException;
+import com.forgather.global.external.ExternalCalls;
+import com.forgather.global.external.ExternalOperation;
+import com.forgather.global.external.FailureType;
 
 @Component
 public class AppleAuthClient {
@@ -49,20 +50,20 @@ public class AppleAuthClient {
         form.add("code", authorizationCode);
         form.add("grant_type", "authorization_code");
 
+        AppleTokenResponse response;
         try {
-            AppleTokenResponse response = restClient.post()
-                .uri(appleProperties.getTokenUrl())
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(form)
-                .retrieve()
-                .body(AppleTokenResponse.class);
-            validateResponse(response);
-            return response;
-        } catch (RestClientResponseException e) {
-            throw toAppleTokenException(e);
-        } catch (RestClientException e) {
-            throw new ExternalApiException("Apple token 서버에 연결할 수 없습니다.", e);
+            response = ExternalCalls.execute(ExternalOperation.APPLE_TOKEN, () ->
+                restClient.post()
+                    .uri(appleProperties.getTokenUrl())
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(form)
+                    .retrieve()
+                    .body(AppleTokenResponse.class));
+        } catch (ExternalApiException e) {
+            throw refine(e);
         }
+        validateResponse(response);
+        return response;
     }
 
     public void revoke(String refreshToken) {
@@ -76,57 +77,47 @@ public class AppleAuthClient {
         form.add("token", refreshToken);
         form.add("token_type_hint", "refresh_token");
 
-        try {
+        // revoke의 4xx는 client_secret 설정이나 저장된 refresh token이 잘못된 우리 쪽 문제이므로
+        // 1차 분류(CALLER_ERROR → 500 error)를 그대로 쓴다. 세분화할 provider 지식이 없다.
+        ExternalCalls.execute(ExternalOperation.APPLE_REVOKE, () ->
             restClient.post()
                 .uri(appleProperties.getRevokeUrl())
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(form)
                 .retrieve()
-                .toBodilessEntity();
-        } catch (RestClientResponseException e) {
-            throw toAppleRevokeException(e);
-        } catch (RestClientException e) {
-            throw new ExternalApiException("Apple token 서버에 연결할 수 없습니다.", e);
-        }
+                .toBodilessEntity());
     }
 
+    /**
+     * token 교환의 2차 세분화. 응답 본문의 error 코드를 읽어야만 아는 것만 다룬다.
+     * 5xx·타임아웃 분류는 provider 지식이 필요 없으므로 손대지 않는다.
+     */
+    private ExternalApiException refine(ExternalApiException exception) {
+        if (exception.getType() != FailureType.CALLER_ERROR) {
+            return exception;
+        }
+        // invalid_grant는 이미 쓴 code를 다시 보냈거나 만료된 경우로 사용자가 재로그인해야 한다.
+        if ("invalid_grant".equals(parseError(exception.getResponseBody()))) {
+            return exception.as(FailureType.AUTH_REJECTED);
+        }
+        return exception;
+    }
+
+    /**
+     * 200인데 필수 필드가 비었다면 애플이 계약을 바꿨거나 우리 DTO가 어긋난 것이다.
+     * 외부 장애로 위장되지 않도록 error로 분류한다.
+     */
     private void validateResponse(AppleTokenResponse response) {
         if (response == null
             || !StringUtils.hasText(response.accessToken())
             || !StringUtils.hasText(response.refreshToken())
             || !StringUtils.hasText(response.idToken())
             || response.expiresIn() == null) {
-            throw new ExternalApiException("Apple token 응답이 올바르지 않습니다.");
+            throw new ExternalApiException(
+                ExternalOperation.APPLE_TOKEN,
+                FailureType.MALFORMED_RESPONSE,
+                "Apple token 응답이 올바르지 않습니다.");
         }
-    }
-
-    private BaseException toAppleTokenException(RestClientResponseException exception) {
-        if (exception.getStatusCode().is5xxServerError()) {
-            return new ExternalApiException("Apple token 서버에 장애가 발생했습니다.", exception);
-        }
-        String error = parseError(exception.getResponseBodyAsString());
-        return switch (error) {
-            case "invalid_grant" ->
-                new BaseException("Apple authorization code가 유효하지 않습니다.", HttpStatus.UNAUTHORIZED, exception);
-            case "invalid_request" ->
-                new BaseException("Apple token 요청이 올바르지 않습니다.", HttpStatus.INTERNAL_SERVER_ERROR, exception);
-            case "invalid_scope" ->
-                new BaseException("Apple token 요청 scope가 올바르지 않습니다.", HttpStatus.INTERNAL_SERVER_ERROR, exception);
-            case "invalid_client", "unauthorized_client", "unsupported_grant_type" ->
-                new BaseException("Apple token 서버 인증에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, exception);
-            default -> new BaseException("Apple token 교환에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, exception);
-        };
-    }
-
-    /**
-     * 4xx는 client_secret 설정 오류나 저장된 refresh token이 잘못된 우리 쪽 문제이므로 500으로 남긴다.
-     * 5xx만 외부 장애로 분류한다.
-     */
-    private BaseException toAppleRevokeException(RestClientResponseException exception) {
-        if (exception.getStatusCode().is5xxServerError()) {
-            return new ExternalApiException("Apple token 서버에 장애가 발생했습니다.", exception);
-        }
-        return new BaseException("Apple token revoke에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, exception);
     }
 
     private String parseError(String responseBody) {
