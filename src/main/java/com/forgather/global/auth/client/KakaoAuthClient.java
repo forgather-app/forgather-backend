@@ -13,7 +13,7 @@ import org.springframework.web.client.RestClientResponseException;
 
 import com.forgather.global.config.KakaoProperties;
 import com.forgather.global.exception.BaseException;
-import com.forgather.global.exception.ExternalApiException;
+import com.forgather.global.external.ExternalApiException;
 
 import lombok.RequiredArgsConstructor;
 

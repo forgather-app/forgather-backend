@@ -18,7 +18,7 @@ import org.springframework.web.client.RestClient;
 
 import com.forgather.global.config.KakaoProperties;
 import com.forgather.global.exception.BaseException;
-import com.forgather.global.exception.ExternalApiException;
+import com.forgather.global.external.ExternalApiException;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.http.Fault;

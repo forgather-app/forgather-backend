@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.forgather.global.external.ExternalApiException;
 import com.forgather.global.response.ApiResponse;
 import com.forgather.global.response.ResponseCode;
 

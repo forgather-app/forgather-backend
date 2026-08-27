@@ -16,7 +16,7 @@ import com.forgather.global.auth.dto.AppleTokenResponse;
 import com.forgather.global.auth.util.AppleClientSecretProvider;
 import com.forgather.global.config.AppleProperties;
 import com.forgather.global.exception.BaseException;
-import com.forgather.global.exception.ExternalApiException;
+import com.forgather.global.external.ExternalApiException;
 
 @Component
 public class AppleAuthClient {
