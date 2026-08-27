@@ -204,23 +204,31 @@ public class GlobalExceptionHandler {
             .log("{}: {}", e.getClass().getSimpleName(), e.getMessage());
     }
 
+    /**
+     * default를 두지 않는다. 새 FailureType이 추가되면 컴파일이 깨지면서 응답 정책을 함께 정하도록 강제한다.
+     * default가 있으면 예컨대 4xx 계열 상수가 추가됐을 때 status는 4xx인데 code는 EXTERNAL_API_UNAVAILABLE인
+     * 자가당착 응답이 경고 없이 나간다.
+     */
     private ResponseCode resolveExternalCode(FailureType type) {
         return switch (type) {
             case AUTH_REJECTED -> ResponseCode.UNAUTHORIZED;
             case CALLER_ERROR, MALFORMED_RESPONSE -> ResponseCode.INTERNAL_ERROR;
-            default -> ResponseCode.EXTERNAL_API_UNAVAILABLE;
+            case RATE_LIMITED, UPSTREAM_ERROR, CONNECT_TIMEOUT, READ_TIMEOUT, CONNECTION_FAILED ->
+                ResponseCode.EXTERNAL_API_UNAVAILABLE;
         };
     }
 
     /**
      * 원본 메시지는 내부 정보(설정 키, 외부 응답 본문 등) 유출 우려가 있어 응답에서는 고정 문구를 쓴다.
      * 추적은 logExternalApi가 남기는 stack trace와 kv로 수행한다.
+     * resolveExternalCode와 같은 이유로 default를 두지 않는다.
      */
     private String resolveExternalMessage(FailureType type) {
         return switch (type) {
             case AUTH_REJECTED -> "소셜 로그인 인증에 실패했습니다. 다시 로그인해 주세요.";
             case CALLER_ERROR, MALFORMED_RESPONSE -> "예상치 못한 오류가 발생했습니다.";
-            default -> "외부 서비스 일시 장애로 요청에 실패했습니다. 잠시 후 다시 시도해 주세요.";
+            case RATE_LIMITED, UPSTREAM_ERROR, CONNECT_TIMEOUT, READ_TIMEOUT, CONNECTION_FAILED ->
+                "외부 서비스 일시 장애로 요청에 실패했습니다. 잠시 후 다시 시도해 주세요.";
         };
     }
 
