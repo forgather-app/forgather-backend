@@ -8,10 +8,6 @@ import org.springframework.web.client.RestClientResponseException;
 
 /**
  * 외부 호출의 1차 분류. 상태코드와 IO 실패를 {@link FailureType}으로 옮긴다.
- * <p>
- * HTTP 자체는 호출부의 RestClient가 친다. 이 클래스는 넘겨받은 호출을 실행하고
- * 터진 예외에 이름표를 붙일 뿐이라 provider가 누구인지도, URL이 무엇인지도 모른다.
- * 상태가 없으므로 스프링 빈이 아니다.
  */
 public final class ExternalCalls {
 
