@@ -2,6 +2,7 @@ package com.forgather.global.auth.client;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,13 +18,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.client.RestClient;
 
 import com.forgather.global.config.AppleProperties;
 import com.forgather.global.config.GoogleProperties;
 import com.forgather.global.config.KakaoProperties;
 import com.forgather.global.exception.JwtBaseException;
+import com.forgather.global.external.ExternalApiException;
+import com.forgather.global.external.FailureType;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 
@@ -91,22 +93,23 @@ class SocialAuthClientTest {
         assertThat(publicKey.getEncoded()).isEqualTo(kakaoJwk.publicKey().getEncoded());
     }
 
-    @DisplayName("공개키 캐시 갱신 후에도 비어 있으면 서버 에러로 처리한다")
+    @DisplayName("JWKS 응답에 keys가 비어 있으면 응답 계약 위반으로 처리한다")
     @Test
-    void getPublicKey_cacheStillEmpty_throwsInternalServerError() {
+    void getPublicKey_cacheStillEmpty_throwsMalformedResponse() {
         // given
         stubJwksFailure("/kakao/.well-known/jwks.json");
         SocialAuthClient socialAuthClient = createSocialAuthClient();
         wireMock.resetAll();
         stubEmptyJwks("/kakao/.well-known/jwks.json");
 
-        // then
+        // when & then
         assertThatThrownBy(() -> socialAuthClient.getPublicKey(SocialProvider.KAKAO, "missing-key"))
-            .isInstanceOf(JwtBaseException.class)
-            .hasMessageContaining("Public key cache is empty")
-            .satisfies(exception ->
-                assertThat(((JwtBaseException)exception).getStatusCode())
-                    .isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+            .isInstanceOf(ExternalApiException.class)
+            .satisfies(thrown -> {
+                ExternalApiException exception = (ExternalApiException)thrown;
+                assertThat(exception.getType()).isEqualTo(FailureType.MALFORMED_RESPONSE);
+                assertThat(exception.getStatusCode()).isEqualTo(500);
+            });
     }
 
     @DisplayName("kid가 캐시에 없으면 공개키를 한 번 갱신한 뒤 다시 조회한다")
@@ -127,9 +130,9 @@ class SocialAuthClientTest {
         assertThat(publicKey.getEncoded()).isEqualTo(rotatedJwk.publicKey().getEncoded());
     }
 
-    @DisplayName("kid가 없어 갱신을 시도했으나 실패하면 서버 에러로 처리한다")
+    @DisplayName("kid가 없어 갱신을 시도했으나 JWKS가 5xx면 외부 장애로 처리한다")
     @Test
-    void getPublicKey_refreshFailsOnKidMiss_throwsInternalServerError() throws Exception {
+    void getPublicKey_refreshFailsOnKidMiss_throwsExternalApiException() throws Exception {
         // given
         RsaJwk oldJwk = createRsaJwk("old-key");
         stubJwks("/kakao/.well-known/jwks.json", oldJwk);
@@ -137,13 +140,64 @@ class SocialAuthClientTest {
         wireMock.resetAll();
         stubJwksFailure("/kakao/.well-known/jwks.json");
 
-        // then
+        // when & then
         assertThatThrownBy(() -> socialAuthClient.getPublicKey(SocialProvider.KAKAO, "rotated-key"))
+            .isInstanceOf(ExternalApiException.class)
+            .satisfies(thrown -> {
+                ExternalApiException exception = (ExternalApiException)thrown;
+                assertThat(exception.getType()).isEqualTo(FailureType.UPSTREAM_ERROR);
+                assertThat(exception.getStatusCode()).isEqualTo(503);
+            });
+    }
+
+    @DisplayName("갱신에 실패해도 기존 캐시는 지워지지 않아 다른 kid 조회가 계속 성공한다")
+    @Test
+    void getPublicKey_refreshFailure_keepsExistingCache() throws Exception {
+        // given
+        RsaJwk oldJwk = createRsaJwk("old-key");
+        stubJwks("/kakao/.well-known/jwks.json", oldJwk);
+        SocialAuthClient socialAuthClient = createSocialAuthClient();
+        wireMock.resetAll();
+        stubJwksFailure("/kakao/.well-known/jwks.json");
+
+        // when — 캐시에 없는 kid를 요청해 갱신을 유발하고 실패시킨다
+        assertThatThrownBy(() -> socialAuthClient.getPublicKey(SocialProvider.KAKAO, "rotated-key"))
+            .isInstanceOf(ExternalApiException.class);
+
+        // then — 기존 kid는 여전히 캐시에서 조회된다
+        assertThat(socialAuthClient.getPublicKey(SocialProvider.KAKAO, "old-key").getEncoded())
+            .isEqualTo(oldJwk.publicKey().getEncoded());
+    }
+
+    @DisplayName("캐시에 kid가 있으면 JWKS를 다시 조회하지 않는다")
+    @Test
+    void getPublicKey_cacheHit_doesNotRefetch() throws Exception {
+        // given
+        RsaJwk jwk = createRsaJwk("kakao-key");
+        stubJwks("/kakao/.well-known/jwks.json", jwk);
+        SocialAuthClient socialAuthClient = createSocialAuthClient();
+        wireMock.resetRequests();
+
+        // when
+        socialAuthClient.getPublicKey(SocialProvider.KAKAO, "kakao-key");
+
+        // then
+        wireMock.verify(0, getRequestedFor(urlPathEqualTo("/kakao/.well-known/jwks.json")));
+    }
+
+    @DisplayName("갱신에 성공했는데도 kid가 없으면 위조 토큰으로 보고 401을 던진다")
+    @Test
+    void getPublicKey_unknownKidAfterSuccessfulRefresh_throwsUnauthorized() throws Exception {
+        // given
+        RsaJwk jwk = createRsaJwk("kakao-key");
+        stubJwks("/kakao/.well-known/jwks.json", jwk);
+        SocialAuthClient socialAuthClient = createSocialAuthClient();
+
+        // when & then
+        assertThatThrownBy(() -> socialAuthClient.getPublicKey(SocialProvider.KAKAO, "forged-kid"))
             .isInstanceOf(JwtBaseException.class)
-            .hasMessageContaining("Failed to refresh JWKS")
-            .satisfies(exception ->
-                assertThat(((JwtBaseException)exception).getStatusCode())
-                    .isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value()));
+            .extracting("statusCode")
+            .isEqualTo(401);
     }
 
     private SocialAuthClient createSocialAuthClient() {
