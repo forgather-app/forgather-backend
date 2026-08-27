@@ -1,8 +1,7 @@
 package com.forgather.global.external;
 
-import org.springframework.http.HttpStatus;
-
 import org.slf4j.event.Level;
+import org.springframework.http.HttpStatus;
 
 /**
  * 외부 호출 실패의 원인 분류이자 정책 테이블.
