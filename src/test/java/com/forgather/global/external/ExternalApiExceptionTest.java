@@ -129,7 +129,7 @@ class ExternalApiExceptionTest {
             () -> assertThat(refined.getType()).isEqualTo(FailureType.AUTH_REJECTED),
             () -> assertThat(refined.getStatusCode()).isEqualTo(401),
             () -> assertThat(refined.getResponseBody()).contains("invalid_grant"),
-            () -> assertThat(refined.getOperation().name()).isEqualTo("token"),
+            () -> assertThat(refined.getOperation().operationName()).isEqualTo("token"),
             () -> assertThat(refined.getOperation().service()).isEqualTo(ExternalService.APPLE)
         );
     }
