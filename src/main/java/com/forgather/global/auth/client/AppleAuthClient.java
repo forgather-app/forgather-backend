@@ -60,7 +60,12 @@ public class AppleAuthClient {
                     .retrieve()
                     .body(AppleTokenResponse.class));
         } catch (ExternalApiException e) {
-            throw refine(e);
+            // invalid_grant는 이미 쓴 code를 다시 보냈거나 만료된 경우로 사용자가 재로그인해야 한다.
+            if (e.getType() == FailureType.CALLER_ERROR
+                && "invalid_grant".equals(parseError(e.getResponseBody()))) {
+                throw e.as(FailureType.AUTH_REJECTED);
+            }
+            throw e;
         }
         validateResponse(response);
         return response;
@@ -77,8 +82,6 @@ public class AppleAuthClient {
         form.add("token", refreshToken);
         form.add("token_type_hint", "refresh_token");
 
-        // revoke의 4xx는 client_secret 설정이나 저장된 refresh token이 잘못된 우리 쪽 문제이므로
-        // 1차 분류(CALLER_ERROR → 500 error)를 그대로 쓴다. 세분화할 provider 지식이 없다.
         ExternalCalls.execute(ExternalOperation.APPLE_REVOKE, () ->
             restClient.post()
                 .uri(appleProperties.getRevokeUrl())
@@ -88,25 +91,6 @@ public class AppleAuthClient {
                 .toBodilessEntity());
     }
 
-    /**
-     * token 교환의 2차 세분화. 응답 본문의 error 코드를 읽어야만 아는 것만 다룬다.
-     * 5xx·타임아웃 분류는 provider 지식이 필요 없으므로 손대지 않는다.
-     */
-    private ExternalApiException refine(ExternalApiException exception) {
-        if (exception.getType() != FailureType.CALLER_ERROR) {
-            return exception;
-        }
-        // invalid_grant는 이미 쓴 code를 다시 보냈거나 만료된 경우로 사용자가 재로그인해야 한다.
-        if ("invalid_grant".equals(parseError(exception.getResponseBody()))) {
-            return exception.as(FailureType.AUTH_REJECTED);
-        }
-        return exception;
-    }
-
-    /**
-     * 200인데 필수 필드가 비었다면 애플이 계약을 바꿨거나 우리 DTO가 어긋난 것이다.
-     * 외부 장애로 위장되지 않도록 error로 분류한다.
-     */
     private void validateResponse(AppleTokenResponse response) {
         if (response == null
             || !StringUtils.hasText(response.accessToken())

@@ -60,28 +60,21 @@ public class KakaoAuthClient {
                     .retrieve()
                     .toBodilessEntity());
         } catch (ExternalApiException e) {
-            absorbOrRethrow(e, userId);
+            if (e.getType() == FailureType.CALLER_ERROR && isAlreadyUnlinked(e.getResponseBody())) {
+                log.atInfo()
+                    .addKeyValue("service", "KAKAO")
+                    .addKeyValue("operation", "unlink")
+                    .addKeyValue("result", "alreadyUnlinked")
+                    .log("Kakao unlink 대상이 이미 해제되어 있습니다. userId: {}", userId);
+                return;
+            }
+            throw e;
         }
     }
 
     /**
      * -101은 이미 앱과 연결이 끊긴 사용자로 unlink의 목적이 이미 달성된 상태다.
-     * <p>
-     * 단 잘못된 admin key로도 동일하게 -101이 발생한다(user_id가 앱 스코프이므로).
-     * 전 건이 조용히 성공 처리되는 상황을 감지할 수 있도록 info 로그에 kv를 남긴다.
      */
-    private void absorbOrRethrow(ExternalApiException exception, String userId) {
-        if (exception.getType() == FailureType.CALLER_ERROR && isAlreadyUnlinked(exception.getResponseBody())) {
-            log.atInfo()
-                .addKeyValue("service", "KAKAO")
-                .addKeyValue("operation", "unlink")
-                .addKeyValue("result", "alreadyUnlinked")
-                .log("Kakao unlink 대상이 이미 해제되어 있습니다. userId: {}", userId);
-            return;
-        }
-        throw exception;
-    }
-
     private boolean isAlreadyUnlinked(String responseBody) {
         if (!StringUtils.hasText(responseBody)) {
             return false;
