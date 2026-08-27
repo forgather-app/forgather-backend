@@ -22,6 +22,8 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.forgather.global.external.ExternalApiException;
+import com.forgather.global.external.ExternalOperation;
+import com.forgather.global.external.FailureType;
 import com.forgather.global.response.ApiResponse;
 import com.forgather.global.response.ResponseCode;
 
@@ -181,18 +183,49 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 외부 서비스 일시 장애 -> warn
-     * 우리 서버 결함이 아니므로 error로 올리지 않되, 원인 추적을 위해 stack trace는 남긴다.
-     * 응답은 5xx 마스킹 대신 재시도를 안내하는 고정 문구를 쓴다.
+     * 외부 서비스 호출 실패.
+     * 응답 status와 로그 레벨을 FailureType에서 파생시켜 정책이 클라이언트에 흩어지지 않게 한다.
+     * 외부 5xx·타임아웃은 우리가 개입할 수 없으므로 warn으로 두고, 심각도는
+     * http.client.requests 메트릭의 실패율이 판단한다.
      */
     @ExceptionHandler(ExternalApiException.class)
     public ResponseEntity<ApiResponse<Void>> handleExternalApiException(ExternalApiException e) {
-        logExternalApiWarning(e);
+        logExternalApi(e);
         return ResponseEntity.status(e.getStatusCode())
             .contentType(APPLICATION_JSON)
-            .body(ApiResponse.error(
-                ResponseCode.EXTERNAL_API_UNAVAILABLE,
-                "외부 서비스 일시 장애로 요청에 실패했습니다. 잠시 후 다시 시도해 주세요."));
+            .body(ApiResponse.error(resolveExternalCode(e.getType()), resolveExternalMessage(e.getType())));
+    }
+
+    private void logExternalApi(ExternalApiException e) {
+        // Task 9에서 제거할 레거시 생성자로 만든 예외는 operation이 없다.
+        // 마이그레이션이 끝나지 않은 클라이언트의 예외가 여기 도달할 수 있으므로 방어한다.
+        ExternalOperation operation = e.getOperation();
+        log.atLevel(e.getLogLevel())
+            .setCause(e)
+            .addKeyValue("service", operation == null ? "UNKNOWN" : operation.service().name())
+            .addKeyValue("operation", operation == null ? "unknown" : operation.name())
+            .addKeyValue("failureType", e.getType().name())
+            .log("{}: {}", e.getClass().getSimpleName(), e.getMessage());
+    }
+
+    private ResponseCode resolveExternalCode(FailureType type) {
+        return switch (type) {
+            case AUTH_REJECTED -> ResponseCode.UNAUTHORIZED;
+            case CALLER_ERROR, MALFORMED_RESPONSE -> ResponseCode.INTERNAL_ERROR;
+            default -> ResponseCode.EXTERNAL_API_UNAVAILABLE;
+        };
+    }
+
+    /**
+     * 원본 메시지는 내부 정보(설정 키, 외부 응답 본문 등) 유출 우려가 있어 응답에서는 고정 문구를 쓴다.
+     * 추적은 logExternalApi가 남기는 stack trace와 kv로 수행한다.
+     */
+    private String resolveExternalMessage(FailureType type) {
+        return switch (type) {
+            case AUTH_REJECTED -> "소셜 로그인 인증에 실패했습니다. 다시 로그인해 주세요.";
+            case CALLER_ERROR, MALFORMED_RESPONSE -> "예상치 못한 오류가 발생했습니다.";
+            default -> "외부 서비스 일시 장애로 요청에 실패했습니다. 잠시 후 다시 시도해 주세요.";
+        };
     }
 
     /**
@@ -288,9 +321,5 @@ public class GlobalExceptionHandler {
 
     private void logServerError(Exception e) {
         log.atError().setCause(e).log("{}: {}", e.getClass().getSimpleName(), e.getMessage());
-    }
-
-    private void logExternalApiWarning(Exception e) {
-        log.atWarn().setCause(e).log("{}: {}", e.getClass().getSimpleName(), e.getMessage());
     }
 }
