@@ -65,7 +65,7 @@ public class KakaoAuthClient {
                     .addKeyValue("service", "KAKAO")
                     .addKeyValue("operation", "unlink")
                     .addKeyValue("result", "alreadyUnlinked")
-                    .log("Kakao unlink 대상이 이미 해제되어 있습니다. userId: {}", userId);
+                    .log("Kakao unlink 대상이 이미 해제되어 있습니다.");
                 return;
             }
             throw e;
