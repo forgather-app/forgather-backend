@@ -59,10 +59,6 @@ public class SocialAuthClient {
 
     /**
      * 캐시 폴백 우선. JWKS가 흔들려도 캐시에 유효한 키가 있으면 로그인이 살아있게 한다.
-     * <p>
-     * 갱신에 실패했을 때 kid를 못 찾은 이유가 "위조 토큰"인지 "키 롤오버 직후 + JWKS 다운"인지
-     * 구분할 수 없다. 401로 단정하면 정상 사용자를 튕기므로 외부 장애(503)로 본다.
-     * 갱신에 성공했는데도 kid가 없으면 그때는 위조이므로 401을 유지한다.
      */
     public PublicKey getPublicKey(SocialProvider provider, String kid) {
         Optional<PublicKey> cached = findInCache(provider, kid);
