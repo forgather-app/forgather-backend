@@ -193,7 +193,10 @@ public class Host extends SoftDeleteEntity {
         }
     }
 
-    public void anonymize() {
+    /**
+     * 개인정보를 익명화한다. 이미 익명화된 회원은 다시 처리하지 않으므로 중복 호출에 안전하다.
+     */
+    public void anonymize(LocalDateTime now) {
         if (anonymizedAt != null) {
             return;
         }
@@ -203,7 +206,7 @@ public class Host extends SoftDeleteEntity {
         this.email = null;
         this.introduction = null;
         this.linkUrl = null;
-        this.anonymizedAt = LocalDateTime.now();
+        this.anonymizedAt = now;
     }
 
     public boolean hasValidNickname() {

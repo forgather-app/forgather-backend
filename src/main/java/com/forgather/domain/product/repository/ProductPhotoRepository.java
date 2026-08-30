@@ -3,8 +3,12 @@ package com.forgather.domain.product.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
 import com.forgather.domain.product.model.Product;
 import com.forgather.domain.product.model.ProductPhoto;
+import com.forgather.domain.space.model.Space;
 
 public interface ProductPhotoRepository {
 
@@ -24,5 +28,15 @@ public interface ProductPhotoRepository {
     List<ProductPhoto> findAllByProductAndDeletedAtIsNull(Product product);
 
     <S extends ProductPhoto> List<S> saveAll(Iterable<S> photos);
+
+    /**
+     * soft delete된 행을 포함해 여러 스페이스에 속한 모든 작품 사진을 조회한다.
+     */
+    @Query("""
+        SELECT pp
+        FROM ProductPhoto pp
+        WHERE pp.product.space IN :spaces
+        """)
+    List<ProductPhoto> findAllBySpaceIn(@Param("spaces") List<Space> spaces);
 
 }

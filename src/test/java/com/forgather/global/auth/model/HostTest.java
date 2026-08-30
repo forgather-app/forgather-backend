@@ -22,15 +22,16 @@ class HostTest {
 
     private static final String VALID_CODE = "a3f2k9x1qz";
 
-    @DisplayName("익명화하면 개인정보가 제거되고 익명화 시각이 기록된다")
+    @DisplayName("익명화하면 개인정보가 제거되고 전달받은 시각이 익명화 시각으로 기록된다")
     @Test
     void anonymize() {
         // given
         Host host = createHostWithLegacyPictureUrl("https://cdn.forgather.app/hosts/1/profile/a.webp");
         host.updateProfile(null, "안녕하세요, 포게더 작가입니다.", "https://forgather.app/");
+        LocalDateTime now = LocalDateTime.now();
 
         // when
-        host.anonymize();
+        host.anonymize(now);
 
         // then
         assertAll(
@@ -40,7 +41,7 @@ class HostTest {
             () -> assertThat(host.getEmail()).isNull(),
             () -> assertThat(host.getIntroduction()).isNull(),
             () -> assertThat(host.getLinkUrl()).isNull(),
-            () -> assertThat(host.getAnonymizedAt()).isNotNull()
+            () -> assertThat(host.getAnonymizedAt()).isEqualTo(now)
         );
     }
 
@@ -371,11 +372,11 @@ class HostTest {
     void anonymizeIsIdempotent() {
         // given
         Host host = createHost();
-        host.anonymize();
-        LocalDateTime firstAnonymizedAt = host.getAnonymizedAt();
+        LocalDateTime firstAnonymizedAt = LocalDateTime.now();
+        host.anonymize(firstAnonymizedAt);
 
         // when
-        host.anonymize();
+        host.anonymize(firstAnonymizedAt.plusDays(1));
 
         // then
         assertThat(host.getAnonymizedAt()).isEqualTo(firstAnonymizedAt);
