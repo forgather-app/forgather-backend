@@ -1,7 +1,17 @@
 package com.forgather.global.auth.client;
 
+import com.forgather.global.external.ExternalService;
+
 public enum SocialProvider {
     KAKAO,
     GOOGLE,
-    APPLE
+    APPLE;
+
+    public ExternalService toExternalService() {
+        return switch (this) {
+            case KAKAO -> ExternalService.KAKAO;
+            case GOOGLE -> ExternalService.GOOGLE;
+            case APPLE -> ExternalService.APPLE;
+        };
+    }
 }

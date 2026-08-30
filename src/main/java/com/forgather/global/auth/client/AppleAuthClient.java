@@ -7,8 +7,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestClientResponseException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.global.auth.dto.AppleTokenErrorResponse;
@@ -16,6 +14,10 @@ import com.forgather.global.auth.dto.AppleTokenResponse;
 import com.forgather.global.auth.util.AppleClientSecretProvider;
 import com.forgather.global.config.AppleProperties;
 import com.forgather.global.exception.BaseException;
+import com.forgather.global.external.ExternalApiException;
+import com.forgather.global.external.ExternalCalls;
+import com.forgather.global.external.ExternalOperation;
+import com.forgather.global.external.FailureType;
 
 @Component
 public class AppleAuthClient {
@@ -48,20 +50,25 @@ public class AppleAuthClient {
         form.add("code", authorizationCode);
         form.add("grant_type", "authorization_code");
 
+        AppleTokenResponse response;
         try {
-            AppleTokenResponse response = restClient.post()
-                .uri(appleProperties.getTokenUrl())
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(form)
-                .retrieve()
-                .body(AppleTokenResponse.class);
-            validateResponse(response);
-            return response;
-        } catch (RestClientResponseException e) {
-            throw toAppleTokenException(e);
-        } catch (RestClientException e) {
-            throw new BaseException("Apple token 서버에 연결할 수 없습니다.", HttpStatus.BAD_GATEWAY, e);
+            response = ExternalCalls.execute(ExternalOperation.APPLE_TOKEN, () ->
+                restClient.post()
+                    .uri(appleProperties.getTokenUrl())
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(form)
+                    .retrieve()
+                    .body(AppleTokenResponse.class));
+        } catch (ExternalApiException e) {
+            // invalid_grant는 이미 쓴 code를 다시 보냈거나 만료된 경우로 사용자가 재로그인해야 한다.
+            if (e.getType() == FailureType.CALLER_ERROR
+                && "invalid_grant".equals(parseError(e.getResponseBody()))) {
+                throw e.as(FailureType.AUTH_REJECTED);
+            }
+            throw e;
         }
+        validateResponse(response);
+        return response;
     }
 
     public void revoke(String refreshToken) {
@@ -75,18 +82,13 @@ public class AppleAuthClient {
         form.add("token", refreshToken);
         form.add("token_type_hint", "refresh_token");
 
-        try {
+        ExternalCalls.execute(ExternalOperation.APPLE_REVOKE, () ->
             restClient.post()
                 .uri(appleProperties.getRevokeUrl())
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(form)
                 .retrieve()
-                .toBodilessEntity();
-        } catch (RestClientResponseException e) {
-            throw new BaseException("Apple token revoke에 실패했습니다.", HttpStatus.BAD_GATEWAY, e);
-        } catch (RestClientException e) {
-            throw new BaseException("Apple token 서버에 연결할 수 없습니다.", HttpStatus.BAD_GATEWAY, e);
-        }
+                .toBodilessEntity());
     }
 
     private void validateResponse(AppleTokenResponse response) {
@@ -95,23 +97,11 @@ public class AppleAuthClient {
             || !StringUtils.hasText(response.refreshToken())
             || !StringUtils.hasText(response.idToken())
             || response.expiresIn() == null) {
-            throw new BaseException("Apple token 응답이 올바르지 않습니다.", HttpStatus.BAD_GATEWAY);
+            throw new ExternalApiException(
+                ExternalOperation.APPLE_TOKEN,
+                FailureType.MALFORMED_RESPONSE,
+                "Apple token 응답이 올바르지 않습니다.");
         }
-    }
-
-    private BaseException toAppleTokenException(RestClientResponseException exception) {
-        String error = parseError(exception.getResponseBodyAsString());
-        return switch (error) {
-            case "invalid_grant" ->
-                new BaseException("Apple authorization code가 유효하지 않습니다.", HttpStatus.UNAUTHORIZED, exception);
-            case "invalid_request" ->
-                new BaseException("Apple token 요청이 올바르지 않습니다.", HttpStatus.INTERNAL_SERVER_ERROR, exception);
-            case "invalid_scope" ->
-                new BaseException("Apple token 요청 scope가 올바르지 않습니다.", HttpStatus.INTERNAL_SERVER_ERROR, exception);
-            case "invalid_client", "unauthorized_client", "unsupported_grant_type" ->
-                new BaseException("Apple token 서버 인증에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, exception);
-            default -> new BaseException("Apple token 교환에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, exception);
-        };
     }
 
     private String parseError(String responseBody) {

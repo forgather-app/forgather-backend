@@ -34,6 +34,9 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.forgather.global.external.ExternalApiException;
+import com.forgather.global.external.ExternalOperation;
+import com.forgather.global.external.FailureType;
 
 import io.jsonwebtoken.JwtException;
 
@@ -207,6 +210,34 @@ class GlobalExceptionHandlerTest {
             Snapshot res = perform(new UnauthorizedException("로그인이 필요합니다"));
 
             assertEnvelope(res, 401, "UNAUTHORIZED", "로그인이 필요합니다");
+        }
+
+        @DisplayName("외부 장애(UPSTREAM_ERROR) -> 503 / EXTERNAL_API_UNAVAILABLE / 재시도 안내")
+        @Test
+        void externalUpstreamError() throws Exception {
+            Snapshot res = perform(new ExternalApiException(
+                ExternalOperation.APPLE_TOKEN, FailureType.UPSTREAM_ERROR, "Apple token 서버에 장애가 발생했습니다."));
+
+            assertEnvelope(res, 503, "EXTERNAL_API_UNAVAILABLE",
+                "외부 서비스 일시 장애로 요청에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+        }
+
+        @DisplayName("우리 쪽 결함(CALLER_ERROR) -> 500 / INTERNAL_ERROR / 메시지 마스킹")
+        @Test
+        void externalCallerError() throws Exception {
+            Snapshot res = perform(new ExternalApiException(
+                ExternalOperation.KAKAO_UNLINK, FailureType.CALLER_ERROR, "admin key가 유효하지 않습니다."));
+
+            assertEnvelope(res, 500, "INTERNAL_ERROR", "예상치 못한 오류가 발생했습니다.");
+        }
+
+        @DisplayName("사용자 입력 문제(AUTH_REJECTED) -> 401 / UNAUTHORIZED / 재로그인 안내")
+        @Test
+        void externalAuthRejected() throws Exception {
+            Snapshot res = perform(new ExternalApiException(
+                ExternalOperation.APPLE_TOKEN, FailureType.AUTH_REJECTED, "Apple authorization code가 유효하지 않습니다."));
+
+            assertEnvelope(res, 401, "UNAUTHORIZED", "소셜 로그인 인증에 실패했습니다. 다시 로그인해 주세요.");
         }
     }
 

@@ -26,9 +26,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.global.auth.dto.AppleTokenResponse;
 import com.forgather.global.auth.util.AppleClientSecretProvider;
 import com.forgather.global.config.AppleProperties;
-import com.forgather.global.exception.BaseException;
+import com.forgather.global.external.ExternalApiException;
+import com.forgather.global.external.FailureType;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.http.Fault;
 
 class AppleAuthClientTest {
 
@@ -86,7 +88,7 @@ class AppleAuthClientTest {
             .withRequestBody(containing("grant_type=authorization_code")));
     }
 
-    @DisplayName("Apple이 invalid_grant를 반환하면 유효하지 않은 authorization code 예외를 던진다")
+    @DisplayName("Apple이 invalid_grant를 반환하면 사용자 입력 문제로 분류한다")
     @Test
     void exchangeAuthorizationCodeWithInvalidGrant() {
         // given
@@ -100,10 +102,52 @@ class AppleAuthClientTest {
 
         // when & then
         assertThatThrownBy(() -> appleAuthClient.exchangeAuthorizationCode("invalid-code"))
-            .isInstanceOf(BaseException.class)
-            .hasMessageContaining("authorization code")
-            .extracting("statusCode")
-            .isEqualTo(401);
+            .isInstanceOf(ExternalApiException.class)
+            .extracting("type")
+            .isEqualTo(FailureType.AUTH_REJECTED);
+    }
+
+    @DisplayName("Apple이 invalid_client를 반환하면 우리 설정 오류로 분류한다")
+    @Test
+    void exchangeAuthorizationCodeWithInvalidClient() {
+        // given
+        wireMock.stubFor(post(urlEqualTo("/auth/token"))
+            .willReturn(aResponse()
+                .withStatus(400)
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .withBody("""
+                    {"error":"invalid_client"}
+                    """)));
+
+        // when & then
+        assertThatThrownBy(() -> appleAuthClient.exchangeAuthorizationCode("code"))
+            .isInstanceOf(ExternalApiException.class)
+            .satisfies(thrown -> {
+                ExternalApiException exception = (ExternalApiException)thrown;
+                assertThat(exception.getType()).isEqualTo(FailureType.CALLER_ERROR);
+                assertThat(exception.getStatusCode()).isEqualTo(500);
+            });
+    }
+
+    @DisplayName("200이지만 필수 필드가 비면 우리 DTO 문제로 보고 MALFORMED_RESPONSE로 분류한다")
+    @Test
+    void exchangeAuthorizationCodeWithIncompleteBody() {
+        // given
+        wireMock.stubFor(post(urlEqualTo("/auth/token"))
+            .willReturn(aResponse()
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .withBody("""
+                    {"access_token":"only-access-token"}
+                    """)));
+
+        // when & then
+        assertThatThrownBy(() -> appleAuthClient.exchangeAuthorizationCode("code"))
+            .isInstanceOf(ExternalApiException.class)
+            .satisfies(thrown -> {
+                ExternalApiException exception = (ExternalApiException)thrown;
+                assertThat(exception.getType()).isEqualTo(FailureType.MALFORMED_RESPONSE);
+                assertThat(exception.getStatusCode()).isEqualTo(500);
+            });
     }
 
     @DisplayName("Apple이 invalid_scope를 반환하면 token 요청 설정 예외를 던진다")
@@ -120,10 +164,80 @@ class AppleAuthClientTest {
 
         // when & then
         assertThatThrownBy(() -> appleAuthClient.exchangeAuthorizationCode("authorization-code"))
-            .isInstanceOf(BaseException.class)
-            .hasMessageContaining("scope")
+            .isInstanceOf(ExternalApiException.class)
+            .satisfies(thrown -> {
+                ExternalApiException exception = (ExternalApiException)thrown;
+                assertThat(exception.getType()).isEqualTo(FailureType.CALLER_ERROR);
+                assertThat(exception.getStatusCode()).isEqualTo(500);
+            });
+    }
+
+    @DisplayName("Apple token 서버가 5xx를 반환하면 외부 장애로 분류한다")
+    @Test
+    void exchangeAuthorizationCodeWithServerError() {
+        // given
+        wireMock.stubFor(post(urlEqualTo("/auth/token"))
+            .willReturn(aResponse().withStatus(503)));
+
+        // when & then
+        assertThatThrownBy(() -> appleAuthClient.exchangeAuthorizationCode("code"))
+            .isInstanceOf(ExternalApiException.class)
+            .satisfies(thrown -> {
+                ExternalApiException exception = (ExternalApiException)thrown;
+                assertThat(exception.getType()).isEqualTo(FailureType.UPSTREAM_ERROR);
+                assertThat(exception.getStatusCode()).isEqualTo(503);
+            });
+    }
+
+    @DisplayName("Apple token 서버 연결에 실패하면 재시도 없이 외부 서비스 장애 예외를 던진다")
+    @Test
+    void exchangeAuthorizationCodeWithConnectionFailure() {
+        // given
+        wireMock.stubFor(post(urlEqualTo("/auth/token"))
+            .willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)));
+
+        // when & then
+        assertThatThrownBy(() -> appleAuthClient.exchangeAuthorizationCode("authorization-code"))
+            .isInstanceOf(ExternalApiException.class)
             .extracting("statusCode")
-            .isEqualTo(500);
+            .isEqualTo(503);
+        wireMock.verify(1, postRequestedFor(urlEqualTo("/auth/token")));
+    }
+
+    @DisplayName("Apple revoke가 4xx로 실패하면 우리 쪽 오류로 500을 던진다")
+    @Test
+    void revokeWithClientError() {
+        // given
+        wireMock.stubFor(post(urlEqualTo("/auth/revoke"))
+            .willReturn(aResponse()
+                .withStatus(400)
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .withBody("""
+                    {"error":"invalid_client"}
+                    """)));
+
+        // when & then
+        assertThatThrownBy(() -> appleAuthClient.revoke("apple-refresh-token"))
+            .isInstanceOf(ExternalApiException.class)
+            .satisfies(thrown -> {
+                ExternalApiException exception = (ExternalApiException)thrown;
+                assertThat(exception.getType()).isEqualTo(FailureType.CALLER_ERROR);
+                assertThat(exception.getStatusCode()).isEqualTo(500);
+            });
+    }
+
+    @DisplayName("Apple revoke가 5xx로 실패하면 외부 서비스 장애 예외를 던진다")
+    @Test
+    void revokeWithServerError() {
+        // given
+        wireMock.stubFor(post(urlEqualTo("/auth/revoke"))
+            .willReturn(aResponse().withStatus(500)));
+
+        // when & then
+        assertThatThrownBy(() -> appleAuthClient.revoke("apple-refresh-token"))
+            .isInstanceOf(ExternalApiException.class)
+            .extracting("statusCode")
+            .isEqualTo(503);
     }
 
     private AppleProperties appleProperties() throws Exception {
@@ -135,7 +249,7 @@ class AppleAuthClientTest {
             "test-key-id",
             toPem(generateEcKeyPair()),
             wireMock.baseUrl() + "/auth/token",
-            "https://appleid.apple.com/auth/revoke"
+            wireMock.baseUrl() + "/auth/revoke"
         );
     }
 

@@ -21,7 +21,12 @@ import org.springframework.web.client.RestClient;
 import com.forgather.global.config.AppleProperties;
 import com.forgather.global.config.GoogleProperties;
 import com.forgather.global.config.KakaoProperties;
+import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.JwtBaseException;
+import com.forgather.global.external.ExternalApiException;
+import com.forgather.global.external.ExternalCalls;
+import com.forgather.global.external.ExternalOperation;
+import com.forgather.global.external.FailureType;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,51 +57,34 @@ public class SocialAuthClient {
         updateAllKeys();
     }
 
+    /**
+     * 캐시 폴백 우선. JWKS가 흔들려도 캐시에 유효한 키가 있으면 로그인이 살아있게 한다.
+     */
     public PublicKey getPublicKey(SocialProvider provider, String kid) {
-        List<Map<String, Object>> keys = keyCaches.get(provider);
-        if (keys == null || keys.isEmpty()) {
-            synchronized (getKeyUpdateLock(provider)) {
-                keys = keyCaches.get(provider);
-                if (keys == null || keys.isEmpty()) {
-                    refreshKeys(provider);
-                    keys = keyCaches.get(provider);
-                }
-            }
+        Optional<PublicKey> cached = findInCache(provider, kid);
+        if (cached.isPresent()) {
+            return cached.get();
         }
 
-        Optional<PublicKey> publicKey = findPublicKey(keys, kid);
-        if (publicKey.isPresent()) {
-            return publicKey.get();
-        }
-
-        // kid 없는 경우 갱신
-        List<Map<String, Object>> refreshedKeys;
         synchronized (getKeyUpdateLock(provider)) {
-            refreshedKeys = keyCaches.get(provider);
-            if (refreshedKeys != null && !refreshedKeys.isEmpty()) {
-                publicKey = findPublicKey(refreshedKeys, kid);
-                if (publicKey.isPresent()) {
-                    return publicKey.get();
-                }
+            Optional<PublicKey> rechecked = findInCache(provider, kid);
+            if (rechecked.isPresent()) {
+                return rechecked.get();
             }
-
             refreshKeys(provider);
-            refreshedKeys = keyCaches.get(provider);
         }
 
-        return findPublicKey(refreshedKeys, kid)
-            .orElseThrow(() ->
-                new JwtBaseException(
-                    "Public key not found for provider: %s, kid: %s".formatted(provider, kid),
-                    HttpStatus.UNAUTHORIZED)
-            );
+        return findInCache(provider, kid)
+            .orElseThrow(() -> new JwtBaseException(
+                "Public key not found for provider: %s, kid: %s".formatted(provider, kid),
+                HttpStatus.UNAUTHORIZED));
     }
 
-    private Optional<PublicKey> findPublicKey(List<Map<String, Object>> keys, String kid) {
+    private Optional<PublicKey> findInCache(SocialProvider provider, String kid) {
+        List<Map<String, Object>> keys = keyCaches.get(provider);
         if (keys == null || keys.isEmpty()) {
-            throw new JwtBaseException("Public key cache is empty", HttpStatus.INTERNAL_SERVER_ERROR);
+            return Optional.empty();
         }
-
         return keys.stream()
             .filter(key -> kid.equals(key.get("kid")))
             .findFirst()
@@ -115,16 +103,10 @@ public class SocialAuthClient {
     }
 
     /**
-     * 토큰 검증 경로용. 갱신 실패는 최신 키를 확인할 수 없다는 뜻이므로 서버 오류로 전파한다.
+     * 토큰 검증 경로용. fetch에 성공했을 때만 캐시를 교체하므로 갱신 실패가 기존 캐시를 지우지 않는다.
      */
     private void refreshKeys(SocialProvider provider) {
-        try {
-            keyCaches.put(provider, fetchKeys(provider));
-        } catch (Exception e) {
-            throw new JwtBaseException(
-                "Failed to refresh JWKS for provider: %s".formatted(provider),
-                HttpStatus.INTERNAL_SERVER_ERROR, e);
-        }
+        keyCaches.put(provider, fetchKeys(provider));
     }
 
     public void updateAllKeys() {
@@ -160,22 +142,23 @@ public class SocialAuthClient {
     private List<Map<String, Object>> fetchKeys(SocialProvider provider) {
         String jwksUrl = jwksUrls.get(provider);
         if (!StringUtils.hasText(jwksUrl)) {
-            throw new IllegalStateException("JWKS URL is not configured for provider: " + provider);
+            throw new BaseException(
+                "JWKS URL이 설정되지 않았습니다. provider: " + provider, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        Map<String, Object> jwks = restClient.get()
-            .uri(jwksUrl)
-            .retrieve()
-            .body(Map.class);
-        if (jwks == null) {
-            throw new IllegalStateException("Failed to fetch JWKS for provider: " + provider);
-        }
+        ExternalOperation operation = ExternalOperation.jwks(provider.toExternalService());
+        Map<String, Object> jwks = ExternalCalls.execute(operation, () ->
+            restClient.get()
+                .uri(jwksUrl)
+                .retrieve()
+                .body(Map.class));
 
-        Object keys = jwks.get("keys");
-        if (!(keys instanceof List<?>)) {
-            throw new IllegalStateException("JWKS keys are missing for provider: " + provider);
+        if (jwks == null || !(jwks.get("keys") instanceof List<?> keys) || keys.isEmpty()) {
+            throw new ExternalApiException(
+                operation,
+                FailureType.MALFORMED_RESPONSE,
+                "JWKS 응답에 keys가 없습니다. provider: " + provider);
         }
-
         return (List<Map<String, Object>>)keys;
     }
 }
