@@ -70,6 +70,15 @@ public class HostController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @GetMapping("/auth/me")
+    @Operation(summary = "내 정보 확인",
+        description = "현재 로그인된 사용자의 정보를 확인합니다. " +
+            "로그인된 사용자가 없으면 401 Unauthorized를 반환합니다.")
+    public ResponseEntity<ApiResponse<HostResponse>> getCurrentUser(@LoginHost Host host) {
+        var response = hostService.getAccount(host);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @PostMapping("/auth/onboarding")
     @Operation(summary = "온보딩 완료",
         description = "서비스 닉네임과 약관 동의 이력을 함께 저장합니다. " +
