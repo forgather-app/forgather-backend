@@ -1,4 +1,4 @@
-package com.forgather.global.auth.dto;
+package com.forgather.domain.host.dto;
 
 import com.forgather.domain.host.model.Host;
 import com.forgather.domain.host.model.HostProfilePhoto;
