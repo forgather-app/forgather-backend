@@ -55,7 +55,7 @@ private String buildAccessToken(Long id, String role) {
 | 경로 | `/spaces/**`, `/products/**` 등 | `/admin/**`, `/view/admin/**` |
 
 ```java
-// LoginHostArgumentResolver - @LoginHost 처리 (global/auth/resolver/LoginHostArgumentResolver.java)
+// LoginHostArgumentResolver - @LoginHost 처리 (domain/host/resolver/LoginHostArgumentResolver.java)
 @Override
 public Host resolveArgument(MethodParameter parameter, ...) {
     String jwtToken = resolveJwtToken(request); // Authorization 헤더 우선, 없으면 access_token 쿠키
@@ -210,7 +210,7 @@ public void delete(String spaceCode, Host host) {
 
 | 패키지 | 역할 |
 |-------|------|
-| `auth/` | JWT 토큰 처리, 소셜 OAuth 연동(Kakao·Apple), 인증 인터셉터/리졸버 |
+| `auth/` | JWT 토큰 생성·검증(`JwtTokenProvider`), 인증 쿠키 처리(`AuthCookieProvider`) |
 | `config/` | WebMvc, S3, Swagger, 비동기 처리 등 설정 |
 | `exception/` | 전역 예외 처리, BaseException 계층 |
 | `util/` | 공용 유틸리티 (TextLengthCounter, RandomCodeGenerator 등) |

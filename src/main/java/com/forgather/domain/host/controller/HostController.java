@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.forgather.domain.host.annotation.LoginHost;
 import com.forgather.domain.host.dto.HostProfileResponse;
 import com.forgather.domain.host.dto.HostResponse;
 import com.forgather.domain.host.dto.OnboardingRequest;
@@ -18,7 +19,6 @@ import com.forgather.domain.host.dto.UpdateHostProfileRequest;
 import com.forgather.domain.host.model.Host;
 import com.forgather.domain.host.service.HostService;
 import com.forgather.domain.host.service.WithdrawService;
-import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.auth.util.AuthCookieProvider;
 import com.forgather.global.response.ApiResponse;
 

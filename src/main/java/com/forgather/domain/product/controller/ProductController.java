@@ -12,13 +12,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.forgather.domain.host.annotation.LoginHost;
 import com.forgather.domain.host.model.Host;
 import com.forgather.domain.product.dto.ProductResponse;
 import com.forgather.domain.product.dto.ProductsResponse;
 import com.forgather.domain.product.dto.RegisterProductRequest;
 import com.forgather.domain.product.dto.UpdateProductRequest;
 import com.forgather.domain.product.service.ProductService;
-import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;

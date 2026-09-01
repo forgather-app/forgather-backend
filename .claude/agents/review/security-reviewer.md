@@ -26,7 +26,7 @@ Spring Boot + JWT + Kakao OAuth + Admin 세션 인증 구조의 보안 취약점
 
 **JWT 기반 (Host API)**
 - `global/auth/util/JwtTokenProvider.java`, `global/external/social/SocialJwtParser.java`
-- `global/auth/resolver/LoginHostArgumentResolver.java`
+- `domain/host/resolver/LoginHostArgumentResolver.java`
 - `global/external/social/KakaoApiClient.java`
 
 체크:
