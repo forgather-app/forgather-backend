@@ -1,12 +1,12 @@
-package com.forgather.global.auth.service;
+package com.forgather.domain.host.service;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.forgather.global.auth.model.SocialRevokeFailLog;
-import com.forgather.global.auth.repository.SocialRevokeFailLogRepository;
+import com.forgather.domain.host.model.SocialRevokeFailLog;
+import com.forgather.domain.host.repository.SocialRevokeFailLogRepository;
 import com.forgather.global.external.social.AppleApiClient;
 import com.forgather.global.external.social.KakaoApiClient;
 

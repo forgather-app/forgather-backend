@@ -1,10 +1,10 @@
-package com.forgather.global.auth.scheduler;
+package com.forgather.domain.host.scheduler;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.forgather.global.auth.service.HostAnonymizeService;
-import com.forgather.global.auth.service.SocialRevokeService;
+import com.forgather.domain.host.service.HostAnonymizeService;
+import com.forgather.domain.host.service.SocialRevokeService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

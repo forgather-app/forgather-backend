@@ -1,4 +1,4 @@
-package com.forgather.global.auth.service;
+package com.forgather.domain.host.service;
 
 import static com.forgather.fixture.HostFixture.createHostWithId;
 import static org.mockito.Mockito.inOrder;

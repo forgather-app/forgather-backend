@@ -1,4 +1,4 @@
-package com.forgather.global.auth.service;
+package com.forgather.domain.host.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -17,8 +17,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.forgather.global.auth.model.SocialRevokeFailLog;
-import com.forgather.global.auth.repository.SocialRevokeFailLogRepository;
+import com.forgather.domain.host.model.SocialRevokeFailLog;
+import com.forgather.domain.host.repository.SocialRevokeFailLogRepository;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.external.social.AppleApiClient;
 import com.forgather.global.external.social.KakaoApiClient;

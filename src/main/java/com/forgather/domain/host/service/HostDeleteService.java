@@ -1,4 +1,4 @@
-package com.forgather.global.auth.service;
+package com.forgather.domain.host.service;
 
 import java.util.List;
 
