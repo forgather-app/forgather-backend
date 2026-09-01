@@ -1,4 +1,4 @@
-package com.forgather.global.config;
+package com.forgather.config;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
