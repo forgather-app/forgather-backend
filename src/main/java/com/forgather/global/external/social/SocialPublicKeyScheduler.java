@@ -3,8 +3,6 @@ package com.forgather.global.external.social;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.forgather.global.external.social.SocialPublicKeyClient;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

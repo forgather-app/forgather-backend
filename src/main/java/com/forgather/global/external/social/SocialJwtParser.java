@@ -18,8 +18,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.global.config.AppleProperties;
 import com.forgather.global.config.KakaoProperties;
 import com.forgather.global.exception.JwtParseException;
-import com.forgather.global.external.social.SocialProvider;
-import com.forgather.global.external.social.SocialPublicKeyClient;
 import com.forgather.global.external.social.dto.AppleIdToken;
 import com.forgather.global.external.social.dto.KakaoIdToken;
 

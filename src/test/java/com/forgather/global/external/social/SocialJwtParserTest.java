@@ -31,7 +31,6 @@ import com.forgather.global.config.AppleProperties;
 import com.forgather.global.config.GoogleProperties;
 import com.forgather.global.config.KakaoProperties;
 import com.forgather.global.exception.JwtParseException;
-import com.forgather.global.external.social.SocialPublicKeyClient;
 import com.forgather.global.external.social.dto.AppleIdToken;
 import com.forgather.global.external.social.dto.KakaoIdToken;
 import com.github.tomakehurst.wiremock.WireMockServer;

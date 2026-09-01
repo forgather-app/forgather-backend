@@ -15,7 +15,6 @@ import com.forgather.global.external.ExternalApiException;
 import com.forgather.global.external.ExternalCalls;
 import com.forgather.global.external.ExternalOperation;
 import com.forgather.global.external.FailureType;
-import com.forgather.global.external.social.AppleClientSecretProvider;
 import com.forgather.global.external.social.dto.AppleTokenErrorResponse;
 import com.forgather.global.external.social.dto.AppleTokenResponse;
 
