@@ -5,7 +5,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.HexFormat;
 import java.util.Map;
 
@@ -18,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.global.config.AppleProperties;
 import com.forgather.global.config.KakaoProperties;
 import com.forgather.global.exception.JwtParseException;
+import com.forgather.global.external.social.client.SocialPublicKeyClient;
 import com.forgather.global.external.social.dto.AppleIdToken;
 import com.forgather.global.external.social.dto.KakaoIdToken;
 

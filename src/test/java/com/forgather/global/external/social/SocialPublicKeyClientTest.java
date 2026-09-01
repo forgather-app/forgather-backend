@@ -26,6 +26,7 @@ import com.forgather.global.config.KakaoProperties;
 import com.forgather.global.exception.JwtBaseException;
 import com.forgather.global.external.ExternalApiException;
 import com.forgather.global.external.FailureType;
+import com.forgather.global.external.social.client.SocialPublicKeyClient;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 

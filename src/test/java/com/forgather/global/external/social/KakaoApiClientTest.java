@@ -22,6 +22,7 @@ import com.forgather.global.config.KakaoProperties;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.external.ExternalApiException;
 import com.forgather.global.external.FailureType;
+import com.forgather.global.external.social.client.KakaoApiClient;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.http.Fault;

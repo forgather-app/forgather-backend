@@ -20,8 +20,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.forgather.domain.host.model.SocialRevokeFailLog;
 import com.forgather.domain.host.repository.SocialRevokeFailLogRepository;
 import com.forgather.global.exception.BaseException;
-import com.forgather.global.external.social.AppleApiClient;
-import com.forgather.global.external.social.KakaoApiClient;
+import com.forgather.global.external.social.client.AppleApiClient;
+import com.forgather.global.external.social.client.KakaoApiClient;
 import com.forgather.global.external.social.SocialProvider;
 
 @ExtendWith(MockitoExtension.class)

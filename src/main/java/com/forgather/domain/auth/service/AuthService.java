@@ -19,7 +19,7 @@ import com.forgather.domain.host.repository.KakaoHostRepository;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.UnauthorizedException;
-import com.forgather.global.external.social.AppleApiClient;
+import com.forgather.global.external.social.client.AppleApiClient;
 import com.forgather.global.external.social.SocialJwtParser;
 import com.forgather.global.external.social.SocialProvider;
 import com.forgather.global.external.social.dto.AppleIdToken;

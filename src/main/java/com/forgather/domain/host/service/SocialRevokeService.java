@@ -7,8 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.forgather.domain.host.model.SocialRevokeFailLog;
 import com.forgather.domain.host.repository.SocialRevokeFailLogRepository;
-import com.forgather.global.external.social.AppleApiClient;
-import com.forgather.global.external.social.KakaoApiClient;
+import com.forgather.global.external.social.client.AppleApiClient;
+import com.forgather.global.external.social.client.KakaoApiClient;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

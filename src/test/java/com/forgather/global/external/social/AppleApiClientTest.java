@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.global.config.AppleProperties;
 import com.forgather.global.external.ExternalApiException;
 import com.forgather.global.external.FailureType;
+import com.forgather.global.external.social.client.AppleApiClient;
 import com.forgather.global.external.social.dto.AppleTokenResponse;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;

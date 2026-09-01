@@ -1,4 +1,4 @@
-package com.forgather.global.external.social;
+package com.forgather.global.external.social.client;
 
 import java.math.BigInteger;
 import java.security.KeyFactory;
@@ -27,6 +27,7 @@ import com.forgather.global.external.ExternalApiException;
 import com.forgather.global.external.ExternalCalls;
 import com.forgather.global.external.ExternalOperation;
 import com.forgather.global.external.FailureType;
+import com.forgather.global.external.social.SocialProvider;
 
 import lombok.extern.slf4j.Slf4j;
 

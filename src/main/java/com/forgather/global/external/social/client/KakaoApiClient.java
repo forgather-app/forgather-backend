@@ -1,4 +1,4 @@
-package com.forgather.global.external.social;
+package com.forgather.global.external.social.client;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
