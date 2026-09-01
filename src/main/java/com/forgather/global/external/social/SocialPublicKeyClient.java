@@ -1,4 +1,4 @@
-package com.forgather.global.auth.client;
+package com.forgather.global.external.social;
 
 import java.math.BigInteger;
 import java.security.KeyFactory;
@@ -32,14 +32,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class SocialAuthClient {
+public class SocialPublicKeyClient {
 
     private final RestClient restClient;
     private final Map<SocialProvider, String> jwksUrls;
     private final Map<SocialProvider, Object> keyUpdateLocks;
     private final Map<SocialProvider, List<Map<String, Object>>> keyCaches = new ConcurrentHashMap<>();
 
-    public SocialAuthClient(
+    public SocialPublicKeyClient(
         RestClient restClient,
         KakaoProperties kakaoProperties,
         GoogleProperties googleProperties,

@@ -14,35 +14,35 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.forgather.domain.host.model.HostProfilePhoto;
+import com.forgather.domain.host.repository.HostProfilePhotoRepository;
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.term.model.HostTermHistory;
 import com.forgather.domain.term.model.Term;
 import com.forgather.domain.term.model.TermType;
 import com.forgather.domain.term.repository.HostTermHistoryRepository;
 import com.forgather.domain.term.repository.TermRepository;
-import com.forgather.global.auth.client.AppleAuthClient;
-import com.forgather.global.auth.client.SocialProvider;
-import com.forgather.global.auth.dto.AppleIdToken;
 import com.forgather.global.auth.dto.AppleLoginConfirmRequest;
-import com.forgather.global.auth.dto.AppleTokenResponse;
-import com.forgather.domain.host.model.HostProfilePhoto;
-import com.forgather.domain.host.repository.HostProfilePhotoRepository;
 import com.forgather.global.auth.dto.HostResponse;
-import com.forgather.global.auth.dto.KakaoIdToken;
 import com.forgather.global.auth.dto.KakaoLoginConfirmRequest;
 import com.forgather.global.auth.dto.LoginResponse;
 import com.forgather.global.auth.dto.OnboardingRequest;
+import com.forgather.global.auth.model.AppleHost;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.KakaoHost;
-import com.forgather.global.auth.model.AppleHost;
 import com.forgather.global.auth.repository.AppleHostRepository;
 import com.forgather.global.auth.repository.KakaoHostRepository;
-import com.forgather.global.auth.util.JwtParser;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.ConflictException;
 import com.forgather.global.exception.UnauthorizedException;
+import com.forgather.global.external.social.AppleApiClient;
+import com.forgather.global.external.social.SocialJwtParser;
+import com.forgather.global.external.social.SocialProvider;
+import com.forgather.global.external.social.dto.AppleIdToken;
+import com.forgather.global.external.social.dto.AppleTokenResponse;
+import com.forgather.global.external.social.dto.KakaoIdToken;
 import com.forgather.global.util.RandomCodeGenerator;
 
 import lombok.RequiredArgsConstructor;
@@ -57,14 +57,14 @@ public class AuthService {
     private static final int MAX_HOST_CODE_ATTEMPTS = 5;
     private static final String DEFAULT_APPLE_HOST_NAME = "Apple 사용자";
 
-    private final JwtParser jwtParser;
+    private final SocialJwtParser socialJwtParser;
     private final JwtTokenProvider jwtTokenProvider;
     private final KakaoHostRepository kakaoHostRepository;
     private final HostRepository hostRepository;
     private final TermRepository termRepository;
     private final HostTermHistoryRepository hostTermHistoryRepository;
     private final AppleHostRepository appleHostRepository;
-    private final AppleAuthClient appleAuthClient;
+    private final AppleApiClient appleApiClient;
     private final HostProfilePhotoRepository hostProfilePhotoRepository;
     private final RandomCodeGenerator codeGenerator;
 
@@ -81,7 +81,7 @@ public class AuthService {
      * 이메일 저장 이전에 가입한 회원의 빈 이메일을 별도 배치 없이 점진적으로 채우기 위함이다.
      */
     private KakaoHost toKakaoHost(KakaoLoginConfirmRequest request) {
-        KakaoIdToken idToken = jwtParser.parseKakaoIdToken(request.idToken(), request.rawNonce());
+        KakaoIdToken idToken = socialJwtParser.parseKakaoIdToken(request.idToken(), request.rawNonce());
         Optional<KakaoHost> kakaoHost = kakaoHostRepository.findByUserId(idToken.sub());
         if (kakaoHost.isPresent()) {
             KakaoHost existingKakaoHost = kakaoHost.get();
@@ -98,8 +98,8 @@ public class AuthService {
 
     @Transactional
     public LoginResponse appleLoginConfirm(AppleLoginConfirmRequest request) {
-        AppleTokenResponse appleToken = appleAuthClient.exchangeAuthorizationCode(request.authorizationCode());
-        AppleIdToken idToken = jwtParser.parseAppleIdToken(appleToken.idToken(), request.rawNonce());
+        AppleTokenResponse appleToken = appleApiClient.exchangeAuthorizationCode(request.authorizationCode());
+        AppleIdToken idToken = socialJwtParser.parseAppleIdToken(appleToken.idToken(), request.rawNonce());
         AppleHost appleHost = toAppleHost(request.fullName(), idToken, appleToken.refreshToken());
         String accessToken = jwtTokenProvider.generateAccessToken(appleHost.getHost().getId());
         String refreshToken = jwtTokenProvider.generateRefreshToken(appleHost.getHost().getId());

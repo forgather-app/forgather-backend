@@ -1,4 +1,4 @@
-package com.forgather.global.auth.client;
+package com.forgather.global.external.social;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -9,25 +9,25 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.forgather.global.auth.dto.AppleTokenErrorResponse;
-import com.forgather.global.auth.dto.AppleTokenResponse;
-import com.forgather.global.auth.util.AppleClientSecretProvider;
 import com.forgather.global.config.AppleProperties;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.external.ExternalApiException;
 import com.forgather.global.external.ExternalCalls;
 import com.forgather.global.external.ExternalOperation;
 import com.forgather.global.external.FailureType;
+import com.forgather.global.external.social.AppleClientSecretProvider;
+import com.forgather.global.external.social.dto.AppleTokenErrorResponse;
+import com.forgather.global.external.social.dto.AppleTokenResponse;
 
 @Component
-public class AppleAuthClient {
+public class AppleApiClient {
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
     private final AppleProperties appleProperties;
     private final AppleClientSecretProvider clientSecretProvider;
 
-    public AppleAuthClient(
+    public AppleApiClient(
         RestClient restClient,
         ObjectMapper objectMapper,
         AppleProperties appleProperties,

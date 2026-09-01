@@ -1,4 +1,4 @@
-package com.forgather.global.auth.util;
+package com.forgather.global.external.social;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -15,13 +15,13 @@ import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.forgather.global.auth.client.SocialAuthClient;
-import com.forgather.global.auth.client.SocialProvider;
-import com.forgather.global.auth.dto.AppleIdToken;
-import com.forgather.global.auth.dto.KakaoIdToken;
 import com.forgather.global.config.AppleProperties;
 import com.forgather.global.config.KakaoProperties;
 import com.forgather.global.exception.JwtParseException;
+import com.forgather.global.external.social.SocialProvider;
+import com.forgather.global.external.social.SocialPublicKeyClient;
+import com.forgather.global.external.social.dto.AppleIdToken;
+import com.forgather.global.external.social.dto.KakaoIdToken;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -30,10 +30,10 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class JwtParser {
+public class SocialJwtParser {
 
     private final ObjectMapper objectMapper;
-    private final SocialAuthClient socialAuthClient;
+    private final SocialPublicKeyClient socialPublicKeyClient;
     private final AppleProperties appleProperties;
     private final KakaoProperties kakaoProperties;
 
@@ -78,7 +78,7 @@ public class JwtParser {
             throw new JwtParseException("Missing kid in JWT header", HttpStatus.UNAUTHORIZED);
         }
 
-        PublicKey publicKey = socialAuthClient.getPublicKey(provider, kid);
+        PublicKey publicKey = socialPublicKeyClient.getPublicKey(provider, kid);
 
         try {
             return Jwts.parser()

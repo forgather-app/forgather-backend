@@ -1,4 +1,4 @@
-package com.forgather.global.auth.client;
+package com.forgather.global.external.social;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
@@ -23,26 +23,26 @@ import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.forgather.global.auth.dto.AppleTokenResponse;
-import com.forgather.global.auth.util.AppleClientSecretProvider;
 import com.forgather.global.config.AppleProperties;
 import com.forgather.global.external.ExternalApiException;
 import com.forgather.global.external.FailureType;
+import com.forgather.global.external.social.AppleClientSecretProvider;
+import com.forgather.global.external.social.dto.AppleTokenResponse;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.http.Fault;
 
-class AppleAuthClientTest {
+class AppleApiClientTest {
 
     private WireMockServer wireMock;
-    private AppleAuthClient appleAuthClient;
+    private AppleApiClient appleApiClient;
 
     @BeforeEach
     void setUp() throws Exception {
         wireMock = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort());
         wireMock.start();
         AppleProperties appleProperties = appleProperties();
-        appleAuthClient = new AppleAuthClient(
+        appleApiClient = new AppleApiClient(
             RestClient.create(),
             new ObjectMapper(),
             appleProperties,
@@ -73,7 +73,7 @@ class AppleAuthClientTest {
                     """)));
 
         // when
-        AppleTokenResponse response = appleAuthClient.exchangeAuthorizationCode("authorization-code");
+        AppleTokenResponse response = appleApiClient.exchangeAuthorizationCode("authorization-code");
 
         // then
         assertAll(
@@ -101,7 +101,7 @@ class AppleAuthClientTest {
                     """)));
 
         // when & then
-        assertThatThrownBy(() -> appleAuthClient.exchangeAuthorizationCode("invalid-code"))
+        assertThatThrownBy(() -> appleApiClient.exchangeAuthorizationCode("invalid-code"))
             .isInstanceOf(ExternalApiException.class)
             .extracting("type")
             .isEqualTo(FailureType.AUTH_REJECTED);
@@ -120,7 +120,7 @@ class AppleAuthClientTest {
                     """)));
 
         // when & then
-        assertThatThrownBy(() -> appleAuthClient.exchangeAuthorizationCode("code"))
+        assertThatThrownBy(() -> appleApiClient.exchangeAuthorizationCode("code"))
             .isInstanceOf(ExternalApiException.class)
             .satisfies(thrown -> {
                 ExternalApiException exception = (ExternalApiException)thrown;
@@ -141,7 +141,7 @@ class AppleAuthClientTest {
                     """)));
 
         // when & then
-        assertThatThrownBy(() -> appleAuthClient.exchangeAuthorizationCode("code"))
+        assertThatThrownBy(() -> appleApiClient.exchangeAuthorizationCode("code"))
             .isInstanceOf(ExternalApiException.class)
             .satisfies(thrown -> {
                 ExternalApiException exception = (ExternalApiException)thrown;
@@ -163,7 +163,7 @@ class AppleAuthClientTest {
                     """)));
 
         // when & then
-        assertThatThrownBy(() -> appleAuthClient.exchangeAuthorizationCode("authorization-code"))
+        assertThatThrownBy(() -> appleApiClient.exchangeAuthorizationCode("authorization-code"))
             .isInstanceOf(ExternalApiException.class)
             .satisfies(thrown -> {
                 ExternalApiException exception = (ExternalApiException)thrown;
@@ -180,7 +180,7 @@ class AppleAuthClientTest {
             .willReturn(aResponse().withStatus(503)));
 
         // when & then
-        assertThatThrownBy(() -> appleAuthClient.exchangeAuthorizationCode("code"))
+        assertThatThrownBy(() -> appleApiClient.exchangeAuthorizationCode("code"))
             .isInstanceOf(ExternalApiException.class)
             .satisfies(thrown -> {
                 ExternalApiException exception = (ExternalApiException)thrown;
@@ -197,7 +197,7 @@ class AppleAuthClientTest {
             .willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)));
 
         // when & then
-        assertThatThrownBy(() -> appleAuthClient.exchangeAuthorizationCode("authorization-code"))
+        assertThatThrownBy(() -> appleApiClient.exchangeAuthorizationCode("authorization-code"))
             .isInstanceOf(ExternalApiException.class)
             .extracting("statusCode")
             .isEqualTo(503);
@@ -217,7 +217,7 @@ class AppleAuthClientTest {
                     """)));
 
         // when & then
-        assertThatThrownBy(() -> appleAuthClient.revoke("apple-refresh-token"))
+        assertThatThrownBy(() -> appleApiClient.revoke("apple-refresh-token"))
             .isInstanceOf(ExternalApiException.class)
             .satisfies(thrown -> {
                 ExternalApiException exception = (ExternalApiException)thrown;
@@ -234,7 +234,7 @@ class AppleAuthClientTest {
             .willReturn(aResponse().withStatus(500)));
 
         // when & then
-        assertThatThrownBy(() -> appleAuthClient.revoke("apple-refresh-token"))
+        assertThatThrownBy(() -> appleApiClient.revoke("apple-refresh-token"))
             .isInstanceOf(ExternalApiException.class)
             .extracting("statusCode")
             .isEqualTo(503);

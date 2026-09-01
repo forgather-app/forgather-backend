@@ -1,4 +1,4 @@
-package com.forgather.global.auth.dto;
+package com.forgather.global.external.social.dto;
 
 public record AppleTokenErrorResponse(
     String error

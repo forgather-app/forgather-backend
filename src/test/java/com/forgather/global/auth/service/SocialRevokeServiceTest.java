@@ -17,27 +17,27 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.forgather.global.auth.client.AppleAuthClient;
-import com.forgather.global.auth.client.KakaoAuthClient;
-import com.forgather.global.auth.client.SocialProvider;
 import com.forgather.global.auth.model.SocialRevokeFailLog;
 import com.forgather.global.auth.repository.SocialRevokeFailLogRepository;
 import com.forgather.global.exception.BaseException;
+import com.forgather.global.external.social.AppleApiClient;
+import com.forgather.global.external.social.KakaoApiClient;
+import com.forgather.global.external.social.SocialProvider;
 
 @ExtendWith(MockitoExtension.class)
 class SocialRevokeServiceTest {
 
     @Mock
-    private KakaoAuthClient kakaoAuthClient;
+    private KakaoApiClient kakaoApiClient;
 
     @Mock
-    private AppleAuthClient appleAuthClient;
+    private AppleApiClient appleApiClient;
 
     @Mock
     private SocialRevokeFailLogRepository socialRevokeFailLogRepository;
 
     private SocialRevokeService createService() {
-        return new SocialRevokeService(kakaoAuthClient, appleAuthClient, socialRevokeFailLogRepository);
+        return new SocialRevokeService(kakaoApiClient, appleApiClient, socialRevokeFailLogRepository);
     }
 
     @DisplayName("Kakao unlink에 성공하면 실패 로그를 남기지 않는다")
@@ -50,7 +50,7 @@ class SocialRevokeServiceTest {
         service.revokeKakao("kakao-user-1");
 
         // then
-        verify(kakaoAuthClient).unlink("kakao-user-1");
+        verify(kakaoApiClient).unlink("kakao-user-1");
         verify(socialRevokeFailLogRepository, never()).save(any());
     }
 
@@ -60,7 +60,7 @@ class SocialRevokeServiceTest {
         // given
         SocialRevokeService service = createService();
         doThrow(new BaseException("Kakao unlink에 실패했습니다."))
-            .when(kakaoAuthClient).unlink("kakao-user-1");
+            .when(kakaoApiClient).unlink("kakao-user-1");
 
         // when
         service.revokeKakao("kakao-user-1");
@@ -80,7 +80,7 @@ class SocialRevokeServiceTest {
         // given
         SocialRevokeService service = createService();
         doThrow(new BaseException("Apple token revoke에 실패했습니다."))
-            .when(appleAuthClient).revoke("apple-refresh-token");
+            .when(appleApiClient).revoke("apple-refresh-token");
 
         // when
         service.revokeApple("apple-user-1", "apple-refresh-token");
@@ -105,7 +105,7 @@ class SocialRevokeServiceTest {
         when(socialRevokeFailLogRepository.findAllByCompletedAtIsNull())
             .thenReturn(List.of(kakaoLog, appleLog));
         doThrow(new BaseException("Kakao unlink에 실패했습니다."))
-            .when(kakaoAuthClient).unlink("kakao-user-1");
+            .when(kakaoApiClient).unlink("kakao-user-1");
 
         // when
         service.retryFailedRevokes();

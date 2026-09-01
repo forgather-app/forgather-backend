@@ -3,7 +3,7 @@ package com.forgather.global.auth.model;
 import java.time.LocalDateTime;
 
 import com.forgather.domain.model.BaseTimeEntity;
-import com.forgather.global.auth.client.SocialProvider;
+import com.forgather.global.external.social.SocialProvider;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

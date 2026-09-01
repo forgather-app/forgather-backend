@@ -19,7 +19,6 @@ import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
-import com.forgather.global.auth.client.SocialProvider;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.KakaoHost;
 import com.forgather.global.auth.model.SocialRevokeFailLog;
@@ -28,6 +27,7 @@ import com.forgather.global.auth.repository.KakaoHostRepository;
 import com.forgather.global.auth.repository.SocialRevokeFailLogRepository;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.auth.util.JwtTokenProvider;
+import com.forgather.global.external.social.SocialProvider;
 import com.forgather.global.response.ResponseCode;
 
 import io.restassured.http.ContentType;

@@ -1,4 +1,4 @@
-package com.forgather.global.auth.client;
+package com.forgather.global.external.social;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class KakaoAuthClient {
+public class KakaoApiClient {
 
     private static final String ADMIN_KEY_PREFIX = "KakaoAK ";
     private static final int ALREADY_UNLINKED_CODE = -101;

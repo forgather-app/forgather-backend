@@ -1,4 +1,4 @@
-package com.forgather.global.auth.client;
+package com.forgather.global.external.social;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
@@ -26,16 +26,16 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.http.Fault;
 
-class KakaoAuthClientTest {
+class KakaoApiClientTest {
 
     private WireMockServer wireMock;
-    private KakaoAuthClient kakaoAuthClient;
+    private KakaoApiClient kakaoApiClient;
 
     @BeforeEach
     void setUp() {
         wireMock = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort());
         wireMock.start();
-        kakaoAuthClient = new KakaoAuthClient(RestClient.create(), kakaoProperties(), new ObjectMapper());
+        kakaoApiClient = new KakaoApiClient(RestClient.create(), kakaoProperties(), new ObjectMapper());
     }
 
     @AfterEach
@@ -55,7 +55,7 @@ class KakaoAuthClientTest {
                     """)));
 
         // when & then
-        assertThatCode(() -> kakaoAuthClient.unlink("12345")).doesNotThrowAnyException();
+        assertThatCode(() -> kakaoApiClient.unlink("12345")).doesNotThrowAnyException();
         wireMock.verify(postRequestedFor(urlEqualTo("/v1/user/unlink"))
             .withHeader(HttpHeaders.AUTHORIZATION, containing("KakaoAK test-admin-key"))
             .withRequestBody(containing("target_id=12345")));
@@ -74,7 +74,7 @@ class KakaoAuthClientTest {
                     """)));
 
         // when & then
-        assertThatThrownBy(() -> kakaoAuthClient.unlink("12345"))
+        assertThatThrownBy(() -> kakaoApiClient.unlink("12345"))
             .isInstanceOf(ExternalApiException.class)
             .satisfies(thrown -> {
                 ExternalApiException exception = (ExternalApiException)thrown;
@@ -96,7 +96,7 @@ class KakaoAuthClientTest {
                     """)));
 
         // when & then
-        assertThatCode(() -> kakaoAuthClient.unlink("12345")).doesNotThrowAnyException();
+        assertThatCode(() -> kakaoApiClient.unlink("12345")).doesNotThrowAnyException();
     }
 
     @DisplayName("-101이 아닌 4xx는 우리 쪽 오류로 분류한다")
@@ -112,7 +112,7 @@ class KakaoAuthClientTest {
                     """)));
 
         // when & then
-        assertThatThrownBy(() -> kakaoAuthClient.unlink("12345"))
+        assertThatThrownBy(() -> kakaoApiClient.unlink("12345"))
             .isInstanceOf(ExternalApiException.class)
             .extracting("type")
             .isEqualTo(FailureType.CALLER_ERROR);
@@ -126,7 +126,7 @@ class KakaoAuthClientTest {
             .willReturn(aResponse().withStatus(502)));
 
         // when & then
-        assertThatThrownBy(() -> kakaoAuthClient.unlink("12345"))
+        assertThatThrownBy(() -> kakaoApiClient.unlink("12345"))
             .isInstanceOf(ExternalApiException.class)
             .extracting("statusCode")
             .isEqualTo(503);
@@ -140,7 +140,7 @@ class KakaoAuthClientTest {
             .willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)));
 
         // when & then
-        assertThatThrownBy(() -> kakaoAuthClient.unlink("12345"))
+        assertThatThrownBy(() -> kakaoApiClient.unlink("12345"))
             .isInstanceOf(ExternalApiException.class)
             .extracting("statusCode")
             .isEqualTo(503);
@@ -150,7 +150,7 @@ class KakaoAuthClientTest {
     @Test
     void unlinkWithoutUserId() {
         // when & then
-        assertThatThrownBy(() -> kakaoAuthClient.unlink(" "))
+        assertThatThrownBy(() -> kakaoApiClient.unlink(" "))
             .isInstanceOf(BaseException.class)
             .isNotInstanceOf(ExternalApiException.class)
             .extracting("statusCode")

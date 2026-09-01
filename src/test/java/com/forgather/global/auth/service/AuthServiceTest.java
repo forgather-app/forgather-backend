@@ -39,32 +39,32 @@ import com.forgather.domain.term.model.Term;
 import com.forgather.domain.term.model.TermType;
 import com.forgather.domain.term.repository.HostTermHistoryRepository;
 import com.forgather.domain.term.repository.TermRepository;
-import com.forgather.global.auth.client.AppleAuthClient;
-import com.forgather.global.auth.dto.AppleIdToken;
+import com.forgather.fixture.HostFixture;
 import com.forgather.global.auth.dto.AppleLoginConfirmRequest;
-import com.forgather.global.auth.dto.AppleTokenResponse;
 import com.forgather.global.auth.dto.HostResponse;
-import com.forgather.global.auth.dto.KakaoIdToken;
 import com.forgather.global.auth.dto.KakaoLoginConfirmRequest;
 import com.forgather.global.auth.dto.LoginResponse;
 import com.forgather.global.auth.dto.OnboardingRequest;
-import com.forgather.fixture.HostFixture;
 import com.forgather.global.auth.model.AppleHost;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.KakaoHost;
 import com.forgather.global.auth.repository.AppleHostRepository;
 import com.forgather.global.auth.repository.KakaoHostRepository;
-import com.forgather.global.auth.util.JwtParser;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.ConflictException;
+import com.forgather.global.external.social.AppleApiClient;
+import com.forgather.global.external.social.SocialJwtParser;
+import com.forgather.global.external.social.dto.AppleIdToken;
+import com.forgather.global.external.social.dto.AppleTokenResponse;
+import com.forgather.global.external.social.dto.KakaoIdToken;
 import com.forgather.global.util.RandomCodeGenerator;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
     @Mock
-    private JwtParser jwtParser;
+    private SocialJwtParser socialJwtParser;
 
     @Mock
     private JwtTokenProvider jwtTokenProvider;
@@ -85,7 +85,7 @@ class AuthServiceTest {
     private AppleHostRepository appleHostRepository;
 
     @Mock
-    private AppleAuthClient appleAuthClient;
+    private AppleApiClient appleApiClient;
 
     @Mock
     private HostProfilePhotoRepository hostProfilePhotoRepository;
@@ -95,14 +95,14 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         authService = new AuthService(
-            jwtParser,
+            socialJwtParser,
             jwtTokenProvider,
             kakaoHostRepository,
             hostRepository,
             termRepository,
             hostTermHistoryRepository,
             appleHostRepository,
-            appleAuthClient,
+            appleApiClient,
             hostProfilePhotoRepository,
             new RandomCodeGenerator()
         );
@@ -118,9 +118,9 @@ class AuthServiceTest {
             "raw-nonce",
             "홍길동"
         );
-        when(appleAuthClient.exchangeAuthorizationCode("authorization-code"))
+        when(appleApiClient.exchangeAuthorizationCode("authorization-code"))
             .thenReturn(appleTokenResponse("apple-refresh-token"));
-        when(jwtParser.parseAppleIdToken("apple-server-id-token", "raw-nonce"))
+        when(socialJwtParser.parseAppleIdToken("apple-server-id-token", "raw-nonce"))
             .thenReturn(new AppleIdToken(
                 "https://appleid.apple.com",
                 "test-apple-audience",
@@ -166,9 +166,9 @@ class AuthServiceTest {
         );
         Host host = new Host(HostFixture.randomCode(), "기존사용자", "old@example.com");
         AppleHost appleHost = new AppleHost(host, "apple-sub", "old-apple-refresh-token");
-        when(appleAuthClient.exchangeAuthorizationCode("authorization-code"))
+        when(appleApiClient.exchangeAuthorizationCode("authorization-code"))
             .thenReturn(appleTokenResponse("new-apple-refresh-token"));
-        when(jwtParser.parseAppleIdToken("apple-server-id-token", "raw-nonce"))
+        when(socialJwtParser.parseAppleIdToken("apple-server-id-token", "raw-nonce"))
             .thenReturn(new AppleIdToken(
                 "https://appleid.apple.com",
                 "test-apple-audience",
@@ -204,9 +204,9 @@ class AuthServiceTest {
             "raw-nonce",
             null
         );
-        when(appleAuthClient.exchangeAuthorizationCode("authorization-code"))
+        when(appleApiClient.exchangeAuthorizationCode("authorization-code"))
             .thenReturn(appleTokenResponse("apple-refresh-token"));
-        when(jwtParser.parseAppleIdToken("apple-server-id-token", "raw-nonce"))
+        when(socialJwtParser.parseAppleIdToken("apple-server-id-token", "raw-nonce"))
             .thenReturn(new AppleIdToken(
                 "https://appleid.apple.com",
                 "test-apple-audience",
@@ -249,9 +249,9 @@ class AuthServiceTest {
             "raw-nonce",
             "   "
         );
-        when(appleAuthClient.exchangeAuthorizationCode("authorization-code"))
+        when(appleApiClient.exchangeAuthorizationCode("authorization-code"))
             .thenReturn(appleTokenResponse("apple-refresh-token"));
-        when(jwtParser.parseAppleIdToken("apple-server-id-token", "raw-nonce"))
+        when(socialJwtParser.parseAppleIdToken("apple-server-id-token", "raw-nonce"))
             .thenReturn(new AppleIdToken(
                 "https://appleid.apple.com",
                 "test-apple-audience",
@@ -291,7 +291,7 @@ class AuthServiceTest {
     void createKakaoHostWithSeparatedNames() {
         // given
         KakaoIdToken idToken = kakaoIdToken("카카오닉네임", "kakao@example.com");
-        when(jwtParser.parseKakaoIdToken("id-token", "raw-nonce")).thenReturn(idToken);
+        when(socialJwtParser.parseKakaoIdToken("id-token", "raw-nonce")).thenReturn(idToken);
         when(kakaoHostRepository.findByUserId("kakao-user-id")).thenReturn(Optional.empty());
         when(hostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(kakaoHostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -318,7 +318,7 @@ class AuthServiceTest {
     void regeneratesHostCodeWhenAlreadyUsed() {
         // given
         KakaoIdToken idToken = kakaoIdToken("카카오닉네임", "kakao@example.com");
-        when(jwtParser.parseKakaoIdToken("id-token", "raw-nonce")).thenReturn(idToken);
+        when(socialJwtParser.parseKakaoIdToken("id-token", "raw-nonce")).thenReturn(idToken);
         when(kakaoHostRepository.findByUserId("kakao-user-id")).thenReturn(Optional.empty());
         when(hostRepository.existsByCode(anyString())).thenReturn(true, true, false);
         when(hostRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -341,7 +341,7 @@ class AuthServiceTest {
     void failsWhenEveryHostCodeAttemptIsUsed() {
         // given
         KakaoIdToken idToken = kakaoIdToken("카카오닉네임", "kakao@example.com");
-        when(jwtParser.parseKakaoIdToken("id-token", "raw-nonce")).thenReturn(idToken);
+        when(socialJwtParser.parseKakaoIdToken("id-token", "raw-nonce")).thenReturn(idToken);
         when(kakaoHostRepository.findByUserId("kakao-user-id")).thenReturn(Optional.empty());
         when(hostRepository.existsByCode(anyString())).thenReturn(true);
 
@@ -360,7 +360,7 @@ class AuthServiceTest {
         // given
         Host host = createHostWithoutEmail("카카오원본이름");
         KakaoHost kakaoHost = new KakaoHost(host, "kakao-user-id");
-        when(jwtParser.parseKakaoIdToken("id-token", "raw-nonce")).thenReturn(kakaoIdToken("카카오닉네임", "kakao@example.com"));
+        when(socialJwtParser.parseKakaoIdToken("id-token", "raw-nonce")).thenReturn(kakaoIdToken("카카오닉네임", "kakao@example.com"));
         when(kakaoHostRepository.findByUserId("kakao-user-id")).thenReturn(Optional.of(kakaoHost));
         when(jwtTokenProvider.generateAccessToken(nullable(Long.class))).thenReturn("access-token");
         when(jwtTokenProvider.generateRefreshToken(nullable(Long.class))).thenReturn("refresh-token");
@@ -381,7 +381,7 @@ class AuthServiceTest {
     void failKakaoLoginWhenNicknameIsMissing() {
         // given
         KakaoIdToken idToken = kakaoIdToken(null, "kakao@example.com");
-        when(jwtParser.parseKakaoIdToken("id-token", "raw-nonce")).thenReturn(idToken);
+        when(socialJwtParser.parseKakaoIdToken("id-token", "raw-nonce")).thenReturn(idToken);
 
         // when, then
         assertThatThrownBy(() -> authService.kakaoLoginConfirm(kakaoLoginConfirmRequest()))

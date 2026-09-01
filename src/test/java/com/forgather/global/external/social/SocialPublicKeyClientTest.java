@@ -1,4 +1,4 @@
-package com.forgather.global.auth.client;
+package com.forgather.global.external.social;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -29,7 +29,7 @@ import com.forgather.global.external.FailureType;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 
-class SocialAuthClientTest {
+class SocialPublicKeyClientTest {
 
     private WireMockServer wireMock;
 
@@ -51,10 +51,10 @@ class SocialAuthClientTest {
         RsaJwk kakaoJwk = createRsaJwk("kakao-key");
         stubJwks("/kakao/.well-known/jwks.json", kakaoJwk);
 
-        SocialAuthClient socialAuthClient = createSocialAuthClient();
+        SocialPublicKeyClient socialPublicKeyClient = createSocialPublicKeyClient();
 
         // when
-        PublicKey publicKey = socialAuthClient.getPublicKey(SocialProvider.KAKAO, "kakao-key");
+        PublicKey publicKey = socialPublicKeyClient.getPublicKey(SocialProvider.KAKAO, "kakao-key");
 
         // then
         assertThat(publicKey.getEncoded()).isEqualTo(kakaoJwk.publicKey().getEncoded());
@@ -67,10 +67,10 @@ class SocialAuthClientTest {
         RsaJwk appleJwk = createRsaJwk("apple-key");
         stubJwks("/apple/auth/keys", appleJwk);
 
-        SocialAuthClient socialAuthClient = createSocialAuthClient();
+        SocialPublicKeyClient socialPublicKeyClient = createSocialPublicKeyClient();
 
         // when
-        PublicKey publicKey = socialAuthClient.getPublicKey(SocialProvider.APPLE, "apple-key");
+        PublicKey publicKey = socialPublicKeyClient.getPublicKey(SocialProvider.APPLE, "apple-key");
 
         // then
         assertThat(publicKey.getEncoded()).isEqualTo(appleJwk.publicKey().getEncoded());
@@ -81,13 +81,13 @@ class SocialAuthClientTest {
     void getPublicKey_cacheEmpty_refreshesKeys() throws Exception {
         // given
         stubJwksFailure("/kakao/.well-known/jwks.json");
-        SocialAuthClient socialAuthClient = createSocialAuthClient();
+        SocialPublicKeyClient socialPublicKeyClient = createSocialPublicKeyClient();
         wireMock.resetAll();
         RsaJwk kakaoJwk = createRsaJwk("kakao-key");
         stubJwks("/kakao/.well-known/jwks.json", kakaoJwk);
 
         // when
-        PublicKey publicKey = socialAuthClient.getPublicKey(SocialProvider.KAKAO, "kakao-key");
+        PublicKey publicKey = socialPublicKeyClient.getPublicKey(SocialProvider.KAKAO, "kakao-key");
 
         // then
         assertThat(publicKey.getEncoded()).isEqualTo(kakaoJwk.publicKey().getEncoded());
@@ -98,12 +98,12 @@ class SocialAuthClientTest {
     void getPublicKey_cacheStillEmpty_throwsMalformedResponse() {
         // given
         stubJwksFailure("/kakao/.well-known/jwks.json");
-        SocialAuthClient socialAuthClient = createSocialAuthClient();
+        SocialPublicKeyClient socialPublicKeyClient = createSocialPublicKeyClient();
         wireMock.resetAll();
         stubEmptyJwks("/kakao/.well-known/jwks.json");
 
         // when & then
-        assertThatThrownBy(() -> socialAuthClient.getPublicKey(SocialProvider.KAKAO, "missing-key"))
+        assertThatThrownBy(() -> socialPublicKeyClient.getPublicKey(SocialProvider.KAKAO, "missing-key"))
             .isInstanceOf(ExternalApiException.class)
             .satisfies(thrown -> {
                 ExternalApiException exception = (ExternalApiException)thrown;
@@ -118,13 +118,13 @@ class SocialAuthClientTest {
         // given
         RsaJwk oldJwk = createRsaJwk("old-key");
         stubJwks("/kakao/.well-known/jwks.json", oldJwk);
-        SocialAuthClient socialAuthClient = createSocialAuthClient();
+        SocialPublicKeyClient socialPublicKeyClient = createSocialPublicKeyClient();
         wireMock.resetAll();
         RsaJwk rotatedJwk = createRsaJwk("rotated-key");
         stubJwks("/kakao/.well-known/jwks.json", rotatedJwk);
 
         // when
-        PublicKey publicKey = socialAuthClient.getPublicKey(SocialProvider.KAKAO, "rotated-key");
+        PublicKey publicKey = socialPublicKeyClient.getPublicKey(SocialProvider.KAKAO, "rotated-key");
 
         // then
         assertThat(publicKey.getEncoded()).isEqualTo(rotatedJwk.publicKey().getEncoded());
@@ -136,12 +136,12 @@ class SocialAuthClientTest {
         // given
         RsaJwk oldJwk = createRsaJwk("old-key");
         stubJwks("/kakao/.well-known/jwks.json", oldJwk);
-        SocialAuthClient socialAuthClient = createSocialAuthClient();
+        SocialPublicKeyClient socialPublicKeyClient = createSocialPublicKeyClient();
         wireMock.resetAll();
         stubJwksFailure("/kakao/.well-known/jwks.json");
 
         // when & then
-        assertThatThrownBy(() -> socialAuthClient.getPublicKey(SocialProvider.KAKAO, "rotated-key"))
+        assertThatThrownBy(() -> socialPublicKeyClient.getPublicKey(SocialProvider.KAKAO, "rotated-key"))
             .isInstanceOf(ExternalApiException.class)
             .satisfies(thrown -> {
                 ExternalApiException exception = (ExternalApiException)thrown;
@@ -156,16 +156,16 @@ class SocialAuthClientTest {
         // given
         RsaJwk oldJwk = createRsaJwk("old-key");
         stubJwks("/kakao/.well-known/jwks.json", oldJwk);
-        SocialAuthClient socialAuthClient = createSocialAuthClient();
+        SocialPublicKeyClient socialPublicKeyClient = createSocialPublicKeyClient();
         wireMock.resetAll();
         stubJwksFailure("/kakao/.well-known/jwks.json");
 
         // when — 캐시에 없는 kid를 요청해 갱신을 유발하고 실패시킨다
-        assertThatThrownBy(() -> socialAuthClient.getPublicKey(SocialProvider.KAKAO, "rotated-key"))
+        assertThatThrownBy(() -> socialPublicKeyClient.getPublicKey(SocialProvider.KAKAO, "rotated-key"))
             .isInstanceOf(ExternalApiException.class);
 
         // then — 기존 kid는 여전히 캐시에서 조회된다
-        assertThat(socialAuthClient.getPublicKey(SocialProvider.KAKAO, "old-key").getEncoded())
+        assertThat(socialPublicKeyClient.getPublicKey(SocialProvider.KAKAO, "old-key").getEncoded())
             .isEqualTo(oldJwk.publicKey().getEncoded());
     }
 
@@ -175,11 +175,11 @@ class SocialAuthClientTest {
         // given
         RsaJwk jwk = createRsaJwk("kakao-key");
         stubJwks("/kakao/.well-known/jwks.json", jwk);
-        SocialAuthClient socialAuthClient = createSocialAuthClient();
+        SocialPublicKeyClient socialPublicKeyClient = createSocialPublicKeyClient();
         wireMock.resetRequests();
 
         // when
-        socialAuthClient.getPublicKey(SocialProvider.KAKAO, "kakao-key");
+        socialPublicKeyClient.getPublicKey(SocialProvider.KAKAO, "kakao-key");
 
         // then
         wireMock.verify(0, getRequestedFor(urlPathEqualTo("/kakao/.well-known/jwks.json")));
@@ -191,17 +191,17 @@ class SocialAuthClientTest {
         // given
         RsaJwk jwk = createRsaJwk("kakao-key");
         stubJwks("/kakao/.well-known/jwks.json", jwk);
-        SocialAuthClient socialAuthClient = createSocialAuthClient();
+        SocialPublicKeyClient socialPublicKeyClient = createSocialPublicKeyClient();
 
         // when & then
-        assertThatThrownBy(() -> socialAuthClient.getPublicKey(SocialProvider.KAKAO, "forged-kid"))
+        assertThatThrownBy(() -> socialPublicKeyClient.getPublicKey(SocialProvider.KAKAO, "forged-kid"))
             .isInstanceOf(JwtBaseException.class)
             .extracting("statusCode")
             .isEqualTo(401);
     }
 
-    private SocialAuthClient createSocialAuthClient() {
-        return new SocialAuthClient(
+    private SocialPublicKeyClient createSocialPublicKeyClient() {
+        return new SocialPublicKeyClient(
             RestClient.create(),
             new KakaoProperties("test-kakao-native-app-key",
                 "https://kauth.kakao.com",

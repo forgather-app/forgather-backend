@@ -1,4 +1,4 @@
-package com.forgather.global.auth.util;
+package com.forgather.global.external.social;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

@@ -1,4 +1,4 @@
-package com.forgather.global.auth.util;
+package com.forgather.global.external.social;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -27,19 +27,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.forgather.global.auth.client.SocialAuthClient;
-import com.forgather.global.auth.dto.AppleIdToken;
-import com.forgather.global.auth.dto.KakaoIdToken;
 import com.forgather.global.config.AppleProperties;
 import com.forgather.global.config.GoogleProperties;
 import com.forgather.global.config.KakaoProperties;
 import com.forgather.global.exception.JwtParseException;
+import com.forgather.global.external.social.SocialPublicKeyClient;
+import com.forgather.global.external.social.dto.AppleIdToken;
+import com.forgather.global.external.social.dto.KakaoIdToken;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 
 import io.jsonwebtoken.Jwts;
 
-class JwtParserTest {
+class SocialJwtParserTest {
 
     private static final String KAKAO_RAW_NONCE = "kakao-raw-nonce";
 
@@ -56,13 +56,13 @@ class JwtParserTest {
         wireMock.stop();
     }
 
-    @DisplayName("Kakao id token 파싱 시 SocialAuthClient의 KAKAO 공개키를 사용한다")
+    @DisplayName("Kakao id token 파싱 시 SocialPublicKeyClient의 KAKAO 공개키를 사용한다")
     @Test
-    void parseIdToken_usesSocialAuthClientKakaoPublicKey() throws Exception {
+    void parseIdToken_usesSocialPublicKeyClientKakaoPublicKey() throws Exception {
         // given
         KeyPair keyPair = generateRsaKeyPair();
         stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
-        JwtParser jwtParser = createJwtParser();
+        SocialJwtParser socialJwtParser = createSocialJwtParser();
         String idToken = Jwts.builder()
             .header()
             .keyId("kakao-key")
@@ -78,7 +78,7 @@ class JwtParserTest {
             .compact();
 
         // when
-        KakaoIdToken kakaoIdToken = jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE);
+        KakaoIdToken kakaoIdToken = socialJwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE);
 
         // then
         assertThat(kakaoIdToken.sub()).isEqualTo("12345");
@@ -92,7 +92,7 @@ class JwtParserTest {
         // given
         KeyPair keyPair = generateRsaKeyPair();
         stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
-        JwtParser jwtParser = createJwtParser();
+        SocialJwtParser socialJwtParser = createSocialJwtParser();
         String idToken = Jwts.builder()
             .header()
             .keyId("kakao-key")
@@ -108,7 +108,7 @@ class JwtParserTest {
             .compact();
 
         // when
-        KakaoIdToken kakaoIdToken = jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE);
+        KakaoIdToken kakaoIdToken = socialJwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE);
 
         // then
         assertThat(kakaoIdToken.sub()).isEqualTo("12345");
@@ -120,7 +120,7 @@ class JwtParserTest {
         // given
         KeyPair keyPair = generateRsaKeyPair();
         stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
-        JwtParser jwtParser = createJwtParser();
+        SocialJwtParser socialJwtParser = createSocialJwtParser();
         String idToken = Jwts.builder()
             .header()
             .keyId("kakao-key")
@@ -136,7 +136,7 @@ class JwtParserTest {
             .compact();
 
         // when & then
-        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
+        assertThatThrownBy(() -> socialJwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
             .isInstanceOf(JwtParseException.class)
             .hasMessageContaining("Kakao issuer");
     }
@@ -147,7 +147,7 @@ class JwtParserTest {
         // given
         KeyPair keyPair = generateRsaKeyPair();
         stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
-        JwtParser jwtParser = createJwtParser();
+        SocialJwtParser socialJwtParser = createSocialJwtParser();
         String idToken = Jwts.builder()
             .header()
             .keyId("kakao-key")
@@ -163,7 +163,7 @@ class JwtParserTest {
             .compact();
 
         // when & then
-        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
+        assertThatThrownBy(() -> socialJwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
             .isInstanceOf(JwtParseException.class)
             .hasMessageContaining("Kakao audience");
     }
@@ -174,7 +174,7 @@ class JwtParserTest {
         // given
         KeyPair keyPair = generateRsaKeyPair();
         stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
-        JwtParser jwtParser = createJwtParser();
+        SocialJwtParser socialJwtParser = createSocialJwtParser();
         String idToken = Jwts.builder()
             .header()
             .keyId("kakao-key")
@@ -189,7 +189,7 @@ class JwtParserTest {
             .compact();
 
         // when & then
-        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
+        assertThatThrownBy(() -> socialJwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
             .isInstanceOf(JwtParseException.class)
             .hasMessageContaining("만료 시간");
     }
@@ -200,7 +200,7 @@ class JwtParserTest {
         // given
         KeyPair keyPair = generateRsaKeyPair();
         stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
-        JwtParser jwtParser = createJwtParser();
+        SocialJwtParser socialJwtParser = createSocialJwtParser();
         String idToken = Jwts.builder()
             .header()
             .keyId("kakao-key")
@@ -215,7 +215,7 @@ class JwtParserTest {
             .compact();
 
         // when & then
-        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
+        assertThatThrownBy(() -> socialJwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
             .isInstanceOf(JwtParseException.class)
             .hasMessageContaining("사용자 식별자");
     }
@@ -226,7 +226,7 @@ class JwtParserTest {
         // given
         KeyPair keyPair = generateRsaKeyPair();
         stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
-        JwtParser jwtParser = createJwtParser();
+        SocialJwtParser socialJwtParser = createSocialJwtParser();
         String idToken = Jwts.builder()
             .header()
             .keyId("kakao-key")
@@ -241,7 +241,7 @@ class JwtParserTest {
             .compact();
 
         // when & then
-        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
+        assertThatThrownBy(() -> socialJwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
             .isInstanceOf(JwtParseException.class)
             .hasMessageContaining("Kakao 닉네임");
     }
@@ -252,7 +252,7 @@ class JwtParserTest {
         // given
         KeyPair keyPair = generateRsaKeyPair();
         stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
-        JwtParser jwtParser = createJwtParser();
+        SocialJwtParser socialJwtParser = createSocialJwtParser();
         String idToken = Jwts.builder()
             .header()
             .keyId("kakao-key")
@@ -267,7 +267,7 @@ class JwtParserTest {
             .compact();
 
         // when & then
-        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
+        assertThatThrownBy(() -> socialJwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
             .isInstanceOf(JwtParseException.class)
             .hasMessageContaining("Kakao email");
     }
@@ -278,7 +278,7 @@ class JwtParserTest {
         // given
         KeyPair keyPair = generateRsaKeyPair();
         stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
-        JwtParser jwtParser = createJwtParser();
+        SocialJwtParser socialJwtParser = createSocialJwtParser();
         String idToken = Jwts.builder()
             .header()
             .keyId("kakao-key")
@@ -294,7 +294,7 @@ class JwtParserTest {
             .compact();
 
         // when & then
-        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
+        assertThatThrownBy(() -> socialJwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
             .isInstanceOf(JwtParseException.class)
             .hasMessageContaining("Kakao nonce");
     }
@@ -305,7 +305,7 @@ class JwtParserTest {
         // given
         KeyPair keyPair = generateRsaKeyPair();
         stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
-        JwtParser jwtParser = createJwtParser();
+        SocialJwtParser socialJwtParser = createSocialJwtParser();
         String idToken = Jwts.builder()
             .header()
             .keyId("kakao-key")
@@ -320,7 +320,7 @@ class JwtParserTest {
             .compact();
 
         // when & then
-        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
+        assertThatThrownBy(() -> socialJwtParser.parseKakaoIdToken(idToken, KAKAO_RAW_NONCE))
             .isInstanceOf(JwtParseException.class)
             .hasMessageContaining("Kakao nonce");
     }
@@ -331,7 +331,7 @@ class JwtParserTest {
         // given
         KeyPair keyPair = generateRsaKeyPair();
         stubJwks("/kakao/.well-known/jwks.json", "kakao-key", (RSAPublicKey)keyPair.getPublic());
-        JwtParser jwtParser = createJwtParser();
+        SocialJwtParser socialJwtParser = createSocialJwtParser();
         String idToken = Jwts.builder()
             .header()
             .keyId("kakao-key")
@@ -347,7 +347,7 @@ class JwtParserTest {
             .compact();
 
         // when & then
-        assertThatThrownBy(() -> jwtParser.parseKakaoIdToken(idToken, null))
+        assertThatThrownBy(() -> socialJwtParser.parseKakaoIdToken(idToken, null))
             .isInstanceOf(JwtParseException.class)
             .hasMessageContaining("Kakao nonce");
     }
@@ -358,7 +358,7 @@ class JwtParserTest {
         // given
         KeyPair keyPair = generateRsaKeyPair();
         stubJwks("/apple/auth/keys", "apple-key", (RSAPublicKey)keyPair.getPublic());
-        JwtParser jwtParser = createJwtParser();
+        SocialJwtParser socialJwtParser = createSocialJwtParser();
         String rawNonce = "raw-nonce";
         String idToken = Jwts.builder()
             .header()
@@ -375,7 +375,7 @@ class JwtParserTest {
             .compact();
 
         // when
-        AppleIdToken appleIdToken = jwtParser.parseAppleIdToken(idToken, rawNonce);
+        AppleIdToken appleIdToken = socialJwtParser.parseAppleIdToken(idToken, rawNonce);
 
         // then
         assertThat(appleIdToken.sub()).isEqualTo("apple-sub");
@@ -388,7 +388,7 @@ class JwtParserTest {
         // given
         KeyPair keyPair = generateRsaKeyPair();
         stubJwks("/apple/auth/keys", "apple-key", (RSAPublicKey)keyPair.getPublic());
-        JwtParser jwtParser = createJwtParser();
+        SocialJwtParser socialJwtParser = createSocialJwtParser();
         String idToken = Jwts.builder()
             .header()
             .keyId("apple-key")
@@ -404,7 +404,7 @@ class JwtParserTest {
             .compact();
 
         // then
-        assertThatThrownBy(() -> jwtParser.parseAppleIdToken(idToken, "raw-nonce"))
+        assertThatThrownBy(() -> socialJwtParser.parseAppleIdToken(idToken, "raw-nonce"))
             .isInstanceOf(JwtParseException.class)
             .hasMessageContaining("Apple nonce");
     }
@@ -415,7 +415,7 @@ class JwtParserTest {
         // given
         KeyPair keyPair = generateRsaKeyPair();
         stubJwks("/apple/auth/keys", "apple-key", (RSAPublicKey)keyPair.getPublic());
-        JwtParser jwtParser = createJwtParser();
+        SocialJwtParser socialJwtParser = createSocialJwtParser();
         String rawNonce = "raw-nonce";
         String idToken = Jwts.builder()
             .header()
@@ -432,7 +432,7 @@ class JwtParserTest {
             .compact();
 
         // then
-        assertThatThrownBy(() -> jwtParser.parseAppleIdToken(idToken, rawNonce))
+        assertThatThrownBy(() -> socialJwtParser.parseAppleIdToken(idToken, rawNonce))
             .isInstanceOf(JwtParseException.class)
             .hasMessageContaining("Apple audience");
     }
@@ -443,7 +443,7 @@ class JwtParserTest {
         // given
         KeyPair keyPair = generateRsaKeyPair();
         stubJwks("/apple/auth/keys", "apple-key", (RSAPublicKey)keyPair.getPublic());
-        JwtParser jwtParser = createJwtParser();
+        SocialJwtParser socialJwtParser = createSocialJwtParser();
         String rawNonce = "raw-nonce";
         String idToken = Jwts.builder()
             .header()
@@ -460,7 +460,7 @@ class JwtParserTest {
             .compact();
 
         // then
-        assertThatThrownBy(() -> jwtParser.parseAppleIdToken(idToken, rawNonce))
+        assertThatThrownBy(() -> socialJwtParser.parseAppleIdToken(idToken, rawNonce))
             .isInstanceOf(JwtParseException.class)
             .hasMessageContaining("Apple email");
     }
@@ -471,7 +471,7 @@ class JwtParserTest {
         // given
         KeyPair keyPair = generateRsaKeyPair();
         stubJwks("/apple/auth/keys", "apple-key", (RSAPublicKey)keyPair.getPublic());
-        JwtParser jwtParser = createJwtParser();
+        SocialJwtParser socialJwtParser = createSocialJwtParser();
         String rawNonce = "raw-nonce";
         String idToken = Jwts.builder()
             .header()
@@ -487,12 +487,12 @@ class JwtParserTest {
             .compact();
 
         // when & then
-        assertThatThrownBy(() -> jwtParser.parseAppleIdToken(idToken, rawNonce))
+        assertThatThrownBy(() -> socialJwtParser.parseAppleIdToken(idToken, rawNonce))
             .isInstanceOf(JwtParseException.class)
             .hasMessageContaining("사용자 식별자");
     }
 
-    private JwtParser createJwtParser() {
+    private SocialJwtParser createSocialJwtParser() {
         AppleProperties appleProperties = new AppleProperties(
             wireMock.baseUrl() + "/apple/auth/keys",
             "https://appleid.apple.com",
@@ -510,13 +510,13 @@ class JwtParserTest {
             "test-admin-key",
             wireMock.baseUrl() + "/kakao/v1/user/unlink"
         );
-        SocialAuthClient socialAuthClient = new SocialAuthClient(
+        SocialPublicKeyClient socialPublicKeyClient = new SocialPublicKeyClient(
             RestClient.create(),
             kakaoProperties,
             new GoogleProperties(wireMock.baseUrl() + "/google/.well-known/jwks.json"),
             appleProperties
         );
-        return new JwtParser(new ObjectMapper(), socialAuthClient, appleProperties, kakaoProperties);
+        return new SocialJwtParser(new ObjectMapper(), socialPublicKeyClient, appleProperties, kakaoProperties);
     }
 
     private KeyPair generateRsaKeyPair() throws Exception {

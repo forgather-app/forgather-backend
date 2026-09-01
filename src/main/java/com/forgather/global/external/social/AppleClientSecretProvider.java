@@ -1,4 +1,4 @@
-package com.forgather.global.auth.util;
+package com.forgather.global.external.social;
 
 import java.security.KeyFactory;
 import java.security.PrivateKey;
