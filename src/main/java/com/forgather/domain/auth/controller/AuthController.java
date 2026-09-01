@@ -1,4 +1,4 @@
-package com.forgather.global.auth.controller;
+package com.forgather.domain.auth.controller;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -10,15 +10,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.forgather.domain.auth.dto.AppleLoginConfirmRequest;
+import com.forgather.domain.auth.dto.KakaoLoginConfirmRequest;
+import com.forgather.domain.auth.dto.LoginResponse;
+import com.forgather.domain.auth.dto.RefreshRequest;
+import com.forgather.domain.auth.service.AuthService;
 import com.forgather.domain.host.dto.HostResponse;
 import com.forgather.domain.host.model.Host;
 import com.forgather.domain.host.service.HostAccountService;
 import com.forgather.global.auth.annotation.LoginHost;
-import com.forgather.global.auth.dto.AppleLoginConfirmRequest;
-import com.forgather.global.auth.dto.KakaoLoginConfirmRequest;
-import com.forgather.global.auth.dto.LoginResponse;
-import com.forgather.global.auth.dto.RefreshRequest;
-import com.forgather.global.auth.service.AuthService;
 import com.forgather.global.auth.util.AuthCookieProvider;
 import com.forgather.global.exception.UnauthorizedException;
 import com.forgather.global.response.ApiResponse;

@@ -1,4 +1,4 @@
-package com.forgather.global.auth.dev;
+package com.forgather.domain.auth.dev;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

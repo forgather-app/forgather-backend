@@ -1,4 +1,4 @@
-package com.forgather.global.auth.dto;
+package com.forgather.domain.auth.dto;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;

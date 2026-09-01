@@ -1,4 +1,4 @@
-package com.forgather.global.auth.dev;
+package com.forgather.domain.auth.dev;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.forgather.global.auth.dto.LoginResponse;
+import com.forgather.domain.auth.dto.LoginResponse;
 import com.forgather.global.auth.util.AuthCookieProvider;
 import com.forgather.global.response.ApiResponse;
 

@@ -1,4 +1,4 @@
-package com.forgather.global.auth.service;
+package com.forgather.domain.auth.service;
 
 import java.util.Optional;
 
@@ -7,15 +7,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.forgather.domain.auth.dto.AppleLoginConfirmRequest;
+import com.forgather.domain.auth.dto.KakaoLoginConfirmRequest;
+import com.forgather.domain.auth.dto.LoginResponse;
 import com.forgather.domain.host.model.AppleHost;
 import com.forgather.domain.host.model.Host;
 import com.forgather.domain.host.model.KakaoHost;
 import com.forgather.domain.host.repository.AppleHostRepository;
 import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.domain.host.repository.KakaoHostRepository;
-import com.forgather.global.auth.dto.AppleLoginConfirmRequest;
-import com.forgather.global.auth.dto.KakaoLoginConfirmRequest;
-import com.forgather.global.auth.dto.LoginResponse;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.UnauthorizedException;

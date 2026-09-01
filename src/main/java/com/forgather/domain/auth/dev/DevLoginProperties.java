@@ -1,4 +1,4 @@
-package com.forgather.global.auth.dev;
+package com.forgather.domain.auth.dev;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Profile;

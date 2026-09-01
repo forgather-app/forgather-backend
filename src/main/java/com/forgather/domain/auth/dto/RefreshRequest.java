@@ -1,4 +1,4 @@
-package com.forgather.global.auth.dto;
+package com.forgather.domain.auth.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

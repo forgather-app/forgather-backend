@@ -1,4 +1,4 @@
-package com.forgather.global.auth.dev;
+package com.forgather.domain.auth.dev;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.forgather.domain.auth.dto.LoginResponse;
 import com.forgather.domain.host.dto.OnboardingRequest;
 import com.forgather.domain.host.model.Host;
 import com.forgather.domain.host.model.KakaoHost;
@@ -18,7 +19,6 @@ import com.forgather.domain.host.repository.KakaoHostRepository;
 import com.forgather.domain.host.service.HostAccountService;
 import com.forgather.domain.term.model.Term;
 import com.forgather.domain.term.repository.TermRepository;
-import com.forgather.global.auth.dto.LoginResponse;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.exception.UnauthorizedException;
 import com.forgather.global.util.RandomCodeGenerator;
