@@ -13,8 +13,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.forgather.domain.space.repository.HostRepository;
-import com.forgather.global.auth.model.Host;
+import com.forgather.domain.host.model.Host;
+import com.forgather.domain.host.repository.HostRepository;
 
 @Import(HostAnonymizeService.class)
 @DataJpaTest

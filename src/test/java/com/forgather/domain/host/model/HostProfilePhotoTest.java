@@ -7,7 +7,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.forgather.fixture.HostFixture;
-import com.forgather.global.auth.model.Host;
 import com.forgather.global.exception.BaseNullPointerException;
 
 class HostProfilePhotoTest {

@@ -1,4 +1,4 @@
-package com.forgather.global.auth.model;
+package com.forgather.domain.host.model;
 
 import java.time.LocalDateTime;
 import java.util.Objects;

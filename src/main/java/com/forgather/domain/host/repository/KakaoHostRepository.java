@@ -1,11 +1,11 @@
-package com.forgather.global.auth.repository;
+package com.forgather.domain.host.repository;
 
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.KakaoHost;
+import com.forgather.domain.host.model.Host;
+import com.forgather.domain.host.model.KakaoHost;
 import com.forgather.global.exception.NotFoundException;
 
 public interface KakaoHostRepository extends JpaRepository<KakaoHost, Long> {

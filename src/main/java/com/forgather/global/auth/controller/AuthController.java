@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.forgather.domain.host.model.Host;
 import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.auth.dto.AppleLoginConfirmRequest;
 import com.forgather.global.auth.dto.HostResponse;
@@ -18,7 +19,6 @@ import com.forgather.global.auth.dto.KakaoLoginConfirmRequest;
 import com.forgather.global.auth.dto.LoginResponse;
 import com.forgather.global.auth.dto.OnboardingRequest;
 import com.forgather.global.auth.dto.RefreshRequest;
-import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.service.AuthService;
 import com.forgather.global.auth.service.WithdrawService;
 import com.forgather.global.auth.util.AuthCookieProvider;

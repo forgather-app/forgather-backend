@@ -3,7 +3,7 @@ package com.forgather.domain.exhibition.repository;
 import java.util.List;
 
 import com.forgather.domain.exhibition.model.ExhibitionHost;
-import com.forgather.global.auth.model.Host;
+import com.forgather.domain.host.model.Host;
 
 public interface ExhibitionHostRepository {
 

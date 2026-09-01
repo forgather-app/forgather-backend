@@ -14,11 +14,11 @@ import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.forgather.global.auth.model.AppleHost;
-import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.KakaoHost;
-import com.forgather.global.auth.repository.AppleHostRepository;
-import com.forgather.global.auth.repository.KakaoHostRepository;
+import com.forgather.domain.host.model.AppleHost;
+import com.forgather.domain.host.model.Host;
+import com.forgather.domain.host.model.KakaoHost;
+import com.forgather.domain.host.repository.AppleHostRepository;
+import com.forgather.domain.host.repository.KakaoHostRepository;
 
 @ExtendWith(MockitoExtension.class)
 class WithdrawServiceTest {

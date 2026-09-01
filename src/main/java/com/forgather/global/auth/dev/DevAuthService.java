@@ -10,14 +10,14 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.host.model.Host;
+import com.forgather.domain.host.model.KakaoHost;
+import com.forgather.domain.host.repository.HostRepository;
+import com.forgather.domain.host.repository.KakaoHostRepository;
 import com.forgather.domain.term.model.Term;
 import com.forgather.domain.term.repository.TermRepository;
 import com.forgather.global.auth.dto.LoginResponse;
 import com.forgather.global.auth.dto.OnboardingRequest;
-import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.KakaoHost;
-import com.forgather.global.auth.repository.KakaoHostRepository;
 import com.forgather.global.auth.service.AuthService;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.exception.UnauthorizedException;

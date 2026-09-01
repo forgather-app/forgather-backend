@@ -12,9 +12,9 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.forgather.domain.host.model.Host;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
-import com.forgather.global.auth.model.Host;
 
 class GuestBookReportTest {
 

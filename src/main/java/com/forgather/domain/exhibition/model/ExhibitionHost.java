@@ -1,7 +1,7 @@
 package com.forgather.domain.exhibition.model;
 
+import com.forgather.domain.host.model.Host;
 import com.forgather.domain.model.SoftDeleteEntity;
-import com.forgather.global.auth.model.Host;
 import com.forgather.global.exception.BaseNullPointerException;
 
 import jakarta.persistence.Column;

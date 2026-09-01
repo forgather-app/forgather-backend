@@ -9,12 +9,12 @@ import com.forgather.domain.host.dto.HostProfileResponse;
 import com.forgather.domain.host.dto.PublicHostProfileResponse;
 import com.forgather.domain.host.dto.RegisterHostProfilePhotoRequest;
 import com.forgather.domain.host.dto.UpdateHostProfileRequest;
+import com.forgather.domain.host.model.Host;
 import com.forgather.domain.host.model.HostProfilePhoto;
 import com.forgather.domain.host.repository.HostProfilePhotoRepository;
-import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.domain.upload.domain.ContentsStorage;
 import com.forgather.domain.upload.domain.FilePathGenerator;
-import com.forgather.global.auth.model.Host;
 
 import lombok.RequiredArgsConstructor;
 

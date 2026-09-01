@@ -1,6 +1,6 @@
 package com.forgather.domain.exhibition.dto;
 
-import com.forgather.global.auth.model.Host;
+import com.forgather.domain.host.model.Host;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

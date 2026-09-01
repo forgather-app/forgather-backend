@@ -7,14 +7,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.forgather.domain.exhibition.model.ExhibitionHost;
 import com.forgather.domain.exhibition.repository.ExhibitionHostRepository;
+import com.forgather.domain.host.model.Host;
 import com.forgather.domain.host.model.HostProfilePhoto;
+import com.forgather.domain.host.repository.AppleHostRepository;
 import com.forgather.domain.host.repository.HostProfilePhotoRepository;
-import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.host.repository.HostRepository;
+import com.forgather.domain.host.repository.KakaoHostRepository;
 import com.forgather.domain.space.service.SpaceService;
-import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.model.SpaceHost;
-import com.forgather.global.auth.repository.AppleHostRepository;
-import com.forgather.global.auth.repository.KakaoHostRepository;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 
 import lombok.RequiredArgsConstructor;

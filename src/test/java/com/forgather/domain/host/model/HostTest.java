@@ -1,4 +1,4 @@
-package com.forgather.global.auth.model;
+package com.forgather.domain.host.model;
 
 import static com.forgather.fixture.HostFixture.createHost;
 import static com.forgather.fixture.HostFixture.createHostWithLegacyPictureUrl;

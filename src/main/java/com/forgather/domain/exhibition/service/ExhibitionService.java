@@ -18,9 +18,9 @@ import com.forgather.domain.exhibition.repository.ExhibitionHostRepository;
 import com.forgather.domain.exhibition.repository.ExhibitionPhotoRepository;
 import com.forgather.domain.exhibition.repository.ExhibitionRepository;
 import com.forgather.domain.exhibition.repository.ExhibitionTimeRepository;
+import com.forgather.domain.host.model.Host;
 import com.forgather.domain.upload.domain.ContentsStorage;
 import com.forgather.domain.upload.domain.FilePathGenerator;
-import com.forgather.global.auth.model.Host;
 
 import lombok.RequiredArgsConstructor;
 

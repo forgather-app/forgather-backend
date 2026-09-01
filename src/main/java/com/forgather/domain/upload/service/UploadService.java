@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.forgather.domain.host.model.Host;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.domain.SignedUrlIssuer;
@@ -14,7 +15,6 @@ import com.forgather.domain.upload.domain.UploadFileMetadata;
 import com.forgather.domain.upload.dto.IssuePreSignedUrlRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlResponse;
-import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.ForbiddenException;
 

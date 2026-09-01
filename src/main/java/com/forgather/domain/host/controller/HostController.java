@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.forgather.domain.host.dto.HostProfileResponse;
 import com.forgather.domain.host.dto.PublicHostProfileResponse;
 import com.forgather.domain.host.dto.UpdateHostProfileRequest;
+import com.forgather.domain.host.model.Host;
 import com.forgather.domain.host.service.HostService;
 import com.forgather.global.auth.annotation.LoginHost;
-import com.forgather.global.auth.model.Host;
 import com.forgather.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;

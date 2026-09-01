@@ -1,4 +1,4 @@
-package com.forgather.domain.space.repository;
+package com.forgather.domain.host.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Lock;
 
 import jakarta.persistence.LockModeType;
 
-import com.forgather.global.auth.model.Host;
+import com.forgather.domain.host.model.Host;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.NotFoundException;
 

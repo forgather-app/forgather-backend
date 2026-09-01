@@ -8,7 +8,7 @@ import java.util.List;
 import com.forgather.domain.exhibition.model.Exhibition;
 import com.forgather.domain.exhibition.model.ExhibitionPhoto;
 import com.forgather.domain.exhibition.model.ExhibitionTimes;
-import com.forgather.global.auth.model.Host;
+import com.forgather.domain.host.model.Host;
 
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;

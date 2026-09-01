@@ -2,9 +2,9 @@ package com.forgather.global.auth.service;
 
 import org.springframework.stereotype.Service;
 
-import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.repository.AppleHostRepository;
-import com.forgather.global.auth.repository.KakaoHostRepository;
+import com.forgather.domain.host.model.Host;
+import com.forgather.domain.host.repository.AppleHostRepository;
+import com.forgather.domain.host.repository.KakaoHostRepository;
 
 import lombok.RequiredArgsConstructor;
 

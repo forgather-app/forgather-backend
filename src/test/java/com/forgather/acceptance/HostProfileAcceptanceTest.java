@@ -16,12 +16,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.forgather.domain.host.model.Host;
 import com.forgather.domain.host.model.HostProfilePhoto;
 import com.forgather.domain.host.repository.HostProfilePhotoRepository;
-import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.domain.upload.domain.ContentsStorage;
 import com.forgather.fixture.HostFixture;
-import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.response.ResponseCode;
 

@@ -1,5 +1,6 @@
 package com.forgather.global.auth.model;
 
+import com.forgather.domain.host.model.Host;
 import com.forgather.domain.model.SoftDeleteEntity;
 import com.forgather.domain.space.model.Space;
 
