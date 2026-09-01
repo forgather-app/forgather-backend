@@ -17,7 +17,7 @@ import com.forgather.domain.auth.dto.RefreshRequest;
 import com.forgather.domain.auth.service.AuthService;
 import com.forgather.domain.host.dto.HostResponse;
 import com.forgather.domain.host.model.Host;
-import com.forgather.domain.host.service.HostAccountService;
+import com.forgather.domain.host.service.HostService;
 import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.auth.util.AuthCookieProvider;
 import com.forgather.global.exception.UnauthorizedException;
@@ -35,7 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthController {
 
     private final AuthService authService;
-    private final HostAccountService hostAccountService;
+    private final HostService hostService;
     private final AuthCookieProvider authCookieProvider;
 
     @GetMapping("/me")
@@ -43,7 +43,7 @@ public class AuthController {
         description = "현재 로그인된 사용자의 정보를 확인합니다. " +
             "로그인된 사용자가 없으면 401 Unauthorized를 반환합니다.")
     public ResponseEntity<ApiResponse<HostResponse>> getCurrentUser(@LoginHost Host host) {
-        var response = hostAccountService.getAccount(host);
+        var response = hostService.getAccount(host);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

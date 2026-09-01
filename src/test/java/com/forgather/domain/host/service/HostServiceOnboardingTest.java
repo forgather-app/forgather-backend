@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -36,11 +37,12 @@ import com.forgather.domain.term.model.Term;
 import com.forgather.domain.term.model.TermType;
 import com.forgather.domain.term.repository.HostTermHistoryRepository;
 import com.forgather.domain.term.repository.TermRepository;
+import com.forgather.domain.upload.domain.ContentsStorage;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.ConflictException;
 
 @ExtendWith(MockitoExtension.class)
-class HostAccountServiceTest {
+class HostServiceOnboardingTest {
 
     @Mock
     private HostRepository hostRepository;
@@ -54,15 +56,16 @@ class HostAccountServiceTest {
     @Mock
     private HostProfilePhotoRepository hostProfilePhotoRepository;
 
-    private HostAccountService hostAccountService;
+    private HostService hostService;
 
     @BeforeEach
     void setUp() {
-        hostAccountService = new HostAccountService(
+        hostService = new HostService(
             hostRepository,
+            hostProfilePhotoRepository,
+            mock(ContentsStorage.class),
             termRepository,
-            hostTermHistoryRepository,
-            hostProfilePhotoRepository
+            hostTermHistoryRepository
         );
     }
 
@@ -75,7 +78,7 @@ class HostAccountServiceTest {
         when(termRepository.findByIdInAndDeletedAtIsNull(agreedTermIds)).thenReturn(List.of());
 
         // when, then
-        assertThatThrownBy(() -> hostAccountService.submitOnboarding(onboardingHost(), request))
+        assertThatThrownBy(() -> hostService.submitOnboarding(onboardingHost(), request))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("존재하지 않거나 삭제된 약관 ID가 포함되어 있습니다.");
     }
@@ -90,7 +93,7 @@ class HostAccountServiceTest {
             .thenReturn(List.of(createPrivacyTerm("1.0.0", "content")));
 
         // when, then
-        assertThatThrownBy(() -> hostAccountService.submitOnboarding(onboardingHost(), request))
+        assertThatThrownBy(() -> hostService.submitOnboarding(onboardingHost(), request))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("필수 약관 동의가 누락되었습니다.");
     }
@@ -105,7 +108,7 @@ class HostAccountServiceTest {
             .thenReturn(TermType.requiredTypes());
 
         // when
-        HostResponse result = hostAccountService.getAccount(host);
+        HostResponse result = hostService.getAccount(host);
 
         // then
         assertThat(result.onboardingCompleted()).isTrue();
@@ -118,7 +121,7 @@ class HostAccountServiceTest {
         Host host = createHostWithId(1L);
 
         // when
-        HostResponse result = hostAccountService.getAccount(host);
+        HostResponse result = hostService.getAccount(host);
 
         // then
         assertThat(result.onboardingCompleted()).isFalse();
@@ -134,7 +137,7 @@ class HostAccountServiceTest {
             .thenReturn(Set.of());
 
         // when
-        HostResponse result = hostAccountService.getAccount(host);
+        HostResponse result = hostService.getAccount(host);
 
         // then
         assertThat(result.onboardingCompleted()).isFalse();
@@ -159,7 +162,7 @@ class HostAccountServiceTest {
         when(termRepository.findByIdInAndDeletedAtIsNull(List.of(1L))).thenReturn(List.of(serviceTerm));
 
         // when & then
-        assertThatThrownBy(() -> hostAccountService.submitOnboarding(onboardingHost(), request))
+        assertThatThrownBy(() -> hostService.submitOnboarding(onboardingHost(), request))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("필수 약관은 거절할 수 없습니다.");
     }
@@ -177,7 +180,7 @@ class HostAccountServiceTest {
         when(termRepository.findByIdInAndDeletedAtIsNull(List.of(3L))).thenReturn(List.of(marketingTerm));
 
         // when & then
-        assertThatThrownBy(() -> hostAccountService.submitOnboarding(onboardingHost(), request))
+        assertThatThrownBy(() -> hostService.submitOnboarding(onboardingHost(), request))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("같은 타입의 약관을 동의와 거절에 함께 보낼 수 없습니다.");
     }
@@ -195,7 +198,7 @@ class HostAccountServiceTest {
         when(termRepository.findLatestTerms()).thenReturn(List.of(serviceTerm, privacyTerm, marketingTerm));
 
         // when & then
-        assertThatThrownBy(() -> hostAccountService.submitOnboarding(onboardingHost(), request))
+        assertThatThrownBy(() -> hostService.submitOnboarding(onboardingHost(), request))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("타입별 최신 약관 전체에 대한 동의 또는 거절이 필요합니다.");
     }
@@ -215,7 +218,7 @@ class HostAccountServiceTest {
         when(termRepository.findLatestTerms()).thenReturn(List.of(latestServiceTerm, privacyTerm, marketingTerm));
 
         // when & then
-        assertThatThrownBy(() -> hostAccountService.submitOnboarding(onboardingHost(), request))
+        assertThatThrownBy(() -> hostService.submitOnboarding(onboardingHost(), request))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("타입별 최신 약관 전체에 대한 동의 또는 거절이 필요합니다.");
     }
@@ -235,7 +238,7 @@ class HostAccountServiceTest {
         when(termRepository.findLatestTerms()).thenReturn(List.of(latestServiceTerm, privacyTerm, marketingTerm));
 
         // when & then
-        assertThatThrownBy(() -> hostAccountService.submitOnboarding(onboardingHost(), request))
+        assertThatThrownBy(() -> hostService.submitOnboarding(onboardingHost(), request))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("타입별 최신 약관 전체에 대한 동의 또는 거절이 필요합니다.");
     }
@@ -256,7 +259,7 @@ class HostAccountServiceTest {
         when(hostRepository.getByIdWithLockOrThrow(1L)).thenReturn(host);
 
         // when
-        hostAccountService.submitOnboarding(host, request);
+        hostService.submitOnboarding(host, request);
 
         // then
         ArgumentCaptor<List<HostTermHistory>> captor = ArgumentCaptor.forClass(List.class);
@@ -280,7 +283,7 @@ class HostAccountServiceTest {
         when(hostTermHistoryRepository.findAgreedTermTypesByHostId(1L)).thenReturn(TermType.requiredTypes());
 
         // when & then
-        assertThatThrownBy(() -> hostAccountService.submitOnboarding(host, request))
+        assertThatThrownBy(() -> hostService.submitOnboarding(host, request))
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("이미 온보딩이 완료된 호스트입니다. hostId: 1");
         verify(hostTermHistoryRepository, never()).saveAll(any());
