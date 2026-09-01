@@ -1,8 +1,7 @@
-package com.forgather.global.auth.model;
+package com.forgather.domain.space.model;
 
 import com.forgather.domain.host.model.Host;
 import com.forgather.domain.model.SoftDeleteEntity;
-import com.forgather.domain.space.model.Space;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

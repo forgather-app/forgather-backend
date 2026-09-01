@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.forgather.back_office.dto.HostDetailResponse;
 import com.forgather.domain.host.model.Host;
-import com.forgather.global.auth.model.SpaceHost;
+import com.forgather.domain.space.model.SpaceHost;
 
 public interface AdminSpaceHostRepository {
 

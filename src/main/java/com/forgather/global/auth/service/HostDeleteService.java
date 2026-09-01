@@ -13,9 +13,9 @@ import com.forgather.domain.host.repository.AppleHostRepository;
 import com.forgather.domain.host.repository.HostProfilePhotoRepository;
 import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.domain.host.repository.KakaoHostRepository;
+import com.forgather.domain.space.model.SpaceHost;
+import com.forgather.domain.space.repository.SpaceHostRepository;
 import com.forgather.domain.space.service.SpaceService;
-import com.forgather.global.auth.model.SpaceHost;
-import com.forgather.global.auth.repository.SpaceHostRepository;
 
 import lombok.RequiredArgsConstructor;
 

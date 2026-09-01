@@ -24,14 +24,14 @@ import com.forgather.domain.host.model.Host;
 import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.domain.product.repository.ProductRepository;
 import com.forgather.domain.space.model.Space;
+import com.forgather.domain.space.model.SpaceHost;
+import com.forgather.domain.space.repository.SpaceHostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fixture.AdminUserFixture;
 import com.forgather.fixture.GuestBookCardFixture;
 import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.ProductFixture;
 import com.forgather.fixture.SpaceFixture;
-import com.forgather.global.auth.model.SpaceHost;
-import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.util.RandomCodeGenerator;
 
 import io.restassured.module.mockmvc.RestAssuredMockMvc;

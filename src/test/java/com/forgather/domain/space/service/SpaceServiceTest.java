@@ -24,12 +24,12 @@ import com.forgather.domain.space.dto.FeaturedSpacesResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
 import com.forgather.domain.space.dto.UnfeatureSpacesRequest;
 import com.forgather.domain.space.model.Space;
+import com.forgather.domain.space.repository.SpaceHostRepository;
 import com.forgather.domain.space.repository.SpacePhotoRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
 import com.forgather.fixture.SpaceHostFixture;
-import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.NotFoundException;
 

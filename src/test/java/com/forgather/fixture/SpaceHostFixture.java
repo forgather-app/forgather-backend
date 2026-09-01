@@ -2,7 +2,7 @@ package com.forgather.fixture;
 
 import com.forgather.domain.host.model.Host;
 import com.forgather.domain.space.model.Space;
-import com.forgather.global.auth.model.SpaceHost;
+import com.forgather.domain.space.model.SpaceHost;
 
 public class SpaceHostFixture {
 

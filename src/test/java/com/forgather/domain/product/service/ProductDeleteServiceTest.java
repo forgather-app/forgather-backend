@@ -21,12 +21,12 @@ import com.forgather.domain.product.model.ProductPhoto;
 import com.forgather.domain.product.repository.ProductPhotoRepository;
 import com.forgather.domain.product.repository.ProductRepository;
 import com.forgather.domain.space.model.Space;
+import com.forgather.domain.space.model.SpaceHost;
+import com.forgather.domain.space.repository.SpaceHostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fake.FakeContentStorage;
 import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
-import com.forgather.global.auth.model.SpaceHost;
-import com.forgather.global.auth.repository.SpaceHostRepository;
 
 @Import({ProductService.class, FakeContentStorage.class})
 @DataJpaTest

@@ -1,4 +1,4 @@
-package com.forgather.global.auth.repository;
+package com.forgather.domain.space.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
 
 import com.forgather.domain.host.model.Host;
 import com.forgather.domain.space.model.Space;
-import com.forgather.global.auth.model.SpaceHost;
+import com.forgather.domain.space.model.SpaceHost;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.NotFoundException;
 
