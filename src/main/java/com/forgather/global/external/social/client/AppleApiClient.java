@@ -11,10 +11,10 @@ import org.springframework.web.client.RestClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.global.config.AppleProperties;
 import com.forgather.global.exception.BaseException;
-import com.forgather.global.external.ExternalApiException;
+import com.forgather.global.exception.ExternalApiException;
 import com.forgather.global.external.ExternalCalls;
 import com.forgather.global.external.ExternalOperation;
-import com.forgather.global.external.FailureType;
+import com.forgather.global.exception.ExternalFailureType;
 import com.forgather.global.external.social.AppleClientSecretProvider;
 import com.forgather.global.external.social.dto.AppleTokenErrorResponse;
 import com.forgather.global.external.social.dto.AppleTokenResponse;
@@ -61,9 +61,9 @@ public class AppleApiClient {
                     .body(AppleTokenResponse.class));
         } catch (ExternalApiException e) {
             // invalid_grant는 이미 쓴 code를 다시 보냈거나 만료된 경우로 사용자가 재로그인해야 한다.
-            if (e.getType() == FailureType.CALLER_ERROR
+            if (e.getType() == ExternalFailureType.CALLER_ERROR
                 && "invalid_grant".equals(parseError(e.getResponseBody()))) {
-                throw e.as(FailureType.AUTH_REJECTED);
+                throw e.as(ExternalFailureType.AUTH_REJECTED);
             }
             throw e;
         }
@@ -99,7 +99,7 @@ public class AppleApiClient {
             || response.expiresIn() == null) {
             throw new ExternalApiException(
                 ExternalOperation.APPLE_TOKEN,
-                FailureType.MALFORMED_RESPONSE,
+                ExternalFailureType.MALFORMED_RESPONSE,
                 "Apple token 응답이 올바르지 않습니다.");
         }
     }

@@ -1,4 +1,4 @@
-package com.forgather.global.external;
+package com.forgather.global.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -14,6 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 
+import com.forgather.global.external.ExternalOperation;
+import com.forgather.global.external.ExternalService;
+
 class ExternalApiExceptionTest {
 
     @DisplayName("외부 5xx는 UPSTREAM_ERROR로 분류되고 503으로 응답한다")
@@ -25,7 +28,7 @@ class ExternalApiExceptionTest {
 
         // then
         assertAll(
-            () -> assertThat(exception.getType()).isEqualTo(FailureType.UPSTREAM_ERROR),
+            () -> assertThat(exception.getType()).isEqualTo(ExternalFailureType.UPSTREAM_ERROR),
             () -> assertThat(exception.getStatusCode()).isEqualTo(503),
             () -> assertThat(exception.isRetryable()).isTrue()
         );
@@ -40,7 +43,7 @@ class ExternalApiExceptionTest {
 
         // then
         assertAll(
-            () -> assertThat(exception.getType()).isEqualTo(FailureType.CALLER_ERROR),
+            () -> assertThat(exception.getType()).isEqualTo(ExternalFailureType.CALLER_ERROR),
             () -> assertThat(exception.getStatusCode()).isEqualTo(500),
             () -> assertThat(exception.isRetryable()).isFalse()
         );
@@ -55,7 +58,7 @@ class ExternalApiExceptionTest {
 
         // then
         assertAll(
-            () -> assertThat(exception.getType()).isEqualTo(FailureType.RATE_LIMITED),
+            () -> assertThat(exception.getType()).isEqualTo(ExternalFailureType.RATE_LIMITED),
             () -> assertThat(exception.isRetryable()).isTrue()
         );
     }
@@ -82,8 +85,8 @@ class ExternalApiExceptionTest {
 
         // then
         assertAll(
-            () -> assertThat(connect.getType()).isEqualTo(FailureType.CONNECT_TIMEOUT),
-            () -> assertThat(read.getType()).isEqualTo(FailureType.READ_TIMEOUT)
+            () -> assertThat(connect.getType()).isEqualTo(ExternalFailureType.CONNECT_TIMEOUT),
+            () -> assertThat(read.getType()).isEqualTo(ExternalFailureType.READ_TIMEOUT)
         );
     }
 
@@ -111,7 +114,7 @@ class ExternalApiExceptionTest {
             ExternalOperation.KAKAO_UNLINK, new ResourceAccessException("io", new IOException("Connection reset")));
 
         // then
-        assertThat(exception.getType()).isEqualTo(FailureType.CONNECTION_FAILED);
+        assertThat(exception.getType()).isEqualTo(ExternalFailureType.CONNECTION_FAILED);
     }
 
     @DisplayName("as()로 타입을 세분화해도 연산과 응답 본문은 유지된다")
@@ -122,11 +125,11 @@ class ExternalApiExceptionTest {
             ExternalOperation.APPLE_TOKEN, responseException(HttpStatus.BAD_REQUEST, "{\"error\":\"invalid_grant\"}"));
 
         // when
-        ExternalApiException refined = origin.as(FailureType.AUTH_REJECTED);
+        ExternalApiException refined = origin.as(ExternalFailureType.AUTH_REJECTED);
 
         // then
         assertAll(
-            () -> assertThat(refined.getType()).isEqualTo(FailureType.AUTH_REJECTED),
+            () -> assertThat(refined.getType()).isEqualTo(ExternalFailureType.AUTH_REJECTED),
             () -> assertThat(refined.getStatusCode()).isEqualTo(401),
             () -> assertThat(refined.getResponseBody()).contains("invalid_grant"),
             () -> assertThat(refined.getOperation().operationName()).isEqualTo("token"),

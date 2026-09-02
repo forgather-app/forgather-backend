@@ -20,8 +20,8 @@ import org.springframework.web.client.RestClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.global.config.KakaoProperties;
 import com.forgather.global.exception.BaseException;
-import com.forgather.global.external.ExternalApiException;
-import com.forgather.global.external.FailureType;
+import com.forgather.global.exception.ExternalApiException;
+import com.forgather.global.exception.ExternalFailureType;
 import com.forgather.global.external.social.client.KakaoApiClient;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
@@ -79,7 +79,7 @@ class KakaoApiClientTest {
             .isInstanceOf(ExternalApiException.class)
             .satisfies(thrown -> {
                 ExternalApiException exception = (ExternalApiException)thrown;
-                assertThat(exception.getType()).isEqualTo(FailureType.CALLER_ERROR);
+                assertThat(exception.getType()).isEqualTo(ExternalFailureType.CALLER_ERROR);
                 assertThat(exception.getStatusCode()).isEqualTo(500);
             });
     }
@@ -116,7 +116,7 @@ class KakaoApiClientTest {
         assertThatThrownBy(() -> kakaoApiClient.unlink("12345"))
             .isInstanceOf(ExternalApiException.class)
             .extracting("type")
-            .isEqualTo(FailureType.CALLER_ERROR);
+            .isEqualTo(ExternalFailureType.CALLER_ERROR);
     }
 
     @DisplayName("Kakao가 5xx를 반환하면 외부 서비스 장애 예외를 던진다")

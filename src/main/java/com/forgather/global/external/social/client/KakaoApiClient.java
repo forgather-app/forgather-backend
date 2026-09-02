@@ -13,10 +13,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.global.config.KakaoProperties;
 import com.forgather.global.exception.BaseException;
-import com.forgather.global.external.ExternalApiException;
+import com.forgather.global.exception.ExternalApiException;
 import com.forgather.global.external.ExternalCalls;
 import com.forgather.global.external.ExternalOperation;
-import com.forgather.global.external.FailureType;
+import com.forgather.global.exception.ExternalFailureType;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,7 +60,7 @@ public class KakaoApiClient {
                     .retrieve()
                     .toBodilessEntity());
         } catch (ExternalApiException e) {
-            if (e.getType() == FailureType.CALLER_ERROR && isAlreadyUnlinked(e.getResponseBody())) {
+            if (e.getType() == ExternalFailureType.CALLER_ERROR && isAlreadyUnlinked(e.getResponseBody())) {
                 log.atInfo()
                     .addKeyValue("service", "KAKAO")
                     .addKeyValue("operation", "unlink")

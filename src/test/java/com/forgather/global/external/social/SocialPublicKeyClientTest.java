@@ -24,8 +24,8 @@ import com.forgather.global.config.AppleProperties;
 import com.forgather.global.config.GoogleProperties;
 import com.forgather.global.config.KakaoProperties;
 import com.forgather.global.exception.JwtBaseException;
-import com.forgather.global.external.ExternalApiException;
-import com.forgather.global.external.FailureType;
+import com.forgather.global.exception.ExternalApiException;
+import com.forgather.global.exception.ExternalFailureType;
 import com.forgather.global.external.social.client.SocialPublicKeyClient;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
@@ -108,7 +108,7 @@ class SocialPublicKeyClientTest {
             .isInstanceOf(ExternalApiException.class)
             .satisfies(thrown -> {
                 ExternalApiException exception = (ExternalApiException)thrown;
-                assertThat(exception.getType()).isEqualTo(FailureType.MALFORMED_RESPONSE);
+                assertThat(exception.getType()).isEqualTo(ExternalFailureType.MALFORMED_RESPONSE);
                 assertThat(exception.getStatusCode()).isEqualTo(500);
             });
     }
@@ -146,7 +146,7 @@ class SocialPublicKeyClientTest {
             .isInstanceOf(ExternalApiException.class)
             .satisfies(thrown -> {
                 ExternalApiException exception = (ExternalApiException)thrown;
-                assertThat(exception.getType()).isEqualTo(FailureType.UPSTREAM_ERROR);
+                assertThat(exception.getType()).isEqualTo(ExternalFailureType.UPSTREAM_ERROR);
                 assertThat(exception.getStatusCode()).isEqualTo(503);
             });
     }

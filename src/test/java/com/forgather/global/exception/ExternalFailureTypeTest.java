@@ -1,4 +1,4 @@
-package com.forgather.global.external;
+package com.forgather.global.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -8,19 +8,22 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.event.Level;
 import org.springframework.http.HttpStatus;
 
-class FailureTypeTest {
+import com.forgather.global.external.ExternalOperation;
+import com.forgather.global.external.ExternalService;
+
+class ExternalFailureTypeTest {
 
     @DisplayName("우리 쪽 결함은 500과 error로, 외부 장애는 503과 warn으로 매핑된다")
     @Test
     void statusAndLevel() {
         // when & then
         assertAll(
-            () -> assertThat(FailureType.CALLER_ERROR.httpStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR),
-            () -> assertThat(FailureType.CALLER_ERROR.logLevel()).isEqualTo(Level.ERROR),
-            () -> assertThat(FailureType.MALFORMED_RESPONSE.httpStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR),
-            () -> assertThat(FailureType.MALFORMED_RESPONSE.logLevel()).isEqualTo(Level.ERROR),
-            () -> assertThat(FailureType.UPSTREAM_ERROR.httpStatus()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE),
-            () -> assertThat(FailureType.UPSTREAM_ERROR.logLevel()).isEqualTo(Level.WARN)
+            () -> assertThat(ExternalFailureType.CALLER_ERROR.httpStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR),
+            () -> assertThat(ExternalFailureType.CALLER_ERROR.logLevel()).isEqualTo(Level.ERROR),
+            () -> assertThat(ExternalFailureType.MALFORMED_RESPONSE.httpStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR),
+            () -> assertThat(ExternalFailureType.MALFORMED_RESPONSE.logLevel()).isEqualTo(Level.ERROR),
+            () -> assertThat(ExternalFailureType.UPSTREAM_ERROR.httpStatus()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE),
+            () -> assertThat(ExternalFailureType.UPSTREAM_ERROR.logLevel()).isEqualTo(Level.WARN)
         );
     }
 
@@ -29,8 +32,8 @@ class FailureTypeTest {
     void authRejected() {
         // when & then
         assertAll(
-            () -> assertThat(FailureType.AUTH_REJECTED.httpStatus()).isEqualTo(HttpStatus.UNAUTHORIZED),
-            () -> assertThat(FailureType.AUTH_REJECTED.logLevel()).isEqualTo(Level.WARN)
+            () -> assertThat(ExternalFailureType.AUTH_REJECTED.httpStatus()).isEqualTo(HttpStatus.UNAUTHORIZED),
+            () -> assertThat(ExternalFailureType.AUTH_REJECTED.logLevel()).isEqualTo(Level.WARN)
         );
     }
 
@@ -39,10 +42,10 @@ class FailureTypeTest {
     void alwaysRetryable() {
         // when & then
         assertAll(
-            () -> assertThat(FailureType.CONNECT_TIMEOUT.retryable(false)).isTrue(),
-            () -> assertThat(FailureType.CONNECTION_FAILED.retryable(false)).isTrue(),
-            () -> assertThat(FailureType.RATE_LIMITED.retryable(false)).isTrue(),
-            () -> assertThat(FailureType.UPSTREAM_ERROR.retryable(false)).isTrue()
+            () -> assertThat(ExternalFailureType.CONNECT_TIMEOUT.retryable(false)).isTrue(),
+            () -> assertThat(ExternalFailureType.CONNECTION_FAILED.retryable(false)).isTrue(),
+            () -> assertThat(ExternalFailureType.RATE_LIMITED.retryable(false)).isTrue(),
+            () -> assertThat(ExternalFailureType.UPSTREAM_ERROR.retryable(false)).isTrue()
         );
     }
 
@@ -51,8 +54,8 @@ class FailureTypeTest {
     void readTimeoutDependsOnIdempotency() {
         // when & then
         assertAll(
-            () -> assertThat(FailureType.READ_TIMEOUT.retryable(true)).isTrue(),
-            () -> assertThat(FailureType.READ_TIMEOUT.retryable(false)).isFalse()
+            () -> assertThat(ExternalFailureType.READ_TIMEOUT.retryable(true)).isTrue(),
+            () -> assertThat(ExternalFailureType.READ_TIMEOUT.retryable(false)).isFalse()
         );
     }
 
@@ -61,9 +64,9 @@ class FailureTypeTest {
     void neverRetryable() {
         // when & then
         assertAll(
-            () -> assertThat(FailureType.CALLER_ERROR.retryable(true)).isFalse(),
-            () -> assertThat(FailureType.MALFORMED_RESPONSE.retryable(true)).isFalse(),
-            () -> assertThat(FailureType.AUTH_REJECTED.retryable(true)).isFalse()
+            () -> assertThat(ExternalFailureType.CALLER_ERROR.retryable(true)).isFalse(),
+            () -> assertThat(ExternalFailureType.MALFORMED_RESPONSE.retryable(true)).isFalse(),
+            () -> assertThat(ExternalFailureType.AUTH_REJECTED.retryable(true)).isFalse()
         );
     }
 

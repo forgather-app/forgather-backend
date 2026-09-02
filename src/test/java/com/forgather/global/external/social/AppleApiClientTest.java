@@ -24,8 +24,8 @@ import org.springframework.web.client.RestClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.global.config.AppleProperties;
-import com.forgather.global.external.ExternalApiException;
-import com.forgather.global.external.FailureType;
+import com.forgather.global.exception.ExternalApiException;
+import com.forgather.global.exception.ExternalFailureType;
 import com.forgather.global.external.social.client.AppleApiClient;
 import com.forgather.global.external.social.dto.AppleTokenResponse;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -104,7 +104,7 @@ class AppleApiClientTest {
         assertThatThrownBy(() -> appleApiClient.exchangeAuthorizationCode("invalid-code"))
             .isInstanceOf(ExternalApiException.class)
             .extracting("type")
-            .isEqualTo(FailureType.AUTH_REJECTED);
+            .isEqualTo(ExternalFailureType.AUTH_REJECTED);
     }
 
     @DisplayName("Apple이 invalid_client를 반환하면 우리 설정 오류로 분류한다")
@@ -124,7 +124,7 @@ class AppleApiClientTest {
             .isInstanceOf(ExternalApiException.class)
             .satisfies(thrown -> {
                 ExternalApiException exception = (ExternalApiException)thrown;
-                assertThat(exception.getType()).isEqualTo(FailureType.CALLER_ERROR);
+                assertThat(exception.getType()).isEqualTo(ExternalFailureType.CALLER_ERROR);
                 assertThat(exception.getStatusCode()).isEqualTo(500);
             });
     }
@@ -145,7 +145,7 @@ class AppleApiClientTest {
             .isInstanceOf(ExternalApiException.class)
             .satisfies(thrown -> {
                 ExternalApiException exception = (ExternalApiException)thrown;
-                assertThat(exception.getType()).isEqualTo(FailureType.MALFORMED_RESPONSE);
+                assertThat(exception.getType()).isEqualTo(ExternalFailureType.MALFORMED_RESPONSE);
                 assertThat(exception.getStatusCode()).isEqualTo(500);
             });
     }
@@ -167,7 +167,7 @@ class AppleApiClientTest {
             .isInstanceOf(ExternalApiException.class)
             .satisfies(thrown -> {
                 ExternalApiException exception = (ExternalApiException)thrown;
-                assertThat(exception.getType()).isEqualTo(FailureType.CALLER_ERROR);
+                assertThat(exception.getType()).isEqualTo(ExternalFailureType.CALLER_ERROR);
                 assertThat(exception.getStatusCode()).isEqualTo(500);
             });
     }
@@ -184,7 +184,7 @@ class AppleApiClientTest {
             .isInstanceOf(ExternalApiException.class)
             .satisfies(thrown -> {
                 ExternalApiException exception = (ExternalApiException)thrown;
-                assertThat(exception.getType()).isEqualTo(FailureType.UPSTREAM_ERROR);
+                assertThat(exception.getType()).isEqualTo(ExternalFailureType.UPSTREAM_ERROR);
                 assertThat(exception.getStatusCode()).isEqualTo(503);
             });
     }
@@ -221,7 +221,7 @@ class AppleApiClientTest {
             .isInstanceOf(ExternalApiException.class)
             .satisfies(thrown -> {
                 ExternalApiException exception = (ExternalApiException)thrown;
-                assertThat(exception.getType()).isEqualTo(FailureType.CALLER_ERROR);
+                assertThat(exception.getType()).isEqualTo(ExternalFailureType.CALLER_ERROR);
                 assertThat(exception.getStatusCode()).isEqualTo(500);
             });
     }

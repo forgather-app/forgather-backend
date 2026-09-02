@@ -23,10 +23,10 @@ import com.forgather.global.config.GoogleProperties;
 import com.forgather.global.config.KakaoProperties;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.JwtBaseException;
-import com.forgather.global.external.ExternalApiException;
+import com.forgather.global.exception.ExternalApiException;
 import com.forgather.global.external.ExternalCalls;
 import com.forgather.global.external.ExternalOperation;
-import com.forgather.global.external.FailureType;
+import com.forgather.global.exception.ExternalFailureType;
 import com.forgather.global.external.social.SocialProvider;
 
 import lombok.extern.slf4j.Slf4j;
@@ -157,7 +157,7 @@ public class SocialPublicKeyClient {
         if (jwks == null || !(jwks.get("keys") instanceof List<?> keys) || keys.isEmpty()) {
             throw new ExternalApiException(
                 operation,
-                FailureType.MALFORMED_RESPONSE,
+                ExternalFailureType.MALFORMED_RESPONSE,
                 "JWKS 응답에 keys가 없습니다. provider: " + provider);
         }
         return (List<Map<String, Object>>)keys;

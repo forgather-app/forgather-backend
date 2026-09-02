@@ -1,4 +1,4 @@
-package com.forgather.global.external;
+package com.forgather.global.exception;
 
 import java.net.SocketTimeoutException;
 
@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 
-import com.forgather.global.exception.BaseException;
+import com.forgather.global.external.ExternalOperation;
 
 import lombok.Getter;
 
@@ -22,12 +22,12 @@ public class ExternalApiException extends BaseException {
     private static final String CONNECT_TIMEOUT_MARKER = "Connect";
 
     private final ExternalOperation operation;
-    private final FailureType type;
+    private final ExternalFailureType type;
     private final String responseBody;
 
     public ExternalApiException(
         ExternalOperation operation,
-        FailureType type,
+        ExternalFailureType type,
         String responseBody,
         String message,
         Throwable cause
@@ -38,7 +38,7 @@ public class ExternalApiException extends BaseException {
         this.responseBody = responseBody;
     }
 
-    public ExternalApiException(ExternalOperation operation, FailureType type, String message) {
+    public ExternalApiException(ExternalOperation operation, ExternalFailureType type, String message) {
         this(operation, type, null, message, null);
     }
 
@@ -47,13 +47,13 @@ public class ExternalApiException extends BaseException {
      */
     public static ExternalApiException fromStatus(ExternalOperation operation, RestClientResponseException cause) {
         HttpStatusCode status = cause.getStatusCode();
-        FailureType type = resolveStatusType(status);
+        ExternalFailureType type = resolveStatusType(status);
         String message = "%s 호출이 %d로 실패했습니다.".formatted(operation.id(), status.value());
         return new ExternalApiException(operation, type, cause.getResponseBodyAsString(), message, cause);
     }
 
     public static ExternalApiException fromIo(ExternalOperation operation, ResourceAccessException cause) {
-        FailureType type = resolveIoType(cause);
+        ExternalFailureType type = resolveIoType(cause);
         String message = "%s 호출에 실패했습니다. 원인: %s".formatted(operation.id(), type);
         return new ExternalApiException(operation, type, null, message, cause);
     }
@@ -61,7 +61,7 @@ public class ExternalApiException extends BaseException {
     /**
      * 2차 세분화용. 응답 본문을 읽어야만 아는 사실을 반영한 새 예외를 만든다.
      */
-    public ExternalApiException as(FailureType refined) {
+    public ExternalApiException as(ExternalFailureType refined) {
         return new ExternalApiException(operation, refined, responseBody, getMessage(), getCause());
     }
 
@@ -73,21 +73,21 @@ public class ExternalApiException extends BaseException {
         return type.logLevel();
     }
 
-    private static FailureType resolveStatusType(HttpStatusCode status) {
+    private static ExternalFailureType resolveStatusType(HttpStatusCode status) {
         if (status.value() == TOO_MANY_REQUESTS) {
-            return FailureType.RATE_LIMITED;
+            return ExternalFailureType.RATE_LIMITED;
         }
         if (status.is5xxServerError()) {
-            return FailureType.UPSTREAM_ERROR;
+            return ExternalFailureType.UPSTREAM_ERROR;
         }
-        return FailureType.CALLER_ERROR;
+        return ExternalFailureType.CALLER_ERROR;
     }
 
-    private static FailureType resolveIoType(ResourceAccessException cause) {
+    private static ExternalFailureType resolveIoType(ResourceAccessException cause) {
         if (cause.getCause() instanceof SocketTimeoutException timeout) {
             String message = String.valueOf(timeout.getMessage());
-            return message.contains(CONNECT_TIMEOUT_MARKER) ? FailureType.CONNECT_TIMEOUT : FailureType.READ_TIMEOUT;
+            return message.contains(CONNECT_TIMEOUT_MARKER) ? ExternalFailureType.CONNECT_TIMEOUT : ExternalFailureType.READ_TIMEOUT;
         }
-        return FailureType.CONNECTION_FAILED;
+        return ExternalFailureType.CONNECTION_FAILED;
     }
 }

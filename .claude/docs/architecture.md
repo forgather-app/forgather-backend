@@ -216,7 +216,8 @@ public void delete(String spaceCode, Host host) {
 |-------|------|
 | `auth/` | JWT 토큰 생성·검증(`JwtTokenProvider`), 인증 쿠키 처리(`AuthCookieProvider`) |
 | `config/` | 외부 연동 Properties (`JwtProperties`, `S3Properties` 등) |
-| `exception/` | 전역 예외 처리, BaseException 계층 |
+| `exception/` | 전역 예외 처리, BaseException 계층, 외부 호출 실패 규약(`ExternalApiException`, `ExternalFailureType`) |
+| `external/` | 외부 API 연동 기술 계층 (`ExternalCalls`, `ExternalOperation`, `social/`). 도메인을 알지 못한다 |
 | `util/` | 공용 유틸리티 (TextLengthCounter, RandomCodeGenerator 등) |
 | `logging/` | 로깅 인터셉터, 비동기 로깅 데코레이터 |
 | `converter/` | Multipart JSON 컨버터 |

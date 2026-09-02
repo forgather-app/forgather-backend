@@ -1,4 +1,4 @@
-package com.forgather.global.external;
+package com.forgather.global.exception;
 
 import static org.slf4j.event.Level.ERROR;
 import static org.slf4j.event.Level.WARN;
@@ -13,7 +13,7 @@ import org.springframework.http.HttpStatus;
  * 외부 호출 실패의 원인 분류이자 정책 테이블.
  * 응답 status, 로그 레벨, 재시도 가능 여부가 모두 여기서 파생된다.
  */
-public enum FailureType {
+public enum ExternalFailureType {
 
     /** 우리가 요청을 잘못 만들었다. 설정 오류 등 배포로만 고쳐진다. */
     CALLER_ERROR(INTERNAL_SERVER_ERROR, ERROR, Retry.NEVER),
@@ -49,7 +49,7 @@ public enum FailureType {
     private final Level logLevel;
     private final Retry retry;
 
-    FailureType(HttpStatus httpStatus, Level logLevel, Retry retry) {
+    ExternalFailureType(HttpStatus httpStatus, Level logLevel, Retry retry) {
         this.httpStatus = httpStatus;
         this.logLevel = logLevel;
         this.retry = retry;
