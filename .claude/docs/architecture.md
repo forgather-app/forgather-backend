@@ -206,15 +206,12 @@ public void delete(String spaceCode, Host host) {
 
 ## 패키지별 역할
 
-### config/
-- 조립 설정(Composition Root): `WebConfig`, `S3Config`, `AsyncConfig`, `SwaggerConfig`, `RestClientConfig`, `PasswordEncoderConfig`, `CorsProperties`
-- 모든 계층을 알 수 있으나, 어떤 계층도 `config/`를 참조하지 않는다
-
 ### global/
 
 | 패키지 | 역할 |
 |-------|------|
 | `auth/` | JWT 토큰 생성·검증(`JwtTokenProvider`), 인증 쿠키 처리(`AuthCookieProvider`), `config/`의 `JwtProperties`·`AuthCookieProperties` |
+| `config/` | 조립 설정(`WebConfig`, `S3Config`, `AsyncConfig`, `SwaggerConfig`, `RestClientConfig`, `PasswordEncoderConfig`, `CorsProperties`) |
 | `exception/` | 전역 예외 처리, BaseException 계층, 외부 호출 실패 규약(`ExternalApiException`, `ExternalFailureType`) |
 | `external/` | 외부 API 연동 기술 계층 (`ExternalCalls`, `ExternalOperation`, `social/`, `social/config/`의 소셜 Properties). 도메인을 알지 못한다 |
 | `util/` | 공용 유틸리티 (TextLengthCounter, RandomCodeGenerator 등) |
@@ -245,14 +242,14 @@ public void delete(String spaceCode, Host host) {
 
 | 클래스 | 역할 | 위치 |
 |--------|------|------|
-| `S3Config` | S3Client, S3AsyncClient, S3Presigner, S3TransferManager 빈 | `config/` |
-| `SwaggerConfig` | OpenAPI 3.0 설정, JWT Bearer 인증 스키마 | `config/` |
-| `WebConfig` | CORS, 인터셉터, ArgumentResolver, MessageConverter 등록 | `config/` |
-| `AsyncConfig` | 비동기 TaskExecutor 설정 (corePoolSize=4, queueCapacity=1000) | `config/` |
-| `RestClientConfig` | RestClient 빈 (외부 API 호출용) | `config/` |
+| `S3Config` | S3Client, S3AsyncClient, S3Presigner, S3TransferManager 빈 | `global/config/` |
+| `SwaggerConfig` | OpenAPI 3.0 설정, JWT Bearer 인증 스키마 | `global/config/` |
+| `WebConfig` | CORS, 인터셉터, ArgumentResolver, MessageConverter 등록 | `global/config/` |
+| `AsyncConfig` | 비동기 TaskExecutor 설정 (corePoolSize=4, queueCapacity=1000) | `global/config/` |
+| `RestClientConfig` | RestClient 빈 (외부 API 호출용) | `global/config/` |
 
 ```java
-// AsyncConfig - 비동기 처리 설정 (config/AsyncConfig.java)
+// AsyncConfig - 비동기 처리 설정 (global/config/AsyncConfig.java)
 @Bean
 public TaskExecutor taskExecutor() {
     ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
@@ -279,7 +276,7 @@ Properties는 값을 소비하는 모듈의 `config/` 하위에 둔다.
 | `AppleProperties` | 애플 client ID, issuer, JWKS URL, client secret 서명용 키 | `global/external/social/config/` |
 | `GoogleProperties` | 구글 JWKS URL | `global/external/social/config/` |
 | `S3Properties` | 버킷명, 리전, 루트 디렉토리, 태깅 | `domain/upload/config/` |
-| `CorsProperties` | 허용 origin, method, header | `config/` |
+| `CorsProperties` | 허용 origin, method, header | `global/config/` |
 
 ---
 

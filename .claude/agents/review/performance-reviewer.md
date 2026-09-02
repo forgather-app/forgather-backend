@@ -48,7 +48,7 @@ Spring Boot + JPA + S3 + HikariCP 환경의 성능 병목을 탐지한다. **`jp
 - [ ] HikariCP 풀 사이즈 · 타임아웃
 
 ### 4. 비동기 처리
-- `config/AsyncConfig.java`, `domain/upload/event/`
+- `global/config/AsyncConfig.java`, `domain/upload/event/`
 - [ ] 스레드 풀 설정 (core, max, queue)
 - [ ] 실패 에러 핸들링
 - [ ] `@TransactionalEventListener` 활용

@@ -1,4 +1,4 @@
-package com.forgather.config;
+package com.forgather.global.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

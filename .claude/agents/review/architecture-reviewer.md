@@ -24,13 +24,12 @@ Forgather의 **도메인별 패키지 + 레이어드 아키텍처** 구조적 �
 
 ```
 com.forgather/
-├── config/          # 조립 설정 (Composition Root)
 ├── back_office/     # Admin 백오피스 (별도 인증)
 ├── domain/
 │   ├── guestbook/ / product/ / space/ / stats/ / upload/
 │   └── model/       # 공통 엔티티 (BaseTimeEntity, SoftDeleteEntity)
 └── global/
-    ├── auth/ exception/ external/ logging/ util/
+    ├── auth/ config/ exception/ external/ logging/ util/
 ```
 
 각 도메인: `controller/ / dto/ / model/ / repository/{jpa/,인터페이스} / service/`
@@ -82,7 +81,7 @@ grep -rn "Repository" --include="*.java" src/main/java/com/forgather/domain/*/co
 - [ ] 비동기 실패 처리 전략
 
 ### 6. 설정 및 Config
-- `config/*.java`, `**/config/*Properties.java`
+- `global/config/*.java`, `**/config/*Properties.java`
 - [ ] `@ConfigurationProperties` 일관성
 - [ ] 환경별 설정 분리
 - [ ] Bean 등록 방식

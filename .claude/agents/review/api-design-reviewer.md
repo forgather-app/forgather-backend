@@ -30,7 +30,7 @@ back_office/controller/Admin*.java
 domain/**/dto/*Request.java, *Response.java
 domain/auth/dto/
 global/exception/GlobalExceptionHandler.java
-config/SwaggerConfig.java
+global/config/SwaggerConfig.java
 ```
 
 ## Process

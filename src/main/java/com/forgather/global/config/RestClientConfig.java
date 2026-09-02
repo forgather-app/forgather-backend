@@ -1,4 +1,4 @@
-package com.forgather.config;
+package com.forgather.global.config;
 
 import java.time.Duration;
 
