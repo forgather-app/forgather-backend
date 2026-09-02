@@ -23,8 +23,8 @@ import com.forgather.domain.guestbook.dto.WriteGuestBookCardRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardResponse;
 import com.forgather.domain.guestbook.service.GuestBookService;
 import com.forgather.domain.guestbook.service.GuestbookReportService;
-import com.forgather.domain.host.annotation.LoginHost;
 import com.forgather.domain.host.model.Host;
+import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Hidden;

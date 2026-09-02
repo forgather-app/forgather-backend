@@ -1,4 +1,4 @@
-package com.forgather.domain.host.annotation;
+package com.forgather.global.auth.annotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

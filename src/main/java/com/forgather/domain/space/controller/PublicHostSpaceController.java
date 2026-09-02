@@ -6,10 +6,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.forgather.domain.host.annotation.LoginHost;
 import com.forgather.domain.host.model.Host;
 import com.forgather.domain.space.dto.PublicHostSpacesResponse;
 import com.forgather.domain.space.service.SpaceService;
+import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;

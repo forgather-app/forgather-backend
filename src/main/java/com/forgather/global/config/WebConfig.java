@@ -16,7 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.back_office.interceptor.AdminAuthInterceptor;
 import com.forgather.back_office.interceptor.LoginPageRedirectInterceptor;
 import com.forgather.back_office.resolver.LoginAdminUserArgumentResolver;
-import com.forgather.domain.host.resolver.LoginHostArgumentResolver;
+import com.forgather.global.auth.resolver.LoginHostArgumentResolver;
 import com.forgather.global.converter.MultipartJsonConverter;
 import com.forgather.global.logging.LoggingInterceptor;
 

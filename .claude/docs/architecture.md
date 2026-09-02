@@ -55,7 +55,7 @@ private String buildAccessToken(Long id, String role) {
 | 경로 | `/spaces/**`, `/products/**` 등 | `/admin/**`, `/view/admin/**` |
 
 ```java
-// LoginHostArgumentResolver - @LoginHost 처리 (domain/host/resolver/LoginHostArgumentResolver.java)
+// LoginHostArgumentResolver - @LoginHost 처리 (global/auth/resolver/LoginHostArgumentResolver.java)
 @Override
 public Host resolveArgument(MethodParameter parameter, ...) {
     String jwtToken = resolveJwtToken(request); // Authorization 헤더 우선, 없으면 access_token 쿠키
