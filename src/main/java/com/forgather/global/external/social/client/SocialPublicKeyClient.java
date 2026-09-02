@@ -18,16 +18,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
+import com.forgather.global.exception.BaseException;
+import com.forgather.global.exception.ExternalApiException;
+import com.forgather.global.exception.ExternalFailureType;
+import com.forgather.global.exception.JwtBaseException;
+import com.forgather.global.external.ExternalCalls;
+import com.forgather.global.external.ExternalOperation;
+import com.forgather.global.external.social.SocialProvider;
 import com.forgather.global.external.social.config.AppleProperties;
 import com.forgather.global.external.social.config.GoogleProperties;
 import com.forgather.global.external.social.config.KakaoProperties;
-import com.forgather.global.exception.BaseException;
-import com.forgather.global.exception.JwtBaseException;
-import com.forgather.global.exception.ExternalApiException;
-import com.forgather.global.external.ExternalCalls;
-import com.forgather.global.external.ExternalOperation;
-import com.forgather.global.exception.ExternalFailureType;
-import com.forgather.global.external.social.SocialProvider;
 
 import lombok.extern.slf4j.Slf4j;
 

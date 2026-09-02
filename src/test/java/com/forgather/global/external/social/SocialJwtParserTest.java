@@ -27,11 +27,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.forgather.global.exception.JwtParseException;
+import com.forgather.global.external.social.client.SocialPublicKeyClient;
 import com.forgather.global.external.social.config.AppleProperties;
 import com.forgather.global.external.social.config.GoogleProperties;
 import com.forgather.global.external.social.config.KakaoProperties;
-import com.forgather.global.exception.JwtParseException;
-import com.forgather.global.external.social.client.SocialPublicKeyClient;
 import com.forgather.global.external.social.dto.AppleIdToken;
 import com.forgather.global.external.social.dto.KakaoIdToken;
 import com.github.tomakehurst.wiremock.WireMockServer;

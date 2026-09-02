@@ -11,8 +11,8 @@ import java.util.Date;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
-import com.forgather.global.external.social.config.AppleProperties;
 import com.forgather.global.exception.BaseException;
+import com.forgather.global.external.social.config.AppleProperties;
 
 import io.jsonwebtoken.Jwts;
 

@@ -16,8 +16,8 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.forgather.global.external.social.config.AppleProperties;
 import com.forgather.global.exception.BaseException;
+import com.forgather.global.external.social.config.AppleProperties;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;

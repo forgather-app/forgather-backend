@@ -14,10 +14,10 @@ import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.forgather.global.external.social.config.AppleProperties;
-import com.forgather.global.external.social.config.KakaoProperties;
 import com.forgather.global.exception.JwtParseException;
 import com.forgather.global.external.social.client.SocialPublicKeyClient;
+import com.forgather.global.external.social.config.AppleProperties;
+import com.forgather.global.external.social.config.KakaoProperties;
 import com.forgather.global.external.social.dto.AppleIdToken;
 import com.forgather.global.external.social.dto.KakaoIdToken;
 
