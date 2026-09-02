@@ -1,4 +1,4 @@
-package com.forgather.global.config;
+package com.forgather.global.external.social.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;

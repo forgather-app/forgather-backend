@@ -9,7 +9,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.forgather.global.config.AppleProperties;
+import com.forgather.global.external.social.config.AppleProperties;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.ExternalApiException;
 import com.forgather.global.external.ExternalCalls;

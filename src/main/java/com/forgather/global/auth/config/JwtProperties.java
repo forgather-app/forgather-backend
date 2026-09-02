@@ -1,4 +1,4 @@
-package com.forgather.global.config;
+package com.forgather.global.auth.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

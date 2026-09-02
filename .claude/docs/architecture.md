@@ -214,10 +214,9 @@ public void delete(String spaceCode, Host host) {
 
 | 패키지 | 역할 |
 |-------|------|
-| `auth/` | JWT 토큰 생성·검증(`JwtTokenProvider`), 인증 쿠키 처리(`AuthCookieProvider`) |
-| `config/` | 외부 연동 Properties (`JwtProperties`, `S3Properties` 등) |
+| `auth/` | JWT 토큰 생성·검증(`JwtTokenProvider`), 인증 쿠키 처리(`AuthCookieProvider`), `config/`의 `JwtProperties`·`AuthCookieProperties` |
 | `exception/` | 전역 예외 처리, BaseException 계층, 외부 호출 실패 규약(`ExternalApiException`, `ExternalFailureType`) |
-| `external/` | 외부 API 연동 기술 계층 (`ExternalCalls`, `ExternalOperation`, `social/`). 도메인을 알지 못한다 |
+| `external/` | 외부 API 연동 기술 계층 (`ExternalCalls`, `ExternalOperation`, `social/`, `social/config/`의 소셜 Properties). 도메인을 알지 못한다 |
 | `util/` | 공용 유틸리티 (TextLengthCounter, RandomCodeGenerator 등) |
 | `logging/` | 로깅 인터셉터, 비동기 로깅 데코레이터 |
 | `converter/` | Multipart JSON 컨버터 |
@@ -270,13 +269,17 @@ public TaskExecutor taskExecutor() {
 
 ### Properties 클래스
 
-| 클래스 | 역할 |
-|--------|------|
-| `JwtProperties` | JWT secret, 토큰 만료 시간 |
-| `S3Properties` | 버킷명, 리전, 루트 디렉토리, 태깅 |
-| `KakaoProperties` | 카카오 네이티브 앱 키(`aud` 검증 기준), issuer, JWKS URL, Admin 키, unlink URL |
-| `AppleProperties` | 애플 client ID, issuer, JWKS URL, client secret 서명용 키 |
-| `CorsProperties` | 허용 origin, method, header |
+Properties는 값을 소비하는 모듈의 `config/` 하위에 둔다.
+
+| 클래스 | 역할 | 위치 |
+|--------|------|------|
+| `JwtProperties` | JWT secret, 토큰 만료 시간 | `global/auth/config/` |
+| `AuthCookieProperties` | 인증 쿠키 secure·SameSite 옵션 | `global/auth/config/` |
+| `KakaoProperties` | 카카오 네이티브 앱 키(`aud` 검증 기준), issuer, JWKS URL, Admin 키, unlink URL | `global/external/social/config/` |
+| `AppleProperties` | 애플 client ID, issuer, JWKS URL, client secret 서명용 키 | `global/external/social/config/` |
+| `GoogleProperties` | 구글 JWKS URL | `global/external/social/config/` |
+| `S3Properties` | 버킷명, 리전, 루트 디렉토리, 태깅 | `domain/upload/config/` |
+| `CorsProperties` | 허용 origin, method, header | `config/` |
 
 ---
 

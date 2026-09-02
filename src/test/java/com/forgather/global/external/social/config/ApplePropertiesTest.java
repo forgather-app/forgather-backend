@@ -1,4 +1,4 @@
-package com.forgather.global.config;
+package com.forgather.global.external.social.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

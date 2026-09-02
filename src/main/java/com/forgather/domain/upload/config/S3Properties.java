@@ -1,4 +1,4 @@
-package com.forgather.global.config;
+package com.forgather.domain.upload.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

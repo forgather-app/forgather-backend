@@ -20,9 +20,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClient;
 
-import com.forgather.global.config.AppleProperties;
-import com.forgather.global.config.GoogleProperties;
-import com.forgather.global.config.KakaoProperties;
+import com.forgather.global.external.social.config.AppleProperties;
+import com.forgather.global.external.social.config.GoogleProperties;
+import com.forgather.global.external.social.config.KakaoProperties;
 import com.forgather.global.exception.JwtBaseException;
 import com.forgather.global.exception.ExternalApiException;
 import com.forgather.global.exception.ExternalFailureType;

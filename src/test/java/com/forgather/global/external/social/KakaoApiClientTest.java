@@ -18,7 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.forgather.global.config.KakaoProperties;
+import com.forgather.global.external.social.config.KakaoProperties;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.ExternalApiException;
 import com.forgather.global.exception.ExternalFailureType;
