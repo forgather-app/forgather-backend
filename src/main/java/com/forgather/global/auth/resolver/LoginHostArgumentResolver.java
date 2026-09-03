@@ -18,7 +18,6 @@ import com.forgather.global.auth.util.AuthCookieProvider;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.exception.UnauthorizedException;
 
-import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +26,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class LoginHostArgumentResolver implements HandlerMethodArgumentResolver {
 
-    private static final String BEARER = "Bearer ";
-    private static final String AUTHORIZATION_HEADER_NAME = "Authorization";
     private static final String HOST = "HOST";
 
     private final JwtTokenProvider jwtTokenProvider;
@@ -62,23 +59,11 @@ public class LoginHostArgumentResolver implements HandlerMethodArgumentResolver 
     }
 
     private String resolveJwtToken(HttpServletRequest request) {
-        String authorizationHeader = request.getHeader(AUTHORIZATION_HEADER_NAME);
-        if (authorizationHeader != null) {
-            return extractBearerToken(authorizationHeader);
-        }
-
         Cookie accessTokenCookie = WebUtils.getCookie(request, AuthCookieProvider.ACCESS_TOKEN_COOKIE_NAME);
         if (accessTokenCookie == null || !StringUtils.hasText(accessTokenCookie.getValue())) {
             return null;
         }
         return accessTokenCookie.getValue();
-    }
-
-    private String extractBearerToken(String authorizationHeader) {
-        if (!authorizationHeader.startsWith(BEARER)) {
-            throw new JwtException("Invalid JWT token format");
-        }
-        return authorizationHeader.substring(BEARER.length());
     }
 
     private void throwExceptionIfRequired(boolean required) {
