@@ -29,7 +29,7 @@ public class ExhibitionController {
 
     private final ExhibitionService exhibitionService;
 
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @Operation(summary = "전시 생성", description = "새로운 전시를 생성합니다.")
     @PostMapping
     public ResponseEntity<ApiResponse<ExhibitionResponse>> create(

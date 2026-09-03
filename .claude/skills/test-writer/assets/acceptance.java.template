@@ -61,7 +61,7 @@ class ${Domain}AcceptanceTest extends AcceptanceTest {
 
         // when
         ${ResponseType} result = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .when()
             .get("/${endpoint}")
             .then()

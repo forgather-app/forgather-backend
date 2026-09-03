@@ -270,7 +270,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
         void hostCanReadGuestBookInPrivateSpace() {
             // when, then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .accept(ContentType.JSON)
                 .queryParam("page", 1)
                 .queryParam("size", 15)
@@ -287,7 +287,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
         void throwExceptionWhenAnotherHostReadGuestBookInPrivateSpace() {
             // when, then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + anotherAccessToken)
+                .postProcessors(withAccessToken(anotherAccessToken))
                 .accept(ContentType.JSON)
                 .queryParam("page", 1)
                 .queryParam("size", 15)
@@ -311,7 +311,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when, then
             ApiResponse<GuestBookResponse> result = RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .accept(ContentType.JSON)
                 .queryParam("page", 1)
                 .queryParam("size", 15)
@@ -381,7 +381,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when
             ApiResponse<GuestBookResponse> result = RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .accept(ContentType.JSON)
                 .queryParam("page", 1)
                 .queryParam("size", 15)
@@ -476,7 +476,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when, then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + anotherAccessToken)
+                .postProcessors(withAccessToken(anotherAccessToken))
                 .accept(ContentType.JSON)
                 .when()
                 .get("/spaces/%s/guestbook/%d".formatted(privateSpace.getCode(), writeResponse.id()))
@@ -494,7 +494,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when, then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .accept(ContentType.JSON)
                 .when()
                 .get("/spaces/%s/guestbook/%d".formatted(privateSpace.getCode(), writeResponse.id()))
@@ -511,7 +511,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when
             ApiResponse<GuestBookCardResponse> result = RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .accept(ContentType.JSON)
                 .when()
                 .get("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), guestBookCard.getId()))
@@ -557,7 +557,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when, then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .accept(ContentType.JSON)
                 .when()
                 .get("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), guestBookCard.getId()))
@@ -575,7 +575,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .accept(ContentType.JSON)
                 .when()
                 .get("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), writeResponse.id()))
@@ -585,7 +585,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
             // then
             String response = RestAssuredMockMvc.given()
                 .header("X-API-Version", "2")
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .accept(ContentType.JSON)
                 .queryParam("page", 1)
                 .queryParam("size", 15)
@@ -704,7 +704,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .when()
                 .delete("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), writeResponse.id()))
                 .then()
@@ -744,7 +744,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when, then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + anotherAccessToken)
+                .postProcessors(withAccessToken(anotherAccessToken))
                 .when()
                 .delete("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), writeResponse.id()))
                 .then()
@@ -761,7 +761,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when, then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .when()
                 .delete("/spaces/%s/guestbook/%d".formatted(privateSpace.getCode(), writeResponse.id()))
                 .then()
@@ -788,7 +788,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .contentType(ContentType.JSON)
                 .body(request)
                 .when()
@@ -853,7 +853,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + anotherAccessToken)
+                .postProcessors(withAccessToken(anotherAccessToken))
                 .contentType(ContentType.JSON)
                 .body(request)
                 .when()
@@ -877,7 +877,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .contentType(ContentType.JSON)
                 .body(request)
                 .when()
@@ -930,7 +930,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
         CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(ADVERTISEMENT_SPAM, null);
 
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + accessToken)
+            .postProcessors(withAccessToken(accessToken))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -941,7 +941,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
     private void readGuestBookCardAsHost(Space space, Long guestBookCardId) {
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + accessToken)
+            .postProcessors(withAccessToken(accessToken))
             .accept(ContentType.JSON)
             .when()
             .get("/spaces/%s/guestbook/%d".formatted(space.getCode(), guestBookCardId))

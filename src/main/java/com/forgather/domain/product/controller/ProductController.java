@@ -54,7 +54,7 @@ public class ProductController {
         return ResponseEntity.ok().body(ApiResponse.success(response));
     }
 
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @Operation(summary = "작품 등록", description = "복수 작품 등록이 반영된 api는 version 3으로 호출")
     @PostMapping(headers = "X-API-Version=3")
     public ResponseEntity<ApiResponse<ProductResponse>> registerV3(
@@ -66,7 +66,7 @@ public class ProductController {
         return ResponseEntity.status(CREATED).body(ApiResponse.success(response));
     }
 
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @Operation(summary = "작품 수정",
         description = "변경 사항이 없는 데이터는 json에 포함하지 않거나 null로 요청한다.  복수 작품 등록이 반영된 api는 version 1로 호출")
     @PatchMapping(value = "/{productId}", headers = "X-API-Version=1")
@@ -80,7 +80,7 @@ public class ProductController {
         return ResponseEntity.ok().body(ApiResponse.success(response));
     }
 
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @Operation(summary = "작품 삭제", description = "복수 작품 등록이 반영된 api는 version 1로 호출")
     @DeleteMapping(value = "/{productId}", headers = "X-API-Version=1")
     public ResponseEntity<Void> deleteV2(

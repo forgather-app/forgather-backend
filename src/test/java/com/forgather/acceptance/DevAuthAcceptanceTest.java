@@ -53,7 +53,7 @@ class DevAuthAcceptanceTest extends AcceptanceTest {
         termJpaRepository.save(createPrivacyTerm("1.0.0", "privacy"));
     }
 
-    @DisplayName("고정 아이디와 비밀번호로 로그인하면 카카오 로그인과 동일하게 토큰을 바디와 쿠키로 함께 반환한다")
+    @DisplayName("고정 아이디와 비밀번호로 로그인하면 카카오 로그인과 동일하게 토큰을 HttpOnly 쿠키로 반환한다")
     @Test
     void loginWithFixedCredentials() {
         // given
@@ -68,8 +68,7 @@ class DevAuthAcceptanceTest extends AcceptanceTest {
         List<String> setCookieHeaders = response.headers().getValues(HttpHeaders.SET_COOKIE);
         assertAll(
             () -> assertThat(response.jsonPath().getString("code")).isEqualTo(ResponseCode.SUCCESS.name()),
-            () -> assertThat(response.jsonPath().getString("data.accessToken")).isNotBlank(),
-            () -> assertThat(response.jsonPath().getString("data.refreshToken")).isNotBlank(),
+            () -> assertThat(response.jsonPath().getString("data")).isNull(),
             () -> assertThat(setCookieHeaders).hasSize(2),
             () -> assertThat(setCookieHeaders).anySatisfy(
                 cookie -> assertThat(cookie).startsWith(AuthCookieProvider.ACCESS_TOKEN_COOKIE_NAME + "=")
@@ -86,12 +85,11 @@ class DevAuthAcceptanceTest extends AcceptanceTest {
         // given
         String accessToken = login(Map.of("loginId", LOGIN_ID, "password", PASSWORD))
             .extract()
-            .jsonPath()
-            .getString("data.accessToken");
+            .cookie(AuthCookieProvider.ACCESS_TOKEN_COOKIE_NAME);
 
         // when
         ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+            .postProcessors(withAccessToken(accessToken))
             .accept(ContentType.JSON)
             .when()
             .get("/auth/me")

@@ -17,7 +17,6 @@ import com.forgather.global.auth.dto.HostResponse;
 import com.forgather.global.auth.dto.KakaoLoginConfirmRequest;
 import com.forgather.global.auth.dto.LoginResponse;
 import com.forgather.global.auth.dto.OnboardingRequest;
-import com.forgather.global.auth.dto.RefreshRequest;
 import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.service.AuthService;
 import com.forgather.global.auth.service.WithdrawService;
@@ -52,8 +51,8 @@ public class AuthController {
     @PostMapping("/login/kakao/confirm")
     @Operation(summary = "Kakao 로그인 완료",
         description = "Kakao 로그인 후 발급받은 액세스토큰을 전달하여 로그인합니다. " +
-            "로그인 성공 시, 액세스토큰과 리프레시토큰을 응답 바디와 HttpOnly 쿠키로 반환합니다.")
-    public ResponseEntity<ApiResponse<LoginResponse>> kakaoLoginConfirm(
+            "로그인 성공 시, 액세스토큰과 리프레시토큰을 HttpOnly 쿠키로 반환합니다.")
+    public ResponseEntity<ApiResponse<Void>> kakaoLoginConfirm(
         @RequestBody KakaoLoginConfirmRequest request
     ) {
         var response = authService.kakaoLoginConfirm(request);
@@ -64,8 +63,8 @@ public class AuthController {
     @Operation(summary = "Apple 로그인 완료",
         description = "Apple 로그인 후 발급받은 identity token, authorization code, raw nonce와 이름을 전달합니다. " +
             "서버는 authorization code를 Apple token endpoint에 교환하여 로그인합니다. " +
-            "로그인 성공 시, 액세스토큰과 리프레시토큰을 응답 바디와 HttpOnly 쿠키로 반환합니다.")
-    public ResponseEntity<ApiResponse<LoginResponse>> appleLoginConfirm(
+            "로그인 성공 시, 액세스토큰과 리프레시토큰을 HttpOnly 쿠키로 반환합니다.")
+    public ResponseEntity<ApiResponse<Void>> appleLoginConfirm(
         @RequestBody AppleLoginConfirmRequest request
     ) {
         var response = authService.appleLoginConfirm(request);
@@ -74,15 +73,14 @@ public class AuthController {
 
     @PostMapping("/refresh")
     @Operation(summary = "로그인 세션 갱신",
-        description = "요청 바디의 리프레시 토큰을 우선 사용하고, 없으면 쿠키의 리프레시 토큰으로 " +
-            "로그인 세션을 갱신합니다. 갱신된 토큰은 응답 바디와 HttpOnly 쿠키로 반환합니다.")
-    public ResponseEntity<ApiResponse<LoginResponse>> refresh(
-        @RequestBody(required = false) RefreshRequest request,
+        description = "쿠키의 리프레시 토큰으로 로그인 세션을 갱신합니다. " +
+            "갱신된 토큰은 HttpOnly 쿠키로 반환합니다.")
+    public ResponseEntity<ApiResponse<Void>> refresh(
         @Parameter(hidden = true)
         @CookieValue(name = AuthCookieProvider.REFRESH_TOKEN_COOKIE_NAME, required = false)
         String refreshTokenCookie
     ) {
-        String refreshToken = resolveRefreshToken(request, refreshTokenCookie);
+        String refreshToken = resolveRefreshToken(refreshTokenCookie);
         var response = authService.refresh(refreshToken);
         return createTokenResponse(response);
     }
@@ -118,10 +116,7 @@ public class AuthController {
         return createExpiredCookieResponse();
     }
 
-    private String resolveRefreshToken(RefreshRequest request, String refreshTokenCookie) {
-        if (request != null && StringUtils.hasText(request.refreshToken())) {
-            return request.refreshToken();
-        }
+    private String resolveRefreshToken(String refreshTokenCookie) {
         if (StringUtils.hasText(refreshTokenCookie)) {
             return refreshTokenCookie;
         }
@@ -137,7 +132,7 @@ public class AuthController {
             .body(ApiResponse.success());
     }
 
-    private ResponseEntity<ApiResponse<LoginResponse>> createTokenResponse(LoginResponse response) {
+    private ResponseEntity<ApiResponse<Void>> createTokenResponse(LoginResponse response) {
         HttpHeaders headers = new HttpHeaders();
         headers.add(
             HttpHeaders.SET_COOKIE,
@@ -149,6 +144,6 @@ public class AuthController {
         );
         return ResponseEntity.ok()
             .headers(headers)
-            .body(ApiResponse.success(response));
+            .body(ApiResponse.success());
     }
 }

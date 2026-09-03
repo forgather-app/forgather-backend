@@ -67,7 +67,7 @@ class WithdrawAcceptanceTest extends AcceptanceTest {
 
     private ExtractableResponse<MockMvcResponse> withdraw(String token) {
         return RestAssuredMockMvc.given()
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .delete("/auth/me")
@@ -149,7 +149,7 @@ class WithdrawAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .get("/auth/me")
@@ -168,8 +168,7 @@ class WithdrawAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .contentType(ContentType.JSON)
-            .body("{\"refreshToken\": \"" + refreshToken + "\"}")
+            .postProcessors(withRefreshToken(refreshToken))
             .when()
             .post("/auth/refresh")
             .then()

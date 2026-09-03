@@ -42,7 +42,7 @@ public class TermController {
             + "약관 정보는 항상 타입별 최신 약관 기준이며 노출 순서(sortOrder) 오름차순으로 반환합니다. "
             + "약관이 실질적으로 개정되어 기존 동의가 무효화되면 isReagreementRequired가 true가 됩니다. "
             + "로그인된 사용자가 없으면 401 Unauthorized를 반환합니다.")
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<List<TermAgreementResponse>>> getMyTermAgreements(@LoginHost Host host) {
         var response = termService.getMyTermAgreements(host);
@@ -56,7 +56,7 @@ public class TermController {
             + "타입별 최신 약관이 아니거나 온보딩을 마치지 않은 호스트면 400 Bad Request, "
             + "존재하지 않거나 삭제된 약관이면 404 Not Found, "
             + "로그인된 사용자가 없으면 401 Unauthorized를 반환합니다.")
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @PostMapping("/{termId}/agreement")
     public ResponseEntity<ApiResponse<TermAgreementResponse>> agreeTerm(
         @LoginHost Host host,
@@ -72,7 +72,7 @@ public class TermController {
             + "필수 약관이거나 타입별 최신 약관이 아니거나 온보딩을 마치지 않은 호스트면 400 Bad Request, "
             + "존재하지 않거나 삭제된 약관이면 404 Not Found, "
             + "로그인된 사용자가 없으면 401 Unauthorized를 반환합니다.")
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @DeleteMapping("/{termId}/agreement")
     public ResponseEntity<ApiResponse<TermAgreementResponse>> withdrawTerm(
         @LoginHost Host host,

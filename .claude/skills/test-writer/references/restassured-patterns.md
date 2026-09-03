@@ -1,10 +1,17 @@
 # RestAssuredMockMvc 패턴
 
+## 인증
+
+호스트 인증은 `access_token` HttpOnly 쿠키로만 이루어진다. 인수 테스트에서는 `AcceptanceTest`의
+`withAccessToken(token)` / `withRefreshToken(token)` 헬퍼를 `.postProcessors(...)`에 넘긴다.
+RestAssuredMockMvc의 `.cookie()`는 Spring 6.2의 bridge 메서드 때문에 JVM 실행에 따라
+"argument type mismatch"로 실패하므로 사용하지 않는다.
+
 ## GET 요청
 
 ```java
 SpaceResponse result = RestAssuredMockMvc.given()
-    .header("Authorization", "Bearer " + token)
+    .postProcessors(withAccessToken(token))
     .when()
     .get("/spaces/{spaceCode}", space.getCode())
     .then()
@@ -18,7 +25,7 @@ SpaceResponse result = RestAssuredMockMvc.given()
 
 ```java
 CreateResponse response = RestAssuredMockMvc.given()
-    .header("Authorization", "Bearer " + token)
+    .postProcessors(withAccessToken(token))
     .contentType(ContentType.JSON)
     .body(request)
     .when()
@@ -39,7 +46,7 @@ MockMultipartFile file = new MockMultipartFile(
 String request = objectMapper.writeValueAsString(createRequest);
 
 CreateSpaceResponse response = RestAssuredMockMvc.given()
-    .header("Authorization", "Bearer " + token)
+    .postProcessors(withAccessToken(token))
     .multiPart("request", request, "application/json")
     .multiPart("file", file.getOriginalFilename(), file.getBytes(), file.getContentType())
     .when()
@@ -55,7 +62,7 @@ CreateSpaceResponse response = RestAssuredMockMvc.given()
 
 ```java
 var response = RestAssuredMockMvc.given()
-    .header("Authorization", "Bearer " + token)
+    .postProcessors(withAccessToken(token))
     .when()
     .delete("/spaces/{spaceCode}", space.getCode())
     .then()
@@ -73,11 +80,11 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 ```
 
-### 인증 실패 (Authorization 헤더 없음)
+### 인증 실패 (access_token 쿠키 없음)
 
 ```java
 RestAssuredMockMvc.given()
-    .when()  // Authorization 헤더 없음
+    .when()  // access_token 쿠키 없음
     .delete("/spaces/{spaceCode}", space.getCode())
     .then()
     .statusCode(HttpStatus.UNAUTHORIZED.value())
@@ -90,7 +97,7 @@ RestAssuredMockMvc.given()
 
 ```java
 RestAssuredMockMvc.given()
-    .header("Authorization", "Bearer " + token)
+    .postProcessors(withAccessToken(token))
     .when()
     .delete("/spaces/{spaceCode}/guestbook/{cardId}", spaceCode, cardId)
     .then()

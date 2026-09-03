@@ -83,7 +83,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
 
         // when
         ApiResponse<ExhibitionResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(request)
@@ -129,7 +129,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
 
         // when
         ApiResponse<ExhibitionResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(request)
@@ -169,7 +169,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
 
         // when
         ApiResponse<ExhibitionResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(request)
@@ -212,7 +212,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
 
         // when
         ApiResponse<ExhibitionResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(request)
@@ -265,7 +265,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -291,7 +291,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -320,7 +320,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -347,7 +347,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -374,7 +374,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -410,7 +410,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -441,7 +441,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -470,7 +470,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -498,7 +498,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -526,7 +526,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -554,7 +554,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -581,7 +581,7 @@ class ExhibitionAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()

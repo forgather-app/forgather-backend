@@ -135,7 +135,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         ApiResponse<CreateSpaceResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -167,7 +167,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         ApiResponse<CreateSpaceResponse> created = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -203,7 +203,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         ApiResponse<CreateSpaceResponse> created = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -249,7 +249,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         ApiResponse<CreateSpaceResponse> created = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -280,7 +280,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -300,7 +300,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         ApiResponse<CreateSpaceResponse> created = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -328,7 +328,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -469,7 +469,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .header("X-API-Version", "1")
             .when()
             .delete("/spaces/{spaceCode}/products/{productId}", space.getCode(), representative.getId())
@@ -557,7 +557,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .when()
             .get("/spaces/{spaceCode}", space.getCode())
             .then()
@@ -637,7 +637,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         var response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .when()
             .delete("/spaces/{spaceCode}", space.getCode())
             .then()
@@ -667,7 +667,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         var response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .when()
             .delete("/spaces/{spaceCode}", space.getCode())
             .then()
@@ -715,7 +715,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + otherToken)
+            .postProcessors(withAccessToken(otherToken))
             .when()
             .delete("/spaces/{spaceCode}", space.getCode())
             .then()
@@ -800,7 +800,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
     private ApiResponse<SpaceResponse> getSpace(String spaceCode, String accessToken) {
         return RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + accessToken)
+            .postProcessors(withAccessToken(accessToken))
             .when()
             .get("/spaces/{spaceCode}", spaceCode)
             .then()
@@ -825,7 +825,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
     private ApiResponse<SpaceResponse> patchSpace(Space space, String request, HttpStatus expected) {
         return RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -906,7 +906,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + otherToken)
+            .postProcessors(withAccessToken(otherToken))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -1004,7 +1004,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         ApiResponse<FeaturedSpacesResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(new FeatureSpacesRequest(List.of(first.getCode(), second.getCode())))
             .when()
@@ -1058,7 +1058,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         ApiResponse<FeaturedSpacesResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(new FeatureSpacesRequest(List.of(target.getCode())))
             .when()
@@ -1102,7 +1102,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(new FeatureSpacesRequest(emptySpaceCodes))
             .when()
@@ -1139,7 +1139,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         ApiResponse<FeaturedSpacesResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(new FeatureSpacesRequest(List.of(space.getCode(), space.getCode())))
             .when()
@@ -1188,7 +1188,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(new FeatureSpacesRequest(List.of(notFeatured.getCode(), otherSpace.getCode())))
             .when()
@@ -1217,7 +1217,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(new FeatureSpacesRequest(List.of(notFeatured.getCode(), notExistingSpaceCode)))
             .when()
@@ -1259,7 +1259,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(new FeatureSpacesRequest(nullSpaceCodes))
             .when()
@@ -1283,7 +1283,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(new FeatureSpacesRequest(tooManySpaceCodes))
             .when()
@@ -1301,7 +1301,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(new FeatureSpacesRequest(List.of(space.getCode(), " ")))
             .when()
@@ -1319,7 +1319,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         Space other = saveSpaceOf(host, "2222222222");
         feature(featuredSpace.getCode());
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .when()
             .delete("/spaces/{spaceCode}", featuredSpace.getCode())
             .then()
@@ -1348,7 +1348,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -1430,7 +1430,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(new UnfeatureSpacesRequest(List.of(first.getCode())))
             .when()
@@ -1505,7 +1505,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(new UnfeatureSpacesRequest(emptySpaceCodes))
             .when()
@@ -1527,7 +1527,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(new UnfeatureSpacesRequest(List.of(featured.getCode(), otherSpace.getCode())))
             .when()
@@ -1551,7 +1551,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(new UnfeatureSpacesRequest(List.of(featured.getCode(), notExistingSpaceCode)))
             .when()
@@ -1590,7 +1590,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(new UnfeatureSpacesRequest(nullSpaceCodes))
             .when()
@@ -1610,7 +1610,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(new UnfeatureSpacesRequest(tooManySpaceCodes))
             .when()
@@ -1628,7 +1628,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(new UnfeatureSpacesRequest(List.of(space.getCode(), " ")))
             .when()
@@ -1674,7 +1674,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
     private List<HostSpaceItemResponse> getMySpaces() {
         ApiResponse<HostSpaceResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .when()
             .get("/spaces/me")
             .then()
@@ -1701,7 +1701,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
     private void feature(String... spaceCodes) {
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(new FeatureSpacesRequest(List.of(spaceCodes)))
             .when()
@@ -1712,7 +1712,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
 
     private void unfeature(String... spaceCodes) {
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .body(new UnfeatureSpacesRequest(List.of(spaceCodes)))
             .when()

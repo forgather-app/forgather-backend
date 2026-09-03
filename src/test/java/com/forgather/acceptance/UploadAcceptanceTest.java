@@ -136,7 +136,7 @@ class UploadAcceptanceTest extends AcceptanceTest {
 
         // when
         ApiResponse<IssueSignedUrlResponse> result = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(request)
@@ -179,7 +179,7 @@ class UploadAcceptanceTest extends AcceptanceTest {
 
         // when
         ApiResponse<IssueSignedUrlResponse> result = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(request)
@@ -214,7 +214,7 @@ class UploadAcceptanceTest extends AcceptanceTest {
 
         // when, then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(request)
@@ -336,7 +336,7 @@ class UploadAcceptanceTest extends AcceptanceTest {
 
         // when
         ApiResponse<IssueSignedUrlResponse> result = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(request)
@@ -417,7 +417,7 @@ class UploadAcceptanceTest extends AcceptanceTest {
 
         // when
         ApiResponse<IssueSignedUrlResponse> result = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(request)
@@ -498,7 +498,7 @@ class UploadAcceptanceTest extends AcceptanceTest {
 
     private String issueSpacePhotoSignedUrl(String accessToken, IssuePreSignedUrlRequest request) {
         ApiResponse<IssueSignedUrlResponse> result = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + accessToken)
+            .postProcessors(withAccessToken(accessToken))
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(request)
@@ -598,7 +598,7 @@ class UploadAcceptanceTest extends AcceptanceTest {
 
     private ApiResponse<Void> postSpacePhotoSignedUrlsExpectingBadRequest(IssuePreSignedUrlRequest request) {
         return RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(request)
@@ -621,7 +621,7 @@ class UploadAcceptanceTest extends AcceptanceTest {
 
     private ApiResponse<Void> postExhibitionSignedUrlsExpectingBadRequest(IssuePreSignedUrlRequest request) {
         return RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(request)

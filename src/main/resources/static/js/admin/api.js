@@ -255,7 +255,7 @@ const API = {
      *
      * 주의:
      * - 이 함수는 비동기(async)이므로 반드시 await 또는 .then() 사용 필요
-     * - Authorization 헤더가 자동으로 포함되므로 로그인 상태여야 함
+     * - 세션 쿠키가 자동으로 전송되므로 로그인 상태여야 함
      * - spaceCode는 URL 경로에 포함되므로 특수문자가 있는 경우 인코딩 필요 없음
      */
     async getSpaceDetail(spaceCode) {
@@ -316,7 +316,7 @@ const API = {
      *
      * 주의:
      * - 이 함수는 비동기(async)이므로 반드시 await 또는 .then() 사용 필요
-     * - Authorization 헤더가 자동으로 포함되므로 로그인 상태여야 함
+     * - 세션 쿠키가 자동으로 전송되므로 로그인 상태여야 함
      * - 페이지 번호는 1부터 시작 (서버에서 0-based를 1-based로 변환하여 반환)
      */
     async getHosts(page = 1, size = 15, sort = 'createdAt,desc') {
