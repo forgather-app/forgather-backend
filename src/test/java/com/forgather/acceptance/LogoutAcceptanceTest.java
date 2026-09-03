@@ -13,7 +13,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.fixture.HostFixture;
@@ -26,7 +25,6 @@ import io.restassured.http.ContentType;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import io.restassured.module.mockmvc.response.MockMvcResponse;
 import io.restassured.response.ExtractableResponse;
-import jakarta.servlet.http.Cookie;
 
 @DisplayName("인수 테스트: 로그아웃")
 @AutoConfigureMockMvc
@@ -56,10 +54,7 @@ class LogoutAcceptanceTest extends AcceptanceTest {
 
         // when
         ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
-            .postProcessors(withCookies(
-                new Cookie(AuthCookieProvider.ACCESS_TOKEN_COOKIE_NAME, accessToken),
-                new Cookie(AuthCookieProvider.REFRESH_TOKEN_COOKIE_NAME, refreshToken)
-            ))
+            .postProcessors(withAccessToken(accessToken), withRefreshToken(refreshToken))
             .accept(ContentType.JSON)
             .when()
             .post("/auth/logout")
@@ -101,10 +96,4 @@ class LogoutAcceptanceTest extends AcceptanceTest {
         );
     }
 
-    private RequestPostProcessor withCookies(Cookie... cookies) {
-        return request -> {
-            request.setCookies(cookies);
-            return request;
-        };
-    }
 }

@@ -12,7 +12,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -78,7 +77,7 @@ class HostProfileAcceptanceTest extends AcceptanceTest {
 
         // when
         ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .get("/hosts/me/profile")
@@ -199,7 +198,7 @@ class HostProfileAcceptanceTest extends AcceptanceTest {
 
         // when
         ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(Map.of(
@@ -246,7 +245,7 @@ class HostProfileAcceptanceTest extends AcceptanceTest {
 
         // when
         ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(request)
@@ -277,7 +276,7 @@ class HostProfileAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(Map.of("photo", Map.of("uploadFileName", "hosts/a.webp", "capacity", 1024)))
@@ -296,7 +295,7 @@ class HostProfileAcceptanceTest extends AcceptanceTest {
 
         // when
         RestAssuredMockMvc.given()
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(Map.of("nickname", "가나다라마바사아자차카"))
@@ -320,7 +319,7 @@ class HostProfileAcceptanceTest extends AcceptanceTest {
 
         // when
         RestAssuredMockMvc.given()
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(Map.of("nickname", emojiNickname))
