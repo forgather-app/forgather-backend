@@ -1,4 +1,4 @@
-package com.forgather.global.exception;
+package com.forgather.global.external.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;

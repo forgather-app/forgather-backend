@@ -1,4 +1,4 @@
-package com.forgather.global.exception;
+package com.forgather.global.external.exception;
 
 import static org.slf4j.event.Level.ERROR;
 import static org.slf4j.event.Level.WARN;

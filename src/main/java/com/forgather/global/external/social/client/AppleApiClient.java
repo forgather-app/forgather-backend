@@ -10,8 +10,8 @@ import org.springframework.web.client.RestClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.global.exception.BaseException;
-import com.forgather.global.exception.ExternalApiException;
-import com.forgather.global.exception.ExternalFailureType;
+import com.forgather.global.external.exception.ExternalApiException;
+import com.forgather.global.external.exception.ExternalFailureType;
 import com.forgather.global.external.ExternalCalls;
 import com.forgather.global.external.ExternalOperation;
 import com.forgather.global.external.social.AppleClientSecretProvider;

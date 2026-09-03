@@ -35,6 +35,8 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.global.external.ExternalOperation;
+import com.forgather.global.external.exception.ExternalApiException;
+import com.forgather.global.external.exception.ExternalFailureType;
 
 import io.jsonwebtoken.JwtException;
 

@@ -20,8 +20,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClient;
 
-import com.forgather.global.exception.ExternalApiException;
-import com.forgather.global.exception.ExternalFailureType;
+import com.forgather.global.external.exception.ExternalApiException;
+import com.forgather.global.external.exception.ExternalFailureType;
 import com.forgather.global.exception.JwtBaseException;
 import com.forgather.global.external.social.client.SocialPublicKeyClient;
 import com.forgather.global.external.social.config.AppleProperties;

@@ -6,8 +6,8 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 
-import com.forgather.global.exception.ExternalApiException;
-import com.forgather.global.exception.ExternalFailureType;
+import com.forgather.global.external.exception.ExternalApiException;
+import com.forgather.global.external.exception.ExternalFailureType;
 
 /**
  * 외부 호출의 1차 분류. 상태코드와 IO 실패를 {@link ExternalFailureType}으로 옮긴다.

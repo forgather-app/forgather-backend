@@ -1,4 +1,4 @@
-package com.forgather.global.exception;
+package com.forgather.global.external.exception;
 
 import java.net.SocketTimeoutException;
 
@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 
+import com.forgather.global.exception.BaseException;
 import com.forgather.global.external.ExternalOperation;
 
 import lombok.Getter;
