@@ -48,7 +48,7 @@ private String buildAccessToken(Long id, String role) {
 
 | 구분 | Host (작가) | Admin (관리자) |
 |-----|------------|---------------|
-| 인증 방식 | JWT + 소셜 OAuth (Kakao·Apple, Authorization 헤더 또는 HttpOnly 쿠키) | JWT + 세션 |
+| 인증 방식 | JWT + 소셜 OAuth (Kakao·Apple, HttpOnly 쿠키) | JWT + 세션 |
 | 리졸버 | `LoginHostArgumentResolver` | `LoginAdminUserArgumentResolver` |
 | 인터셉터 | - | `AdminAuthInterceptor` |
 | 어노테이션 | `@LoginHost` | `@LoginAdminUser` |
@@ -58,7 +58,7 @@ private String buildAccessToken(Long id, String role) {
 // LoginHostArgumentResolver - @LoginHost 처리 (global/auth/resolver/LoginHostArgumentResolver.java)
 @Override
 public Host resolveArgument(MethodParameter parameter, ...) {
-    String jwtToken = resolveJwtToken(request); // Authorization 헤더 우선, 없으면 access_token 쿠키
+    String jwtToken = resolveJwtToken(request); // access_token 쿠키에서 추출
     if (jwtToken == null) {
         throwExceptionIfRequired(required);
         return null;
@@ -91,7 +91,7 @@ sequenceDiagram
     Server->>Server: 6. 캐시된 공개키로 RSA 서명 검증
     Server->>Server: 7. 클레임 검증 (iss, aud, exp, sub, nickname, email, nonce)
     Server->>Server: 8. Host 조회/생성 (기존 회원은 email 갱신)
-    Server-->>Client: 9. accessToken, refreshToken을 응답 바디와 HttpOnly 쿠키로 반환 (HMAC)
+    Server-->>Client: 9. accessToken, refreshToken을 HttpOnly 쿠키로 반환 (HMAC)
 ```
 
 #### JWKS 공개키 관리
@@ -242,7 +242,7 @@ public void delete(String spaceCode, Host host) {
 | 클래스 | 역할 | 위치 |
 |--------|------|------|
 | `S3Config` | S3Client, S3AsyncClient, S3Presigner, S3TransferManager 빈 | `global/config/` |
-| `SwaggerConfig` | OpenAPI 3.0 설정, JWT Bearer 인증 스키마 | `global/config/` |
+| `SwaggerConfig` | OpenAPI 3.0 설정, access_token 쿠키 인증 스키마 | `global/config/` |
 | `WebConfig` | CORS, 인터셉터, ArgumentResolver, MessageConverter 등록 | `global/config/` |
 | `AsyncConfig` | 비동기 TaskExecutor 설정 (corePoolSize=4, queueCapacity=1000) | `global/config/` |
 | `RestClientConfig` | RestClient 빈 (외부 API 호출용) | `global/config/` |
@@ -416,7 +416,7 @@ private void executeBatchDeletion(List<String> deletePaths) {
 4. **서버**: RSA 공개키로 `idToken` 서명 검증
 5. **서버**: `JwtParser.validateKakaoIdToken`으로 클레임 검증 (`iss`, `aud`, `exp`, `sub`, `nickname`, `email`, `nonce`)
 6. **서버**: `sub` (카카오 사용자 ID)로 Host 조회/생성. 기존 회원은 `Host.updateEmail`로 이메일 갱신
-7. **서버**: HMAC-SHA256으로 서명된 `accessToken`, `refreshToken`을 응답 바디와 HttpOnly 쿠키로 발급
+7. **서버**: HMAC-SHA256으로 서명된 `accessToken`, `refreshToken`을 HttpOnly 쿠키로 발급
 
 #### 스케줄러
 

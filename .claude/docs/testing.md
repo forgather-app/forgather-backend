@@ -79,7 +79,7 @@ void getSpaceInformation() {
 
     // when
     SpaceResponse result = RestAssuredMockMvc.given()
-        .header("Authorization", "Bearer " + token)
+        .postProcessors(withAccessToken(token))
         .when()
         .get("/spaces/{spaceCode}", space.getCode())
         .then()
