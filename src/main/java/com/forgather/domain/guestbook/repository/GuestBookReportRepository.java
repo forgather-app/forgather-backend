@@ -7,7 +7,7 @@ import org.springframework.data.domain.Pageable;
 
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookReport;
-import com.forgather.global.auth.model.Host;
+import com.forgather.domain.host.model.Host;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.NotFoundException;
 

@@ -2,8 +2,8 @@ package com.forgather.domain.guestbook.model;
 
 import java.time.LocalDateTime;
 
+import com.forgather.domain.host.model.Host;
 import com.forgather.domain.model.BaseTimeEntity;
-import com.forgather.global.auth.model.Host;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.util.TextLengthCounter;

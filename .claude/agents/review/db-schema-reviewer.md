@@ -26,7 +26,7 @@ MySQL 기반 Forgather 스키마의 정규화·인덱스 전략·Flyway 마이�
 src/main/resources/db/migration/V*__*.sql
 domain/*/model/*.java          # JPA 엔티티
 domain/model/                  # BaseTimeEntity, SoftDeleteEntity
-global/auth/model/             # 인증 엔티티
+domain/host/model/             # 호스트·인증 엔티티
 src/test/resources/cleanup.sql
 src/test/resources/application.yml
 ```

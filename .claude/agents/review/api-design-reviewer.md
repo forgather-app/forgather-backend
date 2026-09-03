@@ -25,10 +25,10 @@ Forgather 백엔드가 노출하는 Public API(`/api/*`) 및 Admin API(`/admin/*
 
 ```
 domain/**/controller/*Controller.java
-global/auth/controller/AuthController.java
+domain/auth/controller/AuthController.java
 back_office/controller/Admin*.java
 domain/**/dto/*Request.java, *Response.java
-global/auth/dto/
+domain/auth/dto/
 global/exception/GlobalExceptionHandler.java
 global/config/SwaggerConfig.java
 ```

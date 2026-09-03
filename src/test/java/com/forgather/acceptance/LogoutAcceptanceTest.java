@@ -15,9 +15,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
-import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.host.model.Host;
+import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.fixture.HostFixture;
-import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.util.AuthCookieProvider;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.response.ResponseCode;

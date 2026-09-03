@@ -23,9 +23,9 @@ import com.forgather.domain.exhibition.dto.ExhibitionResponse;
 import com.forgather.domain.exhibition.dto.LocationRequest;
 import com.forgather.domain.exhibition.dto.OperatingHourRequest;
 import com.forgather.domain.exhibition.model.LocationType;
-import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.host.model.Host;
+import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.fixture.HostFixture;
-import com.forgather.global.auth.model.Host;
 import com.forgather.global.exception.BaseException;
 
 @ActiveProfiles("test")

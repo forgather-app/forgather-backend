@@ -18,14 +18,14 @@ import com.forgather.back_office.dto.HostSpacesResponse;
 import com.forgather.back_office.dto.SimpleSpaceResponse;
 import com.forgather.back_office.repository.AdminUserRepository;
 import com.forgather.container.TestOnContainer;
+import com.forgather.domain.host.model.Host;
+import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.domain.space.model.Space;
-import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.space.model.SpaceHost;
+import com.forgather.domain.space.repository.SpaceHostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
-import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.SpaceHost;
-import com.forgather.global.auth.repository.SpaceHostRepository;
 import com.forgather.global.exception.NotFoundException;
 
 @Transactional

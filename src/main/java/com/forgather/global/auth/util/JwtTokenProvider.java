@@ -8,7 +8,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
-import com.forgather.global.config.JwtProperties;
+import com.forgather.global.auth.config.JwtProperties;
 import com.forgather.global.exception.JwtBaseException;
 
 import io.jsonwebtoken.Claims;

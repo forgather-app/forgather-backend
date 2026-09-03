@@ -96,10 +96,10 @@ sequenceDiagram
 
 #### JWKS 공개키 관리
 
-JWKS 조회는 provider(KAKAO/GOOGLE/APPLE) 공통으로 `SocialAuthClient`가 담당합니다.
+JWKS 조회는 provider(KAKAO/GOOGLE/APPLE) 공통으로 `SocialPublicKeyClient`가 담당합니다.
 
 ```java
-// SocialAuthClient - provider별 JWKS 캐시에서 공개키 조회 (global/auth/client/SocialAuthClient.java)
+// SocialPublicKeyClient - provider별 JWKS 캐시에서 공개키 조회 (global/external/social/SocialPublicKeyClient.java)
 public PublicKey getPublicKey(SocialProvider provider, String kid) {
     List<Map<String, Object>> keys = keyCaches.get(provider);
     if (keys == null || keys.isEmpty()) {
@@ -124,19 +124,19 @@ public PublicKey getPublicKey(SocialProvider provider, String kid) {
 
 ```java
 // SocialPublicKeyScheduler - 매일 새벽 3시 전체 provider 키 갱신
-// (global/auth/scheduler/SocialPublicKeyScheduler.java)
+// (global/external/social/SocialPublicKeyScheduler.java)
 @Scheduled(cron = "0 0 3 * * *")
 public void updateSocialPublicKeys() {
-    socialAuthClient.updateAllKeys();  // KAKAO, GOOGLE, APPLE
+    socialPublicKeyClient.updateAllKeys();  // KAKAO, GOOGLE, APPLE
 }
 ```
 
 #### id token 클레임 검증
 
-서명 검증 이후 `JwtParser`가 provider별로 클레임을 검증합니다. 카카오·애플 모두 `nonce`를 필수로 요구하며, 클라이언트가 원본을 SHA-256 해싱해 provider에 전달했다고 보고 해시를 대조합니다.
+서명 검증 이후 `SocialJwtParser`가 provider별로 클레임을 검증합니다. 카카오·애플 모두 `nonce`를 필수로 요구하며, 클라이언트가 원본을 SHA-256 해싱해 provider에 전달했다고 보고 해시를 대조합니다.
 
 ```java
-// JwtParser - Kakao id token 클레임 검증 (global/auth/util/JwtParser.java)
+// SocialJwtParser - Kakao id token 클레임 검증 (global/external/social/SocialJwtParser.java)
 private void validateKakaoIdToken(KakaoIdToken idToken, String rawNonce) {
     // iss  : kakao.issuer와 일치
     // aud  : kakao.native-app-key와 일치 (문자열 또는 배열)
@@ -172,7 +172,7 @@ graph TD
 | `ProductService` | 작품 CRUD (최대 3개 제한) | ContentsStorage |
 | `GuestBookService` | 방명록 CRUD, 권한 검증 | ContentsStorage |
 | `UploadService` | 파일 업로드, Presigned URL 발급 | ContentsStorage, SignedUrlIssuer |
-| `AuthService` | OAuth 로그인, 토큰 갱신 | JwtParser, JwtTokenProvider, AppleAuthClient |
+| `AuthService` | OAuth 로그인, 토큰 갱신 | SocialJwtParser, JwtTokenProvider, AppleApiClient |
 
 ### 트랜잭션 경계
 
@@ -210,9 +210,10 @@ public void delete(String spaceCode, Host host) {
 
 | 패키지 | 역할 |
 |-------|------|
-| `auth/` | JWT 토큰 처리, 소셜 OAuth 연동(Kakao·Apple), 인증 인터셉터/리졸버 |
-| `config/` | WebMvc, S3, Swagger, 비동기 처리 등 설정 |
-| `exception/` | 전역 예외 처리, BaseException 계층 |
+| `auth/` | JWT 토큰 생성·검증(`JwtTokenProvider`), 인증 쿠키 처리(`AuthCookieProvider`), `config/`의 `JwtProperties`·`AuthCookieProperties` |
+| `config/` | 조립 설정(`WebConfig`, `S3Config`, `AsyncConfig`, `SwaggerConfig`, `RestClientConfig`, `PasswordEncoderConfig`, `CorsProperties`) |
+| `exception/` | 전역 예외 처리, BaseException 계층, 외부 호출 실패 규약(`ExternalApiException`, `ExternalFailureType`) |
+| `external/` | 외부 API 연동 기술 계층 (`ExternalCalls`, `ExternalOperation`, `social/`, `social/config/`의 소셜 Properties). 도메인을 알지 못한다 |
 | `util/` | 공용 유틸리티 (TextLengthCounter, RandomCodeGenerator 등) |
 | `logging/` | 로깅 인터셉터, 비동기 로깅 데코레이터 |
 | `converter/` | Multipart JSON 컨버터 |
@@ -265,13 +266,17 @@ public TaskExecutor taskExecutor() {
 
 ### Properties 클래스
 
-| 클래스 | 역할 |
-|--------|------|
-| `JwtProperties` | JWT secret, 토큰 만료 시간 |
-| `S3Properties` | 버킷명, 리전, 루트 디렉토리, 태깅 |
-| `KakaoProperties` | 카카오 네이티브 앱 키(`aud` 검증 기준), issuer, JWKS URL, Admin 키, unlink URL |
-| `AppleProperties` | 애플 client ID, issuer, JWKS URL, client secret 서명용 키 |
-| `CorsProperties` | 허용 origin, method, header |
+Properties는 값을 소비하는 모듈의 `config/` 하위에 둔다.
+
+| 클래스 | 역할 | 위치 |
+|--------|------|------|
+| `JwtProperties` | JWT secret, 토큰 만료 시간 | `global/auth/config/` |
+| `AuthCookieProperties` | 인증 쿠키 secure·SameSite 옵션 | `global/auth/config/` |
+| `KakaoProperties` | 카카오 네이티브 앱 키(`aud` 검증 기준), issuer, JWKS URL, Admin 키, unlink URL | `global/external/social/config/` |
+| `AppleProperties` | 애플 client ID, issuer, JWKS URL, client secret 서명용 키 | `global/external/social/config/` |
+| `GoogleProperties` | 구글 JWKS URL | `global/external/social/config/` |
+| `S3Properties` | 버킷명, 리전, 루트 디렉토리, 태깅 | `domain/upload/config/` |
+| `CorsProperties` | 허용 origin, method, header | `global/config/` |
 
 ---
 
@@ -412,17 +417,17 @@ private void executeBatchDeletion(List<String> deletePaths) {
 
 1. **클라이언트**: rawNonce 생성 → `sha256(rawNonce)`를 카카오 SDK의 `nonce`로 넘겨 로그인 → `idToken` 획득
 2. **클라이언트**: `idToken`과 **원본** `rawNonce`를 서버로 전송 (`raw_nonce`는 필수)
-3. **서버**: JWT 헤더에서 `kid` 추출 → `SocialAuthClient`의 JWKS 캐시에서 공개키 조회
+3. **서버**: JWT 헤더에서 `kid` 추출 → `SocialPublicKeyClient`의 JWKS 캐시에서 공개키 조회
 4. **서버**: RSA 공개키로 `idToken` 서명 검증
-5. **서버**: `JwtParser.validateKakaoIdToken`으로 클레임 검증 (`iss`, `aud`, `exp`, `sub`, `nickname`, `email`, `nonce`)
+5. **서버**: `SocialJwtParser.validateKakaoIdToken`으로 클레임 검증 (`iss`, `aud`, `exp`, `sub`, `nickname`, `email`, `nonce`)
 6. **서버**: `sub` (카카오 사용자 ID)로 Host 조회/생성. 기존 회원은 `Host.updateEmail`로 이메일 갱신
 7. **서버**: HMAC-SHA256으로 서명된 `accessToken`, `refreshToken`을 응답 바디와 HttpOnly 쿠키로 발급
 
 #### 스케줄러
 
-- **클래스**: `SocialPublicKeyScheduler` (`global/auth/scheduler/`)
+- **클래스**: `SocialPublicKeyScheduler` (`global/external/social/`)
 - **실행 주기**: 매일 새벽 3시 (`0 0 3 * * *`)
-- **동작**: `SocialAuthClient.updateAllKeys()` — KAKAO·GOOGLE·APPLE JWKS를 한 번에 갱신
+- **동작**: `SocialPublicKeyClient.updateAllKeys()` — KAKAO·GOOGLE·APPLE JWKS를 한 번에 갱신
 - **목적**: provider가 키를 로테이션해도 서비스 중단 없이 검증 가능
 
 ---

@@ -21,13 +21,13 @@ import org.springframework.test.context.jdbc.Sql;
 import com.forgather.container.TestOnContainer;
 import com.forgather.domain.host.dto.RegisterHostProfilePhotoRequest;
 import com.forgather.domain.host.dto.UpdateHostProfileRequest;
+import com.forgather.domain.host.model.Host;
 import com.forgather.domain.host.model.HostProfilePhoto;
+import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.domain.host.repository.jpa.HostProfilePhotoJpaRepository;
-import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.upload.domain.ContentsStorage;
 import com.forgather.fake.FakeContentStorage;
 import com.forgather.fixture.HostFixture;
-import com.forgather.global.auth.model.Host;
 
 /**
  * 트랜잭션을 실제로 커밋해야 경합이 재현되므로 @Transactional을 붙이지 않고, cleanup.sql로 정리한다.

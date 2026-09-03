@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.forgather.domain.guestbook.dto.ReportDetailResponse;
 import com.forgather.domain.guestbook.dto.ReportHistoryResponse;
 import com.forgather.domain.guestbook.service.GuestbookReportService;
+import com.forgather.domain.host.model.Host;
 import com.forgather.global.auth.annotation.LoginHost;
-import com.forgather.global.auth.model.Host;
 import com.forgather.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;

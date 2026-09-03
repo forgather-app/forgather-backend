@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.forgather.domain.model.Photo;
+import com.forgather.domain.upload.config.S3Properties;
 import com.forgather.domain.upload.domain.ContentsStorage;
-import com.forgather.global.config.S3Properties;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
