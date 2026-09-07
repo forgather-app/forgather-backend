@@ -12,9 +12,9 @@ import com.forgather.back_office.dto.HostDetailResponse;
 import com.forgather.back_office.dto.HostSpacesResponse;
 import com.forgather.back_office.repository.AdminHostRepository;
 import com.forgather.back_office.repository.AdminSpaceHostRepository;
+import com.forgather.domain.host.model.Host;
 import com.forgather.domain.space.model.Space;
-import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.SpaceHost;
+import com.forgather.domain.space.model.SpaceHost;
 
 import lombok.RequiredArgsConstructor;
 

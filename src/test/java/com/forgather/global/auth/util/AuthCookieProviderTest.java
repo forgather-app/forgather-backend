@@ -9,8 +9,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseCookie;
 
-import com.forgather.global.config.AuthCookieProperties;
-import com.forgather.global.config.JwtProperties;
+import com.forgather.global.auth.config.AuthCookieProperties;
+import com.forgather.global.auth.config.JwtProperties;
 
 class AuthCookieProviderTest {
 

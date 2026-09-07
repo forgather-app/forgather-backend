@@ -1,7 +1,6 @@
 package com.forgather.domain.host.model;
 
 import com.forgather.domain.model.Photo;
-import com.forgather.global.auth.model.Host;
 import com.forgather.global.exception.BaseNullPointerException;
 
 import jakarta.persistence.Entity;

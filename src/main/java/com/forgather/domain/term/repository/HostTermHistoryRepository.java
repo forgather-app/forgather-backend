@@ -7,9 +7,9 @@ import java.util.Set;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.forgather.domain.host.model.Host;
 import com.forgather.domain.term.model.HostTermHistory;
 import com.forgather.domain.term.model.TermType;
-import com.forgather.global.auth.model.Host;
 
 public interface HostTermHistoryRepository {
 

@@ -4,7 +4,7 @@ import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookReport;
 import com.forgather.domain.guestbook.model.GuestBookReportReason;
 import com.forgather.domain.guestbook.model.ReporterType;
-import com.forgather.global.auth.model.Host;
+import com.forgather.domain.host.model.Host;
 
 public class GuestBookReportFixture {
 

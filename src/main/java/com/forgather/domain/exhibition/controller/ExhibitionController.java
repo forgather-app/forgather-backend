@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.forgather.domain.exhibition.dto.CreateExhibitionRequest;
 import com.forgather.domain.exhibition.dto.ExhibitionResponse;
 import com.forgather.domain.exhibition.service.ExhibitionService;
+import com.forgather.domain.host.model.Host;
 import com.forgather.global.auth.annotation.LoginHost;
-import com.forgather.global.auth.model.Host;
 import com.forgather.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;

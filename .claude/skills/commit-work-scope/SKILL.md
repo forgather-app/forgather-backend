@@ -67,11 +67,11 @@ git diff --cached --name-status
 다음처럼 커밋을 나누겠습니다.
 
 1. refactor: 소셜 JWKS 공개키 조회 공통화
-   - 포함 파일: SocialAuthClient.java, SocialProvider.java, JwtParser.java, application*.yml
+   - 포함 파일: SocialPublicKeyClient.java, SocialProvider.java, SocialJwtParser.java, application*.yml
    - 이유: provider별 JWKS 조회와 Kakao 연동 변경이 하나의 리팩터링 단위입니다.
 
 2. test: 소셜 JWKS 공개키 조회 테스트 추가
-   - 포함 파일: SocialAuthClientTest.java, JwtParserTest.java
+   - 포함 파일: SocialPublicKeyClientTest.java, SocialJwtParserTest.java
    - 이유: 위 리팩터링의 캐시/실패 정책 검증을 분리합니다.
 
 커밋하지 않을 파일:

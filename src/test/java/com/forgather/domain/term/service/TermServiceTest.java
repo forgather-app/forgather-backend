@@ -20,7 +20,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 
-import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.host.model.Host;
+import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.domain.term.dto.TermAgreementResponse;
 import com.forgather.domain.term.model.HostTermHistory;
 import com.forgather.domain.term.model.Term;
@@ -28,7 +29,6 @@ import com.forgather.domain.term.model.TermType;
 import com.forgather.domain.term.repository.HostTermHistoryRepository;
 import com.forgather.domain.term.repository.jpa.TermJpaRepository;
 import com.forgather.fixture.HostFixture;
-import com.forgather.global.auth.model.Host;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.NotFoundException;
 

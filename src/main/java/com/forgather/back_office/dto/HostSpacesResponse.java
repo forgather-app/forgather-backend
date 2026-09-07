@@ -2,8 +2,8 @@ package com.forgather.back_office.dto;
 
 import java.util.List;
 
+import com.forgather.domain.host.model.Host;
 import com.forgather.domain.space.model.Space;
-import com.forgather.global.auth.model.Host;
 
 public record HostSpacesResponse(
     Long hostId,

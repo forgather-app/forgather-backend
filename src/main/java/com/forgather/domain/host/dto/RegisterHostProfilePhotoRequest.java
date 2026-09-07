@@ -1,9 +1,9 @@
 package com.forgather.domain.host.dto;
 
+import com.forgather.domain.host.model.Host;
 import com.forgather.domain.host.model.HostProfilePhoto;
 import com.forgather.domain.upload.domain.UploadFileMetadata;
 import com.forgather.domain.upload.domain.UploadFileNamePolicy;
-import com.forgather.global.auth.model.Host;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;

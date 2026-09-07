@@ -11,9 +11,9 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.util.WebUtils;
 
-import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.host.model.Host;
+import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.global.auth.annotation.LoginHost;
-import com.forgather.global.auth.model.Host;
 import com.forgather.global.auth.util.AuthCookieProvider;
 import com.forgather.global.auth.util.JwtTokenProvider;
 import com.forgather.global.exception.UnauthorizedException;
@@ -23,6 +23,10 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * 모든 도메인 컨트롤러가 소비하는 인증 어댑터. Host 엔티티 반환으로 인한 domain 의존은
+ * 인지된 예외이며 principal DTO 도입 시 제거 예정.
+ */
 @Component
 @RequiredArgsConstructor
 public class LoginHostArgumentResolver implements HandlerMethodArgumentResolver {
