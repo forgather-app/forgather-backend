@@ -2,7 +2,7 @@ package com.forgather.fixture;
 
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.forgather.global.auth.model.Host;
+import com.forgather.domain.host.model.Host;
 import com.forgather.global.util.RandomCodeGenerator;
 
 public class HostFixture {

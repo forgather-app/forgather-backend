@@ -18,6 +18,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
+import com.forgather.global.external.exception.ExternalApiException;
+import com.forgather.global.external.exception.ExternalFailureType;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
@@ -71,7 +73,7 @@ class ExternalCallsTest {
         assertThatThrownBy(() -> ExternalCalls.execute(OPERATION, () -> call(Map.class)))
             .isInstanceOf(ExternalApiException.class)
             .extracting("type")
-            .isEqualTo(FailureType.UPSTREAM_ERROR);
+            .isEqualTo(ExternalFailureType.UPSTREAM_ERROR);
     }
 
     @DisplayName("외부 4xx는 CALLER_ERROR로 분류하고 본문을 보관한다")
@@ -88,7 +90,7 @@ class ExternalCallsTest {
             .isInstanceOf(ExternalApiException.class)
             .satisfies(thrown -> {
                 ExternalApiException exception = (ExternalApiException)thrown;
-                assertThat(exception.getType()).isEqualTo(FailureType.CALLER_ERROR);
+                assertThat(exception.getType()).isEqualTo(ExternalFailureType.CALLER_ERROR);
                 assertThat(exception.getResponseBody()).contains("-101");
             });
     }
@@ -103,7 +105,7 @@ class ExternalCallsTest {
         assertThatThrownBy(() -> ExternalCalls.execute(OPERATION, () -> call(Map.class)))
             .isInstanceOf(ExternalApiException.class)
             .extracting("type")
-            .isEqualTo(FailureType.RATE_LIMITED);
+            .isEqualTo(ExternalFailureType.RATE_LIMITED);
     }
 
     @DisplayName("응답이 지연되면 READ_TIMEOUT으로 분류한다")
@@ -119,7 +121,7 @@ class ExternalCallsTest {
         assertThatThrownBy(() -> ExternalCalls.execute(OPERATION, () -> call(Map.class)))
             .isInstanceOf(ExternalApiException.class)
             .extracting("type")
-            .isEqualTo(FailureType.READ_TIMEOUT);
+            .isEqualTo(ExternalFailureType.READ_TIMEOUT);
     }
 
     @DisplayName("연결이 끊기면 CONNECTION_FAILED로 분류한다")
@@ -132,7 +134,7 @@ class ExternalCallsTest {
         assertThatThrownBy(() -> ExternalCalls.execute(OPERATION, () -> call(Map.class)))
             .isInstanceOf(ExternalApiException.class)
             .extracting("type")
-            .isEqualTo(FailureType.CONNECTION_FAILED);
+            .isEqualTo(ExternalFailureType.CONNECTION_FAILED);
     }
 
     @DisplayName("응답을 역직렬화할 수 없으면 MALFORMED_RESPONSE로 분류한다")
@@ -147,7 +149,7 @@ class ExternalCallsTest {
         assertThatThrownBy(() -> ExternalCalls.execute(OPERATION, () -> call(Map.class)))
             .isInstanceOf(ExternalApiException.class)
             .extracting("type")
-            .isEqualTo(FailureType.MALFORMED_RESPONSE);
+            .isEqualTo(ExternalFailureType.MALFORMED_RESPONSE);
     }
 
     private void stub(ResponseDefinitionBuilder response) {

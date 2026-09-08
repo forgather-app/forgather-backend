@@ -14,8 +14,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.forgather.domain.host.model.Host;
 import com.forgather.fixture.HostFixture;
-import com.forgather.global.auth.model.Host;
 
 class TermAgreementTest {
 

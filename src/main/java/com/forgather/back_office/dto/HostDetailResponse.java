@@ -2,7 +2,7 @@ package com.forgather.back_office.dto;
 
 import java.time.LocalDateTime;
 
-import com.forgather.global.auth.model.Host;
+import com.forgather.domain.host.model.Host;
 
 public record HostDetailResponse(
     Long id,

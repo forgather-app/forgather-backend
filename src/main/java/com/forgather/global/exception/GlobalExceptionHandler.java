@@ -21,8 +21,8 @@ import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
-import com.forgather.global.external.ExternalApiException;
-import com.forgather.global.external.FailureType;
+import com.forgather.global.external.exception.ExternalApiException;
+import com.forgather.global.external.exception.ExternalFailureType;
 import com.forgather.global.response.ApiResponse;
 import com.forgather.global.response.ResponseCode;
 
@@ -183,7 +183,7 @@ public class GlobalExceptionHandler {
 
     /**
      * 외부 서비스 호출 실패.
-     * 응답 status와 로그 레벨을 FailureType에서 파생시켜 정책이 클라이언트에 흩어지지 않게 한다.
+     * 응답 status와 로그 레벨을 ExternalFailureType에서 파생시켜 정책이 클라이언트에 흩어지지 않게 한다.
      * 외부 5xx·타임아웃은 우리가 개입할 수 없으므로 warn으로 두고, 심각도는
      * http.client.requests 메트릭의 실패율이 판단한다.
      */
@@ -205,9 +205,9 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * default를 두지 않는다. 새 FailureType이 추가되면 컴파일이 깨지면서 응답 정책을 함께 정하도록 강제한다.
+     * default를 두지 않는다. 새 ExternalFailureType이 추가되면 컴파일이 깨지면서 응답 정책을 함께 정하도록 강제한다.
      */
-    private ResponseCode resolveExternalCode(FailureType type) {
+    private ResponseCode resolveExternalCode(ExternalFailureType type) {
         return switch (type) {
             case AUTH_REJECTED -> ResponseCode.UNAUTHORIZED;
             case CALLER_ERROR, MALFORMED_RESPONSE -> ResponseCode.INTERNAL_ERROR;
@@ -220,7 +220,7 @@ public class GlobalExceptionHandler {
      * 원본 메시지는 내부 정보(설정 키, 외부 응답 본문 등) 유출 우려가 있어 응답에서는 고정 문구를 쓴다.
      * resolveExternalCode와 같은 이유로 default를 두지 않는다.
      */
-    private String resolveExternalMessage(FailureType type) {
+    private String resolveExternalMessage(ExternalFailureType type) {
         return switch (type) {
             case AUTH_REJECTED -> "소셜 로그인 인증에 실패했습니다. 다시 로그인해 주세요.";
             case CALLER_ERROR, MALFORMED_RESPONSE -> "예상치 못한 오류가 발생했습니다.";

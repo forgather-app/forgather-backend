@@ -12,7 +12,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.host.model.Host;
+import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.domain.term.dto.TermAgreementResponse;
 import com.forgather.domain.term.dto.TermResponse;
 import com.forgather.domain.term.model.HostTermHistory;
@@ -21,7 +22,6 @@ import com.forgather.domain.term.model.TermAgreement;
 import com.forgather.domain.term.model.TermType;
 import com.forgather.domain.term.repository.HostTermHistoryRepository;
 import com.forgather.domain.term.repository.TermRepository;
-import com.forgather.global.auth.model.Host;
 import com.forgather.global.exception.BaseException;
 
 import lombok.RequiredArgsConstructor;

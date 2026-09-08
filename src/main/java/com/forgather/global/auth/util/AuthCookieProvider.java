@@ -5,7 +5,7 @@ import java.time.Duration;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
-import com.forgather.global.config.AuthCookieProperties;
+import com.forgather.global.auth.config.AuthCookieProperties;
 
 import lombok.RequiredArgsConstructor;
 

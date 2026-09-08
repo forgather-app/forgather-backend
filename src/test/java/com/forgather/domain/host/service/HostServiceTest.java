@@ -19,14 +19,14 @@ import com.forgather.container.TestOnContainer;
 import com.forgather.domain.host.dto.HostProfileResponse;
 import com.forgather.domain.host.dto.RegisterHostProfilePhotoRequest;
 import com.forgather.domain.host.dto.UpdateHostProfileRequest;
+import com.forgather.domain.host.model.Host;
 import com.forgather.domain.host.model.HostProfilePhoto;
 import com.forgather.domain.host.repository.HostProfilePhotoRepository;
+import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.domain.host.repository.jpa.HostProfilePhotoJpaRepository;
-import com.forgather.domain.space.repository.HostRepository;
 import com.forgather.domain.upload.domain.ContentsStorage;
 import com.forgather.fake.FakeContentStorage;
 import com.forgather.fixture.HostFixture;
-import com.forgather.global.auth.model.Host;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
