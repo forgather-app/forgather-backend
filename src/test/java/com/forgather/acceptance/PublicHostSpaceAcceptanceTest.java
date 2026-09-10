@@ -247,7 +247,7 @@ class PublicHostSpaceAcceptanceTest extends AcceptanceTest {
 
     private List<PublicHostSpaceItemResponse> getSpacesWithToken(String hostCode, String accessToken) {
         ApiResponse<PublicHostSpacesResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + accessToken)
+            .postProcessors(withAccessToken(accessToken))
             .when()
             .get("/hosts/{hostCode}/spaces", hostCode)
             .then()

@@ -50,7 +50,7 @@ public class SpaceGuestbookController {
 
     @Deprecated(forRemoval = true)
     @Hidden
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @Operation(summary = "방명록 조회",
         description = "공개 스페이스가 아닌 경우 호스트만 조회 가능. 하위 호환을 위한 기존 API이며 신규 클라이언트는 X-API-Version=2로 호출한다.",
         deprecated = true,
@@ -88,7 +88,7 @@ public class SpaceGuestbookController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @Operation(summary = "방명록 조회 v2",
         description = "공개 스페이스가 아닌 경우 호스트만 조회 가능. 호스트일 경우 읽은 방명록만 조회하고 읽지 않은 방명록 수를 응답한다.")
     @GetMapping(headers = "X-API-Version=2")
@@ -103,7 +103,7 @@ public class SpaceGuestbookController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @Operation(summary = "읽지 않은 방명록 조회", description = "스페이스 호스트가 읽지 않은 방명록 목록을 조회한다")
     @GetMapping("/unread")
     public ResponseEntity<ApiResponse<GuestBookResponse>> readUnreadGuestBook(
@@ -117,7 +117,7 @@ public class SpaceGuestbookController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @Operation(summary = "방명록 카드 조회", description = "공개 스페이스가 아닌 경우 호스트만 조회 가능")
     @GetMapping("/{guestBookCardId}")
     public ResponseEntity<ApiResponse<GuestBookCardResponse>> readCard(
@@ -139,7 +139,7 @@ public class SpaceGuestbookController {
         return ResponseEntity.status(CREATED).body(ApiResponse.success(response));
     }
 
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @Operation(summary = "방명록 카드 삭제")
     @DeleteMapping("/{guestBookCardId}")
     public ResponseEntity<Void> deleteCard(
@@ -151,7 +151,7 @@ public class SpaceGuestbookController {
         return ResponseEntity.noContent().build();
     }
 
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @Operation(summary = "방명록 신고", description = "호스트가 자신의 스페이스에 작성된 방명록을 신고한다. 신고 즉시 해당 방명록은 숨김 처리된다.")
     @PostMapping("/{guestBookCardId}/reports")
     public ResponseEntity<ApiResponse<CreateGuestBookReportResponse>> report(
@@ -164,7 +164,7 @@ public class SpaceGuestbookController {
         return ResponseEntity.status(CREATED).body(ApiResponse.success(response));
     }
 
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @Operation(summary = "방명록 카드 사진 선택 삭제")
     @DeleteMapping("/{guestBookCardId}/photos")
     public ResponseEntity<Void> deleteCardPhotos(

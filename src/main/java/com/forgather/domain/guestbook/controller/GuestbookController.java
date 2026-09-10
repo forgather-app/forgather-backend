@@ -32,7 +32,7 @@ public class GuestbookController {
 
     private final GuestbookReportService guestBookReportService;
 
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @Operation(summary = "방명록 신고내역 조회",
         description = "로그인 사용자의 방명록 신고 내역 조회",
         parameters = {
@@ -66,7 +66,7 @@ public class GuestbookController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @Operation(summary = "방명록 신고내역 상세 조회",
         description = "로그인 사용자의 특정 방명록 신고 내역 상세 조회")
     @GetMapping("/me/reports/{reportId}")

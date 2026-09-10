@@ -75,7 +75,7 @@ public class UploadController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @PostMapping(path = "/spaces/{spaceCode}/products/upload/signed-urls")
     @Operation(summary = "스페이스 작품 사진 업로드 URL 발급",
         description = "로그인한 호스트가 자신의 스페이스 작품 사진 업로드용 presigned URL을 발급받습니다." + PRESIGN_USAGE_NOTE)
@@ -89,7 +89,7 @@ public class UploadController {
     }
 
     @Deprecated
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @PostMapping(path = "/spaces/photos/upload/signed-urls")
     @Operation(summary = "스페이스 사진 업로드 URL 발급 (deprecated)",
         description = "[Deprecated] 스페이스 사진은 더 이상 별도로 업로드하지 않습니다. "
@@ -103,7 +103,7 @@ public class UploadController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @PostMapping(path = "/exhibitions/upload/signed-urls")
     @Operation(summary = "전시 사진 업로드 URL 발급",
         description = "로그인한 호스트가 전시 사진 업로드용 presigned URL을 발급받습니다." + PRESIGN_USAGE_NOTE)
@@ -115,7 +115,7 @@ public class UploadController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @PostMapping(path = "/hosts/me/profile/upload/signed-urls")
     @Operation(summary = "프로필 사진 업로드 URL 발급",
         description = "로그인한 호스트가 자신의 프로필 사진 업로드용 presigned URL을 발급받습니다. "

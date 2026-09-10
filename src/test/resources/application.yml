@@ -52,7 +52,6 @@ cors:
     - PATCH
     - OPTIONS
   allowed-headers:
-    - Authorization
     - Content-Type
     - X-Requested-With
   allow-credentials: true

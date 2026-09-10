@@ -43,7 +43,7 @@ public class SpaceController {
 
     @PostMapping
     @Operation(summary = "스페이스 생성", description = "새로운 스페이스를 생성합니다.")
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     public ResponseEntity<ApiResponse<CreateSpaceResponse>> create(
         @RequestBody @Valid CreateSpaceRequest request,
         @LoginHost Host host
@@ -66,7 +66,7 @@ public class SpaceController {
 
     @DeleteMapping("/{spaceCode}")
     @Operation(summary = "스페이스 삭제", description = "스페이스를 삭제합니다.")
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     public ResponseEntity<Void> delete(@PathVariable(name = "spaceCode") String spaceCode,
         @LoginHost Host host
     ) {
@@ -76,7 +76,7 @@ public class SpaceController {
 
     @PatchMapping("/{spaceCode}")
     @Operation(summary = "스페이스 정보 수정", description = "해당 스페이스 코드의 정보를 수정합니다.")
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     public ResponseEntity<ApiResponse<SpaceResponse>> update(
         @PathVariable(name = "spaceCode") String spaceCode,
         @RequestBody @Valid UpdateSpaceRequest request,
@@ -88,7 +88,7 @@ public class SpaceController {
 
     @GetMapping("/me")
     @Operation(summary = "호스트의 스페이스 목록 조회", description = "로그인한 호스트의 스페이스 목록을 조회합니다.")
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     public ResponseEntity<ApiResponse<HostSpaceResponse>> getSpacesInformation(@LoginHost Host host) {
         var response = spaceService.getSpacesInformation(host);
         return ResponseEntity.ok(ApiResponse.success(response));
@@ -102,7 +102,7 @@ public class SpaceController {
             + "요청 목록에 호스트가 소유하지 않은 스페이스 코드가 하나라도 포함되면 부분 반영 없이 전체가 실패합니다. "
             + "존재하지 않는 코드와 다른 호스트의 코드를 구분하지 않고 400으로 응답합니다."
             + "응답에는 처리 후 지정된 호스트의 전체 스페이스 코드 목록이 담깁니다.")
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     public ResponseEntity<ApiResponse<FeaturedSpacesResponse>> featureSpaces(
         @RequestBody @Valid FeatureSpacesRequest request,
         @LoginHost Host host
@@ -119,7 +119,7 @@ public class SpaceController {
             + "요청 목록에 호스트가 소유하지 않은 스페이스 코드가 하나라도 포함되면 부분 반영 없이 전체가 실패합니다. "
             + "존재하지 않는 코드와 다른 호스트의 코드를 구분하지 않고 400으로 응답합니다."
             + "성공 시 data 없이 200으로 응답하며, 해제 후 지정 목록이 필요하면 GET /spaces/me 를 조회합니다.")
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     public ResponseEntity<ApiResponse<Void>> unfeatureSpaces(
         @RequestBody @Valid UnfeatureSpacesRequest request,
         @LoginHost Host host
@@ -130,7 +130,7 @@ public class SpaceController {
 
     @GetMapping("/{spaceCode}/host-check")
     @Operation(summary = "스페이스의 호스트 여부 조회", description = "로그인한 호스트의 스페이스 호스트 여부를 조회합니다.")
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     public ResponseEntity<ApiResponse<CheckSpaceHostResponse>> checkHost(
         @PathVariable(name = "spaceCode") String spaceCode,
         @LoginHost Host host

@@ -95,7 +95,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
 
             // when
             ApiResponse<CreateGuestBookReportResponse> result = RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .contentType(ContentType.JSON)
                 .body(request)
                 .when()
@@ -125,7 +125,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
 
             // when
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .contentType(ContentType.JSON)
                 .body(request)
                 .when()
@@ -165,7 +165,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
 
             // when & then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + anotherAccessToken)
+                .postProcessors(withAccessToken(anotherAccessToken))
                 .contentType(ContentType.JSON)
                 .body(request)
                 .when()
@@ -187,7 +187,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
 
             // when & then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .contentType(ContentType.JSON)
                 .body(request)
                 .when()
@@ -204,7 +204,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
             // given
             CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(reason, null);
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .contentType(ContentType.JSON)
                 .body(request)
                 .when()
@@ -213,7 +213,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
 
             // when & then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .contentType(ContentType.JSON)
                 .body(request)
                 .when()
@@ -237,7 +237,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
 
             // when & then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .contentType(ContentType.JSON)
                 .body(request)
                 .when()
@@ -258,7 +258,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
         void retrieveReportHistory() {
             // given
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .contentType(ContentType.JSON)
                 .body(new CreateGuestBookReportRequest(reason, null))
                 .when()
@@ -267,7 +267,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
 
             // when
             ApiResponse<ReportHistoryResponse> result = RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .accept(ContentType.JSON)
                 .when()
                 .get("/guestbook/me/reports")
@@ -293,7 +293,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
         @Test
         void retrieveReportHistoryEmpty() {
             ApiResponse<ReportHistoryResponse> result = RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .accept(ContentType.JSON)
                 .when()
                 .get("/guestbook/me/reports")
@@ -333,7 +333,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + accessToken)
+            .postProcessors(withAccessToken(accessToken))
             .contentType(ContentType.JSON)
             .body(request)
             .when()
@@ -354,7 +354,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
             // given
             String detail = "상세 신고 사유입니다";
             ApiResponse<CreateGuestBookReportResponse> reportResult = RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .contentType(ContentType.JSON)
                 .body(new CreateGuestBookReportRequest(reason, detail))
                 .when()
@@ -369,7 +369,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
 
             // when
             ApiResponse<ReportDetailResponse> result = RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .accept(ContentType.JSON)
                 .when()
                 .get("/guestbook/me/reports/{reportId}", reportResult.data().id())
@@ -400,7 +400,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
         @Test
         void throwExceptionWhenReportNotFound() {
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .accept(ContentType.JSON)
                 .when()
                 .get("/guestbook/me/reports/{reportId}", 999L)
@@ -413,7 +413,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
         void throwExceptionWhenOtherHostReport() {
             // given
             ApiResponse<CreateGuestBookReportResponse> reportResult = RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .contentType(ContentType.JSON)
                 .body(new CreateGuestBookReportRequest(reason, null))
                 .when()
@@ -428,7 +428,7 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
 
             // when & then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + anotherAccessToken)
+                .postProcessors(withAccessToken(anotherAccessToken))
                 .accept(ContentType.JSON)
                 .when()
                 .get("/guestbook/me/reports/{reportId}", reportResult.data().id())

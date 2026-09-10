@@ -29,14 +29,14 @@ public class DevAuthController {
     @PostMapping("/login/dev")
     @Operation(summary = "개발용 임시 로그인",
         description = "설정된 고정 아이디/비밀번호로 로그인합니다. 카카오 로그인과 동일하게 " +
-            "액세스토큰과 리프레시토큰을 응답 바디와 HttpOnly 쿠키로 반환합니다. " +
+            "액세스토큰과 리프레시토큰을 HttpOnly 쿠키로 반환합니다. " +
             "운영 환경에는 이 API가 존재하지 않습니다.")
-    public ResponseEntity<ApiResponse<LoginResponse>> devLogin(@RequestBody DevLoginRequest request) {
+    public ResponseEntity<ApiResponse<Void>> devLogin(@RequestBody DevLoginRequest request) {
         LoginResponse response = devAuthService.login(request);
         return createTokenResponse(response);
     }
 
-    private ResponseEntity<ApiResponse<LoginResponse>> createTokenResponse(LoginResponse response) {
+    private ResponseEntity<ApiResponse<Void>> createTokenResponse(LoginResponse response) {
         HttpHeaders headers = new HttpHeaders();
         headers.add(
             HttpHeaders.SET_COOKIE,
@@ -48,6 +48,6 @@ public class DevAuthController {
         );
         return ResponseEntity.ok()
             .headers(headers)
-            .body(ApiResponse.success(response));
+            .body(ApiResponse.success());
     }
 }

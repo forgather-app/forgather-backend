@@ -113,7 +113,7 @@ class TermAcceptanceTest extends AcceptanceTest {
 
         // when
         ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .get("/terms/me")
@@ -167,7 +167,7 @@ class TermAcceptanceTest extends AcceptanceTest {
 
         // when
         ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .post("/terms/{termId}/agreement", marketingTerm.getId())
@@ -199,7 +199,7 @@ class TermAcceptanceTest extends AcceptanceTest {
 
         // when
         ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .post("/terms/{termId}/agreement", latestServiceTerm.getId())
@@ -228,7 +228,7 @@ class TermAcceptanceTest extends AcceptanceTest {
 
         // when
         ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .post("/terms/{termId}/agreement", marketingTerm.getId())
@@ -257,7 +257,7 @@ class TermAcceptanceTest extends AcceptanceTest {
 
         // when
         ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .delete("/terms/{termId}/agreement", marketingTerm.getId())
@@ -284,7 +284,7 @@ class TermAcceptanceTest extends AcceptanceTest {
 
         // when
         ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .delete("/terms/{termId}/agreement", marketingTerm.getId())
@@ -311,7 +311,7 @@ class TermAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .delete("/terms/{termId}/agreement", serviceTerm.getId())
@@ -331,7 +331,7 @@ class TermAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .post("/terms/{termId}/agreement", oldServiceTerm.getId())
@@ -351,7 +351,7 @@ class TermAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .delete("/terms/{termId}/agreement", oldMarketingTerm.getId())
@@ -369,7 +369,7 @@ class TermAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .post("/terms/{termId}/agreement", 999L)
@@ -390,7 +390,7 @@ class TermAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .delete("/terms/{termId}/agreement", deletedTerm.getId())
@@ -424,7 +424,7 @@ class TermAcceptanceTest extends AcceptanceTest {
         Term marketingTerm = jpaRepository.save(createMarketingTerm("1.0.0", "## marketing"));
         hostTermHistoryRepository.saveAll(List.of(new HostTermHistory(host, marketingTerm, AGREE)));
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .delete("/terms/{termId}/agreement", marketingTerm.getId())
@@ -433,7 +433,7 @@ class TermAcceptanceTest extends AcceptanceTest {
 
         // when
         ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .post("/terms/{termId}/agreement", marketingTerm.getId())
@@ -463,7 +463,7 @@ class TermAcceptanceTest extends AcceptanceTest {
 
         // when
         ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .delete("/terms/{termId}/agreement", latestMarketingTerm.getId())
@@ -491,21 +491,21 @@ class TermAcceptanceTest extends AcceptanceTest {
         Term serviceTerm = jpaRepository.save(createServiceTerm("2.0.0", "2.0.0", "## revised service"));
         Term marketingTerm = jpaRepository.save(createMarketingTerm("1.0.0", "## marketing"));
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .post("/terms/{termId}/agreement", serviceTerm.getId())
             .then()
             .statusCode(HttpStatus.OK.value());
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .post("/terms/{termId}/agreement", marketingTerm.getId())
             .then()
             .statusCode(HttpStatus.OK.value());
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .delete("/terms/{termId}/agreement", marketingTerm.getId())
@@ -514,7 +514,7 @@ class TermAcceptanceTest extends AcceptanceTest {
 
         // when
         ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .get("/terms/me")
@@ -562,7 +562,7 @@ class TermAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .post("/terms/{termId}/agreement", marketingTerm.getId())
@@ -582,7 +582,7 @@ class TermAcceptanceTest extends AcceptanceTest {
 
         // when & then
         RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + token)
+            .postProcessors(withAccessToken(token))
             .accept(ContentType.JSON)
             .when()
             .delete("/terms/{termId}/agreement", marketingTerm.getId())
