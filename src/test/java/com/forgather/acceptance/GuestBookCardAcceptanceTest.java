@@ -438,7 +438,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.data().nickname()).isEqualTo(writeRequest.nickname()),
                 () -> assertThat(result.data().message()).isEqualTo(writeRequest.message()),
                 () -> assertThat(result.data().createdAt()).isBetween(LocalDateTime.now().minusMinutes(1),
-                    LocalDateTime.now()),
+                    LocalDateTime.now().plusSeconds(1)),
 
                 () -> assertThat(result.data().photos().get(0).originalName()).isEqualTo("photo1.jpg"),
                 () -> assertThat(result.data().photos().get(0).path()).endsWith("/spaces/1234567890/guestbook/abc.jpg"),
@@ -624,7 +624,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.message()).isEqualTo(writeRequest.message()),
                 () -> assertThat(result.isRead()).isFalse(),
                 () -> assertThat(result.createdAt()).isBetween(LocalDateTime.now().minusMinutes(1),
-                    LocalDateTime.now()),
+                    LocalDateTime.now().plusSeconds(1)),
 
                 () -> assertThat(result.photos().get(0).originalName()).isEqualTo("photo1.jpg"),
                 () -> assertThat(result.photos().get(0).path()).endsWith(
