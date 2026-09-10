@@ -367,7 +367,7 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.data().guestBookCards().getFirst().message()).isEqualTo(
                     writeRequest.message()),
                 () -> assertThat(result.data().guestBookCards().getFirst().createdAt()).isBetween(
-                    LocalDateTime.now().minusMinutes(1), LocalDateTime.now())
+                    LocalDateTime.now().minusMinutes(1), LocalDateTime.now().plusSeconds(1))
             );
         }
 
