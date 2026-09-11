@@ -37,7 +37,7 @@ public class WithdrawService {
         OauthHost oauthHost = getOauthHost(host);
         deleteHost(host, oauthHost);
         if (oauthHost != null) {
-            outboxService.save(OutboxType.SOCIAL_REVOKE, new SocialRevokeCommand(host.getId(), oauthHost));
+            outboxService.save(OutboxType.SOCIAL_REVOKE, new SocialRevokePayload(host.getId(), oauthHost));
         }
     }
 

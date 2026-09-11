@@ -3,13 +3,13 @@ package com.forgather.domain.host.service;
 import com.forgather.domain.host.model.OauthHost;
 import com.forgather.global.external.social.SocialProvider;
 
-public record SocialRevokeCommand(
+public record SocialRevokePayload(
     Long hostId,
     SocialProvider provider,
     String userId,
     String refreshToken
 ) {
-    public SocialRevokeCommand(Long hostId, OauthHost oauthHost) {
+    public SocialRevokePayload(Long hostId, OauthHost oauthHost) {
         this(
             hostId,
             oauthHost.getProvider(),
