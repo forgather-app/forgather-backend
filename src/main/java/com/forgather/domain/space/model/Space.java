@@ -30,7 +30,7 @@ public class Space extends SoftDeleteEntity {
     private static final int MAX_LINK_URL_LENGTH = 2048;
     private static final int MAX_LINK_NAME_LENGTH = 30;
     private static final Pattern LINK_URL_PATTERN = Pattern.compile(
-        "^https?://[^\\s]+$"
+        "^https?://[^\\s]+$", Pattern.CASE_INSENSITIVE
     );
 
     @Id
