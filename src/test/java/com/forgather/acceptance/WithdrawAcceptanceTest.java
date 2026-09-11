@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,6 +119,7 @@ class WithdrawAcceptanceTest extends AcceptanceTest {
         );
     }
 
+    @Disabled("탈퇴 시 소셜 revoke가 제거된 상태다. outbox 기반으로 복원할 때 이 계약을 다시 세운다.")
     @DisplayName("Kakao unlink에 실패해도 탈퇴는 완료되고 재시도용 실패 로그가 남는다")
     @Test
     void withdrawSucceedsEvenIfUnlinkFails() {
