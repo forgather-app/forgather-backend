@@ -1,5 +1,7 @@
 package com.forgather.domain.host.model;
 
+import com.forgather.global.external.social.SocialProvider;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,7 +20,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "host_kakao")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class KakaoHost {
+public non-sealed class KakaoHost implements OauthHost {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,5 +36,15 @@ public class KakaoHost {
     public KakaoHost(Host host, String userId) {
         this.host = host;
         this.userId = userId;
+    }
+
+    @Override
+    public SocialProvider getProvider() {
+        return SocialProvider.KAKAO;
+    }
+
+    @Override
+    public String getRefreshToken() {
+        return null;
     }
 }

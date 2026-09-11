@@ -148,6 +148,19 @@ public class SpaceService {
     @Transactional
     public void delete(String spaceCode, Host host) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
+        delete(space, host);
+    }
+
+    @Transactional
+    public void deleteAllByHost(Host host) {
+        List<SpaceHost> spaceHosts =
+            spaceHostRepository.findAllByHostAndDeletedAtIsNullWithSpaceOrderByCreatedAtDesc(host);
+        for (SpaceHost spaceHost : spaceHosts) {
+            delete(spaceHost.getSpace(), host);
+        }
+    }
+
+    private void delete(Space space, Host host) {
         validateSpaceHost(space, host);
         deleteGuestBookAndProduct(host, space);
         deleteSpaceHost(host, space);
