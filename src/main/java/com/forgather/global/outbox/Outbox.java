@@ -52,4 +52,13 @@ public class Outbox extends BaseTimeEntity {
     public static Outbox pending(OutboxType type, Object payload) {
         return new Outbox(type, OutboxStatus.PENDING, payload, 0);
     }
+
+    public void increaseFailCount() {
+        failCount++;
+    }
+
+    public void complete() {
+        payload = null;
+        status = OutboxStatus.COMPLETED;
+    }
 }
