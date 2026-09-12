@@ -16,7 +16,7 @@ public class SocialRevokeScheduler {
 
     private final SocialRevokeProcessor socialRevokeProcessor;
 
-    @Scheduled(cron = "0 */5 * * * *")
+    @Scheduled(cron = "0 */1 * * * *")
     public void processPendingRevokes() {
         try {
             SocialRevokeResult result = socialRevokeProcessor.process();

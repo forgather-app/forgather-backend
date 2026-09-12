@@ -38,9 +38,9 @@ public class SocialRevokeProcessor {
         int succeededCount = 0;
         int failedCount = 0;
         for (Outbox outbox : outboxes) {
-            SocialRevokePayload command;
+            SocialRevokePayload payload;
             try {
-                command = objectMapper.convertValue(outbox.getPayload(), SocialRevokePayload.class);
+                payload = objectMapper.convertValue(outbox.getPayload(), SocialRevokePayload.class);
             } catch (Exception e) {
                 outbox.increaseFailCount();
                 failedCount++;
@@ -49,11 +49,11 @@ public class SocialRevokeProcessor {
             }
 
             try {
-                switch (command.provider()) {
-                    case KAKAO -> kakaoApiClient.unlink(command.userId());
-                    case APPLE -> appleApiClient.revoke(command.refreshToken());
+                switch (payload.provider()) {
+                    case KAKAO -> kakaoApiClient.unlink(payload.userId());
+                    case APPLE -> appleApiClient.revoke(payload.refreshToken());
                     default -> throw new BaseException(
-                        "지원하지 않는 provider입니다. provider: " + command.provider(),
+                        "지원하지 않는 provider입니다. provider: " + payload.provider(),
                         HttpStatus.INTERNAL_SERVER_ERROR
                     );
                 }
@@ -63,7 +63,7 @@ public class SocialRevokeProcessor {
                 outbox.increaseFailCount();
                 failedCount++;
                 log.warn("소셜 연결 해제 실패. outboxId: {}, hostId: {}, provider: {}, failCount: {}",
-                    outbox.getId(), command.hostId(), command.provider(), outbox.getFailCount(), e);
+                    outbox.getId(), payload.hostId(), payload.provider(), outbox.getFailCount(), e);
             }
         }
 
