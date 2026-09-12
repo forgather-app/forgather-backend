@@ -13,7 +13,9 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -158,5 +160,24 @@ class SocialRevokeServiceTest {
             () -> assertThat(result.succeededCount()).isEqualTo(1),
             () -> assertThat(result.failedCount()).isEqualTo(1)
         );
+    }
+
+    @DisplayName("모든 건을 처리한 뒤 실패 상한에 도달한 outbox를 FAILED로 전환한다")
+    @Test
+    void processFailsExhaustedAfterAll() throws JsonProcessingException {
+        // given
+        Outbox outbox = pendingOutbox(1L,
+            new SocialRevokePayload(1L, SocialProvider.KAKAO, "kakao-user-1", null));
+        when(outboxService.findPendingTasks(OutboxType.SOCIAL_REVOKE)).thenReturn(List.of(outbox));
+        doThrow(new BaseException("Kakao unlink에 실패했습니다."))
+            .when(kakaoApiClient).unlink("kakao-user-1");
+
+        // when
+        createProcessor().process();
+
+        // then
+        InOrder inOrder = Mockito.inOrder(outboxService);
+        inOrder.verify(outboxService).increaseFailCount(1L);
+        inOrder.verify(outboxService).failExhausted(OutboxType.SOCIAL_REVOKE, SocialRevokeService.MAX_FAIL_COUNT);
     }
 }

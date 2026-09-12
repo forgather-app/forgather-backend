@@ -109,6 +109,51 @@ class OutboxServiceTest extends TestOnContainer {
         );
     }
 
+    @DisplayName("실패 횟수가 상한 이상인 PENDING outbox를 FAILED로 전환하고 payload는 유지한다")
+    @Test
+    void failExhaustedMarksFailedAndKeepsPayload() {
+        // given
+        Outbox outbox = savePending("payload");
+        outboxService.increaseFailCount(outbox.getId());
+        outboxService.increaseFailCount(outbox.getId());
+
+        // when
+        int failed = outboxService.failExhausted(OutboxType.SOCIAL_REVOKE, 2);
+
+        // then
+        Outbox found = outboxRepository.getByIdOrThrow(outbox.getId());
+        assertAll(
+            () -> assertThat(failed).isEqualTo(1),
+            () -> assertThat(found.getStatus()).isEqualTo(OutboxStatus.FAILED),
+            () -> assertThat(found.getPayload()).isEqualTo("payload"),
+            () -> assertThat(found.getFailCount()).isEqualTo(2)
+        );
+    }
+
+    @DisplayName("실패 횟수가 상한 미만이거나 PENDING이 아닌 outbox는 FAILED로 전환하지 않는다")
+    @Test
+    void failExhaustedSkipsBelowThresholdAndNonPending() {
+        // given
+        Outbox belowThreshold = savePending("below");
+        outboxService.increaseFailCount(belowThreshold.getId());
+        Outbox completed = savePending("completed");
+        outboxService.increaseFailCount(completed.getId());
+        outboxService.increaseFailCount(completed.getId());
+        outboxService.complete(completed.getId());
+
+        // when
+        int failed = outboxService.failExhausted(OutboxType.SOCIAL_REVOKE, 2);
+
+        // then
+        assertAll(
+            () -> assertThat(failed).isZero(),
+            () -> assertThat(outboxRepository.getByIdOrThrow(belowThreshold.getId()).getStatus())
+                .isEqualTo(OutboxStatus.PENDING),
+            () -> assertThat(outboxRepository.getByIdOrThrow(completed.getId()).getStatus())
+                .isEqualTo(OutboxStatus.COMPLETED)
+        );
+    }
+
     @DisplayName("존재하지 않는 outbox를 완료 처리하면 예외가 발생한다")
     @Test
     void completeNotFound() {
