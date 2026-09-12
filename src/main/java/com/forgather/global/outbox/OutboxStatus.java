@@ -11,9 +11,6 @@ public enum OutboxStatus {
     /** 처리 완료 (이미 처리된 것으로 확인된 경우 포함) */
     COMPLETED,
 
-    /** 실행 전 가드에 걸려 더 이상 수행할 필요가 없어진 경우 */
-    CANCELED,
-
     /** 영구 실패 또는 재시도 상한 도달 */
     FAILED,
     ;

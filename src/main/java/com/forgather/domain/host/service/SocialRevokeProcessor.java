@@ -40,7 +40,7 @@ public class SocialRevokeProcessor {
         for (Outbox outbox : outboxes) {
             SocialRevokePayload payload;
             try {
-                payload = objectMapper.convertValue(outbox.getPayload(), SocialRevokePayload.class);
+                payload = objectMapper.readValue(outbox.getPayload(), SocialRevokePayload.class);
             } catch (Exception e) {
                 outbox.increaseFailCount();
                 failedCount++;

@@ -1,8 +1,5 @@
 package com.forgather.global.outbox;
 
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import com.forgather.domain.model.BaseTimeEntity;
 
 import jakarta.persistence.Column;
@@ -32,24 +29,23 @@ public class Outbox extends BaseTimeEntity {
     private OutboxType type;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20)
+    @Column(name = "status", nullable = false)
     private OutboxStatus status;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "payload", columnDefinition = "json")
-    private Object payload;
+    @Column(name = "payload", columnDefinition = "text")
+    private String payload;
 
     @Column(name = "fail_count", nullable = false)
     private int failCount;
 
-    public Outbox(OutboxType type, OutboxStatus status, Object payload, int failCount) {
+    public Outbox(OutboxType type, OutboxStatus status, String payload, int failCount) {
         this.type = type;
         this.status = status;
         this.payload = payload;
         this.failCount = failCount;
     }
 
-    public static Outbox pending(OutboxType type, Object payload) {
+    public static Outbox pending(OutboxType type, String payload) {
         return new Outbox(type, OutboxStatus.PENDING, payload, 0);
     }
 
