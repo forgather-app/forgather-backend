@@ -2,6 +2,7 @@ package com.forgather.global.outbox;
 
 import static com.forgather.global.outbox.OutboxStatus.PENDING;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -13,7 +14,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.global.exception.BaseException;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
@@ -30,6 +33,20 @@ public class OutboxService {
 
     public List<Outbox> findPendingTasks(OutboxType type) {
         return outboxRepository.findByTypeAndStatus(type, PENDING);
+    }
+
+    @Transactional
+    public void complete(Long outboxId) {
+        Outbox outbox = outboxRepository.getByIdOrThrow(outboxId);
+        outbox.complete();
+    }
+
+    @Transactional
+    public void increaseFailCount(Long outboxId) {
+        int updated = outboxRepository.increaseFailCountById(outboxId, LocalDateTime.now());
+        if (updated == 0) {
+            log.warn("실패 횟수를 증가시킬 outbox가 없습니다. outboxId: {}", outboxId);
+        }
     }
 
     private String serialize(Object payload) {
