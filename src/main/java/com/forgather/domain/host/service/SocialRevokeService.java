@@ -21,15 +21,15 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class SocialRevokeService {
 
+    /** 이 횟수 이상 실패한 작업은 FAILED로 전환되어 더 이상 재시도하지 않는다. */
+    public static final int MAX_FAIL_COUNT = 5;
+
     private final KakaoApiClient kakaoApiClient;
     private final AppleApiClient appleApiClient;
     private final OutboxService outboxService;
     private final ObjectMapper objectMapper;
 
     /**
-     * TODO
-     * 실패 상한선
-     *
      * 외부 API 호출 동안 DB 커넥션을 점유하지 않도록 트랜잭션을 두지 않는다.
      * outbox 상태 변경은 OutboxService의 건별 트랜잭션에서 처리한다.
      */
@@ -61,6 +61,7 @@ public class SocialRevokeService {
             }
         }
 
+        failExhausted();
         return new SocialRevokeResult(succeededCount, failedCount);
     }
 
@@ -72,6 +73,13 @@ public class SocialRevokeService {
                 "지원하지 않는 provider입니다. provider: " + payload.provider(),
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
+        }
+    }
+
+    private void failExhausted() {
+        int exhaustedCount = outboxService.failExhausted(OutboxType.SOCIAL_REVOKE, MAX_FAIL_COUNT);
+        if (exhaustedCount > 0) {
+            log.error("실패 상한에 도달해 FAILED로 전환된 소셜 연결 해제 작업: {}건", exhaustedCount);
         }
     }
 }

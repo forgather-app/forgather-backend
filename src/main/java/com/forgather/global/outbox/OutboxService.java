@@ -49,6 +49,16 @@ public class OutboxService {
         }
     }
 
+    /**
+     * 실패 횟수가 상한 이상인 PENDING 작업을 FAILED로 전환한다.
+     *
+     * @return 전환된 건수
+     */
+    @Transactional
+    public int failExhausted(OutboxType type, int maxFailCount) {
+        return outboxRepository.failExhaustedByType(type, maxFailCount, LocalDateTime.now());
+    }
+
     private String serialize(Object payload) {
         try {
             return objectMapper.writeValueAsString(payload);

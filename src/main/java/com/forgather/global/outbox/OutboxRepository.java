@@ -28,6 +28,26 @@ public interface OutboxRepository extends JpaRepository<Outbox, Long> {
         """)
     int increaseFailCountById(@Param("id") Long id, @Param("now") LocalDateTime now);
 
+    /**
+     * 실패 횟수가 상한에 도달한 PENDING 작업을 FAILED로 전환한다.
+     * payload는 원인 확인과 수동 재처리를 위해 유지한다.
+     *
+     * @return 전환된 행 수
+     */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+        UPDATE Outbox o
+        SET o.status = com.forgather.global.outbox.OutboxStatus.FAILED, o.updatedAt = :now
+        WHERE o.type = :type
+          AND o.status = com.forgather.global.outbox.OutboxStatus.PENDING
+          AND o.failCount >= :maxFailCount
+        """)
+    int failExhaustedByType(
+        @Param("type") OutboxType type,
+        @Param("maxFailCount") int maxFailCount,
+        @Param("now") LocalDateTime now
+    );
+
     default Outbox getByIdOrThrow(Long id) {
         if (id == null) {
             throw new BaseNullPointerException("outbox의 id는 null일 수 없습니다.");
