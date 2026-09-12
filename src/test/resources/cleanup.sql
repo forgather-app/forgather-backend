@@ -21,5 +21,6 @@ TRUNCATE TABLE host;
 TRUNCATE TABLE guest;
 TRUNCATE TABLE admin_user;
 TRUNCATE TABLE social_revoke_fail_log;
+TRUNCATE TABLE outbox;
 
 SET FOREIGN_KEY_CHECKS = 1;
