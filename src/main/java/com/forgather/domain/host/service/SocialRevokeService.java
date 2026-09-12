@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SocialRevokeProcessor {
+public class SocialRevokeService {
 
     private final KakaoApiClient kakaoApiClient;
     private final AppleApiClient appleApiClient;

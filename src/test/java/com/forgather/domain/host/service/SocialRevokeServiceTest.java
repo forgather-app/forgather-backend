@@ -26,7 +26,7 @@ import com.forgather.global.outbox.OutboxStatus;
 import com.forgather.global.outbox.OutboxType;
 
 @ExtendWith(MockitoExtension.class)
-class SocialRevokeProcessorTest {
+class SocialRevokeServiceTest {
 
     @Mock
     private KakaoApiClient kakaoApiClient;
@@ -39,8 +39,8 @@ class SocialRevokeProcessorTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private SocialRevokeProcessor createProcessor() {
-        return new SocialRevokeProcessor(kakaoApiClient, appleApiClient, outboxService, objectMapper);
+    private SocialRevokeService createProcessor() {
+        return new SocialRevokeService(kakaoApiClient, appleApiClient, outboxService, objectMapper);
     }
 
     /**

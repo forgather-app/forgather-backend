@@ -4,7 +4,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.forgather.domain.host.service.SocialRevokeResult;
-import com.forgather.domain.host.service.SocialRevokeProcessor;
+import com.forgather.domain.host.service.SocialRevokeService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,12 +14,12 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class SocialRevokeScheduler {
 
-    private final SocialRevokeProcessor socialRevokeProcessor;
+    private final SocialRevokeService socialRevokeService;
 
     @Scheduled(cron = "0 */1 * * * *")
     public void processPendingRevokes() {
         try {
-            SocialRevokeResult result = socialRevokeProcessor.process();
+            SocialRevokeResult result = socialRevokeService.process();
             if (result.isEmpty()) {
                 return;
             }
