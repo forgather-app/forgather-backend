@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +16,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.forgather.domain.host.model.Host;
 import com.forgather.domain.host.model.KakaoHost;
-import com.forgather.domain.host.model.SocialRevokeFailLog;
 import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.domain.host.repository.KakaoHostRepository;
-import com.forgather.domain.host.repository.SocialRevokeFailLogRepository;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.model.SpaceHost;
 import com.forgather.domain.space.repository.SpaceHostRepository;
@@ -28,7 +25,6 @@ import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
 import com.forgather.global.auth.util.JwtTokenProvider;
-import com.forgather.global.external.social.SocialProvider;
 import com.forgather.global.response.ResponseCode;
 
 import io.restassured.http.ContentType;
@@ -54,9 +50,6 @@ class WithdrawAcceptanceTest extends AcceptanceTest {
 
     @Autowired
     private SpaceHostRepository spaceHostRepository;
-
-    @Autowired
-    private SocialRevokeFailLogRepository socialRevokeFailLogRepository;
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
@@ -116,28 +109,6 @@ class WithdrawAcceptanceTest extends AcceptanceTest {
                 cookie.startsWith("access_token=") && cookie.contains("Max-Age=0")),
             () -> assertThat(setCookies).anyMatch(cookie ->
                 cookie.startsWith("refresh_token=") && cookie.contains("Max-Age=0"))
-        );
-    }
-
-    @Disabled("탈퇴 시 소셜 revoke가 제거된 상태다. outbox 기반으로 복원할 때 이 계약을 다시 세운다.")
-    @DisplayName("Kakao unlink에 실패해도 탈퇴는 완료되고 재시도용 실패 로그가 남는다")
-    @Test
-    void withdrawSucceedsEvenIfUnlinkFails() {
-        // given: 테스트 환경에는 kakao unlink 설정이 없어 unlink 호출이 항상 실패한다
-        Host host = hostRepository.save(HostFixture.createHost());
-        kakaoHostRepository.save(new KakaoHost(host, "kakao-user-1"));
-        String token = jwtTokenProvider.generateAccessToken(host.getId());
-
-        // when
-        withdraw(token);
-
-        // then
-        List<SocialRevokeFailLog> failLogs = socialRevokeFailLogRepository.findAllByCompletedAtIsNull();
-        assertAll(
-            () -> assertThat(hostRepository.findByIdAndDeletedAtIsNull(host.getId())).isEmpty(),
-            () -> assertThat(failLogs).hasSize(1),
-            () -> assertThat(failLogs.get(0).getProvider()).isEqualTo(SocialProvider.KAKAO),
-            () -> assertThat(failLogs.get(0).getSocialUserId()).isEqualTo("kakao-user-1")
         );
     }
 

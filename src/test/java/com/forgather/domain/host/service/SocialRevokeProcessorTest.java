@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.external.social.SocialProvider;
@@ -43,16 +44,15 @@ class SocialRevokeProcessorTest {
     }
 
     /**
-     * DB를 거치면 payload가 record가 아닌 Map으로 돌아온다.
-     * 테스트에는 직렬화 단계가 없으므로 그 상태를 직접 만들어 준다.
+     * payload는 JSON 문자열로 저장된다.
      */
-    private Outbox pendingOutbox(SocialRevokePayload payload) {
-        return Outbox.pending(OutboxType.SOCIAL_REVOKE, objectMapper.convertValue(payload, Object.class));
+    private Outbox pendingOutbox(SocialRevokePayload payload) throws JsonProcessingException {
+        return Outbox.pending(OutboxType.SOCIAL_REVOKE, objectMapper.writeValueAsString(payload));
     }
 
     @DisplayName("Kakao 연결 해제에 성공하면 outbox를 완료 처리한다")
     @Test
-    void processKakaoSuccess() {
+    void processKakaoSuccess() throws JsonProcessingException {
         // given
         Outbox outbox = pendingOutbox(
             new SocialRevokePayload(1L, SocialProvider.KAKAO, "kakao-user-1", null));
@@ -71,7 +71,7 @@ class SocialRevokeProcessorTest {
 
     @DisplayName("Apple 연결 해제에 성공하면 outbox를 완료 처리한다")
     @Test
-    void processAppleSuccess() {
+    void processAppleSuccess() throws JsonProcessingException {
         // given
         Outbox outbox = pendingOutbox(
             new SocialRevokePayload(1L, SocialProvider.APPLE, "apple-user-1", "apple-refresh-token"));
@@ -87,7 +87,7 @@ class SocialRevokeProcessorTest {
 
     @DisplayName("연결 해제에 실패하면 예외를 전파하지 않고 실패 횟수만 증가시킨다")
     @Test
-    void processFailure() {
+    void processFailure() throws JsonProcessingException {
         // given
         Outbox outbox = pendingOutbox(
             new SocialRevokePayload(1L, SocialProvider.KAKAO, "kakao-user-1", null));
@@ -107,7 +107,7 @@ class SocialRevokeProcessorTest {
 
     @DisplayName("한 건이 실패해도 나머지 건은 계속 처리한다")
     @Test
-    void processContinuesAfterFailure() {
+    void processContinuesAfterFailure() throws JsonProcessingException {
         // given
         Outbox failing = pendingOutbox(
             new SocialRevokePayload(1L, SocialProvider.KAKAO, "kakao-user-1", null));
