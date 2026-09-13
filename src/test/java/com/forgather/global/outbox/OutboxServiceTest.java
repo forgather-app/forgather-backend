@@ -91,6 +91,32 @@ class OutboxServiceTest extends TestOnContainer {
         );
     }
 
+    @DisplayName("실패 처리하면 상태가 FAILED로 바뀌고 실패 횟수가 1 증가하며 payload는 유지된다")
+    @Test
+    void failMarksFailedAndKeepsPayload() {
+        // given
+        Outbox outbox = savePending("payload");
+
+        // when
+        outboxService.fail(outbox.getId());
+
+        // then
+        Outbox found = outboxRepository.getByIdOrThrow(outbox.getId());
+        assertAll(
+            () -> assertThat(found.getStatus()).isEqualTo(OutboxStatus.FAILED),
+            () -> assertThat(found.getFailCount()).isEqualTo(1),
+            () -> assertThat(found.getPayload()).isEqualTo("payload")
+        );
+    }
+
+    @DisplayName("존재하지 않는 outbox를 실패 처리하면 예외가 발생한다")
+    @Test
+    void failNotFound() {
+        // when & then
+        assertThatThrownBy(() -> outboxService.fail(Long.MAX_VALUE))
+            .isInstanceOf(NotFoundException.class);
+    }
+
     @DisplayName("실패 횟수를 호출한 횟수만큼 증가시키고 상태는 바꾸지 않는다")
     @Test
     void increaseFailCountOnlyIncrements() {

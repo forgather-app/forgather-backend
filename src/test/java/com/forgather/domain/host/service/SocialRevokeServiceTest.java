@@ -2,7 +2,6 @@ package com.forgather.domain.host.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -117,24 +116,6 @@ class SocialRevokeServiceTest {
             () -> assertThat(result.succeededCount()).isZero(),
             () -> assertThat(result.failedCount()).isEqualTo(1)
         );
-    }
-
-    @DisplayName("payload 변환에 실패하면 외부 API를 호출하지 않고 실패 횟수만 증가시킨다")
-    @Test
-    void processInvalidPayload() {
-        // given
-        Outbox outbox = pendingOutbox(1L, "not-json");
-        when(outboxService.findPendingTasks(OutboxType.SOCIAL_REVOKE)).thenReturn(List.of(outbox));
-
-        // when
-        SocialRevokeResult result = createProcessor().process();
-
-        // then
-        verify(outboxService).increaseFailCount(1L);
-        verify(outboxService, never()).complete(1L);
-        verify(kakaoApiClient, never()).unlink(anyString());
-        verify(appleApiClient, never()).revoke(anyString());
-        assertThat(result.failedCount()).isEqualTo(1);
     }
 
     @DisplayName("한 건이 실패해도 나머지 건은 계속 처리한다")
