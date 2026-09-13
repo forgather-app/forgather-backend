@@ -42,6 +42,15 @@ public interface OutboxRepository extends JpaRepository<Outbox, Long> {
         @Param("now") LocalDateTime now
     );
 
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+        UPDATE Outbox o
+        SET o.status = com.forgather.global.outbox.OutboxStatus.CANCELED, o.updatedAt = :now
+        WHERE o.id = :id
+          AND o.status = com.forgather.global.outbox.OutboxStatus.PENDING
+        """)
+    int cancelPendingById(@Param("id") Long id, @Param("now") LocalDateTime now);
+
     default Outbox getByIdOrThrow(Long id) {
         if (id == null) {
             throw new BaseNullPointerException("outbox의 id는 null일 수 없습니다.");

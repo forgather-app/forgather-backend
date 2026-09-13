@@ -48,6 +48,16 @@ public class OutboxService {
     }
 
     @Transactional
+    public boolean cancel(Long outboxId) {
+        int updated = outboxRepository.cancelPendingById(outboxId, LocalDateTime.now());
+        if (updated == 0) {
+            log.warn("취소할 PENDING outbox가 없습니다. outboxId: {}", outboxId);
+            return false;
+        }
+        return true;
+    }
+
+    @Transactional
     public void increaseFailCount(Long outboxId) {
         int updated = outboxRepository.increaseFailCountById(outboxId, LocalDateTime.now());
         if (updated == 0) {

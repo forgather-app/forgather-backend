@@ -5,13 +5,9 @@ package com.forgather.global.outbox;
  */
 public enum OutboxStatus {
 
-    /** 처리 대기 중. 스케줄러 폴링 대상 */
     PENDING,
-
-    /** 처리 완료 (이미 처리된 것으로 확인된 경우 포함) */
     COMPLETED,
-
-    /** 영구 실패 또는 재시도 상한 도달 */
     FAILED,
+    CANCELED,
     ;
 }

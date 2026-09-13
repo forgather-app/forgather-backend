@@ -5,7 +5,7 @@ CREATE TABLE `outbox`
 (
     `id`         BIGINT                                  NOT NULL AUTO_INCREMENT,
     `type`       VARCHAR(50)                             NOT NULL,
-    `status`     ENUM ('PENDING', 'COMPLETED', 'FAILED') NOT NULL,
+    `status`     ENUM ('PENDING', 'COMPLETED', 'FAILED', 'CANCELED') NOT NULL,
     `payload`    TEXT                                    NULL,
     `fail_count` INT                                     NOT NULL DEFAULT 0,
     `created_at` TIMESTAMP                               NOT NULL DEFAULT CURRENT_TIMESTAMP,
