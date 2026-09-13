@@ -23,7 +23,8 @@ public class SocialRevokeScheduler {
             if (result.isEmpty()) {
                 return;
             }
-            log.info("소셜 연결 해제 완료. 성공: {}건, 실패: {}건", result.succeededCount(), result.failedCount());
+            log.info("소셜 연결 해제 완료. 성공: {}건, 실패: {}건, 취소: {}건",
+                result.succeededCount(), result.failedCount(), result.canceledCount());
         } catch (Exception e) {
             log.error("소셜 연결 해제 배치 실패", e);
         }

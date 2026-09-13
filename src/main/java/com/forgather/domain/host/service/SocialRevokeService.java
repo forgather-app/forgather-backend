@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.forgather.domain.host.repository.AppleHostRepository;
+import com.forgather.domain.host.repository.KakaoHostRepository;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.external.social.client.AppleApiClient;
 import com.forgather.global.external.social.client.KakaoApiClient;
@@ -27,6 +29,8 @@ public class SocialRevokeService {
     private final KakaoApiClient kakaoApiClient;
     private final AppleApiClient appleApiClient;
     private final OutboxService outboxService;
+    private final KakaoHostRepository kakaoHostRepository;
+    private final AppleHostRepository appleHostRepository;
     private final ObjectMapper objectMapper;
 
     public SocialRevokeResult process() {
@@ -34,6 +38,7 @@ public class SocialRevokeService {
 
         int succeededCount = 0;
         int failedCount = 0;
+        int canceledCount = 0;
         for (Outbox outbox : outboxes) {
             SocialRevokePayload payload;
             try {
@@ -43,6 +48,15 @@ public class SocialRevokeService {
                 outboxService.fail(outbox.getId());
                 failedCount++;
                 log.warn("outbox payload 변환 실패. outboxId: {}", outbox.getId(), e);
+                continue;
+            }
+
+            if (isSocialHostRegistered(payload)) {
+                if (outboxService.cancel(outbox.getId())) {
+                    canceledCount++;
+                    log.info("같은 소셜 계정으로 재가입해 연결 해제를 취소합니다. outboxId: {}, hostId: {}, provider: {}",
+                        outbox.getId(), payload.hostId(), payload.provider());
+                }
                 continue;
             }
 
@@ -59,7 +73,15 @@ public class SocialRevokeService {
         }
 
         failExhausted();
-        return new SocialRevokeResult(succeededCount, failedCount);
+        return new SocialRevokeResult(succeededCount, failedCount, canceledCount);
+    }
+
+    private boolean isSocialHostRegistered(SocialRevokePayload payload) {
+        return switch (payload.provider()) {
+            case KAKAO -> kakaoHostRepository.findByUserId(payload.userId()).isPresent();
+            case APPLE -> appleHostRepository.findByUserId(payload.userId()).isPresent();
+            default -> false;
+        };
     }
 
     private void process(SocialRevokePayload payload) {
