@@ -16,6 +16,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.forgather.container.TestOnContainer;
+import com.forgather.domain.host.model.Host;
+import com.forgather.domain.host.model.KakaoHost;
+import com.forgather.domain.host.repository.HostRepository;
+import com.forgather.domain.host.repository.KakaoHostRepository;
+import com.forgather.fixture.HostFixture;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.external.social.SocialProvider;
 import com.forgather.global.external.social.client.AppleApiClient;
@@ -42,6 +47,12 @@ class SocialRevokeServiceIntegrationTest extends TestOnContainer {
 
     @Autowired
     private OutboxRepository outboxRepository;
+
+    @Autowired
+    private HostRepository hostRepository;
+
+    @Autowired
+    private KakaoHostRepository kakaoHostRepository;
 
     @MockitoBean
     private KakaoApiClient kakaoApiClient;
@@ -88,6 +99,29 @@ class SocialRevokeServiceIntegrationTest extends TestOnContainer {
             () -> assertThat(found.getStatus()).isEqualTo(OutboxStatus.PENDING),
             () -> assertThat(found.getFailCount()).isEqualTo(1),
             () -> assertThat(result.failedCount()).isEqualTo(1)
+        );
+    }
+
+    @DisplayName("같은 소셜 계정으로 재가입한 상태면 외부 API를 호출하지 않고 CANCELED로 전환한다")
+    @Test
+    void processCancelsWhenSocialHostReRegistered() {
+        // given
+        Outbox outbox = outboxService.save(OutboxType.SOCIAL_REVOKE,
+            new SocialRevokePayload(1L, SocialProvider.KAKAO, "kakao-user-1", null));
+        Host host = hostRepository.save(HostFixture.createHost());
+        kakaoHostRepository.save(new KakaoHost(host, "kakao-user-1"));
+
+        // when
+        SocialRevokeResult result = socialRevokeService.process();
+
+        // then
+        Outbox found = outboxRepository.getByIdOrThrow(outbox.getId());
+        verify(kakaoApiClient, never()).unlink(anyString());
+        assertAll(
+            () -> assertThat(found.getStatus()).isEqualTo(OutboxStatus.CANCELED),
+            () -> assertThat(found.getFailCount()).isZero(),
+            () -> assertThat(result.canceledCount()).isEqualTo(1),
+            () -> assertThat(result.isEmpty()).isFalse()
         );
     }
 }
