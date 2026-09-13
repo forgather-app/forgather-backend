@@ -180,6 +180,63 @@ class OutboxServiceTest extends TestOnContainer {
         );
     }
 
+    @DisplayName("PENDING outbox를 취소 처리하면 상태가 CANCELED로 바뀌고 payload는 유지된다")
+    @Test
+    void cancelMarksCanceledAndKeepsPayload() {
+        // given
+        Outbox outbox = savePending("payload");
+
+        // when
+        boolean canceled = outboxService.cancel(outbox.getId());
+
+        // then
+        Outbox found = outboxRepository.getByIdOrThrow(outbox.getId());
+        assertAll(
+            () -> assertThat(canceled).isTrue(),
+            () -> assertThat(found.getStatus()).isEqualTo(OutboxStatus.CANCELED),
+            () -> assertThat(found.getPayload()).isEqualTo("payload")
+        );
+    }
+
+    @DisplayName("PENDING이 아닌 outbox는 취소 처리하지 않는다")
+    @Test
+    void cancelSkipsNonPending() {
+        // given
+        Outbox completed = savePending("completed");
+        outboxService.complete(completed.getId());
+
+        // when
+        boolean canceled = outboxService.cancel(completed.getId());
+
+        // then
+        assertAll(
+            () -> assertThat(canceled).isFalse(),
+            () -> assertThat(outboxRepository.getByIdOrThrow(completed.getId()).getStatus())
+                .isEqualTo(OutboxStatus.COMPLETED)
+        );
+    }
+
+    @DisplayName("취소된 outbox는 PENDING 조회 대상에서 제외된다")
+    @Test
+    void findPendingTasksExcludesCanceled() {
+        // given
+        Outbox canceled = savePending("canceled");
+        outboxService.cancel(canceled.getId());
+
+        // when
+        List<Outbox> found = outboxService.findPendingTasks(OutboxType.SOCIAL_REVOKE);
+
+        // then
+        assertThat(found).extracting(Outbox::getId).doesNotContain(canceled.getId());
+    }
+
+    @DisplayName("존재하지 않는 outbox를 취소 처리하면 예외 없이 false를 반환한다")
+    @Test
+    void cancelNotFound() {
+        // when & then
+        assertThat(outboxService.cancel(Long.MAX_VALUE)).isFalse();
+    }
+
     @DisplayName("존재하지 않는 outbox를 완료 처리하면 예외가 발생한다")
     @Test
     void completeNotFound() {
