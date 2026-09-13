@@ -1,6 +1,7 @@
 package com.forgather.domain.host.service;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class SocialRevokeService {
 
-    /** 이 횟수 이상 실패한 작업은 FAILED로 전환되어 더 이상 재시도하지 않는다. */
     public static final int MAX_FAIL_COUNT = 5;
 
     private final KakaoApiClient kakaoApiClient;
@@ -29,10 +29,6 @@ public class SocialRevokeService {
     private final OutboxService outboxService;
     private final ObjectMapper objectMapper;
 
-    /**
-     * 외부 API 호출 동안 DB 커넥션을 점유하지 않도록 트랜잭션을 두지 않는다.
-     * outbox 상태 변경은 OutboxService의 건별 트랜잭션에서 처리한다.
-     */
     public SocialRevokeResult process() {
         List<Outbox> outboxes = outboxService.findPendingTasks(OutboxType.SOCIAL_REVOKE);
 
@@ -42,8 +38,9 @@ public class SocialRevokeService {
             SocialRevokePayload payload;
             try {
                 payload = objectMapper.readValue(outbox.getPayload(), SocialRevokePayload.class);
+                Objects.requireNonNull(payload);
             } catch (Exception e) {
-                outboxService.increaseFailCount(outbox.getId());
+                outboxService.fail(outbox.getId());
                 failedCount++;
                 log.warn("outbox payload 변환 실패. outboxId: {}", outbox.getId(), e);
                 continue;

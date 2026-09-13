@@ -16,9 +16,6 @@ public interface OutboxRepository extends JpaRepository<Outbox, Long> {
 
     /**
      * 동시 처리 시 lost update를 막기 위해 DB에서 원자적으로 증가시킨다.
-     * 벌크 UPDATE는 Auditing을 타지 않으므로 updatedAt을 직접 갱신한다.
-     *
-     * @return 갱신된 행 수. 존재하지 않으면 0
      */
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
@@ -30,9 +27,6 @@ public interface OutboxRepository extends JpaRepository<Outbox, Long> {
 
     /**
      * 실패 횟수가 상한에 도달한 PENDING 작업을 FAILED로 전환한다.
-     * payload는 원인 확인과 수동 재처리를 위해 유지한다.
-     *
-     * @return 전환된 행 수
      */
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""

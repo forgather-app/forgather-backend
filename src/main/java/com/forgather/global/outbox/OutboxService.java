@@ -42,6 +42,12 @@ public class OutboxService {
     }
 
     @Transactional
+    public void fail(Long outboxId) {
+        Outbox outbox = outboxRepository.getByIdOrThrow(outboxId);
+        outbox.fail();
+    }
+
+    @Transactional
     public void increaseFailCount(Long outboxId) {
         int updated = outboxRepository.increaseFailCountById(outboxId, LocalDateTime.now());
         if (updated == 0) {
@@ -49,11 +55,6 @@ public class OutboxService {
         }
     }
 
-    /**
-     * 실패 횟수가 상한 이상인 PENDING 작업을 FAILED로 전환한다.
-     *
-     * @return 전환된 건수
-     */
     @Transactional
     public int failExhausted(OutboxType type, int maxFailCount) {
         return outboxRepository.failExhaustedByType(type, maxFailCount, LocalDateTime.now());

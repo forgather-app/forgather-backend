@@ -53,4 +53,9 @@ public class Outbox extends BaseTimeEntity {
         payload = null;
         status = OutboxStatus.COMPLETED;
     }
+
+    public void fail() {
+        failCount++;
+        status = OutboxStatus.FAILED;
+    }
 }
