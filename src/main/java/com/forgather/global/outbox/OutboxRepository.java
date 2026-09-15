@@ -45,7 +45,7 @@ public interface OutboxRepository extends JpaRepository<Outbox, Long> {
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
         UPDATE Outbox o
-        SET o.status = com.forgather.global.outbox.OutboxStatus.CANCELED, o.updatedAt = :now
+        SET o.status = com.forgather.global.outbox.OutboxStatus.CANCELED, o.payload = null, o.updatedAt = :now
         WHERE o.id = :id
           AND o.status = com.forgather.global.outbox.OutboxStatus.PENDING
         """)
