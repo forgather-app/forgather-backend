@@ -39,6 +39,7 @@ public class SocialRevokeService {
         int succeededCount = 0;
         int failedCount = 0;
         int canceledCount = 0;
+        int retryableFailedCount = 0;
         for (Outbox outbox : outboxes) {
             SocialRevokePayload payload;
             try {
@@ -67,12 +68,15 @@ public class SocialRevokeService {
             } catch (Exception e) {
                 outboxService.increaseFailCount(outbox.getId());
                 failedCount++;
+                retryableFailedCount++;
                 log.warn("소셜 연결 해제 실패. outboxId: {}, hostId: {}, provider: {}",
                     outbox.getId(), payload.hostId(), payload.provider(), e);
             }
         }
 
-        failExhausted();
+        if (retryableFailedCount > 0) {
+            failExhausted();
+        }
         return new SocialRevokeResult(succeededCount, failedCount, canceledCount);
     }
 
