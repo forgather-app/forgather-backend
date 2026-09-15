@@ -222,4 +222,23 @@ class SocialRevokeServiceTest {
         inOrder.verify(outboxService).increaseFailCount(1L);
         inOrder.verify(outboxService).failExhausted(OutboxType.SOCIAL_REVOKE, SocialRevokeService.MAX_FAIL_COUNT);
     }
+
+    @DisplayName("실패 횟수를 증가시킨 건이 없으면 실패 상한 전환을 호출하지 않는다")
+    @Test
+    void processSkipsFailExhaustedWithoutFailure() throws JsonProcessingException {
+        // given
+        Outbox succeeding = pendingOutbox(1L,
+            new SocialRevokePayload(1L, SocialProvider.KAKAO, "kakao-user-1", null));
+        Outbox malformed = pendingOutbox(2L, "not-json");
+        when(outboxService.findPendingTasks(OutboxType.SOCIAL_REVOKE))
+            .thenReturn(List.of(succeeding, malformed));
+
+        // when
+        createProcessor().process();
+
+        // then
+        verify(outboxService).complete(1L);
+        verify(outboxService).fail(2L);
+        verify(outboxService, never()).failExhausted(OutboxType.SOCIAL_REVOKE, SocialRevokeService.MAX_FAIL_COUNT);
+    }
 }
