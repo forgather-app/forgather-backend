@@ -93,7 +93,7 @@ public class HostController {
 
     @DeleteMapping("/auth/me")
     @Operation(summary = "회원 탈퇴",
-        description = "회원을 탈퇴 처리합니다. 소셜 연결(Kakao/Apple)을 해제하고 계정과 소유 콘텐츠를 삭제합니다. " +
+        description = "회원을 탈퇴 처리합니다. 계정과 소유 콘텐츠를 삭제합니다. " +
             "성공 시 액세스토큰과 리프레시토큰 쿠키를 만료시킵니다. " +
             "탈퇴 후 같은 소셜 계정으로 다시 로그인하면 신규 가입으로 처리됩니다.")
     public ResponseEntity<ApiResponse<Void>> withdraw(@LoginHost Host host) {

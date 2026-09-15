@@ -48,6 +48,12 @@ public class ExhibitionService {
         return ExhibitionResponse.of(exhibition, photo, exhibitionTimes, host);
     }
 
+    @Transactional
+    public void deleteAllByHost(Host host) {
+        exhibitionHostRepository.findAllByHostAndDeletedAtIsNull(host)
+            .forEach(ExhibitionHost::delete);
+    }
+
     private ExhibitionPhoto savePhotoIfPresent(CreateExhibitionRequest request, Exhibition exhibition) {
         if (request.photo() == null) {
             return null;
