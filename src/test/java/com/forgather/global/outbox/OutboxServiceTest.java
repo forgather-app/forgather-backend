@@ -180,9 +180,9 @@ class OutboxServiceTest extends TestOnContainer {
         );
     }
 
-    @DisplayName("PENDING outbox를 취소 처리하면 상태가 CANCELED로 바뀌고 payload는 유지된다")
+    @DisplayName("PENDING outbox를 취소 처리하면 상태가 CANCELED로 바뀌고 payload는 비워진다")
     @Test
-    void cancelMarksCanceledAndKeepsPayload() {
+    void cancelMarksCanceledAndClearsPayload() {
         // given
         Outbox outbox = savePending("payload");
 
@@ -194,7 +194,7 @@ class OutboxServiceTest extends TestOnContainer {
         assertAll(
             () -> assertThat(canceled).isTrue(),
             () -> assertThat(found.getStatus()).isEqualTo(OutboxStatus.CANCELED),
-            () -> assertThat(found.getPayload()).isEqualTo("payload")
+            () -> assertThat(found.getPayload()).isNull()
         );
     }
 
