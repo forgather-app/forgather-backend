@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.forgather.global.auth.util.AuthCookieProvider;
+
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -23,15 +25,15 @@ public class SwaggerConfig {
         return new OpenAPI()
             .info(apiInfo())
             .components(new Components()
-                .addSecuritySchemes("bearerAuth",
+                .addSecuritySchemes("cookieAuth",
                     new SecurityScheme()
-                        .type(SecurityScheme.Type.HTTP)
-                        .scheme("bearer")
-                        .bearerFormat("JWT")
-                        .description("JWT 토큰을 입력하세요")
+                        .type(SecurityScheme.Type.APIKEY)
+                        .in(SecurityScheme.In.COOKIE)
+                        .name(AuthCookieProvider.ACCESS_TOKEN_COOKIE_NAME)
+                        .description("로그인 시 발급되는 HttpOnly access_token 쿠키로 인증합니다. "
+                            + "브라우저에서는 로그인 후 쿠키가 자동으로 전송됩니다.")
                 )
             )
-            // .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
             .servers(List.of(
                 new Server().url(serverUrl).description("API Server")
             ));

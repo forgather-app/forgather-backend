@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.forgather.back_office.dto.HostDetailResponse;
-import com.forgather.global.auth.model.Host;
+import com.forgather.domain.host.model.Host;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.NotFoundException;
 
@@ -19,10 +19,10 @@ public interface AdminHostRepository {
     @Query(
         value = """
             SELECT new com.forgather.back_office.dto.HostDetailResponse(
-                h.id, h.name, h.createdAt,
-                (SELECT COUNT(shm.id)
-                 FROM SpaceHostMap shm JOIN shm.space s
-                 WHERE shm.host = h AND s.deletedAt IS NULL AND shm.deletedAt IS NULL
+                h.id, h.nickname, h.createdAt,
+                (SELECT COUNT(sh.id)
+                 FROM SpaceHost sh JOIN sh.space s
+                 WHERE sh.host = h AND s.deletedAt IS NULL AND sh.deletedAt IS NULL
                 )
             )
             FROM Host h
@@ -34,16 +34,16 @@ public interface AdminHostRepository {
     @Query(
         value = """
             SELECT new com.forgather.back_office.dto.HostDetailResponse(
-                h.id, h.name, h.createdAt,
-                (SELECT COUNT(shm.id)
-                 FROM SpaceHostMap shm JOIN shm.space s
-                 WHERE shm.host = h AND s.deletedAt IS NULL AND shm.deletedAt IS NULL
+                h.id, h.nickname, h.createdAt,
+                (SELECT COUNT(sh.id)
+                 FROM SpaceHost sh JOIN sh.space s
+                 WHERE sh.host = h AND s.deletedAt IS NULL AND sh.deletedAt IS NULL
                 )
             )
             FROM Host h
-            WHERE h.name LIKE CONCAT('%', :name, '%') ESCAPE '\\'
+            WHERE h.nickname LIKE CONCAT('%', :name, '%') ESCAPE '\\'
             """,
-        countQuery = "SELECT COUNT(h) FROM Host h WHERE h.name LIKE CONCAT('%', :name, '%') ESCAPE '\\'"
+        countQuery = "SELECT COUNT(h) FROM Host h WHERE h.nickname LIKE CONCAT('%', :name, '%') ESCAPE '\\'"
     )
     Page<HostDetailResponse> findByNameContaining(
         @Param("name") String name,

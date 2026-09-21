@@ -31,7 +31,6 @@ public class LoginPageRedirectInterceptor implements HandlerInterceptor {
         Object handler
     ) throws Exception {
         if (hasValidSession(request)) {
-            log.info("이미 로그인된 사용자 - spaces 페이지로 리다이렉트");
             response.sendRedirect("/view/admin/spaces");
             return false;
         }

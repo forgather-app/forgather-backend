@@ -4,6 +4,7 @@
 
 ```
 Host (작가)
+  ├── HostProfilePhoto (프로필 사진) 1:1
   └── Space (전시 공간) 1:1
         ├── Product (작품) 1:N
         │     └── ProductPhoto 1:N
@@ -50,12 +51,29 @@ Host (작가)
 
 ### Photo 관련
 ```java
-// 공통 사진 엔티티 - SoftDeleteEntity 상속
-public class Photo extends SoftDeleteEntity {
-    private String url;
-    private Integer orderIndex;
+// 공통 사진 매핑 상위 클래스 - SoftDeleteEntity 상속
+@MappedSuperclass
+public abstract class Photo extends SoftDeleteEntity {
+    protected Long id;
+    protected String originalName;  // presigned 업로드 흐름에서는 "" 로 둔다
+    protected String path;          // S3 key. 응답도 이 값을 내려주고 프론트가 CDN URL을 조립한다
+    protected Long capacity;        // bytes
 }
 ```
+
+구현체는 모두 자식이 FK를 소유한다:
+
+| 엔티티 | 관계 | 비고 |
+|--------|------|------|
+| `SpacePhoto` | Space 1:1 | multipart 업로드, `empty()` 널 오브젝트 사용 |
+| `ProductPhoto` | Product N:1 | `sortOrder` 보유 |
+| `GuestBookCardPhoto` | GuestBookCard N:1 | |
+| `ExhibitionPhoto` | Exhibition 1:1 | presigned 업로드, `originalName = ""` |
+| `HostProfilePhoto` | Host 1:1 | presigned 업로드, `originalName = ""` |
+
+soft delete 때문에 같은 부모로 여러 행(삭제된 행 N + 활성 행 1)이 존재하므로, 1:1이어도 FK 컬럼에 unique를 걸지 않는다.
+단 H2(`ddl-auto: create-drop`) 기반 테스트에서는 Hibernate가 `@OneToOne` FK에 unique를 자동 생성하므로,
+사진 교체를 검증하는 테스트는 `TestOnContainer`(MySQL + Flyway) 위에서 실행해야 한다.
 
 ### ProductPhotos / GuestBookCardPhotos
 사진 목록을 관리하는 일급 컬렉션:

@@ -1,7 +1,12 @@
 package com.forgather.acceptance;
 
+import static com.forgather.domain.guestbook.model.GuestBookReportReason.ADVERTISEMENT_SPAM;
+import static com.forgather.domain.guestbook.model.VisibilityStatus.HIDDEN_BY_ADMIN;
+import static com.forgather.domain.guestbook.model.VisibilityStatus.HIDDEN_BY_HOST;
+import static com.forgather.fixture.GuestBookCardFixture.createWithSpaceAndVisibilityStatus;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.time.LocalDateTime;
@@ -17,28 +22,34 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.forgather.domain.guestbook.dto.CreateGuestBookReportRequest;
 import com.forgather.domain.guestbook.dto.DeleteGuestBookCardPhotosRequest;
 import com.forgather.domain.guestbook.dto.GuestBookCardResponse;
 import com.forgather.domain.guestbook.dto.GuestBookResponse;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardPhotoRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardRequest;
 import com.forgather.domain.guestbook.dto.WriteGuestBookCardResponse;
+import com.forgather.domain.guestbook.model.GuestBookCard;
+import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
+import com.forgather.domain.host.model.Host;
+import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.domain.space.model.Space;
-import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.space.model.SpaceHost;
+import com.forgather.domain.space.repository.SpaceHostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.AwsS3Cloud;
 import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
-import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.SpaceHostMap;
-import com.forgather.global.auth.repository.SpaceHostMapRepository;
 import com.forgather.global.auth.util.JwtTokenProvider;
+import com.forgather.global.response.ApiResponse;
+import com.forgather.global.response.ResponseCode;
 
+import io.restassured.common.mapper.TypeRef;
 import io.restassured.http.ContentType;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 
 @AutoConfigureMockMvc
-public class GuestBookCardAcceptanceTest extends AcceptanceTest {
+class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -50,7 +61,10 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
     private HostRepository hostRepository;
 
     @Autowired
-    private SpaceHostMapRepository spaceHostMapRepository;
+    private SpaceHostRepository spaceHostRepository;
+
+    @Autowired
+    private GuestBookCardRepository guestBookCardRepository;
 
     @MockitoBean
     private AwsS3Cloud awsS3Cloud;
@@ -86,8 +100,8 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
         accessToken = jwtTokenProvider.generateAccessToken(host.getId());
         anotherAccessToken = jwtTokenProvider.generateAccessToken(anotherHost.getId());
 
-        spaceHostMapRepository.save(new SpaceHostMap(publicSpace, host));
-        spaceHostMapRepository.save(new SpaceHostMap(privateSpace, host));
+        spaceHostRepository.save(new SpaceHost(publicSpace, host));
+        spaceHostRepository.save(new SpaceHost(privateSpace, host));
 
         RestAssuredMockMvc.mockMvc(mockMvc);
     }
@@ -103,7 +117,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
             writeGuestBookCard(publicSpace);
 
             // when
-            GuestBookResponse result = RestAssuredMockMvc.given()
+            ApiResponse<GuestBookResponse> result = RestAssuredMockMvc.given()
                 .accept(ContentType.JSON)
                 .queryParam("page", 1)
                 .queryParam("size", 15)
@@ -115,26 +129,29 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(GuestBookResponse.class);
+                .as(new TypeRef<>() {
+                });
 
             // then
             assertAll(
-                () -> assertThat(result.guestBookCards()).size().isEqualTo(2),
-                () -> assertThat(result.currentPage()).isEqualTo(1),
-                () -> assertThat(result.pageSize()).isEqualTo(15),
-                () -> assertThat(result.totalCount()).isEqualTo(2),
-                () -> assertThat(result.totalPages()).isEqualTo(1)
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().guestBookCards()).size().isEqualTo(2),
+                () -> assertThat(result.data().currentPage()).isEqualTo(1),
+                () -> assertThat(result.data().pageSize()).isEqualTo(15),
+                () -> assertThat(result.data().totalCount()).isEqualTo(2),
+                () -> assertThat(result.data().totalPages()).isEqualTo(1)
             );
         }
 
-        @DisplayName("방문자가 공개 스페이스의 방명록을 조회할 경우 방명록 카드 읽음 여부는 알지 못한다")
+        @DisplayName("방문자가 공개 스페이스의 방명록을 조회할 경우 읽지 않은 방명록 개수는 알지 못한다")
         @Test
-        void guestCannotKnowIsCardRead() {
+        void guestCannotKnowUnreadCount() {
             // given
             writeGuestBookCard(publicSpace);
 
             // when
-            boolean result = RestAssuredMockMvc.given()
+            String response = RestAssuredMockMvc.given()
                 .accept(ContentType.JSON)
                 .queryParam("page", 1)
                 .queryParam("size", 15)
@@ -146,11 +163,12 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .asString()
-                .contains("\"isRead\"");
+                .asString();
 
             // then
-            assertThat(result).isFalse();
+            assertAll(
+                () -> assertThat(response).doesNotContain("\"unreadCount\"")
+            );
         }
 
         @DisplayName("방문자 조회 시 방명록은 각 방명록 카드의 방문자 닉네임과 사진 여부를 포함한다")
@@ -161,7 +179,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
             WriteGuestBookCardResponse writeResponseWithNoPhoto = writeGuestBookCardWithNoPhoto(publicSpace);
 
             // when
-            GuestBookResponse result = RestAssuredMockMvc.given()
+            ApiResponse<GuestBookResponse> result = RestAssuredMockMvc.given()
                 .accept(ContentType.JSON)
                 .queryParam("page", 1)
                 .queryParam("size", 15)
@@ -173,21 +191,59 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(GuestBookResponse.class);
+                .as(new TypeRef<>() {
+                });
 
             // then
             assertAll(
-                () -> assertThat(result.guestBookCards()).size().isEqualTo(2),
-                () -> assertThat(result.guestBookCards().getFirst().nickname()).isEqualTo(writeResponseWithNoPhoto.nickname()),
-                () -> assertThat(result.guestBookCards().getFirst().containsPhoto()).isFalse(),
-                () -> assertThat(result.guestBookCards().getFirst().isRead()).isNull(),
-                () -> assertThat(result.guestBookCards().getLast().nickname()).isEqualTo(writeResponse.nickname()),
-                () -> assertThat(result.guestBookCards().getLast().containsPhoto()).isTrue(),
-                () -> assertThat(result.guestBookCards().getLast().isRead()).isNull(),
-                () -> assertThat(result.currentPage()).isEqualTo(1),
-                () -> assertThat(result.pageSize()).isEqualTo(15),
-                () -> assertThat(result.totalCount()).isEqualTo(2),
-                () -> assertThat(result.totalPages()).isEqualTo(1)
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().guestBookCards()).size().isEqualTo(2),
+                () -> assertThat(result.data().guestBookCards().getFirst().nickname()).isEqualTo(
+                    writeResponseWithNoPhoto.nickname()),
+                () -> assertThat(result.data().guestBookCards().getFirst().containsPhoto()).isFalse(),
+                () -> assertThat(result.data().guestBookCards().getLast().nickname()).isEqualTo(
+                    writeResponse.nickname()),
+                () -> assertThat(result.data().guestBookCards().getLast().containsPhoto()).isTrue(),
+                () -> assertThat(result.data().currentPage()).isEqualTo(1),
+                () -> assertThat(result.data().pageSize()).isEqualTo(15),
+                () -> assertThat(result.data().totalCount()).isEqualTo(2),
+                () -> assertThat(result.data().totalPages()).isEqualTo(1)
+            );
+        }
+
+        @DisplayName("방명록 목록 조회 시 숨김 처리된 방명록은 제외된다")
+        @Test
+        void readGuestBookExcludesHiddenCards() {
+            // given
+            WriteGuestBookCardResponse hiddenCard = writeGuestBookCard(publicSpace);
+            WriteGuestBookCardResponse visibleCard = writeGuestBookCardWithNoPhoto(publicSpace);
+            reportGuestBookCard(publicSpace, hiddenCard.id());
+
+            // when
+            ApiResponse<GuestBookResponse> result = RestAssuredMockMvc.given()
+                .accept(ContentType.JSON)
+                .queryParam("page", 1)
+                .queryParam("size", 15)
+                .queryParam("sort", "createdAt,desc")
+                .queryParam("sort", "id,desc")
+                .when()
+                .get("/spaces/%s/guestbook".formatted(publicSpace.getCode()))
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+            // then
+            assertAll(
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().guestBookCards()).size().isEqualTo(1),
+                () -> assertThat(result.data().guestBookCards().getFirst().id()).isEqualTo(visibleCard.id()),
+                () -> assertThat(result.data().totalCount()).isEqualTo(1),
+                () -> assertThat(result.data().totalPages()).isEqualTo(1)
             );
         }
 
@@ -205,6 +261,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .get("/spaces/%s/guestbook".formatted(privateSpace.getCode()))
                 .then()
                 .statusCode(403)
+                .body("code", equalTo("FORBIDDEN"))
                 .body("message", containsString("방문자는 비공개 스페이스의 방명록을 조회할 수 없습니다."));
         }
 
@@ -213,7 +270,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
         void hostCanReadGuestBookInPrivateSpace() {
             // when, then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .accept(ContentType.JSON)
                 .queryParam("page", 1)
                 .queryParam("size", 15)
@@ -230,7 +287,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
         void throwExceptionWhenAnotherHostReadGuestBookInPrivateSpace() {
             // when, then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + anotherAccessToken)
+                .postProcessors(withAccessToken(anotherAccessToken))
                 .accept(ContentType.JSON)
                 .queryParam("page", 1)
                 .queryParam("size", 15)
@@ -240,18 +297,21 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .get("/spaces/%s/guestbook".formatted(privateSpace.getCode()))
                 .then()
                 .statusCode(403)
+                .body("code", equalTo("FORBIDDEN"))
                 .body("message", containsString("방문자는 비공개 스페이스의 방명록을 조회할 수 없습니다."));
         }
 
-        @DisplayName("호스트가 방명록을 조회할 경우 방명록 카드 읽음 여부를 알 수 있다")
+        @DisplayName("호스트가 기본 버전 방명록을 조회할 경우 전체 방명록을 반환하고 읽지 않은 방명록 수를 응답하지 않는다")
         @Test
-        void hostCanKnowIsCardRead() {
+        void hostReadGuestBookWithDefaultVersionKeepsLegacyResponse() {
             // given
-            writeGuestBookCard(publicSpace);
+            WriteGuestBookCardResponse readCard = writeGuestBookCard(publicSpace);
+            WriteGuestBookCardResponse unreadCard = writeGuestBookCardWithNoPhoto(publicSpace);
+            readGuestBookCardAsHost(publicSpace, readCard.id());
 
-            // when
-            boolean result = RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+            // when, then
+            ApiResponse<GuestBookResponse> result = RestAssuredMockMvc.given()
+                .postProcessors(withAccessToken(accessToken))
                 .accept(ContentType.JSON)
                 .queryParam("page", 1)
                 .queryParam("size", 15)
@@ -263,11 +323,89 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .asString()
-                .contains("\"isRead\"");
+                .as(new TypeRef<>() {
+                });
 
             // then
-            assertThat(result).isTrue();
+            assertAll(
+                () -> assertThat(result.data().guestBookCards()).hasSize(2),
+                () -> assertThat(result.data().guestBookCards().getFirst().id()).isEqualTo(unreadCard.id()),
+                () -> assertThat(result.data().guestBookCards().getFirst().isRead()).isFalse(),
+                () -> assertThat(result.data().guestBookCards().getLast().id()).isEqualTo(readCard.id()),
+                () -> assertThat(result.data().guestBookCards().getLast().isRead()).isTrue(),
+                () -> assertThat(result.data().totalCount()).isEqualTo(2)
+            );
+        }
+
+        @DisplayName("방명록 조회 v2 응답의 각 방명록 카드는 메세지와 생성 시각을 포함한다")
+        @Test
+        void guestBookCardContainsMessageAndCreatedAtInV2() {
+            // given
+            WriteGuestBookCardResponse writeResponse = writeGuestBookCard(publicSpace);
+
+            // when
+            ApiResponse<GuestBookResponse> result = RestAssuredMockMvc.given()
+                .header("X-API-Version", "2")
+                .accept(ContentType.JSON)
+                .queryParam("page", 1)
+                .queryParam("size", 15)
+                .queryParam("sort", "createdAt,desc")
+                .queryParam("sort", "id,desc")
+                .when()
+                .get("/spaces/%s/guestbook".formatted(publicSpace.getCode()))
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+            // then
+            assertAll(
+                () -> assertThat(result.data().guestBookCards()).hasSize(1),
+                () -> assertThat(result.data().guestBookCards().getFirst().id()).isEqualTo(writeResponse.id()),
+                () -> assertThat(result.data().guestBookCards().getFirst().message()).isEqualTo(
+                    writeRequest.message()),
+                () -> assertThat(result.data().guestBookCards().getFirst().createdAt()).isBetween(
+                    LocalDateTime.now().minusMinutes(1), LocalDateTime.now().plusSeconds(1))
+            );
+        }
+
+        @DisplayName("호스트는 읽지 않은 방명록 목록을 조회할 수 있다")
+        @Test
+        void hostCanReadUnreadGuestBookCards() {
+            // given
+            WriteGuestBookCardResponse readCard = writeGuestBookCard(publicSpace);
+            WriteGuestBookCardResponse unreadCard = writeGuestBookCardWithNoPhoto(publicSpace);
+            readGuestBookCardAsHost(publicSpace, readCard.id());
+
+            // when
+            ApiResponse<GuestBookResponse> result = RestAssuredMockMvc.given()
+                .postProcessors(withAccessToken(accessToken))
+                .accept(ContentType.JSON)
+                .queryParam("page", 1)
+                .queryParam("size", 15)
+                .queryParam("sort", "createdAt,desc")
+                .queryParam("sort", "id,desc")
+                .when()
+                .get("/spaces/%s/guestbook/unread".formatted(publicSpace.getCode()))
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+            // then
+            assertAll(
+                () -> assertThat(result.data().unreadCount()).isNull(),
+                () -> assertThat(result.data().guestBookCards()).hasSize(1),
+                () -> assertThat(result.data().guestBookCards().getFirst().id()).isEqualTo(unreadCard.id()),
+                () -> assertThat(result.data().guestBookCards().getFirst().message()).isEqualTo("message2"),
+                () -> assertThat(result.data().guestBookCards().getFirst().createdAt()).isNotNull(),
+                () -> assertThat(result.data().guestBookCards().getFirst().isRead()).isNull(),
+                () -> assertThat(result.data().totalCount()).isOne()
+            );
         }
     }
 
@@ -281,7 +419,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
             WriteGuestBookCardResponse writeResponse = writeGuestBookCard(publicSpace);
 
             // when
-            GuestBookCardResponse result = RestAssuredMockMvc.given()
+            ApiResponse<GuestBookCardResponse> result = RestAssuredMockMvc.given()
                 .accept(ContentType.JSON)
                 .when()
                 .get("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), writeResponse.id()))
@@ -289,23 +427,27 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(GuestBookCardResponse.class);
+                .as(new TypeRef<>() {
+                });
 
             // then
             assertAll(
-                () -> assertThat(result.id()).isNotNull(),
-                () -> assertThat(result.nickname()).isEqualTo(writeRequest.nickname()),
-                () -> assertThat(result.message()).isEqualTo(writeRequest.message()),
-                () -> assertThat(result.createdAt()).isBetween(LocalDateTime.now().minusMinutes(1), LocalDateTime.now()),
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().id()).isNotNull(),
+                () -> assertThat(result.data().nickname()).isEqualTo(writeRequest.nickname()),
+                () -> assertThat(result.data().message()).isEqualTo(writeRequest.message()),
+                () -> assertThat(result.data().createdAt()).isBetween(LocalDateTime.now().minusMinutes(1),
+                    LocalDateTime.now().plusSeconds(1)),
 
-                () -> assertThat(result.photos().get(0).originalName()).isEqualTo("photo1.jpg"),
-                () -> assertThat(result.photos().get(0).path()).endsWith("/spaces/1234567890/guestbook/abc.jpg"),
+                () -> assertThat(result.data().photos().get(0).originalName()).isEqualTo("photo1.jpg"),
+                () -> assertThat(result.data().photos().get(0).path()).endsWith("/spaces/1234567890/guestbook/abc.jpg"),
 
-                () -> assertThat(result.photos().get(1).originalName()).isEqualTo("photo2.jpg"),
-                () -> assertThat(result.photos().get(1).path()).endsWith("/spaces/1234567890/guestbook/def.jpg"),
+                () -> assertThat(result.data().photos().get(1).originalName()).isEqualTo("photo2.jpg"),
+                () -> assertThat(result.data().photos().get(1).path()).endsWith("/spaces/1234567890/guestbook/def.jpg"),
 
-                () -> assertThat(result.photos().get(2).originalName()).isEqualTo("photo3.jpg"),
-                () -> assertThat(result.photos().get(2).path()).endsWith("/spaces/1234567890/guestbook/ghi.jpg")
+                () -> assertThat(result.data().photos().get(2).originalName()).isEqualTo("photo3.jpg"),
+                () -> assertThat(result.data().photos().get(2).path()).endsWith("/spaces/1234567890/guestbook/ghi.jpg")
             );
         }
 
@@ -322,6 +464,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .get("/spaces/%s/guestbook/%d".formatted(privateSpace.getCode(), writeResponse.id()))
                 .then()
                 .statusCode(403)
+                .body("code", equalTo("FORBIDDEN"))
                 .body("message", containsString("방문자는 비공개 스페이스의 방명록을 조회할 수 없습니다."));
         }
 
@@ -333,12 +476,13 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when, then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + anotherAccessToken)
+                .postProcessors(withAccessToken(anotherAccessToken))
                 .accept(ContentType.JSON)
                 .when()
                 .get("/spaces/%s/guestbook/%d".formatted(privateSpace.getCode(), writeResponse.id()))
                 .then()
                 .statusCode(403)
+                .body("code", equalTo("FORBIDDEN"))
                 .body("message", containsString("방문자는 비공개 스페이스의 방명록을 조회할 수 없습니다."));
         }
 
@@ -350,12 +494,77 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when, then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .accept(ContentType.JSON)
                 .when()
                 .get("/spaces/%s/guestbook/%d".formatted(privateSpace.getCode(), writeResponse.id()))
                 .then()
                 .statusCode(200);
+        }
+
+        @DisplayName("스페이스 호스트가 숨김 처리한 방명록 카드는 스페이스 호스트가 조회할 수 있다")
+        @Test
+        void hostCanReadHiddenByHostCard() {
+            // given
+            GuestBookCard guestBookCard = createWithSpaceAndVisibilityStatus(publicSpace, HIDDEN_BY_HOST);
+            guestBookCardRepository.save(guestBookCard);
+
+            // when
+            ApiResponse<GuestBookCardResponse> result = RestAssuredMockMvc.given()
+                .postProcessors(withAccessToken(accessToken))
+                .accept(ContentType.JSON)
+                .when()
+                .get("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), guestBookCard.getId()))
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+            // then
+            assertAll(
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().id()).isEqualTo(guestBookCard.getId())
+            );
+        }
+
+        @DisplayName("스페이스 호스트가 숨김 처리한 방명록 카드는 방문자가 조회할 수 없다")
+        @Test
+        void guestCannotReadHiddenByHostCard() {
+            // given
+            GuestBookCard guestBookCard = createWithSpaceAndVisibilityStatus(publicSpace, HIDDEN_BY_HOST);
+            guestBookCardRepository.save(guestBookCard);
+
+            // when, then
+            RestAssuredMockMvc.given()
+                .accept(ContentType.JSON)
+                .when()
+                .get("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), guestBookCard.getId()))
+                .then()
+                .statusCode(404)
+                .body("code", equalTo("NOT_FOUND"))
+                .body("message", containsString("존재하지 않는 방명록 카드입니다."));
+        }
+
+        @DisplayName("관리자가 숨김 처리한 방명록 카드는 스페이스 호스트도 조회할 수 없다")
+        @Test
+        void hostCannotReadHiddenByAdminCard() {
+            // given
+            GuestBookCard guestBookCard = createWithSpaceAndVisibilityStatus(publicSpace, HIDDEN_BY_ADMIN);
+            guestBookCardRepository.save(guestBookCard);
+
+            // when, then
+            RestAssuredMockMvc.given()
+                .postProcessors(withAccessToken(accessToken))
+                .accept(ContentType.JSON)
+                .when()
+                .get("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), guestBookCard.getId()))
+                .then()
+                .statusCode(404)
+                .body("code", equalTo("NOT_FOUND"))
+                .body("message", containsString("존재하지 않는 방명록 카드입니다."));
         }
 
         @DisplayName("호스트가 방명록 카드를 조회하면 읽음 처리된다")
@@ -366,7 +575,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .accept(ContentType.JSON)
                 .when()
                 .get("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), writeResponse.id()))
@@ -374,8 +583,9 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(200);
 
             // then
-            GuestBookResponse result = RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+            String response = RestAssuredMockMvc.given()
+                .header("X-API-Version", "2")
+                .postProcessors(withAccessToken(accessToken))
                 .accept(ContentType.JSON)
                 .queryParam("page", 1)
                 .queryParam("size", 15)
@@ -387,9 +597,14 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(GuestBookResponse.class);
+                .asString();
 
-            assertThat(result.guestBookCards().getFirst().isRead()).isTrue();
+            assertAll(
+                () -> assertThat(response).contains("\"code\":\"SUCCESS\""),
+                () -> assertThat(response).contains("\"unreadCount\":0"),
+                () -> assertThat(response).doesNotContain("\"newCount\""),
+                () -> assertThat(response).contains("\"id\":%d".formatted(writeResponse.id()))
+            );
         }
     }
 
@@ -408,7 +623,8 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.nickname()).isEqualTo(writeRequest.nickname()),
                 () -> assertThat(result.message()).isEqualTo(writeRequest.message()),
                 () -> assertThat(result.isRead()).isFalse(),
-                () -> assertThat(result.createdAt()).isBetween(LocalDateTime.now().minusMinutes(1), LocalDateTime.now()),
+                () -> assertThat(result.createdAt()).isBetween(LocalDateTime.now().minusMinutes(1),
+                    LocalDateTime.now().plusSeconds(1)),
 
                 () -> assertThat(result.photos().get(0).originalName()).isEqualTo("photo1.jpg"),
                 () -> assertThat(result.photos().get(0).path()).endsWith(
@@ -447,7 +663,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .post("/spaces/%s/guestbook".formatted(publicSpace.getCode()))
                 .then()
                 .statusCode(400)
-                .body("message", containsString("방문자 닉네임은 최대 10자까지 입력 가능합니다."));
+                .body("code", equalTo("VALIDATION_FAILED"));
         }
 
         @DisplayName("방명록 카드 사진이 20개를 초과하면 예외를 던진다")
@@ -472,6 +688,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .post("/spaces/%s/guestbook".formatted(publicSpace.getCode()))
                 .then()
                 .statusCode(400)
+                .body("code", equalTo("BAD_REQUEST"))
                 .body("message", containsString("방명록 카드 사진은 최대"));
         }
     }
@@ -487,7 +704,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .when()
                 .delete("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), writeResponse.id()))
                 .then()
@@ -499,7 +716,8 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .when()
                 .get("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), writeResponse.id()))
                 .then()
-                .statusCode(404);
+                .statusCode(404)
+                .body("code", equalTo("NOT_FOUND"));
         }
 
         @DisplayName("방문자는 방명록 카드를 삭제하지 못한다")
@@ -514,6 +732,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .delete("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), writeResponse.id()))
                 .then()
                 .statusCode(401)
+                .body("code", equalTo("UNAUTHORIZED"))
                 .body("message", containsString("로그인이 필요합니다."));
         }
 
@@ -525,11 +744,12 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when, then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + anotherAccessToken)
+                .postProcessors(withAccessToken(anotherAccessToken))
                 .when()
                 .delete("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), writeResponse.id()))
                 .then()
                 .statusCode(403)
+                .body("code", equalTo("FORBIDDEN"))
                 .body("message", containsString("해당 스페이스에 대한 접근 권한이 없습니다."));
         }
 
@@ -541,12 +761,13 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when, then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .when()
                 .delete("/spaces/%s/guestbook/%d".formatted(privateSpace.getCode(), writeResponse.id()))
                 .then()
                 .statusCode(404)
-                .body("message", containsString("해당 스페이스에 존재하지 않는 방명록 카드입니다."));
+                .body("code", equalTo("NOT_FOUND"))
+                .body("message", containsString("존재하지 않는 방명록 카드입니다."));
         }
     }
 
@@ -567,7 +788,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .contentType(ContentType.JSON)
                 .body(request)
                 .when()
@@ -576,7 +797,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(204);
 
             // then
-            GuestBookCardResponse response = RestAssuredMockMvc.given()
+            ApiResponse<GuestBookCardResponse> response = RestAssuredMockMvc.given()
                 .accept(ContentType.JSON)
                 .when()
                 .get("/spaces/%s/guestbook/%d".formatted(publicSpace.getCode(), writeResponse.id()))
@@ -584,10 +805,13 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(GuestBookCardResponse.class);
+                .as(new TypeRef<>() {
+                });
             assertAll(
-                () -> assertThat(response.photos()).size().isEqualTo(1),
-                () -> assertThat(response.photos().getFirst().id()).isEqualTo(writeResponse.photos().get(1).id())
+                () -> assertThat(response.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(response.message()).isNull(),
+                () -> assertThat(response.data().photos()).size().isEqualTo(1),
+                () -> assertThat(response.data().photos().getFirst().id()).isEqualTo(writeResponse.photos().get(1).id())
             );
         }
 
@@ -611,6 +835,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .delete("/spaces/%s/guestbook/%d/photos".formatted(publicSpace.getCode(), writeResponse.id()))
                 .then()
                 .statusCode(401)
+                .body("code", equalTo("UNAUTHORIZED"))
                 .body("message", containsString("로그인이 필요합니다."));
         }
 
@@ -628,13 +853,14 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + anotherAccessToken)
+                .postProcessors(withAccessToken(anotherAccessToken))
                 .contentType(ContentType.JSON)
                 .body(request)
                 .when()
                 .delete("/spaces/%s/guestbook/%d/photos".formatted(publicSpace.getCode(), writeResponse.id()))
                 .then()
                 .statusCode(403)
+                .body("code", equalTo("FORBIDDEN"))
                 .body("message", containsString("해당 스페이스에 대한 접근 권한이 없습니다."));
         }
 
@@ -651,19 +877,20 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
 
             // when
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .contentType(ContentType.JSON)
                 .body(request)
                 .when()
                 .delete("/spaces/%s/guestbook/%d/photos".formatted(publicSpace.getCode(), writeResponse.id()))
                 .then()
                 .statusCode(400)
+                .body("code", equalTo("BAD_REQUEST"))
                 .body("message", containsString("해당 방명록 카드에 존재하지 않는 사진입니다."));
         }
     }
 
     private WriteGuestBookCardResponse writeGuestBookCard(Space space) {
-        return RestAssuredMockMvc.given()
+        ApiResponse<WriteGuestBookCardResponse> response = RestAssuredMockMvc.given()
             .body(writeRequest)
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
@@ -673,7 +900,9 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
             .statusCode(201)
             .extract()
             .body()
-            .as(WriteGuestBookCardResponse.class);
+            .as(new TypeRef<>() {
+            });
+        return response.data();
     }
 
     private WriteGuestBookCardResponse writeGuestBookCardWithNoPhoto(Space space) {
@@ -682,7 +911,7 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
             "message2",
             List.of()
         );
-        return RestAssuredMockMvc.given()
+        ApiResponse<WriteGuestBookCardResponse> response = RestAssuredMockMvc.given()
             .body(writeRequestWithNoPicture)
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
@@ -692,6 +921,31 @@ public class GuestBookCardAcceptanceTest extends AcceptanceTest {
             .statusCode(201)
             .extract()
             .body()
-            .as(WriteGuestBookCardResponse.class);
+            .as(new TypeRef<>() {
+            });
+        return response.data();
+    }
+
+    private void reportGuestBookCard(Space space, Long guestBookCardId) {
+        CreateGuestBookReportRequest request = new CreateGuestBookReportRequest(ADVERTISEMENT_SPAM, null);
+
+        RestAssuredMockMvc.given()
+            .postProcessors(withAccessToken(accessToken))
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/spaces/{spaceCode}/guestbook/{guestBookCardId}/reports", space.getCode(), guestBookCardId)
+            .then()
+            .statusCode(201);
+    }
+
+    private void readGuestBookCardAsHost(Space space, Long guestBookCardId) {
+        RestAssuredMockMvc.given()
+            .postProcessors(withAccessToken(accessToken))
+            .accept(ContentType.JSON)
+            .when()
+            .get("/spaces/%s/guestbook/%d".formatted(space.getCode(), guestBookCardId))
+            .then()
+            .statusCode(200);
     }
 }

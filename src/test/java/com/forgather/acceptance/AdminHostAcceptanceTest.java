@@ -2,6 +2,7 @@ package com.forgather.acceptance;
 
 import static com.forgather.back_office.auth.session.SessionConstants.SESSION_COOKIE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -18,15 +19,15 @@ import com.forgather.back_office.dto.HostSpacesResponse;
 import com.forgather.back_office.model.AdminSession;
 import com.forgather.back_office.model.AdminUser;
 import com.forgather.back_office.repository.AdminUserRepository;
+import com.forgather.domain.host.model.Host;
+import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.domain.space.model.Space;
-import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.space.model.SpaceHost;
+import com.forgather.domain.space.repository.SpaceHostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fixture.AdminUserFixture;
 import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.SpaceFixture;
-import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.SpaceHostMap;
-import com.forgather.global.auth.repository.SpaceHostMapRepository;
 
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import io.restassured.module.mockmvc.specification.MockMvcRequestSpecification;
@@ -48,7 +49,7 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
     private SpaceRepository spaceRepository;
 
     @Autowired
-    private SpaceHostMapRepository spaceHostMapRepository;
+    private SpaceHostRepository spaceHostRepository;
 
     @Autowired
     private SessionManager sessionManager;
@@ -102,15 +103,13 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
     @DisplayName("세션이 없으면 모든 호스트 정보를 조회할 수 없다.")
     @Test
     void getAllHostsWithoutSession() {
-        // when
-        var result = RestAssuredMockMvc.given()
+        // when & then
+        RestAssuredMockMvc.given()
             .when()
             .get("/admin/hosts")
             .then()
-            .extract();
-
-        // then
-        assertThat(result.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+            .statusCode(HttpStatus.UNAUTHORIZED.value())
+            .body("code", equalTo("UNAUTHORIZED"));
     }
 
     @DisplayName("호스트가 소유한 스페이스 목록을 조회한다.")
@@ -120,8 +119,8 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
         Host host = hostRepository.save(HostFixture.createHost());
         Space space1 = spaceRepository.save(SpaceFixture.createSpaceWithCode("1111111111"));
         Space space2 = spaceRepository.save(SpaceFixture.createSpaceWithCode("2222222222"));
-        spaceHostMapRepository.save(new SpaceHostMap(space1, host));
-        spaceHostMapRepository.save(new SpaceHostMap(space2, host));
+        spaceHostRepository.save(new SpaceHost(space1, host));
+        spaceHostRepository.save(new SpaceHost(space2, host));
 
         // when
         HostSpacesResponse result = givenWithSession()
@@ -136,7 +135,7 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
         // then
         assertAll(
             () -> assertThat(result.hostId()).isEqualTo(host.getId()),
-            () -> assertThat(result.hostName()).isEqualTo(host.getName()),
+            () -> assertThat(result.hostName()).isEqualTo(host.getNickname()),
             () -> assertThat(result.spaces()).hasSize(2)
         );
     }
@@ -147,15 +146,13 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
 
-        // when
-        var result = RestAssuredMockMvc.given()
+        // when & then
+        RestAssuredMockMvc.given()
             .when()
             .get("/admin/hosts/{hostId}/spaces", host.getId())
             .then()
-            .extract();
-
-        // then
-        assertThat(result.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+            .statusCode(HttpStatus.UNAUTHORIZED.value())
+            .body("code", equalTo("UNAUTHORIZED"));
     }
 
     @DisplayName("호스트 이름으로 검색한다. (완전 일치)")
@@ -315,16 +312,14 @@ class AdminHostAcceptanceTest extends AcceptanceTest {
     @DisplayName("세션이 없으면 호스트 이름으로 검색할 수 없다.")
     @Test
     void searchHostsByNameWithoutSession() {
-        // when
-        var result = RestAssuredMockMvc.given()
+        // when & then
+        RestAssuredMockMvc.given()
             .queryParam("name", "포스티")
             .when()
             .get("/admin/hosts/search/by-name")
             .then()
-            .extract();
-
-        // then
-        assertThat(result.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+            .statusCode(HttpStatus.UNAUTHORIZED.value())
+            .body("code", equalTo("UNAUTHORIZED"));
     }
 
     private void createHost(int count) {

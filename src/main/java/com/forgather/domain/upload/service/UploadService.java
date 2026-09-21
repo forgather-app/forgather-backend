@@ -1,50 +1,36 @@
 package com.forgather.domain.upload.service;
 
-import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.forgather.domain.host.model.Host;
+import com.forgather.domain.space.model.Space;
+import com.forgather.domain.space.repository.SpaceHostRepository;
+import com.forgather.domain.space.repository.SpaceRepository;
+import com.forgather.domain.upload.domain.SignedUrlIssuer;
+import com.forgather.domain.upload.domain.UploadCategory;
+import com.forgather.domain.upload.domain.UploadFileMetadata;
+import com.forgather.domain.upload.dto.IssuePreSignedUrlRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlRequest;
 import com.forgather.domain.upload.dto.IssueSignedUrlResponse;
-import com.forgather.domain.space.repository.SpaceRepository;
-import com.forgather.domain.upload.domain.ContentsStorage;
-import com.forgather.domain.upload.domain.SignedUrlIssuer;
-import com.forgather.global.exception.FileUploadException;
+import com.forgather.global.exception.ForbiddenException;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class UploadService {
 
     private final SpaceRepository spaceRepository;
-    private final ContentsStorage contentsStorage;
+    private final SpaceHostRepository spaceHostRepository;
     private final SignedUrlIssuer signedUrlIssuer;
 
-    public String upload(String spaceCode, MultipartFile file) {
-        try {
-            long startMillis = System.currentTimeMillis();
-            log.info("파일 업로드 시작 spaceCode: {}, originalName: {}, size: {}",
-                spaceCode, file.getOriginalFilename(), file.getSize());
-
-            String path = contentsStorage.upload(spaceCode, file);
-
-            long durationMillis = System.currentTimeMillis() - startMillis;
-            log.info("파일 업로드 완료 spaceCode: {}, originalName: {}, size: {}, path: {}, duration: {}",
-                spaceCode, file.getOriginalFilename(), file.getSize(), path, durationMillis + "ms");
-
-            return path;
-        } catch (IOException e) {
-            throw new FileUploadException("파일 업로드 실패 spaceCode: %s, originalName: %s, size: %d".formatted(
-                spaceCode, file.getOriginalFilename(), file.getSize()
-            ), e);
-        }
-    }
-
+    @Deprecated(forRemoval = true)
+    @SuppressWarnings("removal")
+    @Transactional(readOnly = true)
     public IssueSignedUrlResponse issueSignedUrls(String spaceCode, IssueSignedUrlRequest request) {
         spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         Map<String, String> signedUrls = signedUrlIssuer.issueSignedUrls(
@@ -53,5 +39,63 @@ public class UploadService {
             request.category()
         );
         return new IssueSignedUrlResponse(signedUrls);
+    }
+
+    @Transactional(readOnly = true)
+    public IssueSignedUrlResponse issueGuestbookSignedUrls(String spaceCode, IssuePreSignedUrlRequest request) {
+        List<UploadFileMetadata> uploadFilesData = request.toUploadFilesData();
+        spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
+
+        Map<String, String> signedUrls = signedUrlIssuer.issueForSpace(
+            uploadFilesData,
+            spaceCode,
+            UploadCategory.GUESTBOOK
+        );
+        return new IssueSignedUrlResponse(signedUrls);
+    }
+
+    @Transactional(readOnly = true)
+    public IssueSignedUrlResponse issueProductSignedUrls(
+        String spaceCode,
+        Host host,
+        IssuePreSignedUrlRequest request
+    ) {
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
+        validateSpaceHost(space, host);
+
+        Map<String, String> signedUrls = signedUrlIssuer.issueForSpace(
+            request.toUploadFilesData(),
+            spaceCode,
+            UploadCategory.PRODUCT
+        );
+        return new IssueSignedUrlResponse(signedUrls);
+    }
+
+    private void validateSpaceHost(Space space, Host host) {
+        if (spaceHostRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host).isPresent()) {
+            return;
+        }
+        throw new ForbiddenException("권한이 존재하지 않습니다.");
+    }
+
+    public IssueSignedUrlResponse issueSpacePhotoSignedUrls(Host host, IssuePreSignedUrlRequest request) {
+        Map.Entry<String, String> signedUrl = signedUrlIssuer.issueForSpacePhoto(
+            request.toUploadFilesData(),
+            host.getId()
+        );
+        return new IssueSignedUrlResponse(signedUrl);
+    }
+
+    public IssueSignedUrlResponse issueExhibitionSignedUrls(IssuePreSignedUrlRequest request) {
+        Map<String, String> signedUrls = signedUrlIssuer.issueForExhibition(request.toUploadFilesData());
+        return new IssueSignedUrlResponse(signedUrls);
+    }
+
+    public IssueSignedUrlResponse issueHostProfileSignedUrls(Host host, IssuePreSignedUrlRequest request) {
+        Map.Entry<String, String> signedUrl = signedUrlIssuer.issueForHostProfile(
+            request.toUploadFilesData(),
+            host.getId()
+        );
+        return new IssueSignedUrlResponse(signedUrl);
     }
 }

@@ -1,7 +1,7 @@
 package com.forgather.domain.space.dto;
 
+import com.forgather.domain.product.model.ProductPhoto;
 import com.forgather.domain.space.model.Space;
-import com.forgather.domain.space.model.SpacePhoto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -22,43 +22,41 @@ public record SpaceResponse(
     @Schema(description = "스페이스 공개여부", example = "true")
     boolean isPublic,
 
-    @Schema(description = "스페이스 호스트 인스타그램 아이디", example = "forgather_official")
-    String instagramUsername,
-
-    @Schema(description = "스페이스 호스트 이메일", example = "forgather@forgather.me")
-    String email,
-
     @Schema(description = "스페이스 소개 링크 URL", example = "https://forgather.app")
     String linkUrl,
 
     @Schema(description = "스페이스 소개 링크 표시 이름", example = "포트폴리오")
     String linkName,
 
-    @Schema(description = "스페이스 프로필 사진", example = """
-        {
-            "isExists": true,
-            "path": "photogather/v2/spaces/1234567890/space/profile.png"
-        }
-        """)
-    SpacePhotoResponse spacePhoto,
+    @Schema(description = "스페이스 사진 경로 (대표 작품의 첫 번째 사진). 작품이 없거나 대표 작품에 사진이 없으면 null이며, 기본 사진 노출은 클라이언트가 담당한다.",
+        example = "images/prod/spaces/1234567890/product/UUID.webp", nullable = true)
+    String spacePhotoPath,
 
-    @Schema(description = "스페이스 방명록 카드 개수", example = "15")
-    Long guestBookCardCount
+    @Schema(description = "스페이스 방명록 카드 개수. 비공개 스페이스는 호스트 본인에게만 실제 값을 응답하고 그 외에는 null(개수 비공개)로 응답한다.",
+        example = "15", nullable = true)
+    Long guestBookCardCount,
+
+    @Schema(description = "'지금 축하받고 있는 스페이스'로 지정되었는지 여부", example = "true")
+    boolean isFeatured,
+
+    @Schema(description = "스페이스 호스트 정보")
+    SpaceHostInfoResponse host
 ) {
 
-    public static SpaceResponse from(Space space, SpacePhoto spacePhoto, Long guestBookCardCount) {
+    public static SpaceResponse from(Space space, ProductPhoto spacePhoto, Long guestBookCardCount,
+        SpaceHostInfoResponse host) {
         return new SpaceResponse(
             space.getId(),
             space.getCode(),
             space.getName(),
             space.getDescription(),
             space.isPublic(),
-            space.getInstagramUsername(),
-            space.getEmail(),
             space.getLinkUrl(),
             space.getLinkName(),
-            SpacePhotoResponse.from(spacePhoto),
-            guestBookCardCount
+            (spacePhoto == null) ? null : spacePhoto.getPath(),
+            guestBookCardCount,
+            space.isFeatured(),
+            host
         );
     }
 }

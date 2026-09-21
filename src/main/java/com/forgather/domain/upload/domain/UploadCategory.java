@@ -3,7 +3,8 @@ package com.forgather.domain.upload.domain;
 public enum UploadCategory {
     PRODUCT,
     GUESTBOOK,
-    SPACE
+    SPACE,
+    EXHIBITION,
     ;
 
     @Override

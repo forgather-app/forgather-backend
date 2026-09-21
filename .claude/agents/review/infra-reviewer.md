@@ -24,7 +24,8 @@ GitHub Actions(테스트) + AWS CodeBuild(빌드) + CodeDeploy(배포) + EC2/S3/
 
 ```
 deploy/
-├── appspec.yml            # CodeDeploy
+├── appspec-dev.yml        # CodeDeploy (dev)
+├── appspec-prod.yml       # CodeDeploy (prod)
 ├── buildspec-dev.yml      # CodeBuild (dev)
 ├── buildspec-prod.yml     # CodeBuild (prod)
 └── deploy.sh
@@ -56,7 +57,7 @@ build.gradle
 - [ ] 캐싱
 - [ ] 환경변수 주입 방식 (Parameter Store, Secrets Manager)
 
-**AWS CodeDeploy (`appspec.yml`)**
+**AWS CodeDeploy (`appspec-dev.yml`, `appspec-prod.yml`)**
 - [ ] 배포 훅 구성
 - [ ] 롤백 전략
 - [ ] Health check

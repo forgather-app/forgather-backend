@@ -8,10 +8,11 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
-import com.forgather.global.config.JwtProperties;
+import com.forgather.global.auth.config.JwtProperties;
 import com.forgather.global.exception.JwtBaseException;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
@@ -91,6 +92,15 @@ public class JwtTokenProvider {
             return role;
         }
         return HOST;
+    }
+
+    public long getRemainingExpirationSeconds(String token) {
+        try {
+            long remainingMillis = getClaims(token).getExpiration().getTime() - System.currentTimeMillis();
+            return Math.max(remainingMillis / 1000, 0);
+        } catch (ExpiredJwtException e) {
+            return 0;
+        }
     }
 
     private Claims getClaims(String token) {

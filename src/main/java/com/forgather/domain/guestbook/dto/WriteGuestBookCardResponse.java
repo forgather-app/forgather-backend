@@ -32,17 +32,17 @@ public record WriteGuestBookCardResponse(
             {
                 "id": 1,
                 "originalName": "photo1.jpg",
-                "path": "photogather/v2/spaces/1234567890/guestbook/abc.jpg"
+                "path": "images/prod/spaces/1234567890/guestbook/abc.jpg"
             },
             {
                 "id": 2,
                 "originalName": "photo2.jpg",
-                "path": "photogather/v2/spaces/1234567890/guestbook/def.jpg"
+                "path": "images/prod/spaces/1234567890/guestbook/def.jpg"
             },
             {
                 "id": 3,
                 "originalName": "photo3.jpg",
-                "path": "photogather/v2/spaces/1234567890/guestbook/ghi.jpg"
+                "path": "images/prod/spaces/1234567890/guestbook/ghi.jpg"
             }
         ]
         """)

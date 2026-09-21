@@ -6,12 +6,14 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import com.forgather.back_office.auth.session.SessionManager;
 import com.forgather.back_office.model.AdminSession;
 import com.forgather.back_office.model.SessionId;
+import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.UnauthorizedException;
 
 import jakarta.servlet.http.Cookie;
@@ -26,6 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 public class AdminAuthInterceptor implements HandlerInterceptor {
 
     public static final String ADMIN_USER_ID_ATTRIBUTE = "adminUserId";
+
+    private static final String MDC_ADMIN_USER_ID_KEY = "adminUserId";
 
     private final SessionManager sessionManager;
 
@@ -47,13 +51,25 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
             SessionId sessionId = SessionId.from(sessionIdValue);
             AdminSession session = sessionManager.getValidSession(sessionId, LocalDateTime.now());
             request.setAttribute(ADMIN_USER_ID_ATTRIBUTE, session.getAdminUserId());
-            log.info("어드민 페이지 접근 허용 - adminUserId: {}, URI: {}", session.getAdminUserId(), request.getRequestURI());
+            MDC.put(MDC_ADMIN_USER_ID_KEY, String.valueOf(session.getAdminUserId()));
+            log.info("어드민 페이지 접근 허용 - URI: {}", request.getRequestURI());
             return true;
-        } catch (Exception e) {
-            log.info("어드민 페이지 접근 시도 - 유효하지 않은 세션: {}", request.getRequestURI(), e);
+        } catch (BaseException e) {
+            // 예상된 인증 실패만 처리한다. 그 외 예외는 GlobalExceptionHandler가 처리하도록 전파한다.
+            log.info("어드민 페이지 접근 실패 - {}: {}", e.getMessage(), request.getRequestURI());
             handleUnauthorized(request, response);
             return false;
         }
+    }
+
+    @Override
+    public void afterCompletion(
+        HttpServletRequest request,
+        HttpServletResponse response,
+        Object handler,
+        Exception exception
+    ) {
+        MDC.remove(MDC_ADMIN_USER_ID_KEY);
     }
 
     private String extractSessionIdFromCookie(HttpServletRequest request) {

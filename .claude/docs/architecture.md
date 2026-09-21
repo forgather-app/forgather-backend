@@ -48,7 +48,7 @@ private String buildAccessToken(Long id, String role) {
 
 | 구분 | Host (작가) | Admin (관리자) |
 |-----|------------|---------------|
-| 인증 방식 | JWT + Kakao OAuth | JWT + 세션 |
+| 인증 방식 | JWT + 소셜 OAuth (Kakao·Apple, HttpOnly 쿠키) | JWT + 세션 |
 | 리졸버 | `LoginHostArgumentResolver` | `LoginAdminUserArgumentResolver` |
 | 인터셉터 | - | `AdminAuthInterceptor` |
 | 어노테이션 | `@LoginHost` | `@LoginAdminUser` |
@@ -58,13 +58,12 @@ private String buildAccessToken(Long id, String role) {
 // LoginHostArgumentResolver - @LoginHost 처리 (global/auth/resolver/LoginHostArgumentResolver.java)
 @Override
 public Host resolveArgument(MethodParameter parameter, ...) {
-    String jwtToken = request.getHeader("Authorization");
+    String jwtToken = resolveJwtToken(request); // access_token 쿠키에서 추출
     if (jwtToken == null) {
         throwExceptionIfRequired(required);
         return null;
     }
 
-    jwtToken = jwtToken.substring(BEARER.length());
     jwtTokenProvider.validateToken(jwtToken);
 
     if (!jwtTokenProvider.getRole(jwtToken).equals(HOST)) {
@@ -84,45 +83,66 @@ sequenceDiagram
     participant Server
     participant Kakao
 
-    Client->>Kakao: 1. 카카오 로그인 요청
-    Kakao-->>Client: 2. idToken 반환 (RSA 서명)
-    Client->>Server: 3. POST /auth/login/kakao/confirm (idToken)
-    Server->>Server: 4. JWT 헤더에서 kid 추출
-    Server->>Server: 5. 캐시된 공개키로 RSA 서명 검증
-    Server->>Server: 6. Host 조회/생성
-    Server-->>Client: 7. accessToken, refreshToken 반환 (HMAC)
+    Client->>Client: 1. rawNonce 생성 후 SHA-256 해싱
+    Client->>Kakao: 2. 카카오 SDK 로그인 요청 (nonce = sha256(rawNonce))
+    Kakao-->>Client: 3. idToken 반환 (RSA 서명, nonce 클레임 포함)
+    Client->>Server: 4. POST /auth/login/kakao/confirm (idToken, rawNonce)
+    Server->>Server: 5. JWT 헤더에서 kid 추출
+    Server->>Server: 6. 캐시된 공개키로 RSA 서명 검증
+    Server->>Server: 7. 클레임 검증 (iss, aud, exp, sub, nickname, email, nonce)
+    Server->>Server: 8. Host 조회/생성 (기존 회원은 email 갱신)
+    Server-->>Client: 9. accessToken, refreshToken을 HttpOnly 쿠키로 반환 (HMAC)
 ```
 
 #### JWKS 공개키 관리
 
+JWKS 조회는 provider(KAKAO/GOOGLE/APPLE) 공통으로 `SocialPublicKeyClient`가 담당합니다.
+
 ```java
-// KakaoAuthClient - JWKS에서 공개키 복원 (global/auth/client/KakaoAuthClient.java)
-public PublicKey getKakaoPublicKey(String kid) {
-    for (Map<String, Object> key : keys) {
-        if (kid.equals(key.get("kid"))) {
-            String n = (String)key.get("n");
-            String e = (String)key.get("e");
-
-            byte[] nBytes = Base64.getUrlDecoder().decode(n);
-            byte[] eBytes = Base64.getUrlDecoder().decode(e);
-
-            BigInteger modulus = new BigInteger(1, nBytes);
-            BigInteger exponent = new BigInteger(1, eBytes);
-
-            RSAPublicKeySpec spec = new RSAPublicKeySpec(modulus, exponent);
-            KeyFactory factory = KeyFactory.getInstance("RSA");
-            return factory.generatePublic(spec);
+// SocialPublicKeyClient - provider별 JWKS 캐시에서 공개키 조회 (global/external/social/SocialPublicKeyClient.java)
+public PublicKey getPublicKey(SocialProvider provider, String kid) {
+    List<Map<String, Object>> keys = keyCaches.get(provider);
+    if (keys == null || keys.isEmpty()) {
+        synchronized (getKeyUpdateLock(provider)) {  // provider 단위 락으로 중복 갱신 방지
+            // double-checked locking 후 updateKeys(provider)
         }
     }
-    throw new JwtBaseException("Public key not found for kid: " + kid);
+
+    Optional<PublicKey> publicKey = findPublicKey(keys, kid);
+    if (publicKey.isPresent()) {
+        return publicKey.get();
+    }
+
+    // kid를 못 찾으면 키 로테이션으로 보고 갱신 후 재조회
+    synchronized (getKeyUpdateLock(provider)) {
+        updateKeys(provider);
+    }
+    return findPublicKey(keyCaches.get(provider), kid)
+        .orElseThrow(() -> new JwtBaseException("Public key not found ...", HttpStatus.UNAUTHORIZED));
 }
 ```
 
 ```java
-// KakaoPublicKeyScheduler - 매일 새벽 3시 키 갱신 (global/auth/scheduler/KakaoPublicKeyScheduler.java)
+// SocialPublicKeyScheduler - 매일 새벽 3시 전체 provider 키 갱신
+// (global/external/social/SocialPublicKeyScheduler.java)
 @Scheduled(cron = "0 0 3 * * *")
-public void updateKakaoPublicKeys() {
-    kakaoAuthClient.updateKakaoKeys();
+public void updateSocialPublicKeys() {
+    socialPublicKeyClient.updateAllKeys();  // KAKAO, GOOGLE, APPLE
+}
+```
+
+#### id token 클레임 검증
+
+서명 검증 이후 `SocialJwtParser`가 provider별로 클레임을 검증합니다. 카카오·애플 모두 `nonce`를 필수로 요구하며, 클라이언트가 원본을 SHA-256 해싱해 provider에 전달했다고 보고 해시를 대조합니다.
+
+```java
+// SocialJwtParser - Kakao id token 클레임 검증 (global/external/social/SocialJwtParser.java)
+private void validateKakaoIdToken(KakaoIdToken idToken, String rawNonce) {
+    // iss  : kakao.issuer와 일치
+    // aud  : kakao.native-app-key와 일치 (문자열 또는 배열)
+    // exp  : 존재
+    // sub, nickname, email : 존재 (카카오 콘솔에서 닉네임·이메일 필수 동의)
+    // nonce: hashRawNonce(rawNonce)와 일치
 }
 ```
 
@@ -152,7 +172,7 @@ graph TD
 | `ProductService` | 작품 CRUD (최대 3개 제한) | ContentsStorage |
 | `GuestBookService` | 방명록 CRUD, 권한 검증 | ContentsStorage |
 | `UploadService` | 파일 업로드, Presigned URL 발급 | ContentsStorage, SignedUrlIssuer |
-| `AuthService` | OAuth 로그인, 토큰 갱신 | JwtTokenProvider, KakaoAuthClient |
+| `AuthService` | OAuth 로그인, 토큰 갱신 | SocialJwtParser, JwtTokenProvider, AppleApiClient |
 
 ### 트랜잭션 경계
 
@@ -176,7 +196,7 @@ public void delete(String spaceCode, Host host) {
     Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
     validateSpaceHost(space, host);
     deleteGuestBookAndProduct(host, space);  // 하위 서비스 호출
-    deleteSpaceHostMap(host, space);
+    deleteSpaceHost(host, space);
     deleteSpacePhoto(space);
     space.delete();
 }
@@ -190,9 +210,10 @@ public void delete(String spaceCode, Host host) {
 
 | 패키지 | 역할 |
 |-------|------|
-| `auth/` | JWT 토큰 처리, Kakao OAuth 연동, 인증 인터셉터/리졸버 |
-| `config/` | WebMvc, S3, Swagger, 비동기 처리 등 설정 |
-| `exception/` | 전역 예외 처리, BaseException 계층 |
+| `auth/` | JWT 토큰 생성·검증(`JwtTokenProvider`), 인증 쿠키 처리(`AuthCookieProvider`), `config/`의 `JwtProperties`·`AuthCookieProperties` |
+| `config/` | 조립 설정(`WebConfig`, `S3Config`, `AsyncConfig`, `SwaggerConfig`, `RestClientConfig`, `PasswordEncoderConfig`, `CorsProperties`) |
+| `exception/` | 전역 예외 처리, BaseException 계층, 외부 호출 실패 규약(`ExternalApiException`, `ExternalFailureType`) |
+| `external/` | 외부 API 연동 기술 계층 (`ExternalCalls`, `ExternalOperation`, `social/`, `social/config/`의 소셜 Properties). 도메인을 알지 못한다 |
 | `util/` | 공용 유틸리티 (TextLengthCounter, RandomCodeGenerator 등) |
 | `logging/` | 로깅 인터셉터, 비동기 로깅 데코레이터 |
 | `converter/` | Multipart JSON 컨버터 |
@@ -222,7 +243,7 @@ public void delete(String spaceCode, Host host) {
 | 클래스 | 역할 | 위치 |
 |--------|------|------|
 | `S3Config` | S3Client, S3AsyncClient, S3Presigner, S3TransferManager 빈 | `global/config/` |
-| `SwaggerConfig` | OpenAPI 3.0 설정, JWT Bearer 인증 스키마 | `global/config/` |
+| `SwaggerConfig` | OpenAPI 3.0 설정, access_token 쿠키 인증 스키마 | `global/config/` |
 | `WebConfig` | CORS, 인터셉터, ArgumentResolver, MessageConverter 등록 | `global/config/` |
 | `AsyncConfig` | 비동기 TaskExecutor 설정 (corePoolSize=4, queueCapacity=1000) | `global/config/` |
 | `RestClientConfig` | RestClient 빈 (외부 API 호출용) | `global/config/` |
@@ -245,12 +266,17 @@ public TaskExecutor taskExecutor() {
 
 ### Properties 클래스
 
-| 클래스 | 역할 |
-|--------|------|
-| `JwtProperties` | JWT secret, 토큰 만료 시간 |
-| `S3Properties` | 버킷명, 리전, 루트 디렉토리, 태깅 |
-| `KakaoProperties` | 카카오 클라이언트 ID |
-| `CorsProperties` | 허용 origin, method, header |
+Properties는 값을 소비하는 모듈의 `config/` 하위에 둔다.
+
+| 클래스 | 역할 | 위치 |
+|--------|------|------|
+| `JwtProperties` | JWT secret, 토큰 만료 시간 | `global/auth/config/` |
+| `AuthCookieProperties` | 인증 쿠키 secure·SameSite 옵션 | `global/auth/config/` |
+| `KakaoProperties` | 카카오 네이티브 앱 키(`aud` 검증 기준), issuer, JWKS URL, Admin 키, unlink URL | `global/external/social/config/` |
+| `AppleProperties` | 애플 client ID, issuer, JWKS URL, client secret 서명용 키 | `global/external/social/config/` |
+| `GoogleProperties` | 구글 JWKS URL | `global/external/social/config/` |
+| `S3Properties` | 버킷명, 리전, 루트 디렉토리, 태깅 | `domain/upload/config/` |
+| `CorsProperties` | 허용 origin, method, header | `global/config/` |
 
 ---
 
@@ -389,18 +415,20 @@ private void executeBatchDeletion(List<String> deletePaths) {
 
 #### 인증 플로우 상세
 
-1. **클라이언트**: 카카오 SDK로 로그인 → `idToken` 획득
-2. **서버**: `idToken` 수신 → JWT 헤더에서 `kid` 추출
-3. **서버**: 캐시된 JWKS에서 `kid`에 해당하는 공개키 조회
+1. **클라이언트**: rawNonce 생성 → `sha256(rawNonce)`를 카카오 SDK의 `nonce`로 넘겨 로그인 → `idToken` 획득
+2. **클라이언트**: `idToken`과 **원본** `rawNonce`를 서버로 전송 (`raw_nonce`는 필수)
+3. **서버**: JWT 헤더에서 `kid` 추출 → `SocialPublicKeyClient`의 JWKS 캐시에서 공개키 조회
 4. **서버**: RSA 공개키로 `idToken` 서명 검증
-5. **서버**: `sub` (카카오 사용자 ID)로 Host 조회/생성
-6. **서버**: HMAC-SHA256으로 서명된 `accessToken`, `refreshToken` 발급
+5. **서버**: `SocialJwtParser.validateKakaoIdToken`으로 클레임 검증 (`iss`, `aud`, `exp`, `sub`, `nickname`, `email`, `nonce`)
+6. **서버**: `sub` (카카오 사용자 ID)로 Host 조회/생성. 기존 회원은 `Host.updateEmail`로 이메일 갱신
+7. **서버**: HMAC-SHA256으로 서명된 `accessToken`, `refreshToken`을 HttpOnly 쿠키로 발급
 
 #### 스케줄러
 
+- **클래스**: `SocialPublicKeyScheduler` (`global/external/social/`)
 - **실행 주기**: 매일 새벽 3시 (`0 0 3 * * *`)
-- **동작**: 카카오 JWKS 엔드포인트에서 최신 공개키 목록 갱신
-- **목적**: 카카오가 키를 로테이션해도 서비스 중단 없이 검증 가능
+- **동작**: `SocialPublicKeyClient.updateAllKeys()` — KAKAO·GOOGLE·APPLE JWKS를 한 번에 갱신
+- **목적**: provider가 키를 로테이션해도 서비스 중단 없이 검증 가능
 
 ---
 

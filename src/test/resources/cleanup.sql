@@ -1,15 +1,26 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
+TRUNCATE TABLE host_term_history;
+TRUNCATE TABLE term;
+TRUNCATE TABLE guest_book_report;
 TRUNCATE TABLE guest_book_card_photo;
 TRUNCATE TABLE product_photo;
 TRUNCATE TABLE space_photo;
 TRUNCATE TABLE guest_book_card;
 TRUNCATE TABLE product;
 TRUNCATE TABLE space_host_map;
+TRUNCATE TABLE host_apple;
 TRUNCATE TABLE host_kakao;
+TRUNCATE TABLE host_profile_photo;
 TRUNCATE TABLE space;
+TRUNCATE TABLE exhibition_time;
+TRUNCATE TABLE exhibition_photo;
+TRUNCATE TABLE exhibition_host;
+TRUNCATE TABLE exhibition;
 TRUNCATE TABLE host;
 TRUNCATE TABLE guest;
 TRUNCATE TABLE admin_user;
+TRUNCATE TABLE social_revoke_fail_log;
+TRUNCATE TABLE outbox;
 
 SET FOREIGN_KEY_CHECKS = 1;

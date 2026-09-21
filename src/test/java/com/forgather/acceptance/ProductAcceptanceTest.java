@@ -2,6 +2,7 @@ package com.forgather.acceptance;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.util.List;
@@ -16,28 +17,35 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.forgather.domain.host.model.Host;
+import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.domain.product.dto.ProductResponse;
 import com.forgather.domain.product.dto.ProductsResponse;
 import com.forgather.domain.product.dto.RegisterProductPhotoRequest;
 import com.forgather.domain.product.dto.RegisterProductRequest;
 import com.forgather.domain.product.dto.UpdateProductRequest;
+import com.forgather.domain.product.model.Product;
+import com.forgather.domain.product.model.ProductPhoto;
+import com.forgather.domain.product.repository.ProductPhotoRepository;
 import com.forgather.domain.product.repository.ProductRepository;
 import com.forgather.domain.space.model.Space;
-import com.forgather.domain.space.repository.HostRepository;
+import com.forgather.domain.space.model.SpaceHost;
+import com.forgather.domain.space.repository.SpaceHostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.domain.upload.AwsS3Cloud;
 import com.forgather.fixture.HostFixture;
+import com.forgather.fixture.ProductFixture;
 import com.forgather.fixture.SpaceFixture;
-import com.forgather.global.auth.model.Host;
-import com.forgather.global.auth.model.SpaceHostMap;
-import com.forgather.global.auth.repository.SpaceHostMapRepository;
 import com.forgather.global.auth.util.JwtTokenProvider;
+import com.forgather.global.response.ApiResponse;
+import com.forgather.global.response.ResponseCode;
 
+import io.restassured.common.mapper.TypeRef;
 import io.restassured.http.ContentType;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 
 @AutoConfigureMockMvc
-public class ProductAcceptanceTest extends AcceptanceTest {
+class ProductAcceptanceTest extends AcceptanceTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -52,10 +60,13 @@ public class ProductAcceptanceTest extends AcceptanceTest {
     private HostRepository hostRepository;
 
     @Autowired
-    private SpaceHostMapRepository spaceHostMapRepository;
+    private SpaceHostRepository spaceHostRepository;
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private ProductPhotoRepository productPhotoRepository;
 
     @MockitoBean
     private AwsS3Cloud awsS3Cloud;
@@ -66,7 +77,6 @@ public class ProductAcceptanceTest extends AcceptanceTest {
 
     private RegisterProductRequest registerRequest = new RegisterProductRequest(
         "title",
-        "category",
         "authorName",
         "description",
         "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
@@ -87,7 +97,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
         Host anotherHost = HostFixture.createHost();
         hostRepository.save(host);
         hostRepository.save(anotherHost);
-        spaceHostMapRepository.save(new SpaceHostMap(space, host));
+        spaceHostRepository.save(new SpaceHost(space, host));
 
         accessToken = jwtTokenProvider.generateAccessToken(host.getId());
         anotherAccessToken = jwtTokenProvider.generateAccessToken(anotherHost.getId());
@@ -106,7 +116,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             ProductResponse registerResponse2 = registerProductV3();
 
             // when
-            ProductsResponse result = RestAssuredMockMvc.given()
+            ApiResponse<ProductsResponse> result = RestAssuredMockMvc.given()
                 .header("X-API-Version", "3")
                 .accept(ContentType.JSON)
                 .when()
@@ -115,23 +125,55 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(ProductsResponse.class);
+                .as(new TypeRef<>() {
+                });
 
             // then
             assertAll(
-                () -> assertThat(result.products().getFirst().id()).isEqualTo(registerResponse1.id()),
-                () -> assertThat(result.products().getFirst().title()).isEqualTo(registerResponse1.title()),
-                () -> assertThat(result.products().getFirst().category()).isEqualTo(registerResponse1.category()),
-                () -> assertThat(result.products().getFirst().videoUrl()).isEqualTo(registerResponse1.videoUrl()),
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().products().get(0).id()).isEqualTo(registerResponse1.id()),
+                () -> assertThat(result.data().products().get(0).title()).isEqualTo(registerResponse1.title()),
+                () -> assertThat(result.data().products().get(0).videoUrl()).isEqualTo(registerResponse1.videoUrl()),
 
-                () -> assertThat(result.products().get(1).id()).isEqualTo(registerResponse2.id()),
-                () -> assertThat(result.products().get(1).title()).isEqualTo(registerResponse2.title()),
-                () -> assertThat(result.products().get(1).category()).isEqualTo(registerResponse2.category()),
-                () -> assertThat(result.products().get(1).videoUrl()).isEqualTo(registerResponse2.videoUrl()),
+                () -> assertThat(result.data().products().get(1).id()).isEqualTo(registerResponse2.id()),
+                () -> assertThat(result.data().products().get(1).title()).isEqualTo(registerResponse2.title()),
+                () -> assertThat(result.data().products().get(1).videoUrl()).isEqualTo(registerResponse2.videoUrl()),
 
-                () -> assertThat(result.products().getFirst().firstPhoto().originalName()).isEqualTo("photo1"),
-                () -> assertThat(result.products().getFirst().firstPhoto().path()).endsWith("/spaces/1234567890/product/file1.png"),
-                () -> assertThat(result.products().getFirst().firstPhoto().order()).isEqualTo(1)
+                () -> assertThat(result.data().products().get(0).firstPhoto().originalName()).isEqualTo("photo1"),
+                () -> assertThat(result.data().products().get(0).firstPhoto().path()).endsWith(
+                    "/spaces/1234567890/product/file1.png"),
+                () -> assertThat(result.data().products().get(0).firstPhoto().order()).isEqualTo(1)
+            );
+        }
+
+        @DisplayName("사진이 저장된 순서와 무관하게 정렬 순서가 가장 앞선 사진을 첫 번째 사진으로 반환한다")
+        @Test
+        void returnFirstPhotoBySortOrder() {
+            // given
+            Product product = productRepository.save(ProductFixture.createProductWithSpace(space));
+            productPhotoRepository.save(new ProductPhoto(product, "photo3", "path/third.webp", 1024L, 3));
+            productPhotoRepository.save(new ProductPhoto(product, "photo2", "path/second.webp", 1024L, 2));
+            productPhotoRepository.save(new ProductPhoto(product, "photo1", "path/first.webp", 1024L, 1));
+
+            // when
+            ApiResponse<ProductsResponse> result = RestAssuredMockMvc.given()
+                .header("X-API-Version", "3")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+            // then
+            assertAll(
+                () -> assertThat(result.data().products().getFirst().firstPhoto().order()).isEqualTo(1),
+                () -> assertThat(result.data().products().getFirst().firstPhoto().path())
+                    .isEqualTo("path/first.webp")
             );
         }
 
@@ -139,7 +181,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
         @Test
         void returnEmptyListWhenNoProducts() {
             // when
-            ProductsResponse result = RestAssuredMockMvc.given()
+            ApiResponse<ProductsResponse> result = RestAssuredMockMvc.given()
                 .header("X-API-Version", "3")
                 .accept(ContentType.JSON)
                 .when()
@@ -148,10 +190,15 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(ProductsResponse.class);
+                .as(new TypeRef<>() {
+                });
 
             // then
-            assertThat(result.products()).isEmpty();
+            assertAll(
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().products()).isEmpty()
+            );
         }
     }
 
@@ -164,7 +211,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             ProductResponse registerResponse = registerProductV3();
 
             // when
-            ProductResponse result = RestAssuredMockMvc.given()
+            ApiResponse<ProductResponse> result = RestAssuredMockMvc.given()
                 .header("X-API-Version", "1")
                 .accept(ContentType.JSON)
                 .when()
@@ -173,26 +220,28 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(ProductResponse.class);
+                .as(new TypeRef<>() {
+                });
 
             // then
             assertAll(
-                () -> assertThat(result.id()).isEqualTo(registerResponse.id()),
-                () -> assertThat(result.title()).isEqualTo(registerResponse.title()),
-                () -> assertThat(result.category()).isEqualTo(registerResponse.category()),
-                () -> assertThat(result.authorName()).isEqualTo(registerResponse.authorName()),
-                () -> assertThat(result.description()).isEqualTo(registerResponse.description()),
-                () -> assertThat(result.videoUrl()).isEqualTo(registerResponse.videoUrl()),
-                () -> assertThat(result.isVideoAfterPhoto()).isEqualTo(registerResponse.isVideoAfterPhoto()),
-                () -> assertThat(result.photos().get(0).originalName()).isEqualTo("photo1"),
-                () -> assertThat(result.photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
-                () -> assertThat(result.photos().get(0).order()).isEqualTo(1),
-                () -> assertThat(result.photos().get(1).originalName()).isEqualTo("photo2"),
-                () -> assertThat(result.photos().get(1).path()).endsWith("/spaces/1234567890/product/file2.png"),
-                () -> assertThat(result.photos().get(1).order()).isEqualTo(2),
-                () -> assertThat(result.photos().get(2).originalName()).isEqualTo("photo3"),
-                () -> assertThat(result.photos().get(2).path()).endsWith("/spaces/1234567890/product/file3.png"),
-                () -> assertThat(result.photos().get(2).order()).isEqualTo(3)
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().id()).isEqualTo(registerResponse.id()),
+                () -> assertThat(result.data().title()).isEqualTo(registerResponse.title()),
+                () -> assertThat(result.data().authorName()).isEqualTo(registerResponse.authorName()),
+                () -> assertThat(result.data().description()).isEqualTo(registerResponse.description()),
+                () -> assertThat(result.data().videoUrl()).isEqualTo(registerResponse.videoUrl()),
+                () -> assertThat(result.data().isVideoAfterPhoto()).isEqualTo(registerResponse.isVideoAfterPhoto()),
+                () -> assertThat(result.data().photos().get(0).originalName()).isEqualTo("photo1"),
+                () -> assertThat(result.data().photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
+                () -> assertThat(result.data().photos().get(0).order()).isEqualTo(1),
+                () -> assertThat(result.data().photos().get(1).originalName()).isEqualTo("photo2"),
+                () -> assertThat(result.data().photos().get(1).path()).endsWith("/spaces/1234567890/product/file2.png"),
+                () -> assertThat(result.data().photos().get(1).order()).isEqualTo(2),
+                () -> assertThat(result.data().photos().get(2).originalName()).isEqualTo("photo3"),
+                () -> assertThat(result.data().photos().get(2).path()).endsWith("/spaces/1234567890/product/file3.png"),
+                () -> assertThat(result.data().photos().get(2).order()).isEqualTo(3)
             );
         }
 
@@ -207,6 +256,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .get("/spaces/%s/products/%d".formatted(space.getCode(), 1L))
                 .then()
                 .statusCode(404)
+                .body("code", equalTo("NOT_FOUND"))
                 .body("message", containsString("해당 스페이스에 존재하지 않는 작품입니다"));
         }
     }
@@ -218,8 +268,8 @@ public class ProductAcceptanceTest extends AcceptanceTest {
         @Test
         void register() {
             // when
-            ProductResponse response = RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+            ApiResponse<ProductResponse> response = RestAssuredMockMvc.given()
+                .postProcessors(withAccessToken(accessToken))
                 .header("X-API-Version", "3")
                 .body(registerRequest)
                 .contentType(ContentType.JSON)
@@ -230,26 +280,31 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .statusCode(201)
                 .extract()
                 .body()
-                .as(ProductResponse.class);
+                .as(new TypeRef<>() {
+                });
 
             // then
             assertAll(
-                () -> assertThat(response.id()).isNotNull(),
-                () -> assertThat(response.title()).isEqualTo(registerRequest.title()),
-                () -> assertThat(response.category()).isEqualTo(registerRequest.category()),
-                () -> assertThat(response.authorName()).isEqualTo(registerRequest.authorName()),
-                () -> assertThat(response.description()).isEqualTo(registerRequest.description()),
-                () -> assertThat(response.videoUrl()).isEqualTo(registerRequest.videoUrl()),
-                () -> assertThat(response.isVideoAfterPhoto()).isEqualTo(registerRequest.isVideoAfterPhoto()),
-                () -> assertThat(response.photos().get(0).originalName()).isEqualTo("photo1"),
-                () -> assertThat(response.photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
-                () -> assertThat(response.photos().get(0).order()).isEqualTo(1),
-                () -> assertThat(response.photos().get(1).originalName()).isEqualTo("photo2"),
-                () -> assertThat(response.photos().get(1).path()).endsWith("/spaces/1234567890/product/file2.png"),
-                () -> assertThat(response.photos().get(1).order()).isEqualTo(2),
-                () -> assertThat(response.photos().get(2).originalName()).isEqualTo("photo3"),
-                () -> assertThat(response.photos().get(2).path()).endsWith("/spaces/1234567890/product/file3.png"),
-                () -> assertThat(response.photos().get(2).order()).isEqualTo(3)
+                () -> assertThat(response.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(response.message()).isNull(),
+                () -> assertThat(response.data().id()).isNotNull(),
+                () -> assertThat(response.data().title()).isEqualTo(registerRequest.title()),
+                () -> assertThat(response.data().authorName()).isEqualTo(registerRequest.authorName()),
+                () -> assertThat(response.data().description()).isEqualTo(registerRequest.description()),
+                () -> assertThat(response.data().videoUrl()).isEqualTo(registerRequest.videoUrl()),
+                () -> assertThat(response.data().isVideoAfterPhoto()).isEqualTo(registerRequest.isVideoAfterPhoto()),
+                () -> assertThat(response.data().photos().get(0).originalName()).isEqualTo("photo1"),
+                () -> assertThat(response.data().photos().get(0).path()).endsWith(
+                    "/spaces/1234567890/product/file1.png"),
+                () -> assertThat(response.data().photos().get(0).order()).isEqualTo(1),
+                () -> assertThat(response.data().photos().get(1).originalName()).isEqualTo("photo2"),
+                () -> assertThat(response.data().photos().get(1).path()).endsWith(
+                    "/spaces/1234567890/product/file2.png"),
+                () -> assertThat(response.data().photos().get(1).order()).isEqualTo(2),
+                () -> assertThat(response.data().photos().get(2).originalName()).isEqualTo("photo3"),
+                () -> assertThat(response.data().photos().get(2).path()).endsWith(
+                    "/spaces/1234567890/product/file3.png"),
+                () -> assertThat(response.data().photos().get(2).order()).isEqualTo(3)
             );
         }
 
@@ -262,7 +317,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
 
             // when, then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .header("X-API-Version", "3")
                 .body(registerRequest)
                 .contentType(ContentType.JSON)
@@ -273,9 +328,9 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .statusCode(201);
         }
 
-        @DisplayName("작품 3개를 초과해서 등록하면 예외를 던진다")
+        @DisplayName("작품 개수 제한 없이 3개를 초과해서 등록할 수 있다")
         @Test
-        void throwExceptionWhenProductExceedMaxCount() {
+        void registerProductsWithoutMaxCountLimit() {
             // given
             registerProductV3();
             registerProductV3();
@@ -283,7 +338,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
 
             // when, then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .header("X-API-Version", "3")
                 .body(registerRequest)
                 .contentType(ContentType.JSON)
@@ -291,8 +346,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .when()
                 .post("/spaces/%s/products".formatted(space.getCode()))
                 .then()
-                .statusCode(400)
-                .body("message", containsString("작품은 3개까지만 등록 가능"));
+                .statusCode(201);
         }
 
         @DisplayName("작품 설명을 2000자까지 작성할 수 있다")
@@ -301,7 +355,6 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             // given
             RegisterProductRequest registerRequest = new RegisterProductRequest(
                 "title",
-                "category",
                 "authorName",
                 "1234567890".repeat(200),
                 "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
@@ -310,7 +363,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             );
             // when, then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .header("X-API-Version", "3")
                 .body(registerRequest)
                 .contentType(ContentType.JSON)
@@ -319,6 +372,106 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .post("/spaces/%s/products".formatted(space.getCode()))
                 .then()
                 .statusCode(201);
+        }
+
+        @DisplayName("작품 설명 없이 작품을 등록하면 빈 문자열로 저장된다")
+        @Test
+        void registerWithoutDescription() {
+            // given
+            RegisterProductRequest request = new RegisterProductRequest(
+                "title",
+                "authorName",
+                null,
+                "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
+                false,
+                List.of()
+            );
+
+            // when
+            ApiResponse<ProductResponse> response = RestAssuredMockMvc.given()
+                .postProcessors(withAccessToken(accessToken))
+                .header("X-API-Version", "3")
+                .body(request)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(201)
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+            // then
+            assertAll(
+                () -> assertThat(response.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(response.data().description()).isEqualTo("")
+            );
+        }
+
+        @DisplayName("멀티 코드포인트 이모지로만 이루어진 작품명 50자를 등록할 수 있다")
+        @Test
+        void registerWithMultiCodePointEmojiTitle() {
+            // given
+            String title = "👨‍👩‍👧‍👦".repeat(50); // grapheme 50자, 코드포인트 350개
+            RegisterProductRequest request = new RegisterProductRequest(
+                title,
+                "authorName",
+                "description",
+                "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
+                false,
+                List.of()
+            );
+
+            // when
+            ApiResponse<ProductResponse> response = RestAssuredMockMvc.given()
+                .postProcessors(withAccessToken(accessToken))
+                .header("X-API-Version", "3")
+                .body(request)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(201)
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+            // then
+            assertAll(
+                () -> assertThat(response.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(response.data().title()).isEqualTo(title)
+            );
+        }
+
+        @DisplayName("작품명이 50자를 초과하면 검증에 실패한다")
+        @Test
+        void throwExceptionWhenTitleExceedMaxLength() {
+            // given
+            RegisterProductRequest request = new RegisterProductRequest(
+                "1234567890".repeat(5) + "1",
+                "authorName",
+                "description",
+                "https://youtu.be/lkuAxAVgAX0?si=OAobeoMmjeGurOHI",
+                false,
+                List.of()
+            );
+
+            // when, then
+            RestAssuredMockMvc.given()
+                .postProcessors(withAccessToken(accessToken))
+                .header("X-API-Version", "3")
+                .body(request)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(400)
+                .body("code", equalTo("VALIDATION_FAILED"));
         }
 
         @DisplayName("방문자가 작품을 등록하면 예외를 던진다")
@@ -334,6 +487,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .post("/spaces/%s/products".formatted(space.getCode()))
                 .then()
                 .statusCode(401)
+                .body("code", equalTo("UNAUTHORIZED"))
                 .body("message", containsString("로그인이 필요합니다."));
         }
 
@@ -342,7 +496,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
         void throwExceptionWhenAnotherHostRegister() {
             // when, then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + anotherAccessToken)
+                .postProcessors(withAccessToken(anotherAccessToken))
                 .header("X-API-Version", "3")
                 .body(registerRequest)
                 .contentType(ContentType.JSON)
@@ -351,6 +505,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .post("/spaces/%s/products".formatted(space.getCode()))
                 .then()
                 .statusCode(403)
+                .body("code", equalTo("FORBIDDEN"))
                 .body("message", containsString("해당 스페이스에 대한 접근 권한이 없습니다."));
         }
     }
@@ -367,7 +522,6 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             UpdateProductRequest request = new UpdateProductRequest(
                 "foovar1",
                 null,
-                null,
                 "description",
                 "https://youtu.be/aaa",
                 true,
@@ -379,8 +533,8 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             );
 
             // when
-            ProductResponse result = RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+            ApiResponse<ProductResponse> result = RestAssuredMockMvc.given()
+                .postProcessors(withAccessToken(accessToken))
                 .header("X-API-Version", "1")
                 .body(request)
                 .contentType(ContentType.JSON)
@@ -391,29 +545,31 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .statusCode(200)
                 .extract()
                 .body()
-                .as(ProductResponse.class);
+                .as(new TypeRef<>() {
+                });
 
             // then
             assertAll(
-                () -> assertThat(result.id()).isEqualTo(registerResponse.id()),
-                () -> assertThat(result.title()).isEqualTo(request.title()),
-                () -> assertThat(result.category()).isEqualTo(registerResponse.category()),
-                () -> assertThat(result.authorName()).isEqualTo(registerResponse.authorName()),
-                () -> assertThat(result.description()).isEqualTo(request.description()),
-                () -> assertThat(result.videoUrl()).isEqualTo(request.videoUrl()),
-                () -> assertThat(result.isVideoAfterPhoto()).isEqualTo(request.isVideoAfterPhoto()),
-                () -> assertThat(result.photos().get(0).originalName()).isEqualTo("photo1"),
-                () -> assertThat(result.photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
-                () -> assertThat(result.photos().get(0).order()).isEqualTo(1),
-                () -> assertThat(result.photos().get(1).originalName()).isEqualTo("photo3"),
-                () -> assertThat(result.photos().get(1).path()).endsWith("/spaces/1234567890/product/file3.png"),
-                () -> assertThat(result.photos().get(1).order()).isEqualTo(2),
-                () -> assertThat(result.photos().get(2).originalName()).isEqualTo("photo4"),
-                () -> assertThat(result.photos().get(2).path()).endsWith("/spaces/1234567890/product/file4.png"),
-                () -> assertThat(result.photos().get(2).order()).isEqualTo(3),
-                () -> assertThat(result.photos().get(3).originalName()).isEqualTo("photo5"),
-                () -> assertThat(result.photos().get(3).path()).endsWith("/spaces/1234567890/product/file5.png"),
-                () -> assertThat(result.photos().get(3).order()).isEqualTo(4)
+                () -> assertThat(result.code()).isEqualTo(ResponseCode.SUCCESS),
+                () -> assertThat(result.message()).isNull(),
+                () -> assertThat(result.data().id()).isEqualTo(registerResponse.id()),
+                () -> assertThat(result.data().title()).isEqualTo(request.title()),
+                () -> assertThat(result.data().authorName()).isEqualTo(registerResponse.authorName()),
+                () -> assertThat(result.data().description()).isEqualTo(request.description()),
+                () -> assertThat(result.data().videoUrl()).isEqualTo(request.videoUrl()),
+                () -> assertThat(result.data().isVideoAfterPhoto()).isEqualTo(request.isVideoAfterPhoto()),
+                () -> assertThat(result.data().photos().get(0).originalName()).isEqualTo("photo1"),
+                () -> assertThat(result.data().photos().get(0).path()).endsWith("/spaces/1234567890/product/file1.png"),
+                () -> assertThat(result.data().photos().get(0).order()).isEqualTo(1),
+                () -> assertThat(result.data().photos().get(1).originalName()).isEqualTo("photo3"),
+                () -> assertThat(result.data().photos().get(1).path()).endsWith("/spaces/1234567890/product/file3.png"),
+                () -> assertThat(result.data().photos().get(1).order()).isEqualTo(2),
+                () -> assertThat(result.data().photos().get(2).originalName()).isEqualTo("photo4"),
+                () -> assertThat(result.data().photos().get(2).path()).endsWith("/spaces/1234567890/product/file4.png"),
+                () -> assertThat(result.data().photos().get(2).order()).isEqualTo(3),
+                () -> assertThat(result.data().photos().get(3).originalName()).isEqualTo("photo5"),
+                () -> assertThat(result.data().photos().get(3).path()).endsWith("/spaces/1234567890/product/file5.png"),
+                () -> assertThat(result.data().photos().get(3).order()).isEqualTo(4)
             );
         }
 
@@ -425,7 +581,6 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             UpdateProductRequest request = new UpdateProductRequest(
                 "foovar1",
                 null,
-                null,
                 "description",
                 "https://youtu.be/aaa",
                 true,
@@ -435,7 +590,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
 
             // when, then
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .header("X-API-Version", "1")
                 .body(request)
                 .contentType(ContentType.JSON)
@@ -444,6 +599,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .patch("/spaces/%s/products/%d".formatted(space.getCode(), registerResponse.id()))
                 .then()
                 .statusCode(400)
+                .body("code", equalTo("BAD_REQUEST"))
                 .body("message", containsString("작품에 존재하지 않는 사진입니다."));
         }
 
@@ -455,7 +611,6 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
             UpdateProductRequest request = new UpdateProductRequest(
                 "foovar1",
-                null,
                 null,
                 "description",
                 "https://youtu.be/aaa",
@@ -477,6 +632,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .patch("/spaces/%s/products/%d".formatted(space.getCode(), registerResponse.id()))
                 .then()
                 .statusCode(401)
+                .body("code", equalTo("UNAUTHORIZED"))
                 .body("message", containsString("로그인이 필요합니다."));
         }
 
@@ -488,7 +644,6 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             Mockito.doNothing().when(awsS3Cloud).deleteContents(Mockito.anyList());
             UpdateProductRequest request = new UpdateProductRequest(
                 "foovar1",
-                null,
                 null,
                 "description",
                 "https://youtu.be/aaa",
@@ -502,7 +657,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
 
             // when
             RestAssuredMockMvc.given()
-                .header("Authorization", "Bearer " + anotherAccessToken)
+                .postProcessors(withAccessToken(anotherAccessToken))
                 .header("X-API-Version", "1")
                 .body(request)
                 .contentType(ContentType.JSON)
@@ -511,6 +666,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .patch("/spaces/%s/products/%d".formatted(space.getCode(), registerResponse.id()))
                 .then()
                 .statusCode(403)
+                .body("code", equalTo("FORBIDDEN"))
                 .body("message", containsString("해당 스페이스에 대한 접근 권한이 없습니다."));
         }
     }
@@ -528,7 +684,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             // when, then
             RestAssuredMockMvc
                 .given()
-                .header("Authorization", "Bearer " + accessToken)
+                .postProcessors(withAccessToken(accessToken))
                 .header("X-API-Version", "1")
                 .when()
                 .delete("/spaces/%s/products/%d".formatted(space.getCode(), registerResponse.id()))
@@ -553,6 +709,7 @@ public class ProductAcceptanceTest extends AcceptanceTest {
                 .delete("/spaces/%s/products/%d".formatted(space.getCode(), registerResponse.id()))
                 .then()
                 .statusCode(401)
+                .body("code", equalTo("UNAUTHORIZED"))
                 .body("message", containsString("로그인이 필요합니다."));
         }
 
@@ -566,19 +723,20 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             // when, then
             RestAssuredMockMvc
                 .given()
-                .header("Authorization", "Bearer " + anotherAccessToken)
+                .postProcessors(withAccessToken(anotherAccessToken))
                 .header("X-API-Version", "1")
                 .when()
                 .delete("/spaces/%s/products/%d".formatted(space.getCode(), registerResponse.id()))
                 .then()
                 .statusCode(403)
+                .body("code", equalTo("FORBIDDEN"))
                 .body("message", containsString("해당 스페이스에 대한 접근 권한이 없습니다."));
         }
     }
 
     private ProductResponse registerProductV3() {
-        return RestAssuredMockMvc.given()
-            .header("Authorization", "Bearer " + accessToken)
+        ApiResponse<ProductResponse> response = RestAssuredMockMvc.given()
+            .postProcessors(withAccessToken(accessToken))
             .header("X-API-Version", "3")
             .body(registerRequest)
             .contentType(ContentType.JSON)
@@ -589,6 +747,8 @@ public class ProductAcceptanceTest extends AcceptanceTest {
             .statusCode(201)
             .extract()
             .body()
-            .as(ProductResponse.class);
+            .as(new TypeRef<>() {
+            });
+        return response.data();
     }
 }

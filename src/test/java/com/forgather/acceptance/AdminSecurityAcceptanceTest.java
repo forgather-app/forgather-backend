@@ -2,6 +2,7 @@ package com.forgather.acceptance;
 
 import static com.forgather.back_office.auth.session.SessionConstants.SESSION_COOKIE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.BDDMockito.given;
 
@@ -125,14 +126,12 @@ class AdminSecurityAcceptanceTest extends AcceptanceTest {
     @DisplayName("세션이 없으면 보안 요약 정보를 조회할 수 없다.")
     @Test
     void getSummaryWithoutSession() {
-        // when
-        var result = RestAssuredMockMvc.given()
+        // when & then
+        RestAssuredMockMvc.given()
             .when()
             .get("/admin/security/summary")
             .then()
-            .extract();
-
-        // then
-        assertThat(result.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+            .statusCode(HttpStatus.UNAUTHORIZED.value())
+            .body("code", equalTo("UNAUTHORIZED"));
     }
 }

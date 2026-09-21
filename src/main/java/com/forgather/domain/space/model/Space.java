@@ -27,13 +27,8 @@ public class Space extends SoftDeleteEntity {
     private static final int CODE_LENGTH = 10;
     private static final int MAX_NAME_LENGTH = 30;
     private static final int MAX_DESCRIPTION_LENGTH = 200;
-    private static final int MAX_INSTAGRAM_USERNAME_LENGTH = 30;
-    private static final int MAX_EMAIL_LENGTH = 50;
     private static final int MAX_LINK_URL_LENGTH = 2048;
     private static final int MAX_LINK_NAME_LENGTH = 30;
-    private static final Pattern EMAIL_PATTERN = Pattern.compile(
-        "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,63}$"
-    );
     private static final Pattern LINK_URL_PATTERN = Pattern.compile(
         "^https?://[^\\s]+$", Pattern.CASE_INSENSITIVE
     );
@@ -54,12 +49,6 @@ public class Space extends SoftDeleteEntity {
     @Column(name = "is_public", nullable = false)
     private boolean isPublic = false;
 
-    @Column(name = "instagram_username", nullable = false)
-    private String instagramUsername;
-
-    @Column(name = "email", nullable = false)
-    private String email;
-
     @Column(name = "link_url", nullable = false, length = 2048)
     private String linkUrl;
 
@@ -67,57 +56,51 @@ public class Space extends SoftDeleteEntity {
     private String linkName;
 
     /**
-     * 스페이스를 생성한다.
-     *
-     * @param code              스페이스 코드 (필수, 10자)
-     * @param name              스페이스 이름 (필수, 최대 30자)
-     * @param description       스페이스 설명 (필수, 최대 200자)
-     * @param isPublic          스페이스 공개 여부 (필수)
-     * @param instagramUsername 인스타그램 아이디 (필수, 최대 30자)
-     * @param email             이메일 (필수, 최대 50자)
-     * @param linkUrl           소개 링크 URL (선택, 최대 2048자, 표시 이름과 함께 입력)
-     * @param linkName          소개 링크 표시 이름 (선택, 최대 30자, URL과 함께 입력)
+     * 호스트가 지정한 '지금 축하받고 있는 스페이스'인지 여부.
      */
-    public Space(String code, String name, String description, boolean isPublic, String instagramUsername,
-        String email, String linkUrl, String linkName) {
-        validateRequiredFields(code, name, description, instagramUsername, email);
+    @Column(name = "is_featured", nullable = false)
+    private boolean isFeatured = false;
+
+    /**
+     * 스페이스를 생성한다.
+     * 필수값은 스페이스 이름뿐이며, 나머지 값은 생략하면 빈 문자열로 저장한다.
+     *
+     * @param code        스페이스 코드 (필수, 10자)
+     * @param name        스페이스 이름 (필수, 최대 30자)
+     * @param description 스페이스 설명 (선택, 최대 200자)
+     * @param isPublic    스페이스 공개 여부 (선택, 기본 false)
+     * @param linkUrl     소개 링크 URL (선택, 최대 2048자, 표시 이름과 함께 입력)
+     * @param linkName    소개 링크 표시 이름 (선택, 최대 30자, URL과 함께 입력)
+     */
+    public Space(String code, String name, String description, boolean isPublic, String linkUrl, String linkName) {
+        validateRequiredFields(code, name);
+        // 이 도메인은 '값 없음'을 NULL이 아니라 빈 문자열로 표현한다. 검증 전에 먼저 정규화한다.
+        String newDescription = convertBlankToEmptyString(description);
+        String newLinkUrl = convertBlankToEmptyString(linkUrl);
+        String newLinkName = convertBlankToEmptyString(linkName);
+
         validateCode(code);
         validateName(name);
-        validateDescription(description);
-        validateInstagramUsername(instagramUsername);
-        validateEmail(email);
-        validateLink(linkUrl, linkName);
+        validateDescription(newDescription);
+        validateLink(newLinkUrl, newLinkName);
         this.code = code;
         this.name = name;
-        this.description = convertBlankToEmptyString(description);
+        this.description = newDescription;
         this.isPublic = isPublic;
-        this.instagramUsername = convertBlankToEmptyString(instagramUsername);
-        this.email = convertBlankToEmptyString(email);
-        this.linkUrl = convertBlankToEmptyString(linkUrl);
-        this.linkName = convertBlankToEmptyString(linkName);
+        this.linkUrl = newLinkUrl;
+        this.linkName = newLinkName;
     }
 
-    private void validateRequiredFields(String code, String name, String description, String instagramUsername,
-        String email) {
+    private void validateRequiredFields(String code, String name) {
         if (code == null) {
             throw new BaseNullPointerException("스페이스 코드는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
         }
         if (name == null) {
             throw new BaseNullPointerException("스페이스 이름은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
         }
-        if (description == null) {
-            throw new BaseNullPointerException("스페이스 설명은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
-        }
-        if (instagramUsername == null) {
-            throw new BaseNullPointerException("인스타그램 아이디는 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
-        }
-        if (email == null) {
-            throw new BaseNullPointerException("이메일은 null일 수 없습니다.", HttpStatus.BAD_REQUEST);
-        }
     }
 
-    public void update(String name, String description, Boolean isPublic, String instagramUsername, String email,
-        String linkUrl, String linkName) {
+    public void update(String name, String description, Boolean isPublic, String linkUrl, String linkName) {
         if (name != null) {
             validateName(name);
             this.name = name;
@@ -126,16 +109,8 @@ public class Space extends SoftDeleteEntity {
             validateDescription(description);
             this.description = description;
         }
-        if (instagramUsername != null) {
-            validateInstagramUsername(instagramUsername);
-            this.instagramUsername = instagramUsername;
-        }
         if (isPublic != null) {
             this.isPublic = isPublic;
-        }
-        if (email != null) {
-            validateEmail(email);
-            this.email = email;
         }
         updateLink(linkUrl, linkName);
     }
@@ -153,6 +128,28 @@ public class Space extends SoftDeleteEntity {
         if (linkName != null) {
             this.linkName = convertBlankToEmptyString(linkName);
         }
+    }
+
+    public void feature() {
+        this.isFeatured = true;
+    }
+
+    public void unfeature() {
+        this.isFeatured = false;
+    }
+
+    public boolean isSameCode(String code) {
+        return this.code.equals(code);
+    }
+
+    /**
+     * 삭제되는 스페이스가 스스로 정리해야 할 상태를 초기화한 뒤 소프트 삭제한다.
+     * 삭제 시 정리가 필요한 필드가 늘어나면 서비스가 아니라 이 메서드에 추가한다.
+     */
+    @Override
+    public void delete() {
+        unfeature();
+        super.delete();
     }
 
     private void validateCode(String code) {
@@ -173,24 +170,6 @@ public class Space extends SoftDeleteEntity {
     private void validateDescription(String description) {
         if (TextLengthCounter.count(description) > MAX_DESCRIPTION_LENGTH) {
             throw new BaseException("스페이스 설명은 최대 %d자까지 가능합니다.".formatted(MAX_DESCRIPTION_LENGTH));
-        }
-    }
-
-    private void validateInstagramUsername(String instagramUsername) {
-        if (instagramUsername.length() > MAX_INSTAGRAM_USERNAME_LENGTH) {
-            throw new BaseException("인스타그램 아이디는 최대 %d자까지 가능합니다.".formatted(MAX_INSTAGRAM_USERNAME_LENGTH));
-        }
-    }
-
-    private void validateEmail(String email) {
-        if (email.isBlank()) {
-            return;
-        }
-        if (email.length() > MAX_EMAIL_LENGTH) {
-            throw new BaseException("이메일은 최대 %d자까지 가능합니다.".formatted(MAX_EMAIL_LENGTH));
-        }
-        if (!EMAIL_PATTERN.matcher(email).matches()) {
-            throw new BaseException("이메일 형식이 올바르지 않습니다.");
         }
     }
 
@@ -229,15 +208,16 @@ public class Space extends SoftDeleteEntity {
     }
 
     @Override
-    public boolean equals(Object object) {
-        if (object == null || getClass() != object.getClass())
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof Space)) {
             return false;
-        Space space = (Space)object;
-        return Objects.equals(id, space.id);
+        }
+        Space space = (Space)o;
+        return id != null && Objects.equals(id, space.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return Space.class.hashCode();
     }
 }

@@ -1,0 +1,4 @@
+interface:
+  display_name: "작업 브랜치 분기"
+  short_description: "이슈 또는 작업 내용을 확인해 작업 브랜치를 분기"
+  default_prompt: "Use $create-work-branch to 최신 v2/develop에서 규칙에 맞는 작업 브랜치를 분기해."

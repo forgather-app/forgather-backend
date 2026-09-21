@@ -2,7 +2,7 @@ package com.forgather.back_office.dto;
 
 import java.time.LocalDateTime;
 
-import com.forgather.global.auth.model.Host;
+import com.forgather.domain.host.model.Host;
 
 public record HostDetailResponse(
     Long id,
@@ -12,6 +12,6 @@ public record HostDetailResponse(
 ) {
 
     public static HostDetailResponse of(Host host, long spaceCount) {
-        return new HostDetailResponse(host.getId(), host.getName(), host.getCreatedAt(), spaceCount);
+        return new HostDetailResponse(host.getId(), host.getNickname(), host.getCreatedAt(), spaceCount);
     }
 }

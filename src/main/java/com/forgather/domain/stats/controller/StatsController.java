@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.forgather.domain.stats.dto.LandingStatsResponse;
 import com.forgather.domain.stats.service.StatsService;
+import com.forgather.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,8 +25,8 @@ public class StatsController {
 
     @Operation(summary = "랜딩 페이지용 통계", description = "서비스 내 모든 스페이스와 방명록 카드의 개수를 반환합니다.")
     @GetMapping("/landing")
-    public ResponseEntity<LandingStatsResponse> landing() {
+    public ResponseEntity<ApiResponse<LandingStatsResponse>> landing() {
         LandingStatsResponse response = statsService.landing();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

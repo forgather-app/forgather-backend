@@ -38,12 +38,14 @@ public class LoggingAspect {
         try {
             return joinPoint.proceed();
         } finally {
-            long durationMillis = System.currentTimeMillis() - startMillis;
-            log.atDebug()
-                .addKeyValue("event", getMethodName(joinPoint))
-                .addKeyValue("params", getMethodParams(joinPoint))
-                .addKeyValue("duration", durationMillis + "ms")
-                .log();
+            if (log.isDebugEnabled()) {
+                long durationMillis = System.currentTimeMillis() - startMillis;
+                log.atDebug()
+                    .addKeyValue("event", getMethodName(joinPoint))
+                    .addKeyValue("params", getMethodParams(joinPoint))
+                    .addKeyValue("duration", durationMillis + "ms")
+                    .log();
+            }
         }
     }
 

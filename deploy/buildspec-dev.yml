@@ -32,7 +32,7 @@ phases:
       - ./gradlew build -x test
       - echo "[build] jar, appspec, deploy 파일 복사"
       - cp build/libs/forgather-0.0.1-SNAPSHOT.jar ..
-      - cp deploy/appspec.yml ..
+      - cp deploy/appspec-dev.yml ../appspec.yml
       - cp deploy/deploy-dev.sh ../deploy.sh
 
 artifacts:

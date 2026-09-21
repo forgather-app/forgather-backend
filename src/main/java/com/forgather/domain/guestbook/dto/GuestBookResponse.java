@@ -4,28 +4,37 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record GuestBookResponse(
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "읽지 않은 방명록 카드 개수", example = "3")
+    Long unreadCount,
+
     @Schema(description = "방명록 카드 목록", example = """
         [
             {
               "id": 1,
               "nickname": "밍퐁루블",
-              "containsPhoto": false,
-              "isRead": false
+              "message": "전시 잘봤다~~ 너가 최고야 🤙",
+              "createdAt": "2025-10-13T13:05",
+              "containsPhoto": false
             },
             {
               "id": 2,
               "nickname": "레오",
-              "containsPhoto": true,
-              "isRead": false
+              "message": "졸업 전시 축하해!",
+              "createdAt": "2025-10-13T14:20",
+              "containsPhoto": true
             },
             {
               "id": 3,
               "nickname": "포스티",
-              "containsPhoto": true,
-              "isRead": true
+              "message": "전시 너무 잘 봤어 🤍",
+              "createdAt": "2025-10-14T09:41",
+              "containsPhoto": true
             }
           ]
         """)
@@ -45,7 +54,12 @@ public record GuestBookResponse(
 ) {
 
     public GuestBookResponse(Page<GuestBookCardSimpleResponse> guestBookCards) {
-        this(guestBookCards.toList(),
+        this(guestBookCards, null);
+    }
+
+    public GuestBookResponse(Page<GuestBookCardSimpleResponse> guestBookCards, Long unreadCount) {
+        this(unreadCount,
+            guestBookCards.toList(),
             guestBookCards.getNumber() + 1,
             guestBookCards.getSize(),
             guestBookCards.getTotalElements(),

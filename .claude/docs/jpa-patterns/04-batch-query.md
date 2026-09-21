@@ -16,10 +16,10 @@ List<SpaceResponse> responses = spaces.stream()
     .toList();
 
 // 🟢 Good: 배치 쿼리로 2번의 쿼리로 해결 (Forgather 실제 예시)
-private List<SpaceResponse> createSpaceResponses(List<SpaceHostMap> spaceHostMaps) {
+private List<SpaceResponse> createSpaceResponses(List<SpaceHost> SpaceHosts) {
     // 1. ID 목록 추출
-    List<Long> spaceIds = spaceHostMaps.stream()
-        .map(shm -> shm.getSpace().getId())
+    List<Long> spaceIds = SpaceHosts.stream()
+        .map(sh -> sh.getSpace().getId())
         .toList();
 
     // 2. 배치 쿼리로 한 번에 조회 후 Map 변환
@@ -38,9 +38,9 @@ private List<SpaceResponse> createSpaceResponses(List<SpaceHostMap> spaceHostMap
             photo -> photo));
 
     // 3. Map에서 O(1)으로 조회
-    return spaceHostMaps.stream()
-        .map(shm -> {
-            Space space = shm.getSpace();
+    return SpaceHosts.stream()
+        .map(sh -> {
+            Space space = sh.getSpace();
             Long count = guestBookCardCounts.getOrDefault(space.getId(), 0L);
             SpacePhoto photo = spacePhotos.getOrDefault(space.getId(), SpacePhoto.empty(space));
             return SpaceResponse.from(space, photo, count);

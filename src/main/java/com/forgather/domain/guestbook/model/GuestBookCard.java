@@ -1,11 +1,17 @@
 package com.forgather.domain.guestbook.model;
 
+import static com.forgather.domain.guestbook.model.VisibilityStatus.HIDDEN_BY_ADMIN;
+import static com.forgather.domain.guestbook.model.VisibilityStatus.HIDDEN_BY_HOST;
+import static com.forgather.domain.guestbook.model.VisibilityStatus.VISIBLE;
+
 import org.springframework.http.HttpStatus;
 
+import com.forgather.domain.guestbook.exception.GuestbookCardNotReadableException;
 import com.forgather.domain.model.SoftDeleteEntity;
 import com.forgather.domain.space.model.Space;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
+import com.forgather.global.exception.NotFoundException;
 import com.forgather.global.util.TextLengthCounter;
 
 import jakarta.persistence.Column;
@@ -35,10 +41,6 @@ public class GuestBookCard extends SoftDeleteEntity {
     @JoinColumn(name = "space_id", nullable = false)
     private Space space;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "guest_id", nullable = false)
-    private Guest guest;
-    
     @Column(name = "nickname", length = 10)
     private String nickname;
 
@@ -50,26 +52,22 @@ public class GuestBookCard extends SoftDeleteEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "visibility_status", nullable = false)
-    private VisibilityStatus visibilityStatus = VisibilityStatus.VISIBLE;  // VISIBLE, HIDDEN_BY_USER, HIDDEN_BY_ADMIN
+    private VisibilityStatus visibilityStatus = VISIBLE;
 
-    public GuestBookCard(Space space, Guest guest, String message) {
-        validateRequiredFields(space, guest, guest.getNickname(), message);
-        validateNickname(guest.getNickname());
+    public GuestBookCard(Space space, String nickname, String message) {
+        validateRequiredFields(space, nickname, message);
+        validateNickname(nickname);
         validateMessage(message);
         this.space = space;
-        this.guest = guest;
-        this.nickname = guest.getNickname();
+        this.nickname = nickname;
         this.message = message;
         this.isRead = false;
-        this.visibilityStatus = VisibilityStatus.VISIBLE;
+        this.visibilityStatus = VISIBLE;
     }
 
-    private void validateRequiredFields(Space space, Guest guest, String nickname, String message) {
+    private void validateRequiredFields(Space space, String nickname, String message) {
         if (space == null) {
             throw new BaseNullPointerException("방명록 카드 스페이스는 null일 수 없습니다.");
-        }
-        if (guest == null) {
-            throw new BaseNullPointerException("방명록 카드 방문자는 null일 수 없습니다.");
         }
         if (nickname == null) {
             throw new BaseNullPointerException("방문자 닉네임은 null일 수 없습니다.");
@@ -96,15 +94,26 @@ public class GuestBookCard extends SoftDeleteEntity {
         }
     }
 
-    public String getNickname() {
-        return guest.getNickname();
-    }
-
     public boolean equalsSpace(Space other) {
         return space.equals(other);
     }
 
-    public void read() {
-        isRead = true;
+    public void read(boolean isSpaceHost) {
+        validateCanReadByVisibilityStatus(isSpaceHost);
+        if (isSpaceHost) {
+            isRead = true;
+        }
+    }
+
+    private void validateCanReadByVisibilityStatus(boolean isSpaceHost) {
+        if (visibilityStatus == HIDDEN_BY_ADMIN ||
+            visibilityStatus == HIDDEN_BY_HOST && !isSpaceHost
+        ) {
+            throw new GuestbookCardNotReadableException();
+        }
+    }
+
+    public void hideByAdmin() {
+        visibilityStatus = HIDDEN_BY_ADMIN;
     }
 }

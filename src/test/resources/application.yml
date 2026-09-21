@@ -9,6 +9,7 @@ spring:
     password:
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: create-drop
     show-sql: true
@@ -41,6 +42,8 @@ aws:
 cors:
   allowed-origins:
     - http://localhost:8080
+    - http://localhost:5173
+    - http://localhost:5174
   allowed-methods:
     - GET
     - POST
@@ -49,7 +52,6 @@ cors:
     - PATCH
     - OPTIONS
   allowed-headers:
-    - Authorization
     - Content-Type
     - X-Requested-With
   allow-credentials: true
@@ -67,6 +69,39 @@ jwt:
   access-token-expiration: 7776000 # 90 days
   refresh-token-expiration: 7776000 # 90 days
   secret: mokohistaleopostymingobluelunapongjumokohistaleopostymingobluelunapongjumokohistaleopostymingobluelunapongju
+
+auth:
+  cookie:
+    secure: false
+    same-site: Lax
+  dev-login:
+    login-id: testId
+    password: testPw
+    nickname: 테스트
+    email: test@forgather.app
+
+kakao:
+  native-app-key: test-kakao-native-app-key
+  issuer: https://kauth.kakao.com
+  jwks-url: http://localhost/kakao/.well-known/jwks.json
+  admin-key: test-kakao-admin-key
+  unlink-url: http://localhost/kakao/v1/user/unlink
+
+apple:
+  jwks-url: http://localhost/apple/auth/keys
+  issuer: https://appleid.apple.com
+  client-id: test-apple-client-id
+  team-id: test-apple-team-id
+  key-id: test-apple-key-id
+  # 테스트 전용 EC PKCS#8 개인 키이며 실서비스에서는 사용하지 않는다
+  private-key: |-
+    -----BEGIN PRIVATE KEY-----
+    MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgVkPMdODqOjI7/sBK
+    eIgzhRb7ksP2lMNAZxVCLMIYpKqhRANCAARGHmOIsGmj7xxcwy2dlTS9gT+jKUVG
+    qvpcG9GmkUaNyK5+6TOFZQvljuloKNDLrzQ9zW2qsLoghDmbR4uDdnHw
+    -----END PRIVATE KEY-----
+  token-url: http://localhost/apple/auth/token
+  revoke-url: http://localhost/apple/auth/revoke
 
 monitoring:
   prometheus-url: ""

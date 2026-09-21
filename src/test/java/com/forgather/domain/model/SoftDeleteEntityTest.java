@@ -12,11 +12,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import com.forgather.fixture.GuestBookCardFixture;
 import com.forgather.fixture.GuestBookCardPhotoFixture;
-import com.forgather.fixture.GuestFixture;
 import com.forgather.fixture.ProductFixture;
 import com.forgather.fixture.ProductPhotoFixture;
 import com.forgather.fixture.SpaceFixture;
-import com.forgather.fixture.SpaceHostMapFixture;
+import com.forgather.fixture.SpaceHostFixture;
 import com.forgather.fixture.SpacePhotoFixture;
 
 class SoftDeleteEntityTest {
@@ -44,10 +43,9 @@ class SoftDeleteEntityTest {
         return Stream.of(
             arguments(SpaceFixture.createSpace()),
             arguments(SpacePhotoFixture.createSpacePhoto()),
-            arguments(SpaceHostMapFixture.createSpaceHostMap()),
+            arguments(SpaceHostFixture.createSpaceHost()),
             arguments(GuestBookCardFixture.createGuestBookCard()),
             arguments(GuestBookCardPhotoFixture.createGuestBookCardPhoto()),
-            arguments(GuestFixture.createGuest()),
             arguments(ProductFixture.createProduct()),
             arguments(ProductPhotoFixture.createProductPhoto())
         );
