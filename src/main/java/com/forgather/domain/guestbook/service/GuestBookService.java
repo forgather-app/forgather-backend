@@ -5,6 +5,7 @@ import static com.forgather.domain.upload.domain.FilePathGenerator.generateConte
 import static com.forgather.domain.upload.domain.UploadCategory.GUESTBOOK;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -188,12 +189,14 @@ public class GuestBookService {
         throw new ForbiddenException("방문자는 비공개 스페이스의 방명록을 조회할 수 없습니다. spaceCode: " + space.getCode());
     }
 
+    /**
+     * 권한 검증을 하지 않으므로 호출부가 로그인 호스트의 스페이스 권한 검증을 마친 뒤 호출해야 한다.
+     */
     @Transactional
-    public void deleteAllCardsBySpace(Host host, Space space) {
-        validateSpaceHost(host, space);
-        for (GuestBookCard guestBookCard : guestBookCardRepository.findAllBySpaceAndDeletedAtIsNull(space)) {
-            deleteCard(host, space.getCode(), guestBookCard.getId());
-        }
+    public void deleteAllCardsBySpace(Space space) {
+        LocalDateTime now = LocalDateTime.now();
+        guestBookCardPhotoRepository.softDeleteAllBySpace(space, now);
+        guestBookCardRepository.softDeleteAllBySpace(space, now);
     }
 
     @Transactional

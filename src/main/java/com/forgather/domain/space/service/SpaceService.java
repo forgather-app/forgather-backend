@@ -162,7 +162,8 @@ public class SpaceService {
 
     private void delete(Space space, Host host) {
         validateSpaceHost(space, host);
-        deleteGuestBookAndProduct(host, space);
+        guestBookService.deleteAllCardsBySpace(space);
+        productService.deleteIfExists(host, space);
         deleteSpaceHost(host, space);
         deleteSpacePhoto(space);
         space.delete();
@@ -177,11 +178,6 @@ public class SpaceService {
             return;
         }
         throw new ForbiddenException("권한이 존재하지 않습니다.");
-    }
-
-    private void deleteGuestBookAndProduct(Host host, Space space) {
-        guestBookService.deleteAllCardsBySpace(host, space);
-        productService.deleteIfExists(host, space);
     }
 
     private void deleteSpaceHost(Host host, Space space) {
