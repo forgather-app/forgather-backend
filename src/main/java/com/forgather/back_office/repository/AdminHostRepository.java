@@ -1,5 +1,7 @@
 package com.forgather.back_office.repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -48,6 +50,26 @@ public interface AdminHostRepository {
     Page<HostDetailResponse> findByNameContaining(
         @Param("name") String name,
         Pageable pageable
+    );
+
+    /**
+     * [from, to) 범위에 가입한 호스트 수를 KST 날짜별로 집계한다. 탈퇴 여부와 무관하게 모두 포함한다.
+     * offsetMinutes는 created_at(JVM 기본 타임존)을 KST로 옮기기 위한 분 단위 오프셋이다.
+     */
+    @Query(
+        nativeQuery = true,
+        value = """
+            SELECT DATE_FORMAT(DATE_ADD(h.created_at, INTERVAL :offsetMinutes MINUTE), '%Y-%m-%d') AS day,
+                   COUNT(*) AS count
+            FROM host h
+            WHERE h.created_at >= :from AND h.created_at < :to
+            GROUP BY day
+            """
+    )
+    List<DailyCountRow> countDailySignups(
+        @Param("from") LocalDateTime from,
+        @Param("to") LocalDateTime to,
+        @Param("offsetMinutes") int offsetMinutes
     );
 
     default Host getByIdOrThrow(Long id) {
