@@ -78,7 +78,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // 가장 최근 요청의 응답만 렌더링한다. (늦게 도착한 이전 요청의 응답이 현재 탭의 결과를 덮어쓰지 않도록)
+    let latestRequestId = 0;
+
     async function load(unit) {
+        const requestId = ++latestRequestId;
         setActiveTab(unit);
         monthRangeForm.classList.toggle('hidden', unit !== 'MONTH');
         errorEl.classList.add('hidden');
@@ -86,10 +90,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = unit === 'MONTH'
                 ? await API.getSignupTrend(unit, fromMonthInput.value, toMonthInput.value)
                 : await API.getSignupTrend(unit);
+            if (requestId !== latestRequestId) {
+                return;
+            }
             totalCountEl.textContent = response.totalCount;
             renderChart(response.points, response.unit);
             renderTable(response.points, response.unit);
         } catch (error) {
+            if (requestId !== latestRequestId) {
+                return;
+            }
             errorEl.textContent = error.message || '가입 추이를 불러오지 못했습니다.';
             errorEl.classList.remove('hidden');
         }
