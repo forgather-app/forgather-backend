@@ -50,7 +50,7 @@ src/main/java/com/forgather/
 
 ## 핵심 규칙
 - **ALWAYS** extend `SoftDeleteEntity` for domain entities; call `entity.delete()` instead of `repository.delete()`
-- **ONLY** use JPQL bulk `UPDATE` for soft delete when the target is a leaf entity with no delete-side logic (e.g. `GuestBookCard`, `GuestBookCardPhoto`); set `updatedAt` explicitly and **NEVER** use `clearAutomatically` there (see `docs/design/withdraw-guestbook-n-plus-1.md`)
+- **ONLY** use JPQL bulk `UPDATE` for soft delete when the target is a leaf entity with no delete-side logic (e.g. `GuestBookCard`, `GuestBookCardPhoto`); set `updatedAt` explicitly and **NEVER** use `clearAutomatically` there
 - **NEVER** return JPA entities from controllers; convert to `*Response` DTO
 - **ALWAYS** annotate read-only service methods with `@Transactional(readOnly = true)`
 - **ALWAYS** make `findBy...()` return `Optional<T>`; **ALWAYS** make `getBy...()` throw on missing
