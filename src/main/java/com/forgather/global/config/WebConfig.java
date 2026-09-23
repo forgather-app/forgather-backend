@@ -83,6 +83,8 @@ public class WebConfig implements WebMvcConfigurer {
             .setViewName("admin/hosts/list");
         registry.addViewController("/view/admin/security")
             .setViewName("admin/security/dashboard");
+        registry.addViewController("/view/admin/stats")
+            .setViewName("admin/stats/signups");
     }
 
     @Override

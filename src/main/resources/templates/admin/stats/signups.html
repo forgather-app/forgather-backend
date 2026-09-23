@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가입 추이 - Forgather Admin</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/admin/tailwind-output.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/common.css}">
+</head>
+<body class="bg-bg-color min-h-screen flex flex-col font-sans">
+    <header th:replace="~{admin/layout/fragments :: header(currentPage='stats')}"></header>
+
+    <main class="flex-1 py-xl px-md">
+        <div class="max-w-7xl mx-auto">
+            <div class="mb-xl pb-lg border-b border-border-color">
+                <h2 class="text-3xl font-bold text-text-primary mb-xs">신규 가입 추이</h2>
+                <p class="text-text-secondary">호스트 가입 수 (탈퇴 회원 포함, KST 기준)</p>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-md mb-lg p-lg bg-surface rounded-lg shadow-sm">
+                <div class="flex gap-sm" role="tablist" aria-label="집계 단위">
+                    <button type="button" class="unit-tab px-md py-2.5 min-h-[44px] text-sm font-medium border border-border-color rounded cursor-pointer" data-unit="DAY" role="tab">일 (30일)</button>
+                    <button type="button" class="unit-tab px-md py-2.5 min-h-[44px] text-sm font-medium border border-border-color rounded cursor-pointer" data-unit="WEEK" role="tab">주 (12주)</button>
+                    <button type="button" class="unit-tab px-md py-2.5 min-h-[44px] text-sm font-medium border border-border-color rounded cursor-pointer" data-unit="MONTH" role="tab">월</button>
+                </div>
+                <p class="text-text-secondary text-sm">기간 합계 <strong id="totalCount" class="text-text-primary">0</strong>명</p>
+            </div>
+
+            <!-- 월 단위 기간 선택 (최대 12개월, MONTH 탭에서만 표시) -->
+            <form id="monthRangeForm" class="hidden flex flex-wrap items-center gap-sm mb-lg p-lg bg-surface rounded-lg shadow-sm">
+                <label for="fromMonth" class="text-sm font-medium text-text-secondary">시작 월</label>
+                <input type="month" id="fromMonth" required
+                       class="px-md py-2.5 min-h-[44px] text-sm border border-border-color rounded bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary">
+                <span class="text-text-secondary">~</span>
+                <label for="toMonth" class="text-sm font-medium text-text-secondary">종료 월</label>
+                <input type="month" id="toMonth" required
+                       class="px-md py-2.5 min-h-[44px] text-sm border border-border-color rounded bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary">
+                <button type="submit"
+                        class="px-md py-2.5 min-h-[44px] text-sm font-medium rounded bg-primary text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                    조회
+                </button>
+                <span class="text-text-muted text-sm">최대 12개월</span>
+            </form>
+
+            <div id="errorMessage" class="hidden mb-lg p-md rounded bg-red-50 text-red-700"></div>
+
+            <div class="mb-lg p-lg bg-surface rounded-lg shadow-sm">
+                <div class="relative h-[320px]">
+                    <canvas id="signupChart" aria-label="신규 가입 추이 차트" role="img"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-surface rounded-lg shadow-sm overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-border-color text-left text-text-secondary">
+                            <th class="px-lg py-md font-medium">구간</th>
+                            <th class="px-lg py-md font-medium text-right">가입 수</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trendTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{admin/layout/fragments :: footer}"></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script th:src="@{/js/admin/auth.js}"></script>
+    <script th:src="@{/js/admin/api.js}"></script>
+    <script th:src="@{/js/admin/stats.js}"></script>
+</body>
+</html>
