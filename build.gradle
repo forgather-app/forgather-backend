@@ -81,6 +81,8 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	// 운영(ForgatherApplication.main)과 동일하게 JVM 기본 타임존을 KST로 고정
+	systemProperty 'user.timezone', 'Asia/Seoul'
 }
 
 // =============================================================================
