@@ -74,7 +74,14 @@
 
     <footer th:replace="~{admin/layout/fragments :: footer}"></footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <!--/*
+        Chart.js v4.4.4 (MIT) - 외부 CDN 대신 직접 서빙한다.
+        - 출처: https://registry.npmjs.org/chart.js/-/chart.js-4.4.4.tgz 의 dist/chart.umd.js (수정 없이 파일명만 변경)
+        - tarball integrity: sha512-emICKGBABnxhMjUjlYRR12PmOXhJ2eJjEHL2/dZlWjxRAZT1D8xplLFq5M0tMQK8ja+wBS/tuVEJB5C6r7VxJA==
+        - 파일 sha256: fed6a739f8d0f0687174de6cd14745fc0fc7809144ab113d22908a26bf0d7fea
+        - 보안 공지: https://github.com/chartjs/Chart.js/security (버전 교체 시 위 정보도 갱신)
+    */-->
+    <script th:src="@{/js/vendor/chart.js/chart-4.4.4.umd.min.js}"></script>
     <script th:src="@{/js/admin/auth.js}"></script>
     <script th:src="@{/js/admin/api.js}"></script>
     <script th:src="@{/js/admin/logout-button.js}"></script>
