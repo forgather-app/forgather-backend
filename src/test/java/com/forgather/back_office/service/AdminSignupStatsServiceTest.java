@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
-import java.time.ZoneId;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,7 +31,6 @@ import com.forgather.global.exception.BaseException;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 class AdminSignupStatsServiceTest extends TestOnContainer {
 
-    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     // 2026-09-23은 수요일
     private static final LocalDate TODAY = LocalDate.of(2026, 9, 23);
 
@@ -181,9 +179,6 @@ class AdminSignupStatsServiceTest extends TestOnContainer {
     }
 
     private void setCreatedAt(Host host, LocalDateTime kstDateTime) {
-        LocalDateTime stored = kstDateTime.atZone(KST)
-            .withZoneSameInstant(ZoneId.systemDefault())
-            .toLocalDateTime();
-        jdbcTemplate.update("UPDATE host SET created_at = ? WHERE id = ?", stored, host.getId());
+        jdbcTemplate.update("UPDATE host SET created_at = ? WHERE id = ?", kstDateTime, host.getId());
     }
 }

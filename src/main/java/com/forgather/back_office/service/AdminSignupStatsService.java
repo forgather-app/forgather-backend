@@ -1,8 +1,6 @@
 package com.forgather.back_office.service;
 
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.List;
@@ -15,7 +13,6 @@ import com.forgather.back_office.model.DailyCount;
 import com.forgather.back_office.model.MonthRange;
 import com.forgather.back_office.model.TrendUnit;
 import com.forgather.back_office.repository.AdminHostRepository;
-import com.forgather.back_office.repository.DailyCountRow;
 import com.forgather.global.exception.BaseException;
 
 import lombok.RequiredArgsConstructor;
@@ -53,28 +50,10 @@ public class AdminSignupStatsService {
     }
 
     private SignupTrendResponse aggregate(TrendUnit unit, List<LocalDate> periodStarts, LocalDate endExclusive) {
-        LocalDateTime from = toSystemDateTime(periodStarts.get(0));
-        LocalDateTime to = toSystemDateTime(endExclusive);
-
-        List<DailyCount> dailyCounts = adminHostRepository.countDailySignups(from, to, kstOffsetMinutes())
-            .stream()
-            .map(DailyCountRow::toDailyCount)
-            .toList();
+        List<DailyCount> dailyCounts = adminHostRepository.countDailySignups(
+            periodStarts.get(0).atStartOfDay(),
+            endExclusive.atStartOfDay()
+        );
         return SignupTrendResponse.of(unit, unit.rollUp(dailyCounts, periodStarts));
-    }
-
-    // createdAt은 JPA Auditing이 JVM 기본 타임존으로 기록한다.
-    private LocalDateTime toSystemDateTime(LocalDate kstDate) {
-        return kstDate.atStartOfDay(KST)
-            .withZoneSameInstant(ZoneId.systemDefault())
-            .toLocalDateTime();
-    }
-
-    // JVM 기본 타임존 기준 created_at을 KST로 옮기는 분 단위 오프셋 (JVM이 UTC면 540, KST면 0)
-    private int kstOffsetMinutes() {
-        Instant now = Instant.now();
-        int kstSeconds = KST.getRules().getOffset(now).getTotalSeconds();
-        int systemSeconds = ZoneId.systemDefault().getRules().getOffset(now).getTotalSeconds();
-        return (kstSeconds - systemSeconds) / 60;
     }
 }
