@@ -9,11 +9,11 @@ import java.util.stream.Stream;
 import com.forgather.global.exception.BaseException;
 
 /**
- * 시작 월과 종료 월을 모두 포함하는 조회 기간. 최대 12개월까지 허용한다.
+ * 시작 월과 종료 월을 모두 포함하는 조회 기간. 시작 월은 2025년 7월 이후여야 한다.
  */
 public record MonthRange(YearMonth from, YearMonth to) {
 
-    private static final int MAX_MONTHS = 12;
+    private static final YearMonth MIN_MONTH = YearMonth.of(2025, 7);
 
     public MonthRange {
         if (from == null || to == null) {
@@ -22,8 +22,8 @@ public record MonthRange(YearMonth from, YearMonth to) {
         if (from.isAfter(to)) {
             throw new BaseException("시작 월은 종료 월보다 늦을 수 없습니다. from: " + from + ", to: " + to);
         }
-        if (monthCount(from, to) > MAX_MONTHS) {
-            throw new BaseException("조회 기간은 최대 " + MAX_MONTHS + "개월입니다. from: " + from + ", to: " + to);
+        if (from.isBefore(MIN_MONTH)) {
+            throw new BaseException("시작 월은 " + MIN_MONTH + " 이후여야 합니다. from: " + from);
         }
     }
 

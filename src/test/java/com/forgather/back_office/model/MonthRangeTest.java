@@ -51,12 +51,20 @@ class MonthRangeTest {
             .isInstanceOf(BaseException.class);
     }
 
-    @DisplayName("최대 12개월까지 조회할 수 있다.")
+    @DisplayName("12개월을 넘는 기간도 조회할 수 있다.")
     @Test
-    void maxTwelveMonths() {
-        assertThatCode(() -> new MonthRange(YearMonth.of(2025, 10), YearMonth.of(2026, 9)))
+    void longerThanTwelveMonths() {
+        MonthRange range = new MonthRange(YearMonth.of(2025, 7), YearMonth.of(2026, 9));
+
+        assertThat(range.periodStarts()).hasSize(15);
+    }
+
+    @DisplayName("2025년 7월 이전부터는 조회할 수 없다.")
+    @Test
+    void minMonth() {
+        assertThatCode(() -> new MonthRange(YearMonth.of(2025, 7), YearMonth.of(2025, 9)))
             .doesNotThrowAnyException();
-        assertThatThrownBy(() -> new MonthRange(YearMonth.of(2025, 9), YearMonth.of(2026, 9)))
+        assertThatThrownBy(() -> new MonthRange(YearMonth.of(2025, 6), YearMonth.of(2025, 9)))
             .isInstanceOf(BaseException.class);
     }
 

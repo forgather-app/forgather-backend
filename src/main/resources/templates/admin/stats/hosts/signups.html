@@ -34,7 +34,7 @@
                 <p class="text-text-secondary text-sm">기간 합계 <strong id="totalCount" class="text-text-primary">0</strong>명</p>
             </div>
 
-            <!-- 월 단위 기간 선택 (최대 12개월, MONTH 탭에서만 표시) -->
+            <!-- 월 단위 기간 선택 (2025-07 이후, MONTH 탭에서만 표시) -->
             <form id="monthRangeForm" class="hidden flex flex-wrap items-center gap-sm mb-lg p-lg bg-surface rounded-lg shadow-sm">
                 <label for="fromMonth" class="text-sm font-medium text-text-secondary">시작 월</label>
                 <input type="month" id="fromMonth" required
@@ -47,7 +47,7 @@
                         class="px-md py-2.5 min-h-[44px] text-sm font-medium rounded bg-primary text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
                     조회
                 </button>
-                <span class="text-text-muted text-sm">최대 12개월</span>
+                <span class="text-text-muted text-sm">2025-07 이후 조회 가능</span>
             </form>
 
             <div id="errorMessage" class="hidden mb-lg p-md rounded bg-red-50 text-red-700"></div>

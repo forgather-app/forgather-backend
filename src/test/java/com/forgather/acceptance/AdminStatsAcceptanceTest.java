@@ -124,12 +124,12 @@ class AdminStatsAcceptanceTest extends AcceptanceTest {
         );
     }
 
-    @DisplayName("기간이 12개월을 넘으면 400을 반환한다.")
+    @DisplayName("시작 월이 2025년 7월 이전이면 400을 반환한다.")
     @Test
-    void monthRangeOverTwelveMonths() {
+    void monthRangeBeforeMinMonth() {
         givenWithSession()
             .queryParam("unit", "MONTH")
-            .queryParam("from", "2025-01")
+            .queryParam("from", "2025-06")
             .queryParam("to", "2026-01")
             .when()
             .get("/admin/stats/signups")

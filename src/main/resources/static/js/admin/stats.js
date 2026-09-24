@@ -1,7 +1,7 @@
 /**
  * 신규 가입 추이 페이지
  * - 단위 탭(DAY/WEEK/MONTH) 전환 시 API 재조회 후 차트·표 갱신
- * - MONTH 탭에서만 시작/종료 월(최대 12개월)을 지정해 조회
+ * - MONTH 탭에서만 시작/종료 월(2025-07 이후)을 지정해 조회
  */
 document.addEventListener('DOMContentLoaded', function() {
     const tabs = document.querySelectorAll('.unit-tab');
@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const monthRangeForm = document.getElementById('monthRangeForm');
     const fromMonthInput = document.getElementById('fromMonth');
     const toMonthInput = document.getElementById('toMonth');
+    const MIN_MONTH = '2025-07';
     let chart = null;
 
     // yyyy-MM 문자열 (브라우저 로컬 시간 기준)
@@ -18,12 +19,14 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     }
 
-    // 기본 기간: 이번 달 포함 최근 12개월, 이번 달 이후는 선택 불가
+    // 기본 기간: 이번 달 포함 최근 12개월, 2025-07 이전과 이번 달 이후는 선택 불가
     function initMonthRange() {
         const now = new Date();
         const currentMonth = formatMonth(now);
         fromMonthInput.value = formatMonth(new Date(now.getFullYear(), now.getMonth() - 11, 1));
         toMonthInput.value = currentMonth;
+        fromMonthInput.min = MIN_MONTH;
+        toMonthInput.min = MIN_MONTH;
         fromMonthInput.max = currentMonth;
         toMonthInput.max = currentMonth;
     }
