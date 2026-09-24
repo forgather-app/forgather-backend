@@ -21,6 +21,9 @@ import com.forgather.domain.exhibition.repository.ExhibitionHostRepository;
 import com.forgather.domain.exhibition.repository.ExhibitionRepository;
 import com.forgather.domain.exhibition.repository.jpa.ExhibitionHostJpaRepository;
 import com.forgather.domain.exhibition.repository.jpa.ExhibitionJpaRepository;
+import com.forgather.domain.guestbook.model.GuestBookCard;
+import com.forgather.domain.guestbook.repository.GuestBookCardPhotoRepository;
+import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
 import com.forgather.domain.host.model.AppleHost;
 import com.forgather.domain.host.model.Host;
 import com.forgather.domain.host.model.HostProfilePhoto;
@@ -30,14 +33,22 @@ import com.forgather.domain.host.repository.HostProfilePhotoRepository;
 import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.domain.host.repository.KakaoHostRepository;
 import com.forgather.domain.host.repository.jpa.HostProfilePhotoJpaRepository;
+import com.forgather.domain.product.model.Product;
+import com.forgather.domain.product.repository.ProductPhotoRepository;
+import com.forgather.domain.product.repository.ProductRepository;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.SpaceHostRepository;
+import com.forgather.domain.space.repository.SpacePhotoRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
-import com.forgather.domain.space.repository.jpa.SpaceJpaRepository;
 import com.forgather.fixture.ExhibitionFixture;
+import com.forgather.fixture.GuestBookCardFixture;
+import com.forgather.fixture.GuestBookCardPhotoFixture;
 import com.forgather.fixture.HostFixture;
+import com.forgather.fixture.ProductFixture;
+import com.forgather.fixture.ProductPhotoFixture;
 import com.forgather.fixture.SpaceFixture;
 import com.forgather.fixture.SpaceHostFixture;
+import com.forgather.fixture.SpacePhotoFixture;
 import com.forgather.global.external.social.SocialProvider;
 import com.forgather.global.outbox.Outbox;
 import com.forgather.global.outbox.OutboxService;
@@ -57,20 +68,26 @@ class WithdrawServiceTest extends TestOnContainer {
     private final AppleHostRepository appleHostRepository;
     private final SpaceRepository spaceRepository;
     private final SpaceHostRepository spaceHostRepository;
-    private final SpaceJpaRepository spaceJpaRepository;
     private final ExhibitionRepository exhibitionRepository;
     private final ExhibitionHostRepository exhibitionHostRepository;
     private final ExhibitionJpaRepository exhibitionJpaRepository;
     private final ExhibitionHostJpaRepository exhibitionHostJpaRepository;
     private final OutboxService outboxService;
     private final ObjectMapper objectMapper;
+    private final GuestBookCardRepository guestBookCardRepository;
+    private final GuestBookCardPhotoRepository guestBookCardPhotoRepository;
+    private final SpacePhotoRepository spacePhotoRepository;
+    private final ProductRepository productRepository;
+    private final ProductPhotoRepository productPhotoRepository;
 
     @Autowired
     public WithdrawServiceTest(WithdrawService withdrawService, HostRepository hostRepository,
         HostProfilePhotoRepository photoRepository, HostProfilePhotoJpaRepository photoJpaRepository,
         KakaoHostRepository kakaoHostRepository, AppleHostRepository appleHostRepository,
         SpaceRepository spaceRepository, SpaceHostRepository spaceHostRepository,
-        SpaceJpaRepository spaceJpaRepository, ExhibitionRepository exhibitionRepository,
+        SpacePhotoRepository spacePhotoRepository, ProductRepository productRepository,
+        ProductPhotoRepository productPhotoRepository, GuestBookCardRepository guestBookCardRepository,
+        GuestBookCardPhotoRepository guestBookCardPhotoRepository, ExhibitionRepository exhibitionRepository,
         ExhibitionHostRepository exhibitionHostRepository, ExhibitionJpaRepository exhibitionJpaRepository,
         ExhibitionHostJpaRepository exhibitionHostJpaRepository, OutboxService outboxService,
         ObjectMapper objectMapper
@@ -83,13 +100,17 @@ class WithdrawServiceTest extends TestOnContainer {
         this.appleHostRepository = appleHostRepository;
         this.spaceRepository = spaceRepository;
         this.spaceHostRepository = spaceHostRepository;
-        this.spaceJpaRepository = spaceJpaRepository;
         this.exhibitionRepository = exhibitionRepository;
         this.exhibitionHostRepository = exhibitionHostRepository;
         this.exhibitionJpaRepository = exhibitionJpaRepository;
         this.exhibitionHostJpaRepository = exhibitionHostJpaRepository;
         this.outboxService = outboxService;
         this.objectMapper = objectMapper;
+        this.guestBookCardRepository = guestBookCardRepository;
+        this.guestBookCardPhotoRepository = guestBookCardPhotoRepository;
+        this.spacePhotoRepository = spacePhotoRepository;
+        this.productRepository = productRepository;
+        this.productPhotoRepository = productPhotoRepository;
     }
 
     private SocialRevokePayload readPayload(Outbox outbox) throws JsonProcessingException {
@@ -127,21 +148,33 @@ class WithdrawServiceTest extends TestOnContainer {
         assertThat(hostRepository.getByIdOrThrow(host.getId()).getDeletedAt()).isNotNull();
     }
 
-    @DisplayName("스페이스를 소유한 채 탈퇴하면 스페이스와 호스트 매핑이 삭제 처리된다.")
+    @DisplayName("스페이스를 소유한 채 탈퇴하면 스페이스와 하위 콘텐츠가 모두 삭제 처리된다.")
     @Test
-    void deleteOwnedSpaces() {
+    void deleteOwnedSpaceWithContents() {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         Space space = spaceRepository.save(SpaceFixture.createSpace());
         spaceHostRepository.save(SpaceHostFixture.createSpaceHostWithSpaceAndHost(space, host));
+        spacePhotoRepository.save(SpacePhotoFixture.createSpacePhotoWithSpace(space));
+        Product product = productRepository.save(ProductFixture.createProductWithSpace(space));
+        productPhotoRepository.save(ProductPhotoFixture.createProductPhotoWithProduct(product));
+        GuestBookCard card = guestBookCardRepository.save(
+            GuestBookCardFixture.createGuestBookCard(space, "닉네임", "메시지"));
+        guestBookCardPhotoRepository.saveAll(
+            List.of(GuestBookCardPhotoFixture.createGuestBookCardPhotoWithGuestBookCard(card)));
 
         // when
         withdrawService.withdraw(host);
 
         // then
         assertAll(
-            () -> assertThat(spaceJpaRepository.findById(space.getId()).orElseThrow().getDeletedAt()).isNotNull(),
-            () -> assertThat(spaceHostRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host)).isEmpty()
+            () -> assertThat(spaceRepository.findByCodeAndDeletedAtIsNull(space.getCode())).isEmpty(),
+            () -> assertThat(spaceHostRepository.findBySpaceAndHostAndDeletedAtIsNull(space, host)).isEmpty(),
+            () -> assertThat(spacePhotoRepository.findBySpaceAndDeletedAtIsNull(space)).isEmpty(),
+            () -> assertThat(productRepository.findAllBySpaceAndDeletedAtIsNull(space)).isEmpty(),
+            () -> assertThat(productPhotoRepository.findAllByProductAndDeletedAtIsNull(product)).isEmpty(),
+            () -> assertThat(guestBookCardRepository.findAllBySpaceAndDeletedAtIsNull(space)).isEmpty(),
+            () -> assertThat(guestBookCardPhotoRepository.findAllByGuestBookCardAndDeletedAtIsNull(card)).isEmpty()
         );
     }
 
