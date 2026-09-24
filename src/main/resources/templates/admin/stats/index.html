@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>통계 - Forgather Admin</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/admin/tailwind-output.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/common.css}">
+</head>
+<body class="bg-bg-color min-h-screen flex flex-col font-sans">
+    <header th:replace="~{admin/layout/fragments :: header(currentPage='stats')}"></header>
+
+    <main class="flex-1 py-xl px-md">
+        <div class="max-w-7xl mx-auto">
+            <div class="mb-xl pb-lg border-b border-border-color">
+                <h2 class="text-3xl font-bold text-text-primary mb-xs">통계</h2>
+                <p class="text-text-secondary">확인할 지표를 선택하세요.</p>
+            </div>
+
+            <!--
+                도메인별 지표 목록
+                - 도메인(호스트, 방명록 등)마다 <section>을 두고, 그 안에 지표 카드(<li>)를 둔다.
+                - 지표 카드: 지표 이름 + 확인할 수 있는 내용 + 상세 화면 링크(/view/admin/stats/{도메인}/{지표})
+            -->
+            <div class="space-y-xl">
+                <section aria-labelledby="stats-domain-hosts">
+                    <h3 id="stats-domain-hosts" class="text-xl font-semibold text-text-primary mb-md">호스트</h3>
+                    <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-lg" aria-label="호스트 통계 지표 목록">
+                        <li>
+                            <a th:href="@{/view/admin/stats/hosts/signups}"
+                               class="block h-full p-lg bg-surface rounded-lg shadow-sm border border-border-color hover:border-primary hover:shadow-md transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary">
+                                <h4 class="text-lg font-semibold text-text-primary mb-xs">신규 가입 추이</h4>
+                                <p class="text-sm text-text-secondary">
+                                    일/주/월 단위 호스트 가입 수 추이 (탈퇴 회원 포함, 월 단위 기간 조회)
+                                </p>
+                            </a>
+                        </li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{admin/layout/fragments :: footer}"></footer>
+
+    <script th:src="@{/js/admin/auth.js}"></script>
+    <script th:src="@{/js/admin/logout-button.js}"></script>
+</body>
+</html>
