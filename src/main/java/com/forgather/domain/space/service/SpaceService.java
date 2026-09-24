@@ -162,7 +162,7 @@ public class SpaceService {
 
     private void delete(Space space, Host host) {
         validateSpaceHost(space, host);
-        guestBookService.deleteAllCardsBySpace(space);
+        guestBookService.deleteAllCardsBySpace(host, space);
         productService.deleteIfExists(host, space);
         deleteSpaceHost(host, space);
         deleteSpacePhoto(space);

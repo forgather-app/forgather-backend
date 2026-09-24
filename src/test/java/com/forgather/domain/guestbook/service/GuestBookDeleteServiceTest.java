@@ -121,7 +121,7 @@ public class GuestBookDeleteServiceTest {
         ));
 
         // when
-        guestBookService.deleteAllCardsBySpace(space);
+        guestBookService.deleteAllCardsBySpace(host, space);
 
         // then
         assertAll(
@@ -143,7 +143,7 @@ public class GuestBookDeleteServiceTest {
             List.of(createGuestBookCardPhotoWithGuestBookCard(guestBookCard))).getFirst();
 
         // when
-        guestBookService.deleteAllCardsBySpace(space);
+        guestBookService.deleteAllCardsBySpace(host, space);
 
         // then
         // 벌크 UPDATE는 1차 캐시에 반영되지 않으므로 DB 값으로 다시 읽는다
@@ -167,7 +167,7 @@ public class GuestBookDeleteServiceTest {
         guestBookCardPhotoRepository.saveAll(List.of(createGuestBookCardPhotoWithGuestBookCard(otherCard)));
 
         // when
-        guestBookService.deleteAllCardsBySpace(space);
+        guestBookService.deleteAllCardsBySpace(host, space);
 
         // then
         assertAll(
@@ -179,7 +179,7 @@ public class GuestBookDeleteServiceTest {
         );
     }
 
-    @DisplayName("스페이스 방명록 일괄 삭제는 방명록 수와 무관하게 statement 2개로 처리한다")
+    @DisplayName("스페이스 방명록 일괄 삭제는 방명록 수와 무관하게 statement 3개(권한 검증 1 + 벌크 UPDATE 2)로 처리한다")
     @Test
     void softDeleteGuestBookBySpaceWithConstantStatements() {
         // given
@@ -194,9 +194,9 @@ public class GuestBookDeleteServiceTest {
         statistics.clear();
 
         // when
-        guestBookService.deleteAllCardsBySpace(space);
+        guestBookService.deleteAllCardsBySpace(host, space);
 
         // then
-        assertThat(statistics.getPrepareStatementCount()).isEqualTo(2);
+        assertThat(statistics.getPrepareStatementCount()).isEqualTo(3);
     }
 }
