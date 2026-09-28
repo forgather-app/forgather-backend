@@ -18,9 +18,11 @@
 
     <springProfile name="prod">
         <property scope="context" name="FILE_MAX_HISTORY" value="90"/>
+        <property scope="context" name="ERROR_FILE_MAX_HISTORY" value="30"/>
     </springProfile>
     <springProfile name="!prod">
         <property scope="context" name="FILE_MAX_HISTORY" value="7"/>
+        <property scope="context" name="ERROR_FILE_MAX_HISTORY" value="7"/>
     </springProfile>
 
     <!--콘솔 Appender -->
@@ -84,11 +86,46 @@
         </sift>
     </appender>
 
+    <springProfile name="dev | prod">
+        <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${ERROR_FILE_PATH}/${ERROR_FILE_NAME}.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${ERROR_FILE_PATH}/${ERROR_FILE_NAME}.%d{yyyy-MM-dd}.log</fileNamePattern>
+                <maxHistory>${ERROR_FILE_MAX_HISTORY}</maxHistory>
+            </rollingPolicy>
+            <filter class="ch.qos.logback.classic.filter.LevelFilter">
+                <level>error</level>
+                <onMatch>ACCEPT</onMatch>
+                <onMismatch>DENY</onMismatch>
+            </filter>
+            <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+                <providers>
+                    <timestamp>
+                        <pattern>yyyy-MM-dd'T'HH:mm:ss.SSSZ</pattern>
+                        <timeZone>Asia/Seoul</timeZone>
+                    </timestamp>
+                    <logLevel>
+                        <fieldName>level</fieldName>
+                    </logLevel>
+                    <loggerName>
+                        <fieldName>logger</fieldName>
+                    </loggerName>
+                    <logstashMarkers/>
+                    <mdc/>
+                    <keyValuePairs/>
+                    <message>
+                        <fieldName>msg</fieldName>
+                    </message>
+                    <stackTrace/>
+                </providers>
+            </encoder>
+        </appender>
+    </springProfile>
+
     <!-- 로컬 프로필 -->
     <springProfile name="local">
         <root>
             <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="FILE_BY_LOG_TYPE"/>
         </root>
     </springProfile>
 
@@ -115,39 +152,6 @@
             </filter>
         </appender>
 
-        <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-            <file>${ERROR_FILE_PATH}/${ERROR_FILE_NAME}.log</file>
-            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                <fileNamePattern>${ERROR_FILE_PATH}/${ERROR_FILE_NAME}.%d{yyyy-MM-dd}.log</fileNamePattern>
-                <maxHistory>7</maxHistory>
-            </rollingPolicy>
-            <filter class="ch.qos.logback.classic.filter.LevelFilter">
-                <level>error</level>
-                <onMatch>ACCEPT</onMatch>
-                <onMismatch>DENY</onMismatch>
-            </filter>
-            <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
-                <providers>
-                    <timestamp>
-                        <pattern>yyyy-MM-dd'T'HH:mm:ss.SSSZ</pattern>
-                        <timeZone>Asia/Seoul</timeZone>
-                    </timestamp>
-                    <logLevel>
-                        <fieldName>level</fieldName>
-                    </logLevel>
-                    <loggerName>
-                        <fieldName>logger</fieldName>
-                    </loggerName>
-                    <logstashMarkers/>
-                    <mdc/>
-                    <keyValuePairs/>
-                    <message>
-                        <fieldName>msg</fieldName>
-                    </message>
-                    <stackTrace/>
-                </providers>
-            </encoder>
-        </appender>
         <root>
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="FILE_BY_LOG_TYPE"/>
@@ -158,39 +162,6 @@
 
     <!-- 운영 프로필 -->
     <springProfile name="prod">
-        <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-            <file>${ERROR_FILE_PATH}/${ERROR_FILE_NAME}.log</file>
-            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                <fileNamePattern>${ERROR_FILE_PATH}/${ERROR_FILE_NAME}.%d{yyyy-MM-dd}.log</fileNamePattern>
-                <maxHistory>30</maxHistory>
-            </rollingPolicy>
-            <filter class="ch.qos.logback.classic.filter.LevelFilter">
-                <level>error</level>
-                <onMatch>ACCEPT</onMatch>
-                <onMismatch>DENY</onMismatch>
-            </filter>
-            <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
-                <providers>
-                    <timestamp>
-                        <pattern>yyyy-MM-dd'T'HH:mm:ss.SSSZ</pattern>
-                        <timeZone>Asia/Seoul</timeZone>
-                    </timestamp>
-                    <logLevel>
-                        <fieldName>level</fieldName>
-                    </logLevel>
-                    <loggerName>
-                        <fieldName>logger</fieldName>
-                    </loggerName>
-                    <logstashMarkers/>
-                    <mdc/>
-                    <keyValuePairs/>
-                    <message>
-                        <fieldName>msg</fieldName>
-                    </message>
-                    <stackTrace/>
-                </providers>
-            </encoder>
-        </appender>
         <root>
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="FILE_BY_LOG_TYPE"/>
