@@ -22,6 +22,7 @@ public class LoggingInterceptor implements HandlerInterceptor {
 
     private static final String TRACE_ID_HEADER = "trace-id";
     private static final String MDC_TRACE_ID_KEY = "traceId";
+    private static final String MDC_LOG_TYPE_KEY = "logType";
     private static final int TRACE_ID_LENGTH = 8;
     private static final Marker BODY_MARKER = MarkerFactory.getMarker("BODY");
 
@@ -33,16 +34,33 @@ public class LoggingInterceptor implements HandlerInterceptor {
 
         String traceId = extractTraceId(request);
         MDC.put(MDC_TRACE_ID_KEY, traceId); // 해당 쓰레드에서 발생하는 모든 로그에 포함
+        if (isAdminRequest(request.getRequestURI())) {
+            MDC.put(MDC_LOG_TYPE_KEY, "admin");
+        } else {
+            MDC.remove(MDC_LOG_TYPE_KEY);
+        }
 
-        log.atTrace()
-            .addKeyValue("event", "REQUEST")
-            .addKeyValue("httpMethod", request.getMethod())
-            .addKeyValue("requestUri", request.getRequestURI())
-            .addKeyValue("queryString", request.getQueryString())
-            .addKeyValue("ip", getClientIp(request))
-            .addKeyValue("userAgent", getUserAgent(request))
-            .log();
+        if (!isAdminAsset(request.getRequestURI())) {
+            log.atTrace()
+                .addKeyValue("event", "REQUEST")
+                .addKeyValue("httpMethod", request.getMethod())
+                .addKeyValue("requestUri", request.getRequestURI())
+                .addKeyValue("queryString", request.getQueryString())
+                .addKeyValue("ip", getClientIp(request))
+                .addKeyValue("userAgent", getUserAgent(request))
+                .log();
+        }
         return true;
+    }
+
+    private boolean isAdminRequest(String requestUri) {
+        return requestUri.equals("/admin") || requestUri.startsWith("/admin/")
+            || requestUri.equals("/view/admin") || requestUri.startsWith("/view/admin/");
+    }
+
+    private boolean isAdminAsset(String requestUri) {
+        return requestUri.equals("/css/admin") || requestUri.startsWith("/css/admin/")
+            || requestUri.equals("/js/admin") || requestUri.startsWith("/js/admin/");
     }
 
     private String extractTraceId(HttpServletRequest request) {
@@ -72,21 +90,23 @@ public class LoggingInterceptor implements HandlerInterceptor {
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
         Exception exception) {
-        String contentType = request.getContentType();
-        if (contentType != null && contentType.toLowerCase().startsWith("application/json")) {
-            logRequestBody(request);
+        if (!isAdminAsset(request.getRequestURI())) {
+            String contentType = request.getContentType();
+            if (contentType != null && contentType.toLowerCase().startsWith("application/json")) {
+                logRequestBody(request);
+            }
+
+            Long startTime = (Long)request.getAttribute("com.forgather.startTime");
+            long durationMillis = (startTime != null) ? (System.currentTimeMillis() - startTime) : -1;
+
+            log.atTrace()
+                .addKeyValue("event", "RESPONSE")
+                .addKeyValue("httpMethod", request.getMethod())
+                .addKeyValue("requestUri", request.getRequestURI())
+                .addKeyValue("queryString", request.getQueryString())
+                .addKeyValue("duration", durationMillis + "ms")
+                .log();
         }
-
-        Long startTime = (Long)request.getAttribute("com.forgather.startTime");
-        long durationMillis = (startTime != null) ? (System.currentTimeMillis() - startTime) : -1;
-
-        log.atTrace()
-            .addKeyValue("event", "RESPONSE")
-            .addKeyValue("httpMethod", request.getMethod())
-            .addKeyValue("requestUri", request.getRequestURI())
-            .addKeyValue("queryString", request.getQueryString())
-            .addKeyValue("duration", durationMillis + "ms")
-            .log();
 
         setTraceIdHeader(response);
         MDC.clear(); // 쓰레드 종료 시 MDC 초기화
