@@ -324,6 +324,17 @@ const API = {
     },
 
     /**
+     * 신규 가입 추이 조회
+     * @param {'DAY'|'WEEK'|'MONTH'} unit - 집계 단위
+     * @param {string} [from] - 시작 월 (yyyy-MM, MONTH 전용)
+     * @param {string} [to] - 종료 월 (yyyy-MM, MONTH 전용)
+     * @returns {Promise<{unit: string, totalCount: number, points: {periodStart: string, count: number}[]}>}
+     */
+    async getSignupTrend(unit = 'DAY', from = null, to = null) {
+        return this.get('/stats/signups', {unit, from, to});
+    },
+
+    /**
      * 특정 Host의 스페이스 목록 조회 API
      *
      * @param {number} hostId - 조회할 호스트 ID

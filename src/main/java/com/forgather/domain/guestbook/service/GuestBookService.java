@@ -5,6 +5,7 @@ import static com.forgather.domain.upload.domain.FilePathGenerator.generateConte
 import static com.forgather.domain.upload.domain.UploadCategory.GUESTBOOK;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -191,9 +192,9 @@ public class GuestBookService {
     @Transactional
     public void deleteAllCardsBySpace(Host host, Space space) {
         validateSpaceHost(host, space);
-        for (GuestBookCard guestBookCard : guestBookCardRepository.findAllBySpaceAndDeletedAtIsNull(space)) {
-            deleteCard(host, space.getCode(), guestBookCard.getId());
-        }
+        LocalDateTime now = LocalDateTime.now();
+        guestBookCardPhotoRepository.softDeleteAllBySpace(space, now);
+        guestBookCardRepository.softDeleteAllBySpace(space, now);
     }
 
     @Transactional

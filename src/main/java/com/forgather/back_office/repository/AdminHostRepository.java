@@ -1,5 +1,7 @@
 package com.forgather.back_office.repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -8,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.forgather.back_office.dto.HostDetailResponse;
+import com.forgather.back_office.model.DailyCount;
 import com.forgather.domain.host.model.Host;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.NotFoundException;
@@ -48,6 +51,20 @@ public interface AdminHostRepository {
     Page<HostDetailResponse> findByNameContaining(
         @Param("name") String name,
         Pageable pageable
+    );
+
+    /**
+     * [from, to) 범위에 가입한 호스트 수를 날짜(KST)별로 집계한다. 탈퇴 여부와 무관하게 모두 포함한다.
+     */
+    @Query("""
+        SELECT new com.forgather.back_office.model.DailyCount(EXTRACT(DATE FROM h.createdAt), COUNT(h))
+        FROM Host h
+        WHERE h.createdAt >= :from AND h.createdAt < :to
+        GROUP BY EXTRACT(DATE FROM h.createdAt)
+        """)
+    List<DailyCount> countDailySignups(
+        @Param("from") LocalDateTime from,
+        @Param("to") LocalDateTime to
     );
 
     default Host getByIdOrThrow(Long id) {

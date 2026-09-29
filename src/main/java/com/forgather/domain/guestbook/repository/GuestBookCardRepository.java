@@ -1,10 +1,12 @@
 package com.forgather.domain.guestbook.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -113,6 +115,21 @@ public interface GuestBookCardRepository {
     );
 
     List<GuestBookCard> findAllBySpaceAndDeletedAtIsNull(Space space);
+
+    /**
+     * 스페이스의 미삭제 방명록 카드를 벌크 UPDATE로 soft delete한다.
+     * 엔티티를 로드하지 않으므로 {@code SoftDeleteEntity.delete()}와 auditing을 거치지 않는다.
+     * updatedAt은 직접 세팅하며, {@code GuestBookCard.delete()}에 부가 로직이 생기면 이 경로도 함께 수정해야 한다.
+     * 같은 트랜잭션에서 먼저 로드한 엔티티에는 결과가 반영되지 않으므로, 대상 엔티티를 로드하기 전에 호출해야 한다.
+     */
+    @Modifying
+    @Query("""
+        UPDATE GuestBookCard g
+        SET g.deletedAt = :now, g.updatedAt = :now
+        WHERE g.space = :space
+            AND g.deletedAt IS NULL
+        """)
+    int softDeleteAllBySpace(@Param("space") Space space, @Param("now") LocalDateTime now);
 
     long count();
 
