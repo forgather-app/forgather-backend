@@ -78,9 +78,7 @@ public class GuestBookService {
         return new GuestBookCardPhotos(photos);
     }
 
-    @Deprecated(forRemoval = true)
     @Transactional(readOnly = true)
-    @SuppressWarnings("removal")
     public GuestBookResponse read(Host host, String spaceCode, Pageable pageable) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         boolean isSpaceHost = host != null && isSpaceHost(space, host);
