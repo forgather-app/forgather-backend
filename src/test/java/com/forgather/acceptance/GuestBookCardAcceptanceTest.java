@@ -301,9 +301,9 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 .body("message", containsString("방문자는 비공개 스페이스의 방명록을 조회할 수 없습니다."));
         }
 
-        @DisplayName("호스트가 기본 버전 방명록을 조회할 경우 전체 방명록을 반환하고 읽지 않은 방명록 수를 응답하지 않는다")
+        @DisplayName("호스트가 기본 버전 방명록을 조회하면 읽음 여부를 포함한 읽은 방명록과 읽지 않은 방명록의 통합 목록을 반환한다")
         @Test
-        void hostReadGuestBookWithDefaultVersionKeepsLegacyResponse() {
+        void hostReadGuestBookWithDefaultVersionReturnsUnifiedList() {
             // given
             WriteGuestBookCardResponse readCard = writeGuestBookCard(publicSpace);
             WriteGuestBookCardResponse unreadCard = writeGuestBookCardWithNoPhoto(publicSpace);
@@ -335,6 +335,61 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
                 () -> assertThat(result.data().guestBookCards().getLast().isRead()).isTrue(),
                 () -> assertThat(result.data().totalCount()).isEqualTo(2)
             );
+        }
+
+        @DisplayName("비로그인 방문자가 기본 버전 방명록을 조회하면 통합 목록을 반환하고 읽음 여부와 읽지 않은 방명록 수를 응답하지 않는다")
+        @Test
+        void guestReadGuestBookWithDefaultVersionReturnsUnifiedListWithoutReadState() {
+            // given
+            WriteGuestBookCardResponse readCard = writeGuestBookCard(publicSpace);
+            writeGuestBookCardWithNoPhoto(publicSpace);
+            readGuestBookCardAsHost(publicSpace, readCard.id());
+
+            // when
+            String response = RestAssuredMockMvc.given()
+                .accept(ContentType.JSON)
+                .queryParam("page", 1)
+                .queryParam("size", 15)
+                .queryParam("sort", "createdAt,desc")
+                .queryParam("sort", "id,desc")
+                .when()
+                .get("/spaces/%s/guestbook".formatted(publicSpace.getCode()))
+                .then()
+                .statusCode(200)
+                .body("data.guestBookCards.size()", equalTo(2))
+                .extract()
+                .asString();
+
+            // then
+            assertThat(response).doesNotContain("\"isRead\"", "\"unreadCount\"");
+        }
+
+        @DisplayName("다른 호스트가 기본 버전 방명록을 조회하면 통합 목록을 반환하고 읽음 여부와 읽지 않은 방명록 수를 응답하지 않는다")
+        @Test
+        void anotherHostReadGuestBookWithDefaultVersionReturnsUnifiedListWithoutReadState() {
+            // given
+            WriteGuestBookCardResponse readCard = writeGuestBookCard(publicSpace);
+            writeGuestBookCardWithNoPhoto(publicSpace);
+            readGuestBookCardAsHost(publicSpace, readCard.id());
+
+            // when
+            String response = RestAssuredMockMvc.given()
+                .postProcessors(withAccessToken(anotherAccessToken))
+                .accept(ContentType.JSON)
+                .queryParam("page", 1)
+                .queryParam("size", 15)
+                .queryParam("sort", "createdAt,desc")
+                .queryParam("sort", "id,desc")
+                .when()
+                .get("/spaces/%s/guestbook".formatted(publicSpace.getCode()))
+                .then()
+                .statusCode(200)
+                .body("data.guestBookCards.size()", equalTo(2))
+                .extract()
+                .asString();
+
+            // then
+            assertThat(response).doesNotContain("\"isRead\"", "\"unreadCount\"");
         }
 
         @DisplayName("방명록 조회 v2 응답의 각 방명록 카드는 메세지와 생성 시각을 포함한다")
