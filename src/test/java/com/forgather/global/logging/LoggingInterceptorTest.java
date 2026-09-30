@@ -40,22 +40,6 @@ class LoggingInterceptorTest {
         assertThat(MDC.get("logType")).isNull();
     }
 
-    @DisplayName("어드민 CSS와 JS를 요청하면 어드민 로그 유형이 설정되지 않는다.")
-    @ParameterizedTest
-    @ValueSource(strings = {
-        "/css/admin/common.css", "/js/admin/api.js"
-    })
-    void adminAssetRequestHasNoAdminLogType(String uri) {
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", uri);
-        MockHttpServletResponse response = new MockHttpServletResponse();
-
-        loggingInterceptor.preHandle(request, response, new Object());
-
-        assertThat(MDC.get("logType")).isNull();
-
-        loggingInterceptor.afterCompletion(request, response, new Object(), null);
-    }
-
     @DisplayName("일반 사용자 경로를 요청하면 이전 요청의 어드민 로그 유형이 제거된다.")
     @Test
     void publicRequestDoesNotInheritAdminLogType() {

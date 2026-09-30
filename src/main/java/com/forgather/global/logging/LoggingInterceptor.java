@@ -40,27 +40,20 @@ public class LoggingInterceptor implements HandlerInterceptor {
             MDC.remove(MDC_LOG_TYPE_KEY);
         }
 
-        if (!isAdminAsset(request.getRequestURI())) {
-            log.atTrace()
-                .addKeyValue("event", "REQUEST")
-                .addKeyValue("httpMethod", request.getMethod())
-                .addKeyValue("requestUri", request.getRequestURI())
-                .addKeyValue("queryString", request.getQueryString())
-                .addKeyValue("ip", getClientIp(request))
-                .addKeyValue("userAgent", getUserAgent(request))
-                .log();
-        }
+        log.atTrace()
+            .addKeyValue("event", "REQUEST")
+            .addKeyValue("httpMethod", request.getMethod())
+            .addKeyValue("requestUri", request.getRequestURI())
+            .addKeyValue("queryString", request.getQueryString())
+            .addKeyValue("ip", getClientIp(request))
+            .addKeyValue("userAgent", getUserAgent(request))
+            .log();
         return true;
     }
 
     private boolean isAdminRequest(String requestUri) {
         return requestUri.equals("/admin") || requestUri.startsWith("/admin/")
             || requestUri.equals("/view/admin") || requestUri.startsWith("/view/admin/");
-    }
-
-    private boolean isAdminAsset(String requestUri) {
-        return requestUri.equals("/css/admin") || requestUri.startsWith("/css/admin/")
-            || requestUri.equals("/js/admin") || requestUri.startsWith("/js/admin/");
     }
 
     private String extractTraceId(HttpServletRequest request) {
@@ -90,23 +83,21 @@ public class LoggingInterceptor implements HandlerInterceptor {
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
         Exception exception) {
-        if (!isAdminAsset(request.getRequestURI())) {
-            String contentType = request.getContentType();
-            if (contentType != null && contentType.toLowerCase().startsWith("application/json")) {
-                logRequestBody(request);
-            }
-
-            Long startTime = (Long)request.getAttribute("com.forgather.startTime");
-            long durationMillis = (startTime != null) ? (System.currentTimeMillis() - startTime) : -1;
-
-            log.atTrace()
-                .addKeyValue("event", "RESPONSE")
-                .addKeyValue("httpMethod", request.getMethod())
-                .addKeyValue("requestUri", request.getRequestURI())
-                .addKeyValue("queryString", request.getQueryString())
-                .addKeyValue("duration", durationMillis + "ms")
-                .log();
+        String contentType = request.getContentType();
+        if (contentType != null && contentType.toLowerCase().startsWith("application/json")) {
+            logRequestBody(request);
         }
+
+        Long startTime = (Long)request.getAttribute("com.forgather.startTime");
+        long durationMillis = (startTime != null) ? (System.currentTimeMillis() - startTime) : -1;
+
+        log.atTrace()
+            .addKeyValue("event", "RESPONSE")
+            .addKeyValue("httpMethod", request.getMethod())
+            .addKeyValue("requestUri", request.getRequestURI())
+            .addKeyValue("queryString", request.getQueryString())
+            .addKeyValue("duration", durationMillis + "ms")
+            .log();
 
         setTraceIdHeader(response);
         MDC.clear(); // 쓰레드 종료 시 MDC 초기화
