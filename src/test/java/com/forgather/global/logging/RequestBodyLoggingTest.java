@@ -1,6 +1,7 @@
 package com.forgather.global.logging;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -89,11 +90,11 @@ class RequestBodyLoggingTest {
             .andExpect(status().isOk())
             .andExpect(content().string("안녕하세요"));
 
-        assertThat(getBodyLogs()).singleElement().satisfies(event -> {
-            assertThat(event.getLevel().toString()).isEqualTo(level);
-            assertThat(event.getFormattedMessage()).isEqualTo("\n" + body);
-            assertThat(event.getMarkerList()).extracting(marker -> marker.getName()).containsExactly("BODY");
-        });
+        assertThat(getBodyLogs()).singleElement().satisfies(event -> assertAll(
+            () -> assertThat(event.getLevel().toString()).isEqualTo(level),
+            () -> assertThat(event.getFormattedMessage()).isEqualTo("\n" + body),
+            () -> assertThat(event.getMarkerList()).extracting(marker -> marker.getName()).containsExactly("BODY")
+        ));
     }
 
     @DisplayName("선택한 로그 레벨이 비활성화되어 있으면 본문 로깅 없이 요청을 처리한다.")
@@ -149,11 +150,13 @@ class RequestBodyLoggingTest {
 
         interceptor.afterCompletion(wrapper, response, handler, null);
 
-        assertThat(getBodyLogs()).singleElement()
-            .extracting(ILoggingEvent::getFormattedMessage).isEqualTo("\n" + body);
-        assertThat(request.getCharacterEncoding()).isEqualTo(encoding);
-        assertThat(response.getHeader("trace-id")).isEqualTo(traceId);
-        assertThat(MDC.getCopyOfContextMap()).isNullOrEmpty();
+        assertAll(
+            () -> assertThat(getBodyLogs()).singleElement()
+                .extracting(ILoggingEvent::getFormattedMessage).isEqualTo("\n" + body),
+            () -> assertThat(request.getCharacterEncoding()).isEqualTo(encoding),
+            () -> assertThat(response.getHeader("trace-id")).isEqualTo(traceId),
+            () -> assertThat(MDC.getCopyOfContextMap()).isNullOrEmpty()
+        );
     }
 
     @DisplayName("어노테이션이 있으면 JSON 변환에 실패한 요청도 원본 본문을 기록한다.")
