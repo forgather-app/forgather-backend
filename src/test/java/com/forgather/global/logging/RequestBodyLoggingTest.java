@@ -15,16 +15,22 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.slf4j.event.Level;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.method.HandlerMethod;
 
 import com.forgather.global.util.RandomCodeGenerator;
 
@@ -116,6 +122,38 @@ class RequestBodyLoggingTest {
 
         assertThat(getBodyLogs()).singleElement()
             .extracting(ILoggingEvent::getFormattedMessage).isEqualTo("\n" + body);
+    }
+
+    @DisplayName("charset이 없거나 잘못되어도 UTF-8로 본문을 기록하고 응답 헤더 설정과 MDC 정리를 완료한다.")
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"invalid-charset", "UTF 8"})
+    void invalidCharsetFallsBackOnlyForLogging(String encoding) throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/default") {
+
+            @Override
+            public String getCharacterEncoding() {
+                return encoding;
+            }
+        };
+        String body = "{\"message\":\"안녕하세요\"}";
+        request.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        request.setContent(body.getBytes(StandardCharsets.UTF_8));
+        CustomRequestBodyWrapper wrapper = new CustomRequestBodyWrapper(request);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        HandlerMethod handler = new HandlerMethod(new TestController(),
+            TestController.class.getDeclaredMethod("defaultLevel", Map.class));
+        LoggingInterceptor interceptor = new LoggingInterceptor(new RandomCodeGenerator());
+        interceptor.preHandle(wrapper, response, handler);
+        String traceId = MDC.get("traceId");
+
+        interceptor.afterCompletion(wrapper, response, handler, null);
+
+        assertThat(getBodyLogs()).singleElement()
+            .extracting(ILoggingEvent::getFormattedMessage).isEqualTo("\n" + body);
+        assertThat(request.getCharacterEncoding()).isEqualTo(encoding);
+        assertThat(response.getHeader("trace-id")).isEqualTo(traceId);
+        assertThat(MDC.getCopyOfContextMap()).isNullOrEmpty();
     }
 
     @DisplayName("어노테이션이 있으면 JSON 변환에 실패한 요청도 원본 본문을 기록한다.")
