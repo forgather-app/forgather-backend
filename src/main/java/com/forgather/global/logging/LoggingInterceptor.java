@@ -123,13 +123,23 @@ public class LoggingInterceptor implements HandlerInterceptor {
             if (bytes.length == 0) {
                 return;
             }
-            String encoding = request.getCharacterEncoding();
-            Charset charset = encoding != null ? Charset.forName(encoding) : StandardCharsets.UTF_8;
+            Charset charset = resolveLogCharset(request.getCharacterEncoding());
             log.atLevel(level)
                 .addMarker(BODY_MARKER)
                 .log("\n{}", new String(bytes, charset));
         } catch (IOException e) {
             log.warn("요청 본문 로깅에 실패했습니다.", e);
+        }
+    }
+
+    private Charset resolveLogCharset(String encoding) {
+        if (encoding == null) {
+            return StandardCharsets.UTF_8;
+        }
+        try {
+            return Charset.forName(encoding);
+        } catch (IllegalArgumentException e) {
+            return StandardCharsets.UTF_8;
         }
     }
 
