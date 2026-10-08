@@ -27,7 +27,6 @@ import com.forgather.domain.host.model.Host;
 import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.response.ApiResponse;
 
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -48,12 +47,25 @@ public class SpaceGuestbookController {
     private final GuestBookService guestBookService;
     private final GuestbookReportService guestBookReportService;
 
-    @Deprecated(forRemoval = true)
-    @Hidden
     @SecurityRequirement(name = "cookieAuth")
-    @Operation(summary = "방명록 조회",
-        description = "공개 스페이스가 아닌 경우 호스트만 조회 가능. 하위 호환을 위한 기존 API이며 신규 클라이언트는 X-API-Version=2로 호출한다.",
-        deprecated = true,
+    @Operation(summary = "방명록 목록 조회 (ver1 / ver2)",
+        description = """
+            같은 경로의 GET API이며 X-API-Version 헤더로 조회 방식을 선택한다.
+
+            ### ver1 (기본 버전)
+            - X-API-Version 헤더 없이 호출한다.
+            - 읽은 방명록과 읽지 않은 방명록을 하나의 목록으로 반환한다.
+            - 해당 스페이스의 로그인 호스트에게만 카드별 isRead를 제공한다. false는 읽지 않음을 의미한다.
+            - 방문자 응답에는 isRead가 없으며, 모든 조회자의 응답에서 unreadCount를 제외한다.
+
+            ### ver2
+            - X-API-Version: 2 헤더로 호출한다.
+            - 해당 스페이스의 로그인 호스트에게 읽은 방명록만 반환하고, 읽지 않은 방명록 개수인 unreadCount를 제공한다.
+            - 카드별 isRead는 제공하지 않는다. 읽지 않은 목록은 /spaces/{spaceCode}/guestbook/unread에서 조회한다.
+            - 방문자는 읽음 여부와 관계없이 전체 목록을 조회하며, 응답에는 isRead와 unreadCount가 없다.
+
+            공개 스페이스가 아닌 경우 해당 스페이스의 로그인 호스트만 조회할 수 있다.
+            """,
         parameters = {
             @Parameter(
                 name = "page",
@@ -76,7 +88,6 @@ public class SpaceGuestbookController {
         }
     )
     @GetMapping
-    @SuppressWarnings("removal")
     public ResponseEntity<ApiResponse<GuestBookResponse>> readGuestBook(
         @PathVariable(value = "spaceCode") String spaceCode,
         @Parameter(hidden = true)
@@ -89,8 +100,6 @@ public class SpaceGuestbookController {
     }
 
     @SecurityRequirement(name = "cookieAuth")
-    @Operation(summary = "방명록 조회 v2",
-        description = "공개 스페이스가 아닌 경우 호스트만 조회 가능. 호스트일 경우 읽은 방명록만 조회하고 읽지 않은 방명록 수를 응답한다.")
     @GetMapping(headers = "X-API-Version=2")
     public ResponseEntity<ApiResponse<GuestBookResponse>> readGuestBookV2(
         @PathVariable(value = "spaceCode") String spaceCode,
