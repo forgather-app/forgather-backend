@@ -54,10 +54,10 @@ public class GuestBookReport extends BaseTimeEntity {
     @Column(name = "detail", length = 500)
     private String detail;
 
-    @Column(name = "nickname_snapshot", length = 10, nullable = false)
+    @Column(name = "nickname_snapshot", length = 255, nullable = false)
     private String nicknameSnapshot;
 
-    @Column(name = "message_snapshot", length = 500, nullable = false)
+    @Column(name = "message_snapshot", length = 5000, nullable = false)
     private String messageSnapshot;
 
     @Column(name = "created_at_snapshot", nullable = false)

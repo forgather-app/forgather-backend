@@ -33,6 +33,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class GuestBookCard extends SoftDeleteEntity {
 
+    private static final int MAX_NICKNAME_LENGTH = 20;
+    private static final int MAX_MESSAGE_LENGTH = 500;
+    private static final int MESSAGE_COLUMN_LENGTH = MAX_MESSAGE_LENGTH * 10;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -41,10 +45,10 @@ public class GuestBookCard extends SoftDeleteEntity {
     @JoinColumn(name = "space_id", nullable = false)
     private Space space;
 
-    @Column(name = "nickname", length = 10)
+    @Column(name = "nickname", length = 255)
     private String nickname;
 
-    @Column(name = "message", length = 500, nullable = false)
+    @Column(name = "message", length = MESSAGE_COLUMN_LENGTH, nullable = false)
     private String message;
 
     @Column(name = "is_read", nullable = false)
@@ -82,15 +86,17 @@ public class GuestBookCard extends SoftDeleteEntity {
             throw new BaseException("방문자 닉네임은 공백만 입력할 수 없습니다.");
         }
         int length = TextLengthCounter.count(nickname);
-        if (length > 10) {
-            throw new BaseException("방문자 닉네임은 최대 10자까지 입력 가능합니다. nickname.length: " + length);
+        if (length > MAX_NICKNAME_LENGTH) {
+            throw new BaseException("방문자 닉네임은 최대 %d자까지 입력 가능합니다. nickname.length: %d"
+                .formatted(MAX_NICKNAME_LENGTH, length));
         }
     }
 
     private void validateMessage(String message) {
         int length = TextLengthCounter.count(message);
-        if (length > 400) {
-            throw new BaseException("방명록 카드 메세지는 최대 400까지 입력 가능합니다. message.length: " + length);
+        if (length > MAX_MESSAGE_LENGTH) {
+            throw new BaseException("방명록 카드 메세지는 최대 %d까지 입력 가능합니다. message.length: %d"
+                .formatted(MAX_MESSAGE_LENGTH, length));
         }
     }
 

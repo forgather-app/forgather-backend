@@ -85,7 +85,7 @@ public class HostController {
             "이미 온보딩이 완료된 호스트가 다시 호출하면 409 Conflict를 반환합니다.")
     public ResponseEntity<ApiResponse<HostResponse>> submitOnboarding(
         @LoginHost Host host,
-        @RequestBody OnboardingRequest request
+        @Valid @RequestBody OnboardingRequest request
     ) {
         var response = hostService.submitOnboarding(host, request);
         return ResponseEntity.ok(ApiResponse.success(response));
