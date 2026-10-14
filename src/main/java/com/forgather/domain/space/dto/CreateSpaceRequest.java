@@ -15,8 +15,8 @@ public record CreateSpaceRequest(
     @TextSize(max = 30)
     String name,
 
-    @Schema(description = "스페이스 설명", example = "스페이스 설명", maxLength = 200, nullable = true)
-    @TextSize(max = 200)
+    @Schema(description = "스페이스 설명", example = "스페이스 설명", maxLength = 500, nullable = true)
+    @TextSize(max = 500)
     String description,
 
     @Schema(description = "스페이스 공개 여부", example = "true", defaultValue = "false")

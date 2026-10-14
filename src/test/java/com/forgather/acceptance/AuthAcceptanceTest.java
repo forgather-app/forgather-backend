@@ -15,6 +15,8 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
@@ -218,7 +220,7 @@ class AuthAcceptanceTest extends AcceptanceTest {
         assertThat(response.jsonPath().getBoolean("data.onboardingCompleted")).isFalse();
     }
 
-    @DisplayName("온보딩을 제출하면 닉네임과 약관 동의 이력을 원자적으로 저장한다")
+    @DisplayName("20자 복합 이모지 닉네임으로 온보딩을 제출하면 닉네임과 약관 동의 이력을 원자적으로 저장한다")
     @Test
     void submitOnboarding() {
         // given
@@ -228,13 +230,15 @@ class AuthAcceptanceTest extends AcceptanceTest {
         Term privacyTerm = termJpaRepository.save(createPrivacyTerm("1.0.0", "privacy"));
         Term marketingTerm = termJpaRepository.save(createMarketingTerm("1.0.0", "marketing"));
 
+        String nickname = "🧑‍🧑‍🧒‍🧒".repeat(20);
+
         // when
         ExtractableResponse<MockMvcResponse> response = RestAssuredMockMvc.given()
             .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(Map.of(
-                "nickname", "포개더",
+                "nickname", nickname,
                 "agreedTermIds", List.of(serviceTerm.getId(), privacyTerm.getId(), marketingTerm.getId())
             ))
             .when()
@@ -248,10 +252,10 @@ class AuthAcceptanceTest extends AcceptanceTest {
 
         assertAll(
             () -> assertThat(response.jsonPath().getString("code")).isEqualTo(ResponseCode.SUCCESS.name()),
-            () -> assertThat(response.jsonPath().getString("data.name")).isEqualTo("포개더"),
+            () -> assertThat(response.jsonPath().getString("data.name")).isEqualTo(nickname),
             () -> assertThat(response.jsonPath().getBoolean("data.onboardingCompleted")).isTrue(),
             () -> assertThat(savedHost.getName()).isEqualTo("카카오원본이름"),
-            () -> assertThat(savedHost.getNickname()).isEqualTo("포개더"),
+            () -> assertThat(savedHost.getNickname()).isEqualTo(nickname),
             () -> assertThat(countAgreeHistories(host.getId())).isEqualTo(3)
         );
     }
@@ -315,6 +319,30 @@ class AuthAcceptanceTest extends AcceptanceTest {
             () -> assertThat(savedHost.getNickname()).isNull(),
             () -> assertThat(countAgreeHistories(host.getId())).isZero()
         );
+    }
+
+    @DisplayName("닉네임이 21자이면 약관 검증 전에 온보딩 요청 검증에서 거절한다")
+    @ValueSource(strings = {"가", "🧑‍🧑‍🧒‍🧒"})
+    @ParameterizedTest
+    void rejectOnboardingWhenNicknameExceedsMaxLength(String character) {
+        // given
+        Host host = saveHost(null);
+        String token = jwtTokenProvider.generateAccessToken(host.getId());
+
+        // when
+        RestAssuredMockMvc.given()
+            .postProcessors(withAccessToken(token))
+            .contentType(ContentType.JSON)
+            .body(Map.of("nickname", character.repeat(21), "agreedTermIds", List.of()))
+            .when()
+            .post("/auth/onboarding")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", org.hamcrest.Matchers.equalTo("VALIDATION_FAILED"));
+
+        // then
+        assertThat(hostRepository.getByIdOrThrow(host.getId()).getNickname()).isNull();
+        assertThat(countAgreeHistories(host.getId())).isZero();
     }
 
     @DisplayName("닉네임이 유효하지 않으면 온보딩 제출에 실패한다")

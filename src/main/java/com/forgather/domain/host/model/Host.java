@@ -30,7 +30,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Host extends SoftDeleteEntity {
     public static final int CODE_LENGTH = 10;
-    private static final int MAX_NICKNAME_LENGTH = 10;
+    private static final int MAX_NICKNAME_LENGTH = 20;
     private static final int MAX_INTRODUCTION_LENGTH = 50;
     private static final int MAX_LINK_URL_LENGTH = 2048;
     private static final int NICKNAME_COLUMN_LENGTH = MAX_NICKNAME_LENGTH * 10;
@@ -128,7 +128,7 @@ public class Host extends SoftDeleteEntity {
     /**
      * 프로필을 수정한다. null로 전달된 필드는 변경하지 않는다.
      *
-     * @param nickname     닉네임 (최대 10자, 공백만은 불가)
+     * @param nickname     닉네임 (최대 20자, 공백만은 불가)
      * @param introduction 한 줄 소개 (최대 50자, 공백만 전달 시 제거)
      * @param linkUrl      링크 URL (http(s), 최대 2048자, 공백만 전달 시 제거)
      */

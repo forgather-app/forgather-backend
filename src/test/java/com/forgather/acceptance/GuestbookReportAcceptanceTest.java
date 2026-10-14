@@ -6,10 +6,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
@@ -18,8 +22,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportRequest;
 import com.forgather.domain.guestbook.dto.CreateGuestBookReportResponse;
 import com.forgather.domain.guestbook.dto.ReportDetailResponse;
+import com.forgather.domain.guestbook.dto.WriteGuestBookCardRequest;
+import com.forgather.domain.guestbook.dto.WriteGuestBookCardResponse;
 import com.forgather.domain.guestbook.dto.ReportHistoryResponse;
 import com.forgather.domain.guestbook.model.GuestBookCard;
+import com.forgather.domain.guestbook.model.GuestBookReport;
+import com.forgather.domain.guestbook.repository.GuestBookReportRepository;
 import com.forgather.domain.guestbook.model.GuestBookReportReason;
 import com.forgather.domain.guestbook.model.VisibilityStatus;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
@@ -58,6 +66,9 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
     private GuestBookCardRepository guestBookCardRepository;
 
     @Autowired
+    private GuestBookReportRepository guestBookReportRepository;
+
+    @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
     private Space space;
@@ -81,6 +92,47 @@ class GuestbookReportAcceptanceTest extends AcceptanceTest {
         card = guestBookCardRepository.save(new GuestBookCard(space, "닉네임", "방명록 메시지"));
 
         RestAssuredMockMvc.mockMvc(mockMvc);
+    }
+
+    @DisplayName("최대 길이 닉네임과 메세지로 방명록을 작성하면 신고 스냅샷에도 그대로 저장된다")
+    @ValueSource(strings = {"가", "🧑‍🧑‍🧒‍🧒"})
+    @ParameterizedTest
+    void storesMaxLengthGuestbookAndReportSnapshots(String character) {
+        // given
+        String nickname = character.repeat(20);
+        String message = character.repeat(500);
+        WriteGuestBookCardRequest request = new WriteGuestBookCardRequest(nickname, message, List.of());
+
+        // when
+        ApiResponse<WriteGuestBookCardResponse> written = RestAssuredMockMvc.given()
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/spaces/{spaceCode}/guestbook", space.getCode())
+            .then()
+            .statusCode(HttpStatus.CREATED.value())
+            .extract().body().as(new TypeRef<>() { });
+
+        // then
+        GuestBookCard savedCard = guestBookCardRepository.getByIdAndDeletedAtIsNullOrThrow(written.data().id());
+        assertThat(savedCard.getNickname()).isEqualTo(nickname);
+        assertThat(savedCard.getMessage()).isEqualTo(message);
+
+        // when
+        ApiResponse<CreateGuestBookReportResponse> reported = RestAssuredMockMvc.given()
+            .postProcessors(withAccessToken(accessToken))
+            .contentType(ContentType.JSON)
+            .body(new CreateGuestBookReportRequest(reason, null))
+            .when()
+            .post("/spaces/{spaceCode}/guestbook/{cardId}/reports", space.getCode(), savedCard.getId())
+            .then()
+            .statusCode(HttpStatus.CREATED.value())
+            .extract().body().as(new TypeRef<>() { });
+
+        // then
+        GuestBookReport report = guestBookReportRepository.getByIdOrThrow(reported.data().id());
+        assertThat(report.getNicknameSnapshot()).isEqualTo(nickname);
+        assertThat(report.getMessageSnapshot()).isEqualTo(message);
     }
 
     @DisplayName("방명록 신고")

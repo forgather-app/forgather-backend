@@ -17,6 +17,8 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -123,6 +125,41 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         host = createHost();
         hostRepository.save(host);
         token = jwtTokenProvider.generateAccessToken(host.getId());
+    }
+
+    @DisplayName("일반 문자와 복합 이모지 설명 500자로 스페이스를 생성하고 수정한다")
+    @ParameterizedTest
+    @ValueSource(strings = {"가", "🧑‍🧑‍🧒‍🧒"})
+    void storesDescriptionAtMaxLength(String character) throws Exception {
+        // given
+        String description = character.repeat(500);
+        CreateSpaceRequest request = new CreateSpaceRequest("스페이스", description, true, null, null);
+
+        // when
+        ApiResponse<CreateSpaceResponse> created = RestAssuredMockMvc.given()
+            .postProcessors(withAccessToken(token))
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/spaces")
+            .then()
+            .statusCode(HttpStatus.CREATED.value())
+            .extract().body().as(new TypeRef<>() { });
+
+        // then
+        Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(created.data().spaceCode());
+        assertThat(space.getDescription()).isEqualTo(description);
+
+        // when
+        String updatedDescription = "나" + character.repeat(499);
+        String update = objectMapper.writeValueAsString(
+            new UpdateSpaceRequest(null, updatedDescription, null, null, null));
+        ApiResponse<SpaceResponse> updated = patchSpace(space, update, HttpStatus.OK);
+
+        // then
+        assertThat(updated.data().description()).isEqualTo(updatedDescription);
+        assertThat(spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(space.getCode()).getDescription())
+            .isEqualTo(updatedDescription);
     }
 
     @DisplayName("스페이스를 생성한다.")

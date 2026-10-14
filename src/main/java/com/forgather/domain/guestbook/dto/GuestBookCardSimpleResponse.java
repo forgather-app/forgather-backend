@@ -25,7 +25,7 @@ public record GuestBookCardSimpleResponse(
     @Schema(description = "사진 포함 여부", example = "false")
     Boolean containsPhoto,
 
-    @Schema(description = "호스트 읽음 여부", example = "false")
+    @Schema(description = "해당 스페이스의 로그인 호스트에게만 제공하는 읽음 여부 (false: 읽지 않음)", example = "false")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     Boolean isRead
 ) {
@@ -41,7 +41,6 @@ public record GuestBookCardSimpleResponse(
         );
     }
 
-    @Deprecated(forRemoval = true)
     public static GuestBookCardSimpleResponse fromWithReadStatus(GuestBookCardListDto guestBookCardDto) {
         return new GuestBookCardSimpleResponse(
             guestBookCardDto.id(),
