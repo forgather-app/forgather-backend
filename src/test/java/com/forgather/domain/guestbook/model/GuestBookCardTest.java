@@ -3,6 +3,7 @@ package com.forgather.domain.guestbook.model;
 import static com.forgather.domain.guestbook.model.VisibilityStatus.VISIBLE;
 import static com.forgather.fixture.GuestBookCardFixture.createGuestBookCard;
 import static com.forgather.fixture.GuestBookCardFixture.createGuestBookCardWithMessage;
+import static com.forgather.fixture.GuestBookCardFixture.createGuestBookCardWithNickname;
 import static com.forgather.fixture.GuestBookCardFixture.createGuestBookCardWithSpace;
 import static com.forgather.domain.guestbook.model.VisibilityStatus.HIDDEN_BY_ADMIN;
 import static com.forgather.domain.guestbook.model.VisibilityStatus.HIDDEN_BY_HOST;
@@ -42,27 +43,64 @@ class GuestBookCardTest {
             .hasMessageContaining("방명록 카드 메세지는 null일 수 없습니다.");
     }
 
-    @DisplayName("메세지의 길이가 400자를 초과하면 예외를 던진다")
+    @DisplayName("메세지의 길이가 500자를 초과하면 예외를 던진다")
     @Test
     void throwExceptionWhenMessageExceedMaxLength() {
         // given
-        String message = "1234567890".repeat(40) + "c";
+        String message = "1234567890".repeat(50) + "c";
 
         // when, then
         assertThatThrownBy(() -> createGuestBookCardWithMessage(message))
             .isInstanceOf(BaseException.class)
-            .hasMessageContaining("방명록 카드 메세지는 최대 400까지 입력 가능합니다.");
+            .hasMessageContaining("방명록 카드 메세지는 최대 500까지 입력 가능합니다.");
     }
 
-    @DisplayName("메세지는 이모지를 한 글자로 간주해 400자까지 입력 가능하다")
+    @DisplayName("메세지는 이모지를 한 글자로 간주해 500자까지 입력 가능하다")
     @ValueSource(strings = {"😀", "👦", "👨", "‍👩‍", "‍👦", "‍👩‍👧‍", "👨‍👩‍👧", "👨‍👩‍👧‍👦"})
     @ParameterizedTest
     void countEmojiAsOneCharAtMessage(String emoji) {
         // given
-        String message = emoji.repeat(399) + "c";
+        String message = emoji.repeat(499) + "c";
 
         // when, then
         assertThatCode(() -> createGuestBookCardWithMessage(message)).doesNotThrowAnyException();
+    }
+
+    @DisplayName("복합 이모지 메세지가 501자이면 예외를 던진다")
+    @Test
+    void rejectsEmojiMessageOverMaxLength() {
+        // given
+        String message = "🧑‍🧑‍🧒‍🧒".repeat(501);
+
+        // when & then
+        assertThatThrownBy(() -> createGuestBookCardWithMessage(message))
+            .isInstanceOf(BaseException.class);
+    }
+
+    @DisplayName("일반 문자와 복합 이모지 닉네임은 20자까지 입력 가능하다")
+    @ParameterizedTest
+    @ValueSource(strings = {"가", "🧑‍🧑‍🧒‍🧒"})
+    void allowsNicknameAtMaxLength(String character) {
+        // given
+        String nickname = character.repeat(20);
+
+        // when
+        GuestBookCard card = createGuestBookCardWithNickname(nickname);
+
+        // then
+        assertThat(card.getNickname()).isEqualTo(nickname);
+    }
+
+    @DisplayName("일반 문자와 복합 이모지 닉네임이 21자이면 예외를 던진다")
+    @ParameterizedTest
+    @ValueSource(strings = {"가", "🧑‍🧑‍🧒‍🧒"})
+    void rejectsNicknameOverMaxLength(String character) {
+        // given
+        String nickname = character.repeat(21);
+
+        // when & then
+        assertThatThrownBy(() -> createGuestBookCardWithNickname(nickname))
+            .isInstanceOf(BaseException.class);
     }
 
     @DisplayName("방명록 카드를 생성하면 미읽음 처리된다")

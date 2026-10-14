@@ -695,12 +695,12 @@ class GuestBookCardAcceptanceTest extends AcceptanceTest {
             );
         }
 
-        @DisplayName("방문자 닉네임이 10자를 초과하면 예외를 던진다")
+        @DisplayName("방문자 닉네임이 20자를 초과하면 예외를 던진다")
         @Test
         void throwExceptionWhenNicknameExceedMaxLength() {
             // given
             WriteGuestBookCardRequest request = new WriteGuestBookCardRequest(
-                "12345678901",
+                "가".repeat(21),
                 "message",
                 List.of(
                     new WriteGuestBookCardPhotoRequest("photo1.jpg", "abc.jpg", 1024L),

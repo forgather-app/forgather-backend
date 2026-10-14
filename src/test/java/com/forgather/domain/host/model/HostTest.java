@@ -13,6 +13,8 @@ import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.forgather.domain.term.model.TermType;
 import com.forgather.global.exception.BaseException;
@@ -219,29 +221,31 @@ class HostTest {
                 .hasMessageContaining("닉네임은 공백만 입력할 수 없습니다");
         }
 
-        @DisplayName("닉네임 10자는 허용된다")
-        @Test
-        void allowsNicknameAtMaxLength() {
+        @DisplayName("일반 문자와 복합 이모지 닉네임 20자는 허용된다")
+        @ValueSource(strings = {"가", "🧑‍🧑‍🧒‍🧒"})
+        @ParameterizedTest
+        void allowsNicknameAtMaxLength(String character) {
             // given
             Host host = createHost();
+            String nickname = character.repeat(20);
 
             // when
-            host.updateProfile("가나다라마바사아자차", null, null);
+            host.updateProfile(nickname, null, null);
 
             // then
-            assertThat(host.getNickname()).isEqualTo("가나다라마바사아자차");
+            assertThat(host.getNickname()).isEqualTo(nickname);
         }
 
-        @DisplayName("닉네임이 10자를 초과하면 예외가 발생한다")
+        @DisplayName("닉네임이 20자를 초과하면 예외가 발생한다")
         @Test
         void rejectsNicknameOverMaxLength() {
             // given
             Host host = createHost();
 
             // when & then
-            assertThatThrownBy(() -> host.updateProfile("가나다라마바사아자차카", null, null))
+            assertThatThrownBy(() -> host.updateProfile("가".repeat(21), null, null))
                 .isInstanceOf(BaseException.class)
-                .hasMessageContaining("닉네임은 최대 10자까지 입력 가능합니다");
+                .hasMessageContaining("닉네임은 최대 20자까지 입력 가능합니다");
         }
 
         @DisplayName("이모지 닉네임은 눈에 보이는 글자 수 기준으로 검증된다")
@@ -249,7 +253,7 @@ class HostTest {
         void countsNicknameByGrapheme() {
             // given
             Host host = createHost();
-            String emojiNickname = "🧑‍🧑‍🧒‍🧒".repeat(10);
+            String emojiNickname = "🧑‍🧑‍🧒‍🧒".repeat(20);
 
             // when
             host.updateProfile(emojiNickname, null, null);
@@ -354,16 +358,16 @@ class HostTest {
         }
     }
 
-    @DisplayName("닉네임을 10자 초과로 변경하면 예외가 발생한다")
+    @DisplayName("닉네임을 20자 초과로 변경하면 예외가 발생한다")
     @Test
     void updateNicknameRejectsOverMaxLength() {
         // given
         Host host = createHost();
 
         // when & then
-        assertThatThrownBy(() -> host.updateNickname("가나다라마바사아자차카"))
+        assertThatThrownBy(() -> host.updateNickname("가".repeat(21)))
             .isInstanceOf(BaseException.class)
-            .hasMessageContaining("닉네임은 최대 10자까지 입력 가능합니다");
+            .hasMessageContaining("닉네임은 최대 20자까지 입력 가능합니다");
     }
 
     @DisplayName("이미 익명화된 회원을 다시 익명화해도 익명화 시각이 변경되지 않는다")
