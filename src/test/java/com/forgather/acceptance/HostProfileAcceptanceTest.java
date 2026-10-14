@@ -286,7 +286,7 @@ class HostProfileAcceptanceTest extends AcceptanceTest {
             .statusCode(HttpStatus.BAD_REQUEST.value());
     }
 
-    @DisplayName("닉네임이 10자를 초과하면 프로필 수정에 실패한다")
+    @DisplayName("닉네임이 20자를 초과하면 프로필 수정에 실패한다")
     @Test
     void rejectUpdateWhenNicknameTooLong() {
         // given
@@ -298,24 +298,25 @@ class HostProfileAcceptanceTest extends AcceptanceTest {
             .postProcessors(withAccessToken(token))
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
-            .body(Map.of("nickname", "가나다라마바사아자차카"))
+            .body(Map.of("nickname", "가".repeat(21)))
             .when()
             .patch("/hosts/me/profile")
             .then()
-            .statusCode(HttpStatus.BAD_REQUEST.value());
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", org.hamcrest.Matchers.equalTo("VALIDATION_FAILED"));
 
         // then
         Host savedHost = hostRepository.getByIdOrThrow(host.getId());
         assertThat(savedHost.getNickname()).isEqualTo("포스티");
     }
 
-    @DisplayName("이모지 닉네임은 보이는 글자 수 10자까지 실제 DB에 저장된다")
+    @DisplayName("이모지 닉네임은 보이는 글자 수 20자까지 실제 DB에 저장된다")
     @Test
     void updateProfileWithEmojiNickname() {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         String token = jwtTokenProvider.generateAccessToken(host.getId());
-        String emojiNickname = "🧑‍🧑‍🧒‍🧒".repeat(10);
+        String emojiNickname = "🧑‍🧑‍🧒‍🧒".repeat(20);
 
         // when
         RestAssuredMockMvc.given()

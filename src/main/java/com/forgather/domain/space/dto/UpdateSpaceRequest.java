@@ -12,8 +12,8 @@ public record UpdateSpaceRequest(
     @TextSize(max = 30)
     String name,
 
-    @Schema(description = "새로운 스페이스 설명", example = "졸업전시 스페이스입니다.", maxLength = 200, nullable = true)
-    @TextSize(max = 200)
+    @Schema(description = "새로운 스페이스 설명", example = "졸업전시 스페이스입니다.", maxLength = 500, nullable = true)
+    @TextSize(max = 500)
     String description,
 
     @Schema(description = "새로운 스페이스 공개여부", example = "true", nullable = true)

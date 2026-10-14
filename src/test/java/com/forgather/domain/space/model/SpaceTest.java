@@ -155,17 +155,45 @@ class SpaceTest {
             .hasMessageContaining("스페이스 코드");
     }
 
-    @DisplayName("스페이스 설명은 최대 200자까지 가능하다.")
+    @DisplayName("스페이스 설명이 500자를 초과하면 예외를 던진다.")
     @Test
     void spaceDescriptionValidationTest() {
         // given
         String name = "스페이스";
-        String description = getString(201); // 201자
+        String description = getString(501);
 
         // when & then
         assertThatThrownBy(() -> new Space("1234567890", name, description, false, "", ""))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("스페이스 설명");
+    }
+
+    @DisplayName("일반 문자와 복합 이모지 설명 500자로 스페이스를 생성한다")
+    @ValueSource(strings = {"가", "🧑‍🧑‍🧒‍🧒"})
+    @ParameterizedTest
+    void createsSpaceWithDescriptionAtMaxLength(String character) {
+        // given
+        String description = character.repeat(500);
+
+        // when
+        Space space = new Space("1234567890", "스페이스", description, false, null, null);
+
+        // then
+        assertThat(space.getDescription()).isEqualTo(description);
+    }
+
+    @DisplayName("설명을 501자로 수정하면 예외를 던지고 기존 설명을 유지한다")
+    @ParameterizedTest
+    @ValueSource(strings = {"가", "🧑‍🧑‍🧒‍🧒"})
+    void rejectsDescriptionUpdateOverMaxLength(String character) {
+        // given
+        Space space = SpaceFixture.createSpace();
+        String originalDescription = space.getDescription();
+
+        // when & then
+        assertThatThrownBy(() -> space.update(null, character.repeat(501), null, null, null))
+            .isInstanceOf(BaseException.class);
+        assertThat(space.getDescription()).isEqualTo(originalDescription);
     }
 
     @DisplayName("링크 URL만 입력하고 표시 이름이 없으면 예외를 던진다.")
@@ -254,19 +282,21 @@ class SpaceTest {
         );
     }
 
-    @DisplayName("스페이스 설명을 수정할 수 있다.")
-    @Test
-    void updateSpaceDescription() {
+    @DisplayName("스페이스 설명을 일반 문자와 복합 이모지 500자로 수정하고 다른 필드는 유지한다")
+    @ValueSource(strings = {"가", "🧑‍🧑‍🧒‍🧒"})
+    @ParameterizedTest
+    void updateSpaceDescription(String character) {
         // given
         Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
+        String description = character.repeat(500);
 
         // when
-        space.update(null, "새로운 스페이스 설명", null, null, null);
+        space.update(null, description, null, null, null);
 
         // then
         assertAll(
             () -> assertThat(space.getName()).isEqualTo("스페이스"),
-            () -> assertThat(space.getDescription()).isEqualTo("새로운 스페이스 설명"),
+            () -> assertThat(space.getDescription()).isEqualTo(description),
             () -> assertThat(space.isPublic()).isFalse()
         );
     }

@@ -11,13 +11,13 @@ import jakarta.validation.constraints.NotBlank;
 
 public record WriteGuestBookCardRequest(
 
-    @Schema(description = "방문자 닉네임", example = "밍퐁루블", maxLength = 10)
+    @Schema(description = "방문자 닉네임", example = "밍퐁루블", maxLength = 20)
     @NotBlank
-    @TextSize(max = 10)
+    @TextSize(max = 20)
     String nickname,
 
-    @Schema(description = "메세지", example = "전시 잘봤다~~ 너가 최고야 🤙", maxLength = 400)
-    @TextSize(max = 400)
+    @Schema(description = "메세지", example = "전시 잘봤다~~ 너가 최고야 🤙", maxLength = 500)
+    @TextSize(max = 500)
     String message,
 
     @Schema(description = "방명록 카드 사진 목록", example = """

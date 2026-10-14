@@ -2,10 +2,13 @@ package com.forgather.domain.host.dto;
 
 import java.util.List;
 
+import com.forgather.global.validation.TextSize;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record OnboardingRequest(
-    @Schema(description = "서비스 닉네임", example = "포개더")
+    @Schema(description = "서비스 닉네임 (최대 20자)", example = "포개더", maxLength = 20)
+    @TextSize(max = 20)
     String nickname,
 
     @Schema(description = "동의한 약관 ID 목록", example = "[1, 2]")

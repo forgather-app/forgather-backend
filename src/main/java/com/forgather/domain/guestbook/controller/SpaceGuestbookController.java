@@ -138,7 +138,7 @@ public class SpaceGuestbookController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @Operation(summary = "방명록 카드 작성", description = "방문자 닉네임(10자), 메세지(400자)")
+    @Operation(summary = "방명록 카드 작성", description = "방문자 닉네임(20자), 메세지(500자)")
     @PostMapping
     public ResponseEntity<ApiResponse<WriteGuestBookCardResponse>> writeCard(
         @PathVariable(value = "spaceCode") String spaceCode,

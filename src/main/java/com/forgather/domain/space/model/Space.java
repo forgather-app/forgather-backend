@@ -26,7 +26,8 @@ public class Space extends SoftDeleteEntity {
 
     private static final int CODE_LENGTH = 10;
     private static final int MAX_NAME_LENGTH = 30;
-    private static final int MAX_DESCRIPTION_LENGTH = 200;
+    private static final int MAX_DESCRIPTION_LENGTH = 500;
+    private static final int DESCRIPTION_COLUMN_LENGTH = MAX_DESCRIPTION_LENGTH * 10;
     private static final int MAX_LINK_URL_LENGTH = 2048;
     private static final int MAX_LINK_NAME_LENGTH = 30;
     private static final Pattern LINK_URL_PATTERN = Pattern.compile(
@@ -43,7 +44,7 @@ public class Space extends SoftDeleteEntity {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "description", nullable = false)
+    @Column(name = "description", nullable = false, length = DESCRIPTION_COLUMN_LENGTH)
     private String description;
 
     @Column(name = "is_public", nullable = false)
@@ -67,7 +68,7 @@ public class Space extends SoftDeleteEntity {
      *
      * @param code        스페이스 코드 (필수, 10자)
      * @param name        스페이스 이름 (필수, 최대 30자)
-     * @param description 스페이스 설명 (선택, 최대 200자)
+     * @param description 스페이스 설명 (선택, 최대 500자)
      * @param isPublic    스페이스 공개 여부 (선택, 기본 false)
      * @param linkUrl     소개 링크 URL (선택, 최대 2048자, 표시 이름과 함께 입력)
      * @param linkName    소개 링크 표시 이름 (선택, 최대 30자, URL과 함께 입력)
