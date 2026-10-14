@@ -41,52 +41,53 @@
         </filter>
     </appender>
 
-    <appender name="FILE_BY_LOG_TYPE" class="ch.qos.logback.classic.sift.SiftingAppender">
-        <discriminator>
-            <key>logType</key>
-            <defaultValue>app</defaultValue>
-        </discriminator>
-        <sift>
-            <appender name="FILE-${logType}" class="ch.qos.logback.core.rolling.RollingFileAppender">
-                <file>${FILE_PATH}/${logType}.log</file>
-                <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                    <fileNamePattern>${FILE_PATH}/${logType}.%d{yyyy-MM-dd}.log</fileNamePattern>
-                    <maxHistory>${FILE_MAX_HISTORY}</maxHistory>
-                </rollingPolicy>
-                <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
-                    <providers>
-                        <timestamp>
-                            <pattern>yyyy-MM-dd'T'HH:mm:ss.SSSZ</pattern>
-                            <timeZone>Asia/Seoul</timeZone>
-                        </timestamp>
-                        <logLevel>
-                            <fieldName>level</fieldName>
-                        </logLevel>
-                        <loggerName>
-                            <fieldName>logger</fieldName>
-                        </loggerName>
-                        <logstashMarkers/>
-                        <mdc/>
-                        <keyValuePairs/>
-                        <message>
-                            <fieldName>msg</fieldName>
-                        </message>
-                        <stackTrace/>
-                    </providers>
-                </encoder>
-                <!-- BODY를 제외 -->
-                <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
-                    <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
-                        <marker>BODY</marker>
-                    </evaluator>
-                    <OnMatch>DENY</OnMatch>
-                    <OnMismatch>ACCEPT</OnMismatch>
-                </filter>
-            </appender>
-        </sift>
-    </appender>
-
+    <!-- 개발, 운영 환경 -->
     <springProfile name="dev | prod">
+        <!-- 일반, 어드민 로그 파일 Appender -->
+        <appender name="FILE_BY_LOG_TYPE" class="ch.qos.logback.classic.sift.SiftingAppender">
+            <discriminator>
+                <key>logType</key>
+                <defaultValue>app</defaultValue>
+            </discriminator>
+            <sift>
+                <appender name="FILE-${logType}" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                    <file>${FILE_PATH}/${logType}.log</file>
+                    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                        <fileNamePattern>${FILE_PATH}/${logType}.%d{yyyy-MM-dd}.log</fileNamePattern>
+                        <maxHistory>${FILE_MAX_HISTORY}</maxHistory>
+                    </rollingPolicy>
+                    <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+                        <providers>
+                            <timestamp>
+                                <pattern>yyyy-MM-dd'T'HH:mm:ss.SSSZ</pattern>
+                                <timeZone>Asia/Seoul</timeZone>
+                            </timestamp>
+                            <logLevel>
+                                <fieldName>level</fieldName>
+                            </logLevel>
+                            <loggerName>
+                                <fieldName>logger</fieldName>
+                            </loggerName>
+                            <logstashMarkers/>
+                            <mdc/>
+                            <keyValuePairs/>
+                            <message>
+                                <fieldName>msg</fieldName>
+                            </message>
+                            <stackTrace/>
+                        </providers>
+                    </encoder>
+                    <!-- BODY를 제외 -->
+                    <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+                        <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
+                            <marker>BODY</marker>
+                        </evaluator>
+                        <OnMatch>DENY</OnMatch>
+                        <OnMismatch>ACCEPT</OnMismatch>
+                    </filter>
+                </appender>
+            </sift>
+        </appender>
         <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
             <file>${ERROR_FILE_PATH}/${ERROR_FILE_NAME}.log</file>
             <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
