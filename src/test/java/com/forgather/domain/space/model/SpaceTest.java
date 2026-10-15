@@ -196,19 +196,22 @@ class SpaceTest {
         assertThat(space.getDescription()).isEqualTo(originalDescription);
     }
 
-    @DisplayName("링크 URL만 입력하고 표시 이름이 없으면 예외를 던진다.")
+    @DisplayName("링크 URL만 입력하고 표시 이름이 없어도 스페이스를 생성할 수 있고, 표시 이름은 빈 문자열로 저장한다.")
     @NullAndEmptySource
     @ParameterizedTest
     @ValueSource(strings = {" "})
-    void spaceLinkWithoutNameValidationTest(String blankName) {
-        // when & then
-        assertThatThrownBy(
-            () -> new Space("1234567890", "스페이스", "설명", false, "https://forgather.me", blankName))
-            .isInstanceOf(BaseException.class)
-            .hasMessageContaining("함께 입력");
+    void createSpaceWithOnlyLinkUrl(String blankName) {
+        // given & when
+        Space space = new Space("1234567890", "스페이스", "설명", false, "https://forgather.me", blankName);
+
+        // then
+        assertAll(
+            () -> assertThat(space.getLinkUrl()).isEqualTo("https://forgather.me"),
+            () -> assertThat(space.getLinkName()).isEmpty()
+        );
     }
 
-    @DisplayName("표시 이름만 입력하고 링크 URL이 없으면 예외를 던진다.")
+    @DisplayName("표시 이름만 입력하고 링크 URL이 없으면 스페이스를 생성할 수 없다.")
     @NullAndEmptySource
     @ParameterizedTest
     @ValueSource(strings = {" "})
@@ -225,6 +228,16 @@ class SpaceTest {
     void spaceLinkUrlPatternValidationTest(String invalidUrl) {
         // when & then
         assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, invalidUrl, "포트폴리오"))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("링크 URL 형식");
+    }
+
+    @DisplayName("표시 이름 없이 링크 URL만 입력해도 http/https 형식 검증을 적용한다.")
+    @ValueSource(strings = {"forgather.me", "ftp://forgather.me", "javascript:alert(1)"})
+    @ParameterizedTest
+    void spaceLinkUrlPatternValidationWithoutName(String invalidUrl) {
+        // when & then
+        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, invalidUrl, null))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("링크 URL 형식");
     }
@@ -350,16 +363,68 @@ class SpaceTest {
         );
     }
 
-    @DisplayName("링크 URL만 수정하고 표시 이름을 누락하면 예외를 던진다.")
+    @DisplayName("링크 URL만 수정해도 표시 이름 없이 링크를 추가할 수 있다.")
     @Test
     void updateSpaceLinkUrlOnly() {
         // given
         Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
 
+        // when
+        space.update(null, null, null, "https://forgather.me", null);
+
+        // then
+        assertAll(
+            () -> assertThat(space.getLinkUrl()).isEqualTo("https://forgather.me"),
+            () -> assertThat(space.getLinkName()).isEmpty()
+        );
+    }
+
+    @DisplayName("링크 URL이 없는 스페이스에 표시 이름만 수정하면 예외를 던지고 기존 값을 유지한다.")
+    @Test
+    void rejectsUpdateLinkNameWithoutUrl() {
+        // given
+        Space space = SpaceFixture.createSpace();
+
         // when & then
-        assertThatThrownBy(() -> space.update(null, null, null, "https://forgather.me", null))
+        assertThatThrownBy(() -> space.update(null, null, null, null, "포트폴리오"))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("함께 입력");
+        assertAll(
+            () -> assertThat(space.getLinkUrl()).isEmpty(),
+            () -> assertThat(space.getLinkName()).isEmpty()
+        );
+    }
+
+    @DisplayName("링크 URL과 표시 이름이 있는 스페이스에서 표시 이름만 비우면 URL은 유지하고 이름만 삭제한다.")
+    @Test
+    void updateSpaceLinkNameToEmptyKeepsUrl() {
+        // given
+        Space space = SpaceFixture.createSpaceWithLink("https://forgather.me", "포트폴리오");
+
+        // when
+        space.update(null, null, null, null, "");
+
+        // then
+        assertAll(
+            () -> assertThat(space.getLinkUrl()).isEqualTo("https://forgather.me"),
+            () -> assertThat(space.getLinkName()).isEmpty()
+        );
+    }
+
+    @DisplayName("링크 URL과 표시 이름이 있는 스페이스에서 URL만 비우면 예외를 던지고 기존 링크를 유지한다.")
+    @Test
+    void rejectsClearingLinkUrlWhileNameRemains() {
+        // given
+        Space space = SpaceFixture.createSpaceWithLink("https://forgather.me", "포트폴리오");
+
+        // when & then
+        assertThatThrownBy(() -> space.update(null, null, null, "", null))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("함께 입력");
+        assertAll(
+            () -> assertThat(space.getLinkUrl()).isEqualTo("https://forgather.me"),
+            () -> assertThat(space.getLinkName()).isEqualTo("포트폴리오")
+        );
     }
 
     @DisplayName("스페이스를 생성하면 축하받는 스페이스로 지정되지 않은 상태다.")
