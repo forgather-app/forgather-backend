@@ -20,7 +20,7 @@ public record UpdateSpaceRequest(
     Boolean isPublic,
 
     @Schema(
-        description = "새로운 소개 링크 URL (표시 이름과 함께 입력, 빈 쌍으로 삭제)",
+        description = "새로운 소개 링크 URL (빈 문자열로 삭제, 삭제 시 표시 이름도 함께 비워야 함)",
         example = "https://forgather.app",
         maxLength = 2048,
         nullable = true
@@ -29,7 +29,7 @@ public record UpdateSpaceRequest(
     String linkUrl,
 
     @Schema(
-        description = "새로운 소개 링크 표시 이름 (URL과 함께 입력)",
+        description = "새로운 소개 링크 표시 이름 (선택, 링크 URL이 있을 때만 입력 가능)",
         example = "포트폴리오",
         maxLength = 30,
         nullable = true
