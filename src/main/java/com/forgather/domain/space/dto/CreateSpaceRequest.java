@@ -23,7 +23,7 @@ public record CreateSpaceRequest(
     boolean isPublic,
 
     @Schema(
-        description = "스페이스 소개 링크 URL (표시 이름과 함께 입력)",
+        description = "스페이스 소개 링크 URL (선택)",
         example = "https://forgather.app",
         maxLength = 2048,
         nullable = true
@@ -33,7 +33,7 @@ public record CreateSpaceRequest(
     String linkUrl,
 
     @Schema(
-        description = "스페이스 소개 링크 표시 이름 (URL과 함께 입력)",
+        description = "스페이스 소개 링크 표시 이름 (선택, 링크 URL이 있을 때만 입력 가능)",
         example = "포트폴리오",
         maxLength = 30,
         nullable = true

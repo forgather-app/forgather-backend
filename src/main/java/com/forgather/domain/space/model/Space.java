@@ -70,8 +70,8 @@ public class Space extends SoftDeleteEntity {
      * @param name        스페이스 이름 (필수, 최대 30자)
      * @param description 스페이스 설명 (선택, 최대 500자)
      * @param isPublic    스페이스 공개 여부 (선택, 기본 false)
-     * @param linkUrl     소개 링크 URL (선택, 최대 2048자, 표시 이름과 함께 입력)
-     * @param linkName    소개 링크 표시 이름 (선택, 최대 30자, URL과 함께 입력)
+     * @param linkUrl     소개 링크 URL (선택, 최대 2048자)
+     * @param linkName    소개 링크 표시 이름 (선택, 최대 30자, 링크 URL이 있을 때만 입력 가능)
      */
     public Space(String code, String name, String description, boolean isPublic, String linkUrl, String linkName) {
         validateRequiredFields(code, name);
@@ -120,15 +120,11 @@ public class Space extends SoftDeleteEntity {
         if (linkUrl == null && linkName == null) {
             return;
         }
-        String newLinkUrl = (linkUrl != null) ? linkUrl : this.linkUrl;
-        String newLinkName = (linkName != null) ? linkName : this.linkName;
+        String newLinkUrl = (linkUrl != null) ? convertBlankToEmptyString(linkUrl) : this.linkUrl;
+        String newLinkName = (linkName != null) ? convertBlankToEmptyString(linkName) : this.linkName;
         validateLink(newLinkUrl, newLinkName);
-        if (linkUrl != null) {
-            this.linkUrl = convertBlankToEmptyString(linkUrl);
-        }
-        if (linkName != null) {
-            this.linkName = convertBlankToEmptyString(linkName);
-        }
+        this.linkUrl = newLinkUrl;
+        this.linkName = newLinkName;
     }
 
     public void feature() {
@@ -177,11 +173,14 @@ public class Space extends SoftDeleteEntity {
     private void validateLink(String linkUrl, String linkName) {
         boolean hasUrl = linkUrl != null && !linkUrl.isBlank();
         boolean hasName = linkName != null && !linkName.isBlank();
-        if (hasUrl != hasName) {
-            throw new BaseException("링크 URL과 표시 이름은 함께 입력해야 합니다.");
+        // 표시 이름은 URL에 종속되는 선택 값이다. URL만 있는 링크는 허용하고, 이름만 있는 링크는 거부한다.
+        if (!hasUrl && hasName) {
+            throw new BaseException("링크 표시 이름은 링크 URL과 함께 입력해야 합니다.");
         }
         if (hasUrl) {
             validateLinkUrl(linkUrl);
+        }
+        if (hasName) {
             validateLinkName(linkName);
         }
     }

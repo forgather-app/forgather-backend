@@ -307,12 +307,43 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         );
     }
 
-    @DisplayName("링크 URL만 입력하고 표시 이름을 누락하면 스페이스를 생성할 수 없다.")
+    @DisplayName("링크 URL만 입력해도 스페이스를 생성할 수 있고, 표시 이름은 빈 문자열로 조회된다.")
     @Test
     void createSpaceWithOnlyLinkUrl() throws Exception {
         // given
         String request = objectMapper.writeValueAsString(
             new CreateSpaceRequest("test-space", "description", false, "https://forgather.me", null)
+        );
+
+        // when
+        ApiResponse<CreateSpaceResponse> created = RestAssuredMockMvc.given()
+            .postProcessors(withAccessToken(token))
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when()
+            .post("/spaces")
+            .then()
+            .statusCode(HttpStatus.CREATED.value())
+            .extract()
+            .body()
+            .as(new TypeRef<>() {
+            });
+
+        ApiResponse<SpaceResponse> result = getSpace(created.data().spaceCode());
+
+        // then
+        assertAll(
+            () -> assertThat(result.data().linkUrl()).isEqualTo("https://forgather.me"),
+            () -> assertThat(result.data().linkName()).isEmpty()
+        );
+    }
+
+    @DisplayName("표시 이름만 입력하고 링크 URL을 누락하면 스페이스를 생성할 수 없다.")
+    @Test
+    void createSpaceWithOnlyLinkName() throws Exception {
+        // given
+        String request = objectMapper.writeValueAsString(
+            new CreateSpaceRequest("test-space", "description", false, null, "포트폴리오")
         );
 
         // when & then
@@ -785,6 +816,27 @@ class SpaceAcceptanceTest extends AcceptanceTest {
             () -> assertThat(result.data().linkName()).isEqualTo("포트폴리오"),
             () -> assertThat(result.data().guestBookCardCount()).isZero(),
             () -> assertThat(result.data().host().code()).isEqualTo(host.getCode())
+        );
+    }
+
+    @DisplayName("링크 URL만 보내 스페이스를 수정하면 표시 이름 없이 링크가 저장된다.")
+    @Test
+    void updateSpaceWithOnlyLinkUrl() throws Exception {
+        // given
+        Space space = spaceRepository.save(SpaceFixture.createSpace());
+        spaceHostRepository.save(new SpaceHost(space, host));
+
+        String request = objectMapper.writeValueAsString(
+            new UpdateSpaceRequest(null, null, null, "https://forgather.me", null)
+        );
+
+        // when
+        ApiResponse<SpaceResponse> result = patchSpace(space, request, HttpStatus.OK);
+
+        // then
+        assertAll(
+            () -> assertThat(result.data().linkUrl()).isEqualTo("https://forgather.me"),
+            () -> assertThat(result.data().linkName()).isEmpty()
         );
     }
 
