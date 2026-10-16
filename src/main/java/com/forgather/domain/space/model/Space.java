@@ -120,15 +120,11 @@ public class Space extends SoftDeleteEntity {
         if (linkUrl == null && linkName == null) {
             return;
         }
-        String newLinkUrl = (linkUrl != null) ? linkUrl : this.linkUrl;
-        String newLinkName = (linkName != null) ? linkName : this.linkName;
+        String newLinkUrl = (linkUrl != null) ? convertBlankToEmptyString(linkUrl) : this.linkUrl;
+        String newLinkName = (linkName != null) ? convertBlankToEmptyString(linkName) : this.linkName;
         validateLink(newLinkUrl, newLinkName);
-        if (linkUrl != null) {
-            this.linkUrl = convertBlankToEmptyString(linkUrl);
-        }
-        if (linkName != null) {
-            this.linkName = convertBlankToEmptyString(linkName);
-        }
+        this.linkUrl = newLinkUrl;
+        this.linkName = newLinkName;
     }
 
     public void feature() {
