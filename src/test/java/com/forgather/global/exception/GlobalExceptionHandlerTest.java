@@ -333,6 +333,14 @@ class GlobalExceptionHandlerTest {
 
             assertEnvelope(res, 415, "UNSUPPORTED_MEDIA_TYPE", "지원하지 않는 미디어 타입입니다.");
         }
+
+        @DisplayName("UpgradeRequiredException -> 426 / UPGRADE_REQUIRED")
+        @Test
+        void upgradeRequiredException() throws Exception {
+            Snapshot res = perform(new UpgradeRequiredException("앱 업데이트가 필요합니다."));
+
+            assertEnvelope(res, 426, "UPGRADE_REQUIRED", "앱 업데이트가 필요합니다.");
+        }
     }
 
     @Nested
