@@ -1,6 +1,7 @@
 package com.forgather.acceptance;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -11,6 +12,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -123,6 +127,7 @@ class ProductAcceptanceTest extends AcceptanceTest {
                 .get("/spaces/%s/products".formatted(space.getCode()))
                 .then()
                 .statusCode(200)
+                .body("data.products.authorName", contains("authorName", "authorName"))
                 .extract()
                 .body()
                 .as(new TypeRef<>() {
@@ -145,6 +150,32 @@ class ProductAcceptanceTest extends AcceptanceTest {
                     "/spaces/1234567890/product/file1.png"),
                 () -> assertThat(result.data().products().get(0).firstPhoto().order()).isEqualTo(1)
             );
+        }
+
+        @DisplayName("작가명을 입력하지 않은 작품의 목록 응답은 작가명을 빈 문자열로 반환한다")
+        @ParameterizedTest
+        @NullAndEmptySource
+        @ValueSource(strings = {"   "})
+        void returnEmptyAuthorNameWhenNotProvided(String authorName) {
+            // given
+            Product product = new Product(space, "title", authorName, "description", "", false);
+            productRepository.save(product);
+
+            // when
+            String result = RestAssuredMockMvc.given()
+                .header("X-API-Version", "3")
+                .accept(ContentType.JSON)
+                .when()
+                .get("/spaces/%s/products".formatted(space.getCode()))
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .jsonPath()
+                .getString("data.products[0].authorName");
+
+            // then
+            assertThat(result).isEqualTo("");
         }
 
         @DisplayName("사진이 저장된 순서와 무관하게 정렬 순서가 가장 앞선 사진을 첫 번째 사진으로 반환한다")
