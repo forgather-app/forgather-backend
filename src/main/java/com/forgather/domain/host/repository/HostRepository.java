@@ -18,8 +18,6 @@ public interface HostRepository {
 
     Host save(Host host);
 
-    long count();
-
     Optional<Host> findById(Long id);
 
     Optional<Host> findByIdAndDeletedAtIsNull(Long id);

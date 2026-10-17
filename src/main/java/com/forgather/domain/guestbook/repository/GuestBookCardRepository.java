@@ -131,8 +131,6 @@ public interface GuestBookCardRepository {
         """)
     int softDeleteAllBySpace(@Param("space") Space space, @Param("now") LocalDateTime now);
 
-    long count();
-
     default GuestBookCard getByIdAndDeletedAtIsNullOrThrow(Long id) {
         if (id == null) {
             throw new BaseNullPointerException("방명록 카드의 id는 null일 수 없습니다.");
