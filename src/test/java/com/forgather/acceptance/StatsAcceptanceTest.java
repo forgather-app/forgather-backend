@@ -148,9 +148,9 @@ class StatsAcceptanceTest extends AcceptanceTest {
         assertCounts(result, 0, 0, 3, 0);
     }
 
-    @DisplayName("비공개 스페이스의 작품도 랜딩 작품 수에 포함한다")
+    @DisplayName("방명록이 비공개여도 작품을 랜딩 통계에 포함한다")
     @Test
-    void landingIncludesProductsInPrivateSpace() {
+    void landingIncludesProductsWithPrivateGuestBook() {
         // given
         Space space = spaceRepository.save(SpaceFixture.createPrivateSpace());
         productRepository.save(ProductFixture.createProductWithSpace(space));

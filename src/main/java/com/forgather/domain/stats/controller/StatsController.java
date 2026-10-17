@@ -24,7 +24,7 @@ public class StatsController {
     private final StatsService statsService;
 
     @Operation(summary = "랜딩 페이지용 통계", description = "서비스 내 스페이스, 방명록 글(카드), 회원, 작품의 총 개수를 반환합니다. "
-        + "삭제된 데이터, 탈퇴 및 익명화된 회원, 비공개 스페이스의 작품을 포함합니다. 방명록 카드 1개를 1건으로 집계합니다.")
+        + "삭제된 데이터와 탈퇴 및 익명화된 회원을 포함합니다. 방명록 공개 여부와 관계없이 카드 1개를 1건으로 집계합니다.")
     @GetMapping("/landing")
     public ResponseEntity<ApiResponse<LandingStatsResponse>> landing() {
         LandingStatsResponse response = statsService.landing();
