@@ -20,8 +20,6 @@ public interface SpaceRepository {
 
     Page<Space> findAllByDeletedAtIsNull(Pageable pageable);
 
-    long count();
-
     default Space getByCodeAndDeletedAtIsNullOrThrow(String spaceCode) {
         if (spaceCode == null) {
             throw new BaseNullPointerException("스페이스 코드는 null일 수 없습니다. code: " + spaceCode);
