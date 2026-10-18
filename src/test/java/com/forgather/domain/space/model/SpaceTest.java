@@ -10,7 +10,6 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -430,51 +429,46 @@ class SpaceTest {
         );
     }
 
-    @DisplayName("전시 기간 없이 생성하거나 과거와 미래 및 같은 날짜의 전시 기간으로 생성할 수 있다")
-    @CsvSource(value = {
-        "NULL, NULL",
-        "2000-01-01, 2000-01-31",
-        "2100-01-01, 2100-01-31",
-        "2026-10-19, 2026-10-19",
-        "2000-01-01, 2100-01-31"
-    }, nullValues = "NULL")
-    @ParameterizedTest
-    void createSpaceWithValidExhibitionPeriod(LocalDate startDate, LocalDate endDate) {
-        // given & when
+    @DisplayName("전시 날짜를 전달하면 스페이스에 기간 값 객체를 설정한다")
+    @Test
+    void createSpaceWithExhibitionPeriod() {
+        // given
+        LocalDate startDate = LocalDate.of(2026, 10, 19);
+        LocalDate endDate = LocalDate.of(2026, 10, 20);
+
+        // when
         Space space = new Space("1234567890", "스페이스", "설명", false, null, null, startDate, endDate);
 
         // then
         assertAll(
+            () -> assertThat(space.getExhibitionPeriod()).isNotNull(),
             () -> assertThat(space.getExhibitionStartDate()).isEqualTo(startDate),
             () -> assertThat(space.getExhibitionEndDate()).isEqualTo(endDate)
         );
     }
 
-    @DisplayName("시작일과 종료일 중 하나만 있거나 시작일이 더 늦으면 스페이스를 생성할 수 없다")
-    @CsvSource(value = {
-        "2026-10-19, NULL",
-        "NULL, 2026-10-19",
-        "2026-10-20, 2026-10-19"
-    }, nullValues = "NULL")
-    @ParameterizedTest
-    void rejectsCreateSpaceWithInvalidExhibitionPeriod(LocalDate startDate, LocalDate endDate) {
-        // given & when & then
-        assertThatThrownBy(
-            () -> new Space("1234567890", "스페이스", "설명", false, null, null, startDate, endDate)
-        ).isInstanceOf(BaseException.class);
+    @DisplayName("전시 날짜 없이 스페이스를 생성하면 기간 값 객체는 없다")
+    @Test
+    void createSpaceWithoutExhibitionPeriod() {
+        // given & when
+        Space space = SpaceFixture.createSpace();
+
+        // then
+        assertAll(
+            () -> assertThat(space.getExhibitionPeriod()).isNull(),
+            () -> assertThat(space.getExhibitionStartDate()).isNull(),
+            () -> assertThat(space.getExhibitionEndDate()).isNull()
+        );
     }
 
-    @DisplayName("전시 기간을 과거와 미래 및 같은 날짜의 기간으로 교체할 수 있다")
-    @CsvSource({
-        "2000-01-01, 2000-01-31",
-        "2100-01-01, 2100-01-31",
-        "2026-10-19, 2026-10-19"
-    })
-    @ParameterizedTest
-    void updateExhibitionPeriod(LocalDate startDate, LocalDate endDate) {
+    @DisplayName("새 전시 날짜를 전달하면 기존 기간을 교체한다")
+    @Test
+    void updateExhibitionPeriod() {
         // given
         Space space = SpaceFixture.createSpace();
         space.updateExhibitionPeriod(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 31));
+        LocalDate startDate = LocalDate.of(2026, 10, 19);
+        LocalDate endDate = LocalDate.of(2026, 10, 20);
 
         // when
         space.updateExhibitionPeriod(startDate, endDate);
@@ -486,25 +480,19 @@ class SpaceTest {
         );
     }
 
-    @DisplayName("시작일과 종료일 중 하나만 있거나 시작일이 더 늦으면 수정을 거부하고 기존 기간을 유지한다")
-    @CsvSource(value = {
-        "2026-10-19, NULL",
-        "NULL, 2026-10-19",
-        "2026-10-20, 2026-10-19"
-    }, nullValues = "NULL")
-    @ParameterizedTest
-    void rejectsInvalidExhibitionPeriodUpdateAndKeepsDates(LocalDate startDate, LocalDate endDate) {
+    @DisplayName("새 전시 기간 생성에 실패하면 기존 기간 객체를 유지한다")
+    @Test
+    void keepsExhibitionPeriodWhenReplacementFails() {
         // given
         Space space = SpaceFixture.createSpace();
         space.updateExhibitionPeriod(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 31));
+        SpaceExhibitionPeriod previousPeriod = space.getExhibitionPeriod();
 
         // when & then
-        assertThatThrownBy(() -> space.updateExhibitionPeriod(startDate, endDate))
+        assertThatThrownBy(() -> space.updateExhibitionPeriod(
+            LocalDate.of(2026, 10, 20), LocalDate.of(2026, 10, 19)))
             .isInstanceOf(BaseException.class);
-        assertAll(
-            () -> assertThat(space.getExhibitionStartDate()).isEqualTo(LocalDate.of(2025, 1, 1)),
-            () -> assertThat(space.getExhibitionEndDate()).isEqualTo(LocalDate.of(2025, 1, 31))
-        );
+        assertThat(space.getExhibitionPeriod()).isSameAs(previousPeriod);
     }
 
     @DisplayName("시작일과 종료일을 모두 null로 변경하면 기존 전시 기간을 삭제한다")
@@ -520,7 +508,8 @@ class SpaceTest {
         // then
         assertAll(
             () -> assertThat(space.getExhibitionStartDate()).isNull(),
-            () -> assertThat(space.getExhibitionEndDate()).isNull()
+            () -> assertThat(space.getExhibitionEndDate()).isNull(),
+            () -> assertThat(space.getExhibitionPeriod()).isNull()
         );
     }
 

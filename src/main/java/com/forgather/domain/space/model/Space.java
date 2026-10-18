@@ -12,6 +12,7 @@ import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.util.TextLengthCounter;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -57,11 +58,8 @@ public class Space extends SoftDeleteEntity {
     @Column(name = "link_name", nullable = false)
     private String linkName;
 
-    @Column(name = "exhibition_start_date", nullable = true)
-    private LocalDate exhibitionStartDate;
-
-    @Column(name = "exhibition_end_date", nullable = true)
-    private LocalDate exhibitionEndDate;
+    @Embedded
+    private SpaceExhibitionPeriod exhibitionPeriod;
 
     /**
      * 호스트가 지정한 '지금 축하받고 있는 스페이스'인지 여부.
@@ -82,7 +80,7 @@ public class Space extends SoftDeleteEntity {
      */
     public Space(String code, String name, String description, boolean isPublic, String linkUrl, String linkName,
         LocalDate exhibitionStartDate, LocalDate exhibitionEndDate) {
-        validateExhibitionPeriod(exhibitionStartDate, exhibitionEndDate);
+        SpaceExhibitionPeriod newExhibitionPeriod = createExhibitionPeriod(exhibitionStartDate, exhibitionEndDate);
         validateRequiredFields(code, name);
         // 이 도메인은 '값 없음'을 NULL이 아니라 빈 문자열로 표현한다. 검증 전에 먼저 정규화한다.
         String newDescription = convertBlankToEmptyString(description);
@@ -99,8 +97,7 @@ public class Space extends SoftDeleteEntity {
         this.isPublic = isPublic;
         this.linkUrl = newLinkUrl;
         this.linkName = newLinkName;
-        this.exhibitionStartDate = exhibitionStartDate;
-        this.exhibitionEndDate = exhibitionEndDate;
+        this.exhibitionPeriod = newExhibitionPeriod;
     }
 
     private void validateRequiredFields(String code, String name) {
@@ -139,20 +136,22 @@ public class Space extends SoftDeleteEntity {
     }
 
     public void updateExhibitionPeriod(LocalDate startDate, LocalDate endDate) {
-        validateExhibitionPeriod(startDate, endDate);
-        this.exhibitionStartDate = startDate;
-        this.exhibitionEndDate = endDate;
+        this.exhibitionPeriod = createExhibitionPeriod(startDate, endDate);
     }
 
-    private void validateExhibitionPeriod(LocalDate startDate, LocalDate endDate) {
-        if ((startDate == null) != (endDate == null)) {
-            throw new BaseException("전시 시작일과 종료일은 함께 입력해야 합니다. startDate: " + startDate
-                + ", endDate: " + endDate);
+    private SpaceExhibitionPeriod createExhibitionPeriod(LocalDate startDate, LocalDate endDate) {
+        if (startDate == null && endDate == null) {
+            return null;
         }
-        if (startDate != null && startDate.isAfter(endDate)) {
-            throw new BaseException("전시 시작일은 종료일보다 늦을 수 없습니다. startDate: " + startDate
-                + ", endDate: " + endDate);
-        }
+        return new SpaceExhibitionPeriod(startDate, endDate);
+    }
+
+    public LocalDate getExhibitionStartDate() {
+        return exhibitionPeriod == null ? null : exhibitionPeriod.getStartDate();
+    }
+
+    public LocalDate getExhibitionEndDate() {
+        return exhibitionPeriod == null ? null : exhibitionPeriod.getEndDate();
     }
 
     public void feature() {
