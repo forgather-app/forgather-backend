@@ -19,6 +19,7 @@ import org.springframework.test.context.TestPropertySource;
 
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookCardPhoto;
+import com.forgather.domain.guestbook.repository.GuestBookCardCountRepository;
 import com.forgather.domain.guestbook.repository.GuestBookCardPhotoRepository;
 import com.forgather.domain.guestbook.repository.GuestBookCardRepository;
 import com.forgather.domain.host.model.Host;
@@ -45,6 +46,9 @@ public class GuestBookDeleteServiceTest {
 
     @Autowired
     GuestBookCardRepository guestBookCardRepository;
+
+    @Autowired
+    private GuestBookCardCountRepository guestBookCardCountRepository;
 
     @Autowired
     GuestBookCardPhotoRepository guestBookCardPhotoRepository;
@@ -95,7 +99,7 @@ public class GuestBookDeleteServiceTest {
 
         // then
         assertAll(
-            () -> assertThat(guestBookCardRepository.count()).isEqualTo(3),
+            () -> assertThat(guestBookCardCountRepository.count()).isEqualTo(3),
             () -> assertThat(guestBookCard1.getDeletedAt()).isNotNull(),
             () -> assertThat(guestBookCard2.getDeletedAt()).isNull(),
             () -> assertThat(guestBookCard3.getDeletedAt()).isNotNull(),
@@ -125,7 +129,7 @@ public class GuestBookDeleteServiceTest {
 
         // then
         assertAll(
-            () -> assertThat(guestBookCardRepository.count()).isEqualTo(2),
+            () -> assertThat(guestBookCardCountRepository.count()).isEqualTo(2),
             () -> assertThat(guestBookCardRepository.findAllBySpaceAndDeletedAtIsNull(space)).isEmpty(),
             () -> assertThat(guestBookCardPhotoRepository.findAllByGuestBookCardAndDeletedAtIsNull(guestBookCard1))
                 .isEmpty(),

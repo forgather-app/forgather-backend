@@ -12,6 +12,9 @@ public record SimpleProductResponse(
     @Schema(description = "작품명", example = "고귀한 의자")
     String title,
 
+    @Schema(description = "작가명 (미입력 시 빈 문자열)", example = "검은수염")
+    String authorName,
+
     @Schema(description = "임베드 영상 링크", example = "https://youtu.be/lkuAxAVgAX0")
     String videoUrl,
 
@@ -22,6 +25,7 @@ public record SimpleProductResponse(
     public SimpleProductResponse(Product product, ProductPhoto firstPhoto) {
         this(product.getId(),
             product.getTitle(),
+            product.getAuthorName(),
             product.getVideoUrl(),
             (firstPhoto != null) ? new ProductPhotoResponse(firstPhoto) : null
         );
