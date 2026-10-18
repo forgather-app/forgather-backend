@@ -80,10 +80,6 @@ public class Space extends SoftDeleteEntity {
      * @param linkUrl     소개 링크 URL (선택, 최대 2048자)
      * @param linkName    소개 링크 표시 이름 (선택, 최대 30자, 링크 URL이 있을 때만 입력 가능)
      */
-    public Space(String code, String name, String description, boolean isPublic, String linkUrl, String linkName) {
-        this(code, name, description, isPublic, linkUrl, linkName, null, null);
-    }
-
     public Space(String code, String name, String description, boolean isPublic, String linkUrl, String linkName,
         LocalDate exhibitionStartDate, LocalDate exhibitionEndDate) {
         validateExhibitionPeriod(exhibitionStartDate, exhibitionEndDate);

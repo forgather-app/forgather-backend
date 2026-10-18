@@ -26,7 +26,7 @@ class SpaceTest {
 
         // when & then
         assertThatCode(
-            () -> new Space(spaceCode, name, "", false, "", "")
+            () -> new Space(spaceCode, name, "", false, "", "", null, null)
         ).doesNotThrowAnyException();
     }
 
@@ -39,7 +39,7 @@ class SpaceTest {
         String linkName = "  ";
 
         // when
-        Space space = new Space("1234567890", "나의 졸업전시", description, false, linkUrl, linkName);
+        Space space = new Space("1234567890", "나의 졸업전시", description, false, linkUrl, linkName, null, null);
 
         // then
         assertAll(
@@ -53,7 +53,7 @@ class SpaceTest {
     @Test
     void createSpaceWithoutDescription() {
         // given & when
-        Space space = new Space("1234567890", "나의 졸업전시", null, false, null, null);
+        Space space = new Space("1234567890", "나의 졸업전시", null, false, null, null, null, null);
 
         // then
         assertThat(space.getDescription()).isEmpty();
@@ -63,7 +63,7 @@ class SpaceTest {
     @Test
     void createSpaceWithoutLink() {
         // given & when
-        Space space = new Space("1234567890", "나의 졸업전시", "설명", false, null, null);
+        Space space = new Space("1234567890", "나의 졸업전시", "설명", false, null, null, null, null);
 
         // then
         assertAll(
@@ -76,7 +76,7 @@ class SpaceTest {
     @Test
     void createSpaceWithLink() {
         // given & when
-        Space space = new Space("1234567890", "나의 졸업전시", "설명", false, "https://forgather.me", "포트폴리오");
+        Space space = new Space("1234567890", "나의 졸업전시", "설명", false, "https://forgather.me", "포트폴리오", null, null);
 
         // then
         assertAll(
@@ -93,7 +93,7 @@ class SpaceTest {
 
         // when & then
         assertThatThrownBy(
-            () -> new Space(null, name, null, false, null, null)
+            () -> new Space(null, name, null, false, null, null, null, null)
         ).isInstanceOf(BaseNullPointerException.class)
             .hasMessageContaining("스페이스 코드");
     }
@@ -106,7 +106,7 @@ class SpaceTest {
 
         // when & then
         assertThatThrownBy(
-            () -> new Space(code, null, null, false, null, null)
+            () -> new Space(code, null, null, false, null, null, null, null)
         ).isInstanceOf(BaseNullPointerException.class)
             .hasMessageContaining("스페이스 이름");
     }
@@ -122,7 +122,7 @@ class SpaceTest {
 
         // when & then
         assertThatCode(
-            () -> new Space(spaceCode, name, description, false, "", "")
+            () -> new Space(spaceCode, name, description, false, "", "", null, null)
         ).doesNotThrowAnyException();
     }
 
@@ -136,7 +136,7 @@ class SpaceTest {
 
         // when & then
         assertThatThrownBy(
-            () -> new Space("1234567890", invalidName, description, false, "", "")
+            () -> new Space("1234567890", invalidName, description, false, "", "", null, null)
         ).isInstanceOf(BaseException.class)
             .hasMessageContaining("스페이스 이름");
     }
@@ -150,7 +150,7 @@ class SpaceTest {
 
         // when & then
         assertThatThrownBy(
-            () -> new Space("123456789", name, description, false, "", "")
+            () -> new Space("123456789", name, description, false, "", "", null, null)
         ).isInstanceOf(BaseException.class)
             .hasMessageContaining("스페이스 코드");
     }
@@ -163,7 +163,7 @@ class SpaceTest {
         String description = getString(501);
 
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", name, description, false, "", ""))
+        assertThatThrownBy(() -> new Space("1234567890", name, description, false, "", "", null, null))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("스페이스 설명");
     }
@@ -176,7 +176,7 @@ class SpaceTest {
         String description = character.repeat(500);
 
         // when
-        Space space = new Space("1234567890", "스페이스", description, false, null, null);
+        Space space = new Space("1234567890", "스페이스", description, false, null, null, null, null);
 
         // then
         assertThat(space.getDescription()).isEqualTo(description);
@@ -202,7 +202,7 @@ class SpaceTest {
     @ValueSource(strings = {" "})
     void createSpaceWithOnlyLinkUrl(String blankName) {
         // given & when
-        Space space = new Space("1234567890", "스페이스", "설명", false, "https://forgather.me", blankName);
+        Space space = new Space("1234567890", "스페이스", "설명", false, "https://forgather.me", blankName, null, null);
 
         // then
         assertAll(
@@ -217,7 +217,7 @@ class SpaceTest {
     @ValueSource(strings = {" "})
     void spaceLinkWithoutUrlValidationTest(String blankUrl) {
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, blankUrl, "포트폴리오"))
+        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, blankUrl, "포트폴리오", null, null))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("함께 입력");
     }
@@ -227,7 +227,7 @@ class SpaceTest {
     @ParameterizedTest
     void spaceLinkUrlPatternValidationTest(String invalidUrl) {
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, invalidUrl, "포트폴리오"))
+        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, invalidUrl, "포트폴리오", null, null))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("링크 URL 형식");
     }
@@ -237,7 +237,7 @@ class SpaceTest {
     @ParameterizedTest
     void spaceLinkUrlPatternValidationWithoutName(String invalidUrl) {
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, invalidUrl, null))
+        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, invalidUrl, null, null, null))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("링크 URL 형식");
     }
@@ -247,7 +247,7 @@ class SpaceTest {
     @ParameterizedTest
     void createSpaceWithCaseInsensitiveSchemeLink(String linkUrl) {
         // given & when
-        Space space = new Space("1234567890", "나의 졸업전시", "설명", false, linkUrl, "포트폴리오");
+        Space space = new Space("1234567890", "나의 졸업전시", "설명", false, linkUrl, "포트폴리오", null, null);
 
         // then
         assertThat(space.getLinkUrl()).isEqualTo(linkUrl);
@@ -260,7 +260,7 @@ class SpaceTest {
         String tooLongUrl = "https://forgather.me/" + getString(2048);
 
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, tooLongUrl, "포트폴리오"))
+        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, tooLongUrl, "포트폴리오", null, null))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("링크 URL은 최대");
     }
@@ -273,7 +273,7 @@ class SpaceTest {
 
         // when & then
         assertThatThrownBy(
-            () -> new Space("1234567890", "스페이스", "설명", false, "https://forgather.me", tooLongName))
+            () -> new Space("1234567890", "스페이스", "설명", false, "https://forgather.me", tooLongName, null, null))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("링크 표시 이름은 최대");
     }
@@ -282,7 +282,7 @@ class SpaceTest {
     @Test
     void updateSpaceName() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null);
 
         // when
         space.update("새로운 스페이스", null, null, null, null);
@@ -300,7 +300,7 @@ class SpaceTest {
     @ParameterizedTest
     void updateSpaceDescription(String character) {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null);
         String description = character.repeat(500);
 
         // when
@@ -318,7 +318,7 @@ class SpaceTest {
     @Test
     void updateSpaceIsPublic() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null);
 
         // when
         space.update(null, null, true, null, null);
@@ -335,7 +335,7 @@ class SpaceTest {
     @Test
     void updateSpaceLink() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null);
 
         // when
         space.update(null, null, null, "https://forgather.me", "포트폴리오");
@@ -351,7 +351,7 @@ class SpaceTest {
     @Test
     void updateSpaceLinkToEmpty() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "https://forgather.me", "포트폴리오");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "https://forgather.me", "포트폴리오", null, null);
 
         // when
         space.update(null, null, null, "", "");
@@ -367,7 +367,7 @@ class SpaceTest {
     @Test
     void updateSpaceLinkUrlOnly() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null);
 
         // when
         space.update(null, null, null, "https://forgather.me", null);
@@ -431,7 +431,7 @@ class SpaceTest {
     @Test
     void createSpaceIsNotFeatured() {
         // given & when
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null);
 
         // then
         assertThat(space.isFeatured()).isFalse();
@@ -441,7 +441,7 @@ class SpaceTest {
     @Test
     void feature() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null);
 
         // when
         space.feature();
@@ -454,7 +454,7 @@ class SpaceTest {
     @Test
     void featureIsIdempotent() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null);
         space.feature();
 
         // when
@@ -468,7 +468,7 @@ class SpaceTest {
     @Test
     void unfeature() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null);
         space.feature();
 
         // when
@@ -482,7 +482,7 @@ class SpaceTest {
     @Test
     void unfeatureIsIdempotent() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null);
 
         // when
         space.unfeature();
@@ -499,7 +499,7 @@ class SpaceTest {
     @Test
     void deleteUnfeatures() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null);
         space.feature();
 
         // when
@@ -516,7 +516,7 @@ class SpaceTest {
     @Test
     void deleteIsIdempotent() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null);
         space.feature();
         space.delete();
         var deletedAt = space.getDeletedAt();
@@ -540,7 +540,7 @@ class SpaceTest {
     @Test
     void updateDoesNotChangeFeatured() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "");
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null);
         space.feature();
 
         // when
