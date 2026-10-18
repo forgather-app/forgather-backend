@@ -1,5 +1,8 @@
 package com.forgather.domain.space.dto;
 
+import java.time.LocalDate;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.forgather.domain.product.model.ProductPhoto;
 import com.forgather.domain.space.model.Space;
 
@@ -28,6 +31,14 @@ public record SpaceResponse(
     @Schema(description = "스페이스 소개 링크 표시 이름", example = "포트폴리오")
     String linkName,
 
+    @Schema(description = "전시 시작일", example = "2026-10-17", nullable = true)
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    LocalDate exhibitionStartDate,
+
+    @Schema(description = "전시 종료일", example = "2026-10-31", nullable = true)
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    LocalDate exhibitionEndDate,
+
     @Schema(description = "스페이스 사진 경로 (대표 작품의 첫 번째 사진). 작품이 없거나 대표 작품에 사진이 없으면 null이며, 기본 사진 노출은 클라이언트가 담당한다.",
         example = "images/prod/spaces/1234567890/product/UUID.webp", nullable = true)
     String spacePhotoPath,
@@ -53,6 +64,8 @@ public record SpaceResponse(
             space.isPublic(),
             space.getLinkUrl(),
             space.getLinkName(),
+            space.getExhibitionStartDate(),
+            space.getExhibitionEndDate(),
             (spacePhoto == null) ? null : spacePhoto.getPath(),
             guestBookCardCount,
             space.isFeatured(),

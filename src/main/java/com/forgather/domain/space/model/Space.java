@@ -1,5 +1,6 @@
 package com.forgather.domain.space.model;
 
+import java.time.LocalDate;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -56,6 +57,12 @@ public class Space extends SoftDeleteEntity {
     @Column(name = "link_name", nullable = false)
     private String linkName;
 
+    @Column(name = "exhibition_start_date", nullable = true)
+    private LocalDate exhibitionStartDate;
+
+    @Column(name = "exhibition_end_date", nullable = true)
+    private LocalDate exhibitionEndDate;
+
     /**
      * 호스트가 지정한 '지금 축하받고 있는 스페이스'인지 여부.
      */
@@ -64,7 +71,7 @@ public class Space extends SoftDeleteEntity {
 
     /**
      * 스페이스를 생성한다.
-     * 필수값은 스페이스 이름뿐이며, 나머지 값은 생략하면 빈 문자열로 저장한다.
+     * 필수값은 스페이스 이름뿐이며, 문자열 선택 값은 생략하면 빈 문자열로 저장한다.
      *
      * @param code        스페이스 코드 (필수, 10자)
      * @param name        스페이스 이름 (필수, 최대 30자)
@@ -74,6 +81,12 @@ public class Space extends SoftDeleteEntity {
      * @param linkName    소개 링크 표시 이름 (선택, 최대 30자, 링크 URL이 있을 때만 입력 가능)
      */
     public Space(String code, String name, String description, boolean isPublic, String linkUrl, String linkName) {
+        this(code, name, description, isPublic, linkUrl, linkName, null, null);
+    }
+
+    public Space(String code, String name, String description, boolean isPublic, String linkUrl, String linkName,
+        LocalDate exhibitionStartDate, LocalDate exhibitionEndDate) {
+        validateExhibitionPeriod(exhibitionStartDate, exhibitionEndDate);
         validateRequiredFields(code, name);
         // 이 도메인은 '값 없음'을 NULL이 아니라 빈 문자열로 표현한다. 검증 전에 먼저 정규화한다.
         String newDescription = convertBlankToEmptyString(description);
@@ -90,6 +103,8 @@ public class Space extends SoftDeleteEntity {
         this.isPublic = isPublic;
         this.linkUrl = newLinkUrl;
         this.linkName = newLinkName;
+        this.exhibitionStartDate = exhibitionStartDate;
+        this.exhibitionEndDate = exhibitionEndDate;
     }
 
     private void validateRequiredFields(String code, String name) {
@@ -125,6 +140,23 @@ public class Space extends SoftDeleteEntity {
         validateLink(newLinkUrl, newLinkName);
         this.linkUrl = newLinkUrl;
         this.linkName = newLinkName;
+    }
+
+    public void updateExhibitionPeriod(LocalDate startDate, LocalDate endDate) {
+        validateExhibitionPeriod(startDate, endDate);
+        this.exhibitionStartDate = startDate;
+        this.exhibitionEndDate = endDate;
+    }
+
+    private void validateExhibitionPeriod(LocalDate startDate, LocalDate endDate) {
+        if ((startDate == null) != (endDate == null)) {
+            throw new BaseException("전시 시작일과 종료일은 함께 입력해야 합니다. startDate: " + startDate
+                + ", endDate: " + endDate);
+        }
+        if (startDate != null && startDate.isAfter(endDate)) {
+            throw new BaseException("전시 시작일은 종료일보다 늦을 수 없습니다. startDate: " + startDate
+                + ", endDate: " + endDate);
+        }
     }
 
     public void feature() {

@@ -1,7 +1,11 @@
 package com.forgather.domain.space.dto;
 
+import java.time.LocalDate;
+
 import org.hibernate.validator.constraints.URL;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.OptBoolean;
 import com.forgather.domain.space.model.Space;
 import com.forgather.global.validation.TextSize;
 
@@ -39,10 +43,19 @@ public record CreateSpaceRequest(
         nullable = true
     )
     @TextSize(max = 30)
-    String linkName
+    String linkName,
+
+    @Schema(description = "전시 시작일 (종료일과 함께 입력, 시작일은 종료일 이하)", example = "2026-10-17", nullable = true)
+    @JsonFormat(pattern = "uuuu-MM-dd", lenient = OptBoolean.FALSE)
+    LocalDate exhibitionStartDate,
+
+    @Schema(description = "전시 종료일 (시작일과 함께 입력)", example = "2026-10-31", nullable = true)
+    @JsonFormat(pattern = "uuuu-MM-dd", lenient = OptBoolean.FALSE)
+    LocalDate exhibitionEndDate
 ) {
 
     public Space toEntity(String spaceCode) {
-        return new Space(spaceCode, name, description, isPublic, linkUrl, linkName);
+        return new Space(spaceCode, name, description, isPublic, linkUrl, linkName,
+            exhibitionStartDate, exhibitionEndDate);
     }
 }
