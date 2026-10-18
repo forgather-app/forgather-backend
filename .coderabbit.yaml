@@ -37,11 +37,11 @@ reviews:
     issue_assessment: # 이슈 평가
       mode: "off"
 
-tools: # 추가 분석 도구
-  eslint: # JavaScript/TypeScript
-    enabled: true
-  gitleaks: # 민감정보 체크
-    enabled: true
+  tools: # 추가 분석 도구
+    eslint: # JavaScript/TypeScript
+      enabled: true
+    gitleaks: # 민감정보 체크
+      enabled: true
 
 knowledge_base: # 지식 베이스 설정
   code_guidelines: # 코딩 가이드라인 설정
