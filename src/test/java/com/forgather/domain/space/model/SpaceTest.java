@@ -5,9 +5,12 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import java.time.LocalDate;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -424,6 +427,100 @@ class SpaceTest {
         assertAll(
             () -> assertThat(space.getLinkUrl()).isEqualTo("https://forgather.me"),
             () -> assertThat(space.getLinkName()).isEqualTo("포트폴리오")
+        );
+    }
+
+    @DisplayName("전시 기간 없이 생성하거나 과거와 미래 및 같은 날짜의 전시 기간으로 생성할 수 있다")
+    @CsvSource(value = {
+        "NULL, NULL",
+        "2000-01-01, 2000-01-31",
+        "2100-01-01, 2100-01-31",
+        "2026-10-19, 2026-10-19",
+        "2000-01-01, 2100-01-31"
+    }, nullValues = "NULL")
+    @ParameterizedTest
+    void createSpaceWithValidExhibitionPeriod(LocalDate startDate, LocalDate endDate) {
+        // given & when
+        Space space = new Space("1234567890", "스페이스", "설명", false, null, null, startDate, endDate);
+
+        // then
+        assertAll(
+            () -> assertThat(space.getExhibitionStartDate()).isEqualTo(startDate),
+            () -> assertThat(space.getExhibitionEndDate()).isEqualTo(endDate)
+        );
+    }
+
+    @DisplayName("시작일과 종료일 중 하나만 있거나 시작일이 더 늦으면 스페이스를 생성할 수 없다")
+    @CsvSource(value = {
+        "2026-10-19, NULL",
+        "NULL, 2026-10-19",
+        "2026-10-20, 2026-10-19"
+    }, nullValues = "NULL")
+    @ParameterizedTest
+    void rejectsCreateSpaceWithInvalidExhibitionPeriod(LocalDate startDate, LocalDate endDate) {
+        // given & when & then
+        assertThatThrownBy(
+            () -> new Space("1234567890", "스페이스", "설명", false, null, null, startDate, endDate)
+        ).isInstanceOf(BaseException.class);
+    }
+
+    @DisplayName("전시 기간을 과거와 미래 및 같은 날짜의 기간으로 교체할 수 있다")
+    @CsvSource({
+        "2000-01-01, 2000-01-31",
+        "2100-01-01, 2100-01-31",
+        "2026-10-19, 2026-10-19"
+    })
+    @ParameterizedTest
+    void updateExhibitionPeriod(LocalDate startDate, LocalDate endDate) {
+        // given
+        Space space = SpaceFixture.createSpace();
+        space.updateExhibitionPeriod(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 31));
+
+        // when
+        space.updateExhibitionPeriod(startDate, endDate);
+
+        // then
+        assertAll(
+            () -> assertThat(space.getExhibitionStartDate()).isEqualTo(startDate),
+            () -> assertThat(space.getExhibitionEndDate()).isEqualTo(endDate)
+        );
+    }
+
+    @DisplayName("시작일과 종료일 중 하나만 있거나 시작일이 더 늦으면 수정을 거부하고 기존 기간을 유지한다")
+    @CsvSource(value = {
+        "2026-10-19, NULL",
+        "NULL, 2026-10-19",
+        "2026-10-20, 2026-10-19"
+    }, nullValues = "NULL")
+    @ParameterizedTest
+    void rejectsInvalidExhibitionPeriodUpdateAndKeepsDates(LocalDate startDate, LocalDate endDate) {
+        // given
+        Space space = SpaceFixture.createSpace();
+        space.updateExhibitionPeriod(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 31));
+
+        // when & then
+        assertThatThrownBy(() -> space.updateExhibitionPeriod(startDate, endDate))
+            .isInstanceOf(BaseException.class);
+        assertAll(
+            () -> assertThat(space.getExhibitionStartDate()).isEqualTo(LocalDate.of(2025, 1, 1)),
+            () -> assertThat(space.getExhibitionEndDate()).isEqualTo(LocalDate.of(2025, 1, 31))
+        );
+    }
+
+    @DisplayName("시작일과 종료일을 모두 null로 변경하면 기존 전시 기간을 삭제한다")
+    @Test
+    void clearExhibitionPeriod() {
+        // given
+        Space space = SpaceFixture.createSpace();
+        space.updateExhibitionPeriod(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 31));
+
+        // when
+        space.updateExhibitionPeriod(null, null);
+
+        // then
+        assertAll(
+            () -> assertThat(space.getExhibitionStartDate()).isNull(),
+            () -> assertThat(space.getExhibitionEndDate()).isNull()
         );
     }
 
