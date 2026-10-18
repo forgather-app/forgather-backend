@@ -67,6 +67,8 @@ class SpaceServiceTest extends TestOnContainer {
             "description",
             true,
             null,
+            null,
+            null,
             null
         );
 
@@ -86,6 +88,8 @@ class SpaceServiceTest extends TestOnContainer {
             "test-space",
             "description",
             true,
+            null,
+            null,
             null,
             null
         );

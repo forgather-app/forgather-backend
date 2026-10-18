@@ -18,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -127,13 +128,116 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         token = jwtTokenProvider.generateAccessToken(host.getId());
     }
 
+    @ParameterizedTest
+    @CsvSource({
+        "false, false, 2020-01-01, 2030-12-31",
+        "true, false, NULL, NULL",
+        "NULL, false, 2020-01-01, 2030-12-31",
+        "null, false, 2020-01-01, 2030-12-31",
+        "false, true, 2040-01-01, 2040-01-01",
+        "true, true, 2040-01-01, 2040-01-01",
+        "NULL, true, 2040-01-01, 2040-01-01"
+    })
+    @DisplayName("삭제 플래그와 새 날짜 조합에 따라 기간을 유지하거나 삭제하거나 교체한다")
+    void updateExhibitionPeriod(String deleteFlag, boolean hasDates, String expectedStart, String expectedEnd) {
+        String code = createSpaceWithExhibitionPeriod();
+        String dates = hasDates
+            ? "\"exhibitionStartDate\":\"2040-01-01\",\"exhibitionEndDate\":\"2040-01-01\""
+            : "\"exhibitionStartDate\":null,\"exhibitionEndDate\":null";
+        String flag = deleteFlag.equals("NULL") ? "" : ",\"isDeleteExhibitionPeriod\":" + deleteFlag;
+        RestAssuredMockMvc.given()
+            .postProcessors(withAccessToken(token)).contentType(ContentType.JSON)
+            .body("{" + dates + flag + "}")
+            .when().patch("/spaces/{spaceCode}", code)
+            .then().statusCode(200);
+        RestAssuredMockMvc.given().when().get("/spaces/{spaceCode}", code)
+            .then().statusCode(200)
+            .body("data.exhibitionStartDate", expectedStart.equals("NULL") ? nullValue() : equalTo(expectedStart))
+            .body("data.exhibitionEndDate", expectedEnd.equals("NULL") ? nullValue() : equalTo(expectedEnd));
+    }
+
+    @Test
+    @DisplayName("기간 필드를 생략하면 기존 기간을 유지하고 두 목록 조회에도 기간을 응답한다")
+    void omittedExhibitionPeriodKeepsDates() {
+        String code = createSpaceWithExhibitionPeriod();
+        RestAssuredMockMvc.given()
+            .postProcessors(withAccessToken(token)).contentType(ContentType.JSON).body("{}")
+            .when().patch("/spaces/{spaceCode}", code)
+            .then().statusCode(200)
+            .body("data.exhibitionStartDate", equalTo("2020-01-01"))
+            .body("data.exhibitionEndDate", equalTo("2030-12-31"));
+        RestAssuredMockMvc.given().postProcessors(withAccessToken(token))
+            .when().get("/spaces/me").then().statusCode(200)
+            .body("data.spaces[0].exhibitionStartDate", equalTo("2020-01-01"))
+            .body("data.spaces[0].exhibitionEndDate", equalTo("2030-12-31"));
+        RestAssuredMockMvc.given()
+            .when().get("/hosts/{hostCode}/spaces", host.getCode()).then().statusCode(200)
+            .body("data.spaces[0].exhibitionStartDate", equalTo("2020-01-01"))
+            .body("data.spaces[0].exhibitionEndDate", equalTo("2030-12-31"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "\"exhibitionStartDate\":\"\",\"exhibitionEndDate\":\"\"",
+        "\"exhibitionStartDate\":\"2020-01-01\"",
+        "\"exhibitionEndDate\":\"2030-01-01\"",
+        "\"exhibitionStartDate\":\"2030-01-01\",\"exhibitionEndDate\":\"2020-01-01\"",
+        "\"exhibitionStartDate\":\"2020-02-30\",\"exhibitionEndDate\":\"2030-01-01\"",
+        "\"exhibitionStartDate\":\"2020-01-01T12:00:00\",\"exhibitionEndDate\":\"2030-01-01\""
+    })
+    @DisplayName("잘못된 기간은 생성 및 삭제 플래그가 있는 수정에서도 거부하고 기존 기간을 보존한다")
+    void rejectsInvalidExhibitionPeriod(String dates) {
+        String code = createSpaceWithExhibitionPeriod();
+        RestAssuredMockMvc.given()
+            .postProcessors(withAccessToken(token)).contentType(ContentType.JSON)
+            .body("{\"name\":\"전시\"," + dates + "}")
+            .when().post("/spaces").then().statusCode(400);
+        RestAssuredMockMvc.given()
+            .postProcessors(withAccessToken(token)).contentType(ContentType.JSON)
+            .body("{\"isDeleteExhibitionPeriod\":true," + dates + "}")
+            .when().patch("/spaces/{spaceCode}", code).then().statusCode(400);
+        RestAssuredMockMvc.given().when().get("/spaces/{spaceCode}", code)
+            .then().statusCode(200)
+            .body("data.exhibitionStartDate", equalTo("2020-01-01"))
+            .body("data.exhibitionEndDate", equalTo("2030-12-31"));
+    }
+
+    private String createSpaceWithExhibitionPeriod() {
+        return RestAssuredMockMvc.given()
+            .postProcessors(withAccessToken(token)).contentType(ContentType.JSON)
+            .body("""
+                {"name":"전시", "exhibitionStartDate":"2020-01-01", "exhibitionEndDate":"2030-12-31"}
+                """)
+            .when().post("/spaces").then().statusCode(201).extract().path("data.spaceCode");
+    }
+
+    @Test
+    @DisplayName("전시 기간을 지정하여 생성하면 상세 조회에 날짜를 응답한다")
+    void createAndReadExhibitionPeriod() {
+        String code = RestAssuredMockMvc.given()
+            .postProcessors(withAccessToken(token))
+            .contentType(ContentType.JSON)
+            .body("""
+                {"name":"전시", "exhibitionStartDate":"2020-01-01", "exhibitionEndDate":"2030-12-31"}
+                """)
+            .when().post("/spaces")
+            .then().statusCode(201)
+            .extract().path("data.spaceCode");
+
+        RestAssuredMockMvc.given()
+            .when().get("/spaces/{spaceCode}", code)
+            .then().statusCode(200)
+            .body("data.exhibitionStartDate", equalTo("2020-01-01"))
+            .body("data.exhibitionEndDate", equalTo("2030-12-31"));
+    }
+
     @DisplayName("일반 문자와 복합 이모지 설명 500자로 스페이스를 생성하고 수정한다")
     @ParameterizedTest
     @ValueSource(strings = {"가", "🧑‍🧑‍🧒‍🧒"})
     void storesDescriptionAtMaxLength(String character) throws Exception {
         // given
         String description = character.repeat(500);
-        CreateSpaceRequest request = new CreateSpaceRequest("스페이스", description, true, null, null);
+        CreateSpaceRequest request = new CreateSpaceRequest("스페이스", description, true, null, null, null, null);
 
         // when
         ApiResponse<CreateSpaceResponse> created = RestAssuredMockMvc.given()
@@ -153,7 +257,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // when
         String updatedDescription = "나" + character.repeat(499);
         String update = objectMapper.writeValueAsString(
-            new UpdateSpaceRequest(null, updatedDescription, null, null, null));
+            new UpdateSpaceRequest(null, updatedDescription, null, null, null, null, null, null));
         ApiResponse<SpaceResponse> updated = patchSpace(space, update, HttpStatus.OK);
 
         // then
@@ -167,7 +271,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
     void createSpace() throws Exception {
         // given
         String request = objectMapper.writeValueAsString(
-            new CreateSpaceRequest("test-space", "description", false, null, null)
+            new CreateSpaceRequest("test-space", "description", false, null, null, null, null)
         );
 
         // when
@@ -222,7 +326,9 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         assertAll(
             () -> assertThat(result.data().name()).isEqualTo("test-space"),
             () -> assertThat(result.data().description()).isEmpty(),
-            () -> assertThat(result.data().isPublic()).isFalse()
+            () -> assertThat(result.data().isPublic()).isFalse(),
+            () -> assertThat(result.data().exhibitionStartDate()).isNull(),
+            () -> assertThat(result.data().exhibitionEndDate()).isNull()
         );
     }
 
@@ -262,7 +368,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
     void createSpaceWithoutLogin() throws Exception {
         // given
         String request = objectMapper.writeValueAsString(
-            new CreateSpaceRequest("test-space", "description", false, null, null)
+            new CreateSpaceRequest("test-space", "description", false, null, null, null, null)
         );
 
         // when & then
@@ -281,7 +387,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
     void createSpaceWithLink() throws Exception {
         // given
         String request = objectMapper.writeValueAsString(
-            new CreateSpaceRequest("test-space", "description", false, "https://forgather.me", "포트폴리오")
+            new CreateSpaceRequest("test-space", "description", false, "https://forgather.me", "포트폴리오", null, null)
         );
 
         // when
@@ -312,7 +418,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
     void createSpaceWithOnlyLinkUrl() throws Exception {
         // given
         String request = objectMapper.writeValueAsString(
-            new CreateSpaceRequest("test-space", "description", false, "https://forgather.me", null)
+            new CreateSpaceRequest("test-space", "description", false, "https://forgather.me", null, null, null)
         );
 
         // when
@@ -343,7 +449,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
     void createSpaceWithOnlyLinkName() throws Exception {
         // given
         String request = objectMapper.writeValueAsString(
-            new CreateSpaceRequest("test-space", "description", false, null, "포트폴리오")
+            new CreateSpaceRequest("test-space", "description", false, null, "포트폴리오", null, null)
         );
 
         // when & then
@@ -363,7 +469,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         // given
         String longLinkUrl = "https://forgather.me/" + "a".repeat(300); // 321자 (255 초과, 2048 이하)
         String request = objectMapper.writeValueAsString(
-            new CreateSpaceRequest("test-space", "description", false, longLinkUrl, "포트폴리오")
+            new CreateSpaceRequest("test-space", "description", false, longLinkUrl, "포트폴리오", null, null)
         );
 
         // when
@@ -391,7 +497,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
     void createSpaceWithOverLengthName() throws Exception {
         // given
         String request = objectMapper.writeValueAsString(
-            new CreateSpaceRequest("1234567890".repeat(3) + "1", "description", false, null, null)
+            new CreateSpaceRequest("1234567890".repeat(3) + "1", "description", false, null, null, null, null)
         );
 
         // when & then
@@ -799,7 +905,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         spaceHostRepository.save(new SpaceHost(space, host));
 
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
-            "새로운 스페이스", "새로운 설명", false, "https://forgather.me", "포트폴리오")
+            "새로운 스페이스", "새로운 설명", false, "https://forgather.me", "포트폴리오", null, null, null)
         );
 
         // when
@@ -827,7 +933,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         spaceHostRepository.save(new SpaceHost(space, host));
 
         String request = objectMapper.writeValueAsString(
-            new UpdateSpaceRequest(null, null, null, "https://forgather.me", null)
+            new UpdateSpaceRequest(null, null, null, "https://forgather.me", null, null, null, null)
         );
 
         // when
@@ -937,7 +1043,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         ProductPhoto firstPhoto = saveProductPhoto(product, 1);
 
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
-            "새로운 스페이스", null, null, null, null)
+            "새로운 스페이스", null, null, null, null, null, null, null)
         );
 
         // when
@@ -965,7 +1071,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         spaceHostRepository.save(new SpaceHost(space, host));
 
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
-            "새로운 스페이스", null, null, null, null)
+            "새로운 스페이스", null, null, null, null, null, null, null)
         );
 
         // when & then
@@ -990,7 +1096,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         String otherToken = jwtTokenProvider.generateAccessToken(otherHost.getId());
 
         String request = objectMapper.writeValueAsString(new UpdateSpaceRequest(
-            "새로운 스페이스", null, null, null, null)
+            "새로운 스페이스", null, null, null, null, null, null, null)
         );
 
         // when & then
@@ -1432,7 +1538,7 @@ class SpaceAcceptanceTest extends AcceptanceTest {
         Space space = saveSpaceOf(host, "1111111111");
         feature(space.getCode());
         String request = objectMapper.writeValueAsString(
-            new UpdateSpaceRequest("새로운 이름", null, null, null, null)
+            new UpdateSpaceRequest("새로운 이름", null, null, null, null, null, null, null)
         );
 
         // when
