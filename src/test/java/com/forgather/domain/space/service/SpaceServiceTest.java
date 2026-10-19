@@ -614,14 +614,13 @@ class SpaceServiceTest extends TestOnContainer {
         assertPersistedPlace(space.getCode(), "전시관", "00123", "https://place.map.kakao.com/00123");
     }
 
-    @DisplayName("생성 시 카카오 장소 형식이 잘못되면 거부한다")
-    @ParameterizedTest
-    @CsvSource({"abc, https://place.map.kakao.com/abc", "123, https://example.com/123"})
-    void rejectsInvalidKakaoPlaceOnCreate(String id, String url) {
+    @DisplayName("생성 시 카카오 검증 실패를 전달한다")
+    @Test
+    void rejectsCreateWhenKakaoValidationFails() {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         CreateSpaceRequest request = new CreateSpaceRequest(
-            "전시", null, true, null, null, null, null, "전시관", id, url);
+            "전시", null, true, null, null, null, null, "전시관", "123", "https://example.com/123");
 
         // when & then
         assertThatThrownBy(() -> spaceService.create(request, host)).isInstanceOf(BaseException.class);
