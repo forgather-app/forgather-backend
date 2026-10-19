@@ -23,13 +23,13 @@ public class SpaceLocation {
     private static final String KAKAO_PLACE_URL_PREFIX = "https://place.map.kakao.com/";
     private static final Pattern KAKAO_PLACE_ID_PATTERN = Pattern.compile("[0-9]+");
 
-    @Column(name = "location_name", nullable = false, length = PLACE_NAME_COLUMN_LENGTH)
+    @Column(name = "place_name", nullable = false, length = PLACE_NAME_COLUMN_LENGTH)
     private String placeName;
 
-    @Column(name = "kakao_place_id", nullable = false, length = MAX_KAKAO_PLACE_ID_LENGTH)
+    @Column(name = "place_id", nullable = false, length = MAX_KAKAO_PLACE_ID_LENGTH)
     private String placeId;
 
-    @Column(name = "kakao_place_url", nullable = false, length = MAX_KAKAO_PLACE_URL_LENGTH)
+    @Column(name = "place_url", nullable = false, length = MAX_KAKAO_PLACE_URL_LENGTH)
     private String placeUrl;
 
     public SpaceLocation(String placeName, String placeId, String placeUrl) {

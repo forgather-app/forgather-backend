@@ -626,7 +626,7 @@ class SpaceServiceTest extends TestOnContainer {
             () -> assertThat(reloaded.getLocation().getPlaceUrl()).isEqualTo(placeUrl)
         );
         Object[] columns = (Object[]) entityManager.createNativeQuery(
-                "SELECT location_name, kakao_place_id, kakao_place_url FROM space WHERE code = :code")
+                "SELECT place_name, place_id, place_url FROM space WHERE code = :code")
             .setParameter("code", spaceCode)
             .getSingleResult();
         assertThat(columns).containsExactly(placeName, placeId, placeUrl);
