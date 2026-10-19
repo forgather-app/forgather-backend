@@ -9,6 +9,10 @@ import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -22,6 +26,8 @@ import com.forgather.domain.space.dto.CreateSpaceResponse;
 import com.forgather.domain.space.dto.FeatureSpacesRequest;
 import com.forgather.domain.space.dto.FeaturedSpacesResponse;
 import com.forgather.domain.space.dto.HostSpaceResponse;
+import com.forgather.domain.space.dto.SpaceResponse;
+import com.forgather.domain.space.dto.UpdateSpaceRequest;
 import com.forgather.domain.space.dto.UnfeatureSpacesRequest;
 import com.forgather.domain.space.model.Space;
 import com.forgather.domain.space.repository.SpaceHostRepository;
@@ -33,11 +39,18 @@ import com.forgather.fixture.SpaceHostFixture;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.NotFoundException;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.persistence.EntityManager;
+
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Transactional
 class SpaceServiceTest extends TestOnContainer {
 
+    private final EntityManager entityManager;
+    private final ObjectMapper objectMapper;
     private final SpaceService spaceService;
     private final SpaceRepository spaceRepository;
     private final SpacePhotoRepository spacePhotoRepository;
@@ -47,8 +60,10 @@ class SpaceServiceTest extends TestOnContainer {
     @Autowired
     public SpaceServiceTest(SpaceService spaceService, SpaceRepository spaceRepository,
         SpacePhotoRepository spacePhotoRepository, HostRepository hostRepository,
-        SpaceHostRepository spaceHostRepository
+        SpaceHostRepository spaceHostRepository, EntityManager entityManager, ObjectMapper objectMapper
     ) {
+        this.entityManager = entityManager;
+        this.objectMapper = objectMapper;
         this.spaceService = spaceService;
         this.spaceRepository = spaceRepository;
         this.spacePhotoRepository = spacePhotoRepository;
@@ -66,6 +81,9 @@ class SpaceServiceTest extends TestOnContainer {
             invalidSpaceName,
             "description",
             true,
+            null,
+            null,
+            null,
             null,
             null,
             null,
@@ -88,6 +106,9 @@ class SpaceServiceTest extends TestOnContainer {
             "test-space",
             "description",
             true,
+            null,
+            null,
+            null,
             null,
             null,
             null,
@@ -441,6 +462,186 @@ class SpaceServiceTest extends TestOnContainer {
                 .isInstanceOf(BaseException.class)
                 .hasMessageContaining("유효하지 않은 스페이스 코드입니다."),
             () -> assertThat(featured.isFeatured()).isTrue()
+        );
+    }
+
+    @DisplayName("장소 전체 정보 또는 장소명만 입력하면 생성한 스페이스에 저장된다")
+    @ParameterizedTest
+    @CsvSource({"전시관, 00123, https://place.map.kakao.com/00123", "전시관,'',''"})
+    void createSpacePersistsLocation(String locationName, String kakaoPlaceId, String kakaoPlaceUrl) {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        CreateSpaceRequest request = new CreateSpaceRequest(
+            "전시", null, true, null, null, null, null, locationName, kakaoPlaceId, kakaoPlaceUrl);
+
+        // when
+        CreateSpaceResponse response = spaceService.create(request, host);
+
+        // then
+        assertPersistedLocation(response.spaceCode(), locationName, kakaoPlaceId, kakaoPlaceUrl);
+    }
+
+    @DisplayName("장소 생성 요청의 null과 공백은 DB와 장소 객체에 빈 문자열로 저장된다")
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "\t\n"})
+    void createSpaceWithoutLocation(String value) {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        CreateSpaceRequest request = new CreateSpaceRequest(
+            "전시", null, true, null, null, null, null, value, value, value);
+
+        // when
+        CreateSpaceResponse response = spaceService.create(request, host);
+
+        // then
+        assertPersistedLocation(response.spaceCode(), "", "", "");
+        assertResponseLocation(spaceService.getSpaceInformation(response.spaceCode(), null), "", "", "");
+    }
+
+    @DisplayName("장소명이 없는 스페이스도 상세 응답의 장소 필드 세 개를 빈 문자열로 제공한다")
+    @Test
+    void getSpaceWithoutLocationReturnsEmptyStrings() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        Space space = saveSpaceOf(host, "1111111111");
+        assertPersistedLocation(space.getCode(), "", "", "");
+
+        // when
+        SpaceResponse response = spaceService.getSpaceInformation(space.getCode(), null);
+
+        // then
+        assertResponseLocation(response, "", "", "");
+    }
+
+    @DisplayName("장소가 없는 스페이스에 전체 장소 또는 장소명만 수정해 저장한다")
+    @ParameterizedTest
+    @CsvSource({"전시관, 00123, https://place.map.kakao.com/00123", "전시관,'',''"})
+    void updateSpaceAddsLocation(String locationName, String kakaoPlaceId, String kakaoPlaceUrl) {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        Space space = saveSpaceOf(host, "1111111111");
+        UpdateSpaceRequest request = new UpdateSpaceRequest(
+            null, null, null, null, null, null, null, null, locationName, kakaoPlaceId, kakaoPlaceUrl);
+
+        // when
+        SpaceResponse response = spaceService.update(space.getCode(), request, host);
+
+        // then
+        assertPersistedLocation(space.getCode(), locationName, kakaoPlaceId, kakaoPlaceUrl);
+        assertResponseLocation(response, locationName, kakaoPlaceId, kakaoPlaceUrl);
+    }
+
+    @DisplayName("장소명만 수정하면 기존 카카오 정보는 유지하고 원문 공백도 보존한다")
+    @Test
+    void updateLocationNameKeepsKakaoPlace() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        Space space = saveSpaceOf(host, "1111111111");
+        space.updateLocation("전시관", "00123", "https://place.map.kakao.com/00123");
+        UpdateSpaceRequest request = new UpdateSpaceRequest(
+            null, null, null, null, null, null, null, null, " 새 전시관 ", null, null);
+
+        // when
+        spaceService.update(space.getCode(), request, host);
+
+        // then
+        assertPersistedLocation(space.getCode(), " 새 전시관 ", "00123", "https://place.map.kakao.com/00123");
+    }
+
+    @DisplayName("장소 수정 필드가 모두 null이면 기존 장소 전체를 유지한다")
+    @Test
+    void updateNullLocationKeepsCurrentLocation() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        Space space = saveSpaceOf(host, "1111111111");
+        space.updateLocation("전시관", "00123", "https://place.map.kakao.com/00123");
+        UpdateSpaceRequest request = new UpdateSpaceRequest("새 이름", null, null, null, null, null, null, null, null, null, null);
+
+        // when
+        spaceService.update(space.getCode(), request, host);
+
+        // then
+        assertPersistedLocation(space.getCode(), "전시관", "00123", "https://place.map.kakao.com/00123");
+    }
+
+    @DisplayName("카카오 두 필드만 공백으로 수정하면 장소명을 유지하며 카카오 정보를 삭제한다")
+    @Test
+    void updateBlankKakaoPlaceKeepsLocationName() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        Space space = saveSpaceOf(host, "1111111111");
+        space.updateLocation("전시관", "00123", "https://place.map.kakao.com/00123");
+        UpdateSpaceRequest request = new UpdateSpaceRequest(null, null, null, null, null, null, null, null, null, "", " ");
+
+        // when
+        spaceService.update(space.getCode(), request, host);
+
+        // then
+        assertPersistedLocation(space.getCode(), "전시관", "", "");
+    }
+
+    @DisplayName("장소 세 필드를 공백으로 수정하면 장소 객체와 DB 세 컬럼을 모두 비운다")
+    @ParameterizedTest
+    @ValueSource(strings = {"", " ", "\t\n"})
+    void updateBlankLocationDeletesLocation(String blank) {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        Space space = saveSpaceOf(host, "1111111111");
+        space.updateLocation("전시관", "00123", "https://place.map.kakao.com/00123");
+        UpdateSpaceRequest request = new UpdateSpaceRequest(null, null, null, null, null, null, null, null, blank, blank, blank);
+
+        // when
+        SpaceResponse response = spaceService.update(space.getCode(), request, host);
+
+        // then
+        assertPersistedLocation(space.getCode(), "", "", "");
+        assertResponseLocation(response, "", "", "");
+    }
+
+    @DisplayName("카카오 정보 한쪽만 삭제하면 최종 장소 검증에 실패하고 기존 장소는 유지한다")
+    @Test
+    void updateOneKakaoFieldRejectsMergedLocation() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        Space space = saveSpaceOf(host, "1111111111");
+        space.updateLocation("전시관", "00123", "https://place.map.kakao.com/00123");
+        UpdateSpaceRequest request = new UpdateSpaceRequest(null, null, null, null, null, null, null, null, null, "", null);
+
+        // when & then
+        assertThatThrownBy(() -> spaceService.update(space.getCode(), request, host))
+            .isInstanceOf(BaseException.class);
+        assertPersistedLocation(space.getCode(), "전시관", "00123", "https://place.map.kakao.com/00123");
+    }
+
+    private void assertPersistedLocation(String spaceCode, String locationName, String kakaoPlaceId,
+        String kakaoPlaceUrl) {
+        entityManager.flush();
+        entityManager.clear();
+        Space reloaded = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
+        assertThat(reloaded.getLocation()).isNotNull();
+        assertAll(
+            () -> assertThat(reloaded.getLocation().getLocationName()).isEqualTo(locationName),
+            () -> assertThat(reloaded.getLocation().getKakaoPlaceId()).isEqualTo(kakaoPlaceId),
+            () -> assertThat(reloaded.getLocation().getKakaoPlaceUrl()).isEqualTo(kakaoPlaceUrl)
+        );
+        Object[] columns = (Object[]) entityManager.createNativeQuery(
+                "SELECT location_name, kakao_place_id, kakao_place_url FROM space WHERE code = :code")
+            .setParameter("code", spaceCode)
+            .getSingleResult();
+        assertThat(columns).containsExactly(locationName, kakaoPlaceId, kakaoPlaceUrl);
+    }
+
+    private void assertResponseLocation(SpaceResponse response, String locationName, String kakaoPlaceId,
+        String kakaoPlaceUrl) {
+        JsonNode json = objectMapper.valueToTree(response);
+        assertThat(json.has("locationName")).isTrue();
+        assertThat(json.has("kakaoPlaceId")).isTrue();
+        assertThat(json.has("kakaoPlaceUrl")).isTrue();
+        assertAll(
+            () -> assertThat(json.get("locationName")).isEqualTo(objectMapper.valueToTree(locationName)),
+            () -> assertThat(json.get("kakaoPlaceId")).isEqualTo(objectMapper.valueToTree(kakaoPlaceId)),
+            () -> assertThat(json.get("kakaoPlaceUrl")).isEqualTo(objectMapper.valueToTree(kakaoPlaceUrl))
         );
     }
 
