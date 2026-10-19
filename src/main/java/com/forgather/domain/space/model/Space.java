@@ -1,5 +1,6 @@
 package com.forgather.domain.space.model;
 
+import java.time.LocalDate;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -11,6 +12,7 @@ import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.util.TextLengthCounter;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -56,6 +58,9 @@ public class Space extends SoftDeleteEntity {
     @Column(name = "link_name", nullable = false)
     private String linkName;
 
+    @Embedded
+    private SpaceExhibitionPeriod exhibitionPeriod;
+
     /**
      * 호스트가 지정한 '지금 축하받고 있는 스페이스'인지 여부.
      */
@@ -64,7 +69,7 @@ public class Space extends SoftDeleteEntity {
 
     /**
      * 스페이스를 생성한다.
-     * 필수값은 스페이스 이름뿐이며, 나머지 값은 생략하면 빈 문자열로 저장한다.
+     * 필수값은 스페이스 이름뿐이며, 문자열 선택 값은 생략하면 빈 문자열로 저장한다.
      *
      * @param code        스페이스 코드 (필수, 10자)
      * @param name        스페이스 이름 (필수, 최대 30자)
@@ -73,7 +78,9 @@ public class Space extends SoftDeleteEntity {
      * @param linkUrl     소개 링크 URL (선택, 최대 2048자)
      * @param linkName    소개 링크 표시 이름 (선택, 최대 30자, 링크 URL이 있을 때만 입력 가능)
      */
-    public Space(String code, String name, String description, boolean isPublic, String linkUrl, String linkName) {
+    public Space(String code, String name, String description, boolean isPublic, String linkUrl, String linkName,
+        LocalDate exhibitionStartDate, LocalDate exhibitionEndDate) {
+        SpaceExhibitionPeriod newExhibitionPeriod = createExhibitionPeriod(exhibitionStartDate, exhibitionEndDate);
         validateRequiredFields(code, name);
         // 이 도메인은 '값 없음'을 NULL이 아니라 빈 문자열로 표현한다. 검증 전에 먼저 정규화한다.
         String newDescription = convertBlankToEmptyString(description);
@@ -90,6 +97,7 @@ public class Space extends SoftDeleteEntity {
         this.isPublic = isPublic;
         this.linkUrl = newLinkUrl;
         this.linkName = newLinkName;
+        this.exhibitionPeriod = newExhibitionPeriod;
     }
 
     private void validateRequiredFields(String code, String name) {
@@ -125,6 +133,25 @@ public class Space extends SoftDeleteEntity {
         validateLink(newLinkUrl, newLinkName);
         this.linkUrl = newLinkUrl;
         this.linkName = newLinkName;
+    }
+
+    public void updateExhibitionPeriod(LocalDate startDate, LocalDate endDate) {
+        this.exhibitionPeriod = createExhibitionPeriod(startDate, endDate);
+    }
+
+    private SpaceExhibitionPeriod createExhibitionPeriod(LocalDate startDate, LocalDate endDate) {
+        if (startDate == null && endDate == null) {
+            return null;
+        }
+        return new SpaceExhibitionPeriod(startDate, endDate);
+    }
+
+    public LocalDate getExhibitionStartDate() {
+        return exhibitionPeriod == null ? null : exhibitionPeriod.getStartDate();
+    }
+
+    public LocalDate getExhibitionEndDate() {
+        return exhibitionPeriod == null ? null : exhibitionPeriod.getEndDate();
     }
 
     public void feature() {

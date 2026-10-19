@@ -2,6 +2,7 @@ package com.forgather.domain.space.service;
 
 import static com.forgather.domain.guestbook.model.VisibilityStatus.VISIBLE;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -90,11 +91,23 @@ public class SpaceService {
     public SpaceResponse update(String spaceCode, UpdateSpaceRequest request, Host host) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         validateSpaceHost(space, host);
-
         space.update(request.name(), request.description(), request.isPublic(), request.linkUrl(),
             request.linkName());
+        updateExhibitionPeriod(request, space);
 
         return createSpaceResponse(space, host);
+    }
+
+    /**
+     * 전달 값이 있거나 삭제를 명시한 경우 update
+     */
+    private static void updateExhibitionPeriod(UpdateSpaceRequest request, Space space) {
+        LocalDate startDate = request.exhibitionStartDate();
+        LocalDate endDate = request.exhibitionEndDate();
+        boolean isDeleteExhibitionPeriod = Boolean.TRUE.equals(request.isDeleteExhibitionPeriod());
+        if (startDate != null || endDate != null || isDeleteExhibitionPeriod) {
+            space.updateExhibitionPeriod(startDate, endDate);
+        }
     }
 
     private SpaceResponse createSpaceResponse(Space space, Host viewer) {

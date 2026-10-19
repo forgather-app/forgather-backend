@@ -1,7 +1,11 @@
 package com.forgather.domain.space.dto;
 
+import java.time.LocalDate;
+
 import org.hibernate.validator.constraints.URL;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.OptBoolean;
 import com.forgather.global.validation.TextSize;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -34,6 +38,18 @@ public record UpdateSpaceRequest(
         maxLength = 30,
         nullable = true
     )
-    String linkName
+    String linkName,
+
+    @Schema(description = "전시 시작일 (종료일과 함께 입력, 시작일은 종료일 이하)", example = "2026-10-17", nullable = true)
+    @JsonFormat(pattern = "uuuu-MM-dd", lenient = OptBoolean.FALSE)
+    LocalDate exhibitionStartDate,
+
+    @Schema(description = "전시 종료일 (시작일과 함께 입력)", example = "2026-10-31", nullable = true)
+    @JsonFormat(pattern = "uuuu-MM-dd", lenient = OptBoolean.FALSE)
+    LocalDate exhibitionEndDate,
+
+    @Schema(description = "전시 기간 삭제 여부. 새 날짜 쌍이 있으면 교체가 우선하며, 날짜가 없을 때 true면 삭제한다. false, null, 생략이면 유지한다.",
+        example = "false", nullable = true)
+    Boolean isDeleteExhibitionPeriod
 ) {
 }
