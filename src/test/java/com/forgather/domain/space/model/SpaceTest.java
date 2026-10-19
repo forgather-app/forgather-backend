@@ -690,43 +690,43 @@ class SpaceTest {
 
     @DisplayName("스페이스 생성 시 전달한 장소 정보를 제공한다")
     @Test
-    void createWithLocation() {
+    void createWithPlace() {
         // given & when
         Space space = new Space("1234567890", "스페이스", null, false, null, null, null, null,
             "전시장", "123", "https://place.map.kakao.com/123");
 
         // then
-        assertLocation(space, "전시장", "123", "https://place.map.kakao.com/123");
+        assertPlace(space, "전시장", "123", "https://place.map.kakao.com/123");
     }
 
     @DisplayName("장소를 수정하면 새로운 장소 정보로 변경된다")
     @Test
-    void updateLocation() {
+    void updatePlace() {
         // given
         Space space = new Space("1234567890", "스페이스", null, false, null, null, null, null,
             "전시장", "123", "https://place.map.kakao.com/123");
 
         // when
-        space.updateLocation("다른 전시장", "456", "https://place.map.kakao.com/456");
+        space.updatePlace("다른 전시장", "456", "https://place.map.kakao.com/456");
 
         // then
-        assertLocation(space, "다른 전시장", "456", "https://place.map.kakao.com/456");
+        assertPlace(space, "다른 전시장", "456", "https://place.map.kakao.com/456");
     }
 
     @DisplayName("잘못된 장소로 수정하면 기존 장소 정보를 유지한다")
     @Test
-    void preserveLocationAfterInvalidUpdate() {
+    void preservePlaceAfterInvalidUpdate() {
         // given
         Space space = new Space("1234567890", "스페이스", null, false, null, null, null, null,
             "전시장", "123", "https://place.map.kakao.com/123");
 
         // when & then
-        assertThatThrownBy(() -> space.updateLocation(null, "123", "https://place.map.kakao.com/123"))
+        assertThatThrownBy(() -> space.updatePlace(null, "123", "https://place.map.kakao.com/123"))
             .isInstanceOf(BaseException.class);
-        assertLocation(space, "전시장", "123", "https://place.map.kakao.com/123");
+        assertPlace(space, "전시장", "123", "https://place.map.kakao.com/123");
     }
 
-    private void assertLocation(Space space, String name, String id, String url) {
+    private void assertPlace(Space space, String name, String id, String url) {
         assertAll(
             () -> assertThat(space.getPlaceName()).isEqualTo(name),
             () -> assertThat(space.getPlaceId()).isEqualTo(id),

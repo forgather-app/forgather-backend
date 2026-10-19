@@ -468,7 +468,7 @@ class SpaceServiceTest extends TestOnContainer {
     @DisplayName("장소 전체 정보 또는 장소명만 입력하면 생성한 스페이스에 저장된다")
     @ParameterizedTest
     @CsvSource({"전시관, 00123, https://place.map.kakao.com/00123", "전시관,'',''"})
-    void createSpacePersistsLocation(String placeName, String placeId, String placeUrl) {
+    void createSpacePersistsPlace(String placeName, String placeId, String placeUrl) {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         CreateSpaceRequest request = new CreateSpaceRequest(
@@ -478,14 +478,14 @@ class SpaceServiceTest extends TestOnContainer {
         CreateSpaceResponse response = spaceService.create(request, host);
 
         // then
-        assertPersistedLocation(response.spaceCode(), placeName, placeId, placeUrl);
+        assertPersistedPlace(response.spaceCode(), placeName, placeId, placeUrl);
     }
 
     @DisplayName("장소 생성 요청의 null과 공백은 DB와 장소 객체에 빈 문자열로 저장된다")
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {" ", "\t\n"})
-    void createSpaceWithoutLocation(String value) {
+    void createSpaceWithoutPlace(String value) {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         CreateSpaceRequest request = new CreateSpaceRequest(
@@ -495,29 +495,29 @@ class SpaceServiceTest extends TestOnContainer {
         CreateSpaceResponse response = spaceService.create(request, host);
 
         // then
-        assertPersistedLocation(response.spaceCode(), "", "", "");
-        assertResponseLocation(spaceService.getSpaceInformation(response.spaceCode(), null), "", "", "");
+        assertPersistedPlace(response.spaceCode(), "", "", "");
+        assertResponsePlace(spaceService.getSpaceInformation(response.spaceCode(), null), "", "", "");
     }
 
     @DisplayName("장소명이 없는 스페이스도 상세 응답의 장소 필드 세 개를 빈 문자열로 제공한다")
     @Test
-    void getSpaceWithoutLocationReturnsEmptyStrings() {
+    void getSpaceWithoutPlaceReturnsEmptyStrings() {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         Space space = saveSpaceOf(host, "1111111111");
-        assertPersistedLocation(space.getCode(), "", "", "");
+        assertPersistedPlace(space.getCode(), "", "", "");
 
         // when
         SpaceResponse response = spaceService.getSpaceInformation(space.getCode(), null);
 
         // then
-        assertResponseLocation(response, "", "", "");
+        assertResponsePlace(response, "", "", "");
     }
 
     @DisplayName("장소가 없는 스페이스에 전체 장소 또는 장소명만 수정해 저장한다")
     @ParameterizedTest
     @CsvSource({"전시관, 00123, https://place.map.kakao.com/00123", "전시관,'',''"})
-    void updateSpaceAddsLocation(String placeName, String placeId, String placeUrl) {
+    void updateSpaceAddsPlace(String placeName, String placeId, String placeUrl) {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         Space space = saveSpaceOf(host, "1111111111");
@@ -528,8 +528,8 @@ class SpaceServiceTest extends TestOnContainer {
         SpaceResponse response = spaceService.update(space.getCode(), request, host);
 
         // then
-        assertPersistedLocation(space.getCode(), placeName, placeId, placeUrl);
-        assertResponseLocation(response, placeName, placeId, placeUrl);
+        assertPersistedPlace(space.getCode(), placeName, placeId, placeUrl);
+        assertResponsePlace(response, placeName, placeId, placeUrl);
     }
 
     @DisplayName("장소명만 수정하면 기존 카카오 정보는 유지하고 원문 공백도 보존한다")
@@ -538,7 +538,7 @@ class SpaceServiceTest extends TestOnContainer {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         Space space = saveSpaceOf(host, "1111111111");
-        space.updateLocation("전시관", "00123", "https://place.map.kakao.com/00123");
+        space.updatePlace("전시관", "00123", "https://place.map.kakao.com/00123");
         UpdateSpaceRequest request = new UpdateSpaceRequest(
             null, null, null, null, null, null, null, null, " 새 전시관 ", null, null);
 
@@ -546,23 +546,23 @@ class SpaceServiceTest extends TestOnContainer {
         spaceService.update(space.getCode(), request, host);
 
         // then
-        assertPersistedLocation(space.getCode(), " 새 전시관 ", "00123", "https://place.map.kakao.com/00123");
+        assertPersistedPlace(space.getCode(), " 새 전시관 ", "00123", "https://place.map.kakao.com/00123");
     }
 
     @DisplayName("장소 수정 필드가 모두 null이면 기존 장소 전체를 유지한다")
     @Test
-    void updateNullLocationKeepsCurrentLocation() {
+    void updateNullPlaceKeepsCurrentPlace() {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         Space space = saveSpaceOf(host, "1111111111");
-        space.updateLocation("전시관", "00123", "https://place.map.kakao.com/00123");
+        space.updatePlace("전시관", "00123", "https://place.map.kakao.com/00123");
         UpdateSpaceRequest request = new UpdateSpaceRequest("새 이름", null, null, null, null, null, null, null, null, null, null);
 
         // when
         spaceService.update(space.getCode(), request, host);
 
         // then
-        assertPersistedLocation(space.getCode(), "전시관", "00123", "https://place.map.kakao.com/00123");
+        assertPersistedPlace(space.getCode(), "전시관", "00123", "https://place.map.kakao.com/00123");
     }
 
     @DisplayName("카카오 두 필드만 공백으로 수정하면 장소명을 유지하며 카카오 정보를 삭제한다")
@@ -571,59 +571,88 @@ class SpaceServiceTest extends TestOnContainer {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         Space space = saveSpaceOf(host, "1111111111");
-        space.updateLocation("전시관", "00123", "https://place.map.kakao.com/00123");
+        space.updatePlace("전시관", "00123", "https://place.map.kakao.com/00123");
         UpdateSpaceRequest request = new UpdateSpaceRequest(null, null, null, null, null, null, null, null, null, "", " ");
 
         // when
         spaceService.update(space.getCode(), request, host);
 
         // then
-        assertPersistedLocation(space.getCode(), "전시관", "", "");
+        assertPersistedPlace(space.getCode(), "전시관", "", "");
     }
 
     @DisplayName("장소 세 필드를 공백으로 수정하면 장소 객체와 DB 세 컬럼을 모두 비운다")
     @ParameterizedTest
     @ValueSource(strings = {"", " ", "\t\n"})
-    void updateBlankLocationDeletesLocation(String blank) {
+    void updateBlankPlaceDeletesPlace(String blank) {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         Space space = saveSpaceOf(host, "1111111111");
-        space.updateLocation("전시관", "00123", "https://place.map.kakao.com/00123");
+        space.updatePlace("전시관", "00123", "https://place.map.kakao.com/00123");
         UpdateSpaceRequest request = new UpdateSpaceRequest(null, null, null, null, null, null, null, null, blank, blank, blank);
 
         // when
         SpaceResponse response = spaceService.update(space.getCode(), request, host);
 
         // then
-        assertPersistedLocation(space.getCode(), "", "", "");
-        assertResponseLocation(response, "", "", "");
+        assertPersistedPlace(space.getCode(), "", "", "");
+        assertResponsePlace(response, "", "", "");
     }
 
     @DisplayName("카카오 정보 한쪽만 삭제하면 최종 장소 검증에 실패하고 기존 장소는 유지한다")
     @Test
-    void updateOneKakaoFieldRejectsMergedLocation() {
+    void updateOneKakaoFieldRejectsMergedPlace() {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         Space space = saveSpaceOf(host, "1111111111");
-        space.updateLocation("전시관", "00123", "https://place.map.kakao.com/00123");
+        space.updatePlace("전시관", "00123", "https://place.map.kakao.com/00123");
         UpdateSpaceRequest request = new UpdateSpaceRequest(null, null, null, null, null, null, null, null, null, "", null);
 
         // when & then
         assertThatThrownBy(() -> spaceService.update(space.getCode(), request, host))
             .isInstanceOf(BaseException.class);
-        assertPersistedLocation(space.getCode(), "전시관", "00123", "https://place.map.kakao.com/00123");
+        assertPersistedPlace(space.getCode(), "전시관", "00123", "https://place.map.kakao.com/00123");
     }
 
-    private void assertPersistedLocation(String spaceCode, String placeName, String placeId,
+    @DisplayName("생성 시 카카오 장소 형식이 잘못되면 거부한다")
+    @ParameterizedTest
+    @CsvSource({"abc, https://place.map.kakao.com/abc", "123, https://example.com/123"})
+    void rejectsInvalidKakaoPlaceOnCreate(String id, String url) {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        CreateSpaceRequest request = new CreateSpaceRequest(
+            "전시", null, true, null, null, null, null, "전시관", id, url);
+
+        // when & then
+        assertThatThrownBy(() -> spaceService.create(request, host)).isInstanceOf(BaseException.class);
+    }
+
+    @DisplayName("카카오 ID만 수정하면 기존 URL과 병합한 결과를 검증하고 거부 시 기존 장소를 유지한다")
+    @Test
+    void validatesMergedKakaoPlaceOnUpdate() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        Space space = saveSpaceOf(host, "1111111111");
+        space.updatePlace("전시관", "00123", "https://place.map.kakao.com/00123");
+        UpdateSpaceRequest request = new UpdateSpaceRequest(
+            null, null, null, null, null, null, null, null, null, "456", null);
+
+        // when & then
+        assertThatThrownBy(() -> spaceService.update(space.getCode(), request, host))
+            .isInstanceOf(BaseException.class);
+        assertPersistedPlace(space.getCode(), "전시관", "00123", "https://place.map.kakao.com/00123");
+    }
+
+    private void assertPersistedPlace(String spaceCode, String placeName, String placeId,
         String placeUrl) {
         entityManager.flush();
         entityManager.clear();
         Space reloaded = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
-        assertThat(reloaded.getLocation()).isNotNull();
+        assertThat(reloaded.getPlace()).isNotNull();
         assertAll(
-            () -> assertThat(reloaded.getLocation().getPlaceName()).isEqualTo(placeName),
-            () -> assertThat(reloaded.getLocation().getPlaceId()).isEqualTo(placeId),
-            () -> assertThat(reloaded.getLocation().getPlaceUrl()).isEqualTo(placeUrl)
+            () -> assertThat(reloaded.getPlace().getPlaceName()).isEqualTo(placeName),
+            () -> assertThat(reloaded.getPlace().getPlaceId()).isEqualTo(placeId),
+            () -> assertThat(reloaded.getPlace().getPlaceUrl()).isEqualTo(placeUrl)
         );
         Object[] columns = (Object[]) entityManager.createNativeQuery(
                 "SELECT place_name, place_id, place_url FROM space WHERE code = :code")
@@ -632,7 +661,7 @@ class SpaceServiceTest extends TestOnContainer {
         assertThat(columns).containsExactly(placeName, placeId, placeUrl);
     }
 
-    private void assertResponseLocation(SpaceResponse response, String placeName, String placeId,
+    private void assertResponsePlace(SpaceResponse response, String placeName, String placeId,
         String placeUrl) {
         JsonNode json = objectMapper.valueToTree(response);
         assertThat(json.has("placeName")).isTrue();

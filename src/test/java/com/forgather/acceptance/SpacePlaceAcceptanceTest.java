@@ -46,7 +46,7 @@ class SpacePlaceAcceptanceTest extends AcceptanceTest {
     private String token;
 
     @BeforeEach
-    void setUpLocation() {
+    void setUpPlace() {
         RestAssuredMockMvc.mockMvc(mockMvc);
         Host host = hostRepository.save(createHost());
         token = jwtTokenProvider.generateAccessToken(host.getId());
@@ -58,7 +58,7 @@ class SpacePlaceAcceptanceTest extends AcceptanceTest {
         "{\"name\":\"전시\"}",
         "{\"name\":\"전시\",\"placeName\":null,\"placeId\":null,\"placeUrl\":null}"
     })
-    void createsWithoutLocation(String request) throws Exception {
+    void createsWithoutPlace(String request) throws Exception {
         // given
         // when
         JsonNode created = post(request, 201);
@@ -66,13 +66,13 @@ class SpacePlaceAcceptanceTest extends AcceptanceTest {
 
         // then
         assertThat(created.path("data").size()).isEqualTo(1);
-        assertLocation(detail, "", "", "");
+        assertPlace(detail, "", "", "");
     }
 
     @DisplayName("장소명만 또는 카카오 정보까지 생성하면 상세 조회에 장소 정보가 반영된다")
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
-    void createsAndReadsLocation(boolean withKakao) throws Exception {
+    void createsAndReadsPlace(boolean withKakao) throws Exception {
         // given
         String request = withKakao ? FULL_LOCATION : "{\"name\":\"전시\",\"placeName\":\"전시관\"}";
 
@@ -80,14 +80,14 @@ class SpacePlaceAcceptanceTest extends AcceptanceTest {
         String code = create(request);
 
         // then
-        assertLocation(get(code), "전시관",
+        assertPlace(get(code), "전시관",
             withKakao ? "00123" : "", withKakao ? PLACE_URL : "");
     }
 
     @DisplayName("장소 수정 요청에서 생략과 명시적 null은 기존 값을 유지한다")
     @ParameterizedTest
     @ValueSource(strings = {"{}", "{\"placeName\":null,\"placeId\":null,\"placeUrl\":null}"})
-    void preservesOmittedAndNullLocation(String request) throws Exception {
+    void preservesOmittedAndNullPlace(String request) throws Exception {
         // given
         String code = create(FULL_LOCATION);
 
@@ -95,8 +95,8 @@ class SpacePlaceAcceptanceTest extends AcceptanceTest {
         JsonNode updated = patch(code, request, 200);
 
         // then
-        assertLocation(updated, "전시관", "00123", PLACE_URL);
-        assertLocation(get(code), "전시관", "00123", PLACE_URL);
+        assertPlace(updated, "전시관", "00123", PLACE_URL);
+        assertPlace(get(code), "전시관", "00123", PLACE_URL);
     }
 
     @DisplayName("장소명만 수정하면 기존 카카오 연결을 보존한다")
@@ -109,13 +109,13 @@ class SpacePlaceAcceptanceTest extends AcceptanceTest {
         JsonNode updated = patch(code, "{\"placeName\":\"새 전시관\"}", 200);
 
         // then
-        assertLocation(updated, "새 전시관", "00123", PLACE_URL);
-        assertLocation(get(code), "새 전시관", "00123", PLACE_URL);
+        assertPlace(updated, "새 전시관", "00123", PLACE_URL);
+        assertPlace(get(code), "새 전시관", "00123", PLACE_URL);
     }
 
     @DisplayName("장소가 없는 스페이스에도 부분 수정으로 카카오 장소를 추가한다")
     @Test
-    void addsLocationThroughPatch() throws Exception {
+    void addsPlaceThroughPatch() throws Exception {
         // given
         String code = create("{\"name\":\"전시\"}");
 
@@ -123,7 +123,7 @@ class SpacePlaceAcceptanceTest extends AcceptanceTest {
         patch(code, FULL_LOCATION, 200);
 
         // then
-        assertLocation(get(code), "전시관", "00123", PLACE_URL);
+        assertPlace(get(code), "전시관", "00123", PLACE_URL);
     }
 
     @DisplayName("카카오 두 값을 함께 비우면 장소명은 유지하고 연결만 삭제한다")
@@ -136,13 +136,13 @@ class SpacePlaceAcceptanceTest extends AcceptanceTest {
         JsonNode updated = patch(code, "{\"placeId\":\"\",\"placeUrl\":\"  \"}", 200);
 
         // then
-        assertLocation(updated, "전시관", "", "");
-        assertLocation(get(code), "전시관", "", "");
+        assertPlace(updated, "전시관", "", "");
+        assertPlace(get(code), "전시관", "", "");
     }
 
     @DisplayName("장소 세 값을 공백으로 비우면 전체 장소를 삭제한다")
     @Test
-    void removesEntireLocation() throws Exception {
+    void removesEntirePlace() throws Exception {
         // given
         String code = create(FULL_LOCATION);
 
@@ -151,13 +151,13 @@ class SpacePlaceAcceptanceTest extends AcceptanceTest {
             "{\"placeName\":\"  \",\"placeId\":\"\",\"placeUrl\":\"  \"}", 200);
 
         // then
-        assertLocation(updated, "", "", "");
-        assertLocation(get(code), "", "", "");
+        assertPlace(updated, "", "", "");
+        assertPlace(get(code), "", "", "");
     }
 
     @DisplayName("장소명 없이 카카오 정보를 보내면 생성과 수정 모두 400으로 응답한다")
     @Test
-    void rejectsInvalidLocationOnCreateAndPatch() throws Exception {
+    void rejectsInvalidPlaceOnCreateAndPatch() throws Exception {
         // given
         String code = create("{\"name\":\"전시\"}");
         String request = """
@@ -169,12 +169,12 @@ class SpacePlaceAcceptanceTest extends AcceptanceTest {
         patch(code, request, 400);
 
         // then
-        assertLocation(get(code), "", "", "");
+        assertPlace(get(code), "", "", "");
     }
 
     @DisplayName("기존 장소의 일부만 삭제해 최종 상태가 잘못되면 일반 이름 수정까지 롤백한다")
     @Test
-    void rollsBackGeneralNameAndLocationAfterInvalidPatch() throws Exception {
+    void rollsBackGeneralNameAndPlaceAfterInvalidPatch() throws Exception {
         // given
         String code = create(FULL_LOCATION);
         String request = "{\"name\":\"바뀌면 안 되는 이름\",\"placeName\":\"\"}";
@@ -185,7 +185,7 @@ class SpacePlaceAcceptanceTest extends AcceptanceTest {
         // then
         JsonNode detail = get(code);
         assertThat(detail.path("data").path("name").asText()).isEqualTo("원래 전시");
-        assertLocation(detail, "전시관", "00123", PLACE_URL);
+        assertPlace(detail, "전시관", "00123", PLACE_URL);
     }
 
     @DisplayName("장소가 있는 스페이스도 나의 목록 응답에는 장소 정보를 포함하지 않는다")
@@ -230,7 +230,7 @@ class SpacePlaceAcceptanceTest extends AcceptanceTest {
         return objectMapper.readTree(response);
     }
 
-    private void assertLocation(JsonNode response, String name, String id, String url) {
+    private void assertPlace(JsonNode response, String name, String id, String url) {
         JsonNode data = response.path("data");
         assertThat(data.has("placeName")).isTrue();
         assertThat(data.has("placeId")).isTrue();

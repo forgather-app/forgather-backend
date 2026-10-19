@@ -62,7 +62,7 @@ public class Space extends SoftDeleteEntity {
     private SpaceExhibitionPeriod exhibitionPeriod;
 
     @Embedded
-    private SpacePlace location;
+    private SpacePlace place;
 
     /**
      * 호스트가 지정한 '지금 축하받고 있는 스페이스'인지 여부.
@@ -84,8 +84,8 @@ public class Space extends SoftDeleteEntity {
      * @param exhibitionStartDate 전시 시작일 (종료일과 함께 입력)
      * @param exhibitionEndDate 전시 종료일 (시작일과 함께 입력)
      * @param placeName 장소명 (선택, 최대 50자)
-     * @param placeId 카카오 장소 ID (선택, 장소명과 URL이 있을 때만 입력 가능)
-     * @param placeUrl 카카오 장소 URL (선택, 장소명과 ID가 있을 때만 입력 가능)
+     * @param placeId 장소 ID (선택, 장소명과 URL이 있을 때만 입력 가능)
+     * @param placeUrl 장소 URL (선택, 장소명과 ID가 있을 때만 입력 가능)
      */
     public Space(String code, String name, String description, boolean isPublic, String linkUrl, String linkName,
         LocalDate exhibitionStartDate, LocalDate exhibitionEndDate,
@@ -108,23 +108,23 @@ public class Space extends SoftDeleteEntity {
         this.linkUrl = newLinkUrl;
         this.linkName = newLinkName;
         this.exhibitionPeriod = newExhibitionPeriod;
-        this.location = new SpacePlace(placeName, placeId, placeUrl);
+        this.place = new SpacePlace(placeName, placeId, placeUrl);
     }
 
-    public void updateLocation(String placeName, String placeId, String placeUrl) {
-        this.location = new SpacePlace(placeName, placeId, placeUrl);
+    public void updatePlace(String placeName, String placeId, String placeUrl) {
+        this.place = new SpacePlace(placeName, placeId, placeUrl);
     }
 
     public String getPlaceName() {
-        return location.getPlaceName();
+        return place.getPlaceName();
     }
 
     public String getPlaceId() {
-        return location.getPlaceId();
+        return place.getPlaceId();
     }
 
     public String getPlaceUrl() {
-        return location.getPlaceUrl();
+        return place.getPlaceUrl();
     }
 
     private void validateRequiredFields(String code, String name) {

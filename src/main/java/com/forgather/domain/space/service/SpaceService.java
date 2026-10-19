@@ -71,11 +71,13 @@ public class SpaceService {
     private final ProductPhotoRepository productPhotoRepository;
     private final HostProfilePhotoRepository hostProfilePhotoRepository;
     private final RandomCodeGenerator codeGenerator;
+    private final KakaoPlaceValidator kakaoPlaceValidator;
 
     @Transactional
     public CreateSpaceResponse create(CreateSpaceRequest request, Host host) {
         validateHostNull(host);
         String spaceCode = codeGenerator.generate(10);
+        kakaoPlaceValidator.validate(request.placeId(), request.placeUrl());
         Space space = spaceRepository.save(request.toEntity(spaceCode));
         spaceHostRepository.save(new SpaceHost(space, host));
         return CreateSpaceResponse.from(space);
@@ -94,7 +96,7 @@ public class SpaceService {
         space.update(request.name(), request.description(), request.isPublic(), request.linkUrl(),
             request.linkName());
         updateExhibitionPeriod(request, space);
-        updateLocation(request, space);
+        updatePlace(request, space);
 
         return createSpaceResponse(space, host);
     }
@@ -111,17 +113,17 @@ public class SpaceService {
         }
     }
 
-    private void updateLocation(UpdateSpaceRequest request, Space space) {
+    private void updatePlace(UpdateSpaceRequest request, Space space) {
         if (request.placeName() != null || request.placeId() != null || request.placeUrl() != null) {
-            space.updateLocation(
-                getUpdatedLocationValue(request.placeName(), space.getPlaceName()),
-                getUpdatedLocationValue(request.placeId(), space.getPlaceId()),
-                getUpdatedLocationValue(request.placeUrl(), space.getPlaceUrl())
-            );
+            String placeName = getUpdatedPlaceValue(request.placeName(), space.getPlaceName());
+            String placeId = getUpdatedPlaceValue(request.placeId(), space.getPlaceId());
+            String placeUrl = getUpdatedPlaceValue(request.placeUrl(), space.getPlaceUrl());
+            kakaoPlaceValidator.validate(placeId, placeUrl);
+            space.updatePlace(placeName, placeId, placeUrl);
         }
     }
 
-    private String getUpdatedLocationValue(String requestedValue, String currentValue) {
+    private String getUpdatedPlaceValue(String requestedValue, String currentValue) {
         if (requestedValue == null) {
             return currentValue;
         }

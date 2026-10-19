@@ -1,7 +1,5 @@
 package com.forgather.domain.space.model;
 
-import java.util.regex.Pattern;
-
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.util.TextLengthCounter;
 
@@ -18,18 +16,16 @@ public class SpacePlace {
 
     private static final int MAX_PLACE_NAME_LENGTH = 50;
     private static final int PLACE_NAME_COLUMN_LENGTH = 500;
-    private static final int MAX_KAKAO_PLACE_ID_LENGTH = 255;
-    private static final int MAX_KAKAO_PLACE_URL_LENGTH = 2048;
-    private static final String KAKAO_PLACE_URL_PREFIX = "https://place.map.kakao.com/";
-    private static final Pattern KAKAO_PLACE_ID_PATTERN = Pattern.compile("[0-9]+");
+    private static final int MAX_PLACE_ID_LENGTH = 255;
+    private static final int MAX_PLACE_URL_LENGTH = 2048;
 
     @Column(name = "place_name", nullable = false, length = PLACE_NAME_COLUMN_LENGTH)
     private String placeName;
 
-    @Column(name = "place_id", nullable = false, length = MAX_KAKAO_PLACE_ID_LENGTH)
+    @Column(name = "place_id", nullable = false, length = MAX_PLACE_ID_LENGTH)
     private String placeId;
 
-    @Column(name = "place_url", nullable = false, length = MAX_KAKAO_PLACE_URL_LENGTH)
+    @Column(name = "place_url", nullable = false, length = MAX_PLACE_URL_LENGTH)
     private String placeUrl;
 
     public SpacePlace(String placeName, String placeId, String placeUrl) {
@@ -37,10 +33,10 @@ public class SpacePlace {
         String newPlaceId = convertBlankToEmptyString(placeId);
         String newPlaceUrl = convertBlankToEmptyString(placeUrl);
         if (newPlaceName.isEmpty() && (!newPlaceId.isEmpty() || !newPlaceUrl.isEmpty())) {
-            throw new BaseException("카카오 장소 정보가 있으면 장소명을 입력해야 합니다.");
+            throw new BaseException("장소 정보가 있으면 장소명을 입력해야 합니다.");
         }
         validatePlaceName(newPlaceName);
-        validateKakaoPlace(newPlaceId, newPlaceUrl);
+        validatePlace(newPlaceId, newPlaceUrl);
         this.placeName = newPlaceName;
         this.placeId = newPlaceId;
         this.placeUrl = newPlaceUrl;
@@ -52,24 +48,18 @@ public class SpacePlace {
         }
     }
 
-    private void validateKakaoPlace(String placeId, String placeUrl) {
+    private void validatePlace(String placeId, String placeUrl) {
         if (placeId.isEmpty() && placeUrl.isEmpty()) {
             return;
         }
         if (placeId.isEmpty() || placeUrl.isEmpty()) {
-            throw new BaseException("카카오 장소 ID와 URL은 함께 입력해야 합니다.");
+            throw new BaseException("장소 ID와 URL은 함께 입력해야 합니다.");
         }
-        if (placeId.length() > MAX_KAKAO_PLACE_ID_LENGTH) {
-            throw new BaseException("카카오 장소 ID는 최대 %d자까지 가능합니다.".formatted(MAX_KAKAO_PLACE_ID_LENGTH));
+        if (placeId.length() > MAX_PLACE_ID_LENGTH) {
+            throw new BaseException("장소 ID는 최대 %d자까지 가능합니다.".formatted(MAX_PLACE_ID_LENGTH));
         }
-        if (placeUrl.length() > MAX_KAKAO_PLACE_URL_LENGTH) {
-            throw new BaseException("카카오 장소 URL은 최대 %d자까지 가능합니다.".formatted(MAX_KAKAO_PLACE_URL_LENGTH));
-        }
-        if (!KAKAO_PLACE_ID_PATTERN.matcher(placeId).matches()) {
-            throw new BaseException("카카오 장소 ID는 숫자 문자열이어야 합니다. id: " + placeId);
-        }
-        if (!placeUrl.equals(KAKAO_PLACE_URL_PREFIX + placeId)) {
-            throw new BaseException("카카오 장소 URL은 ID에 해당하는 정확한 주소여야 합니다. url: " + placeUrl);
+        if (placeUrl.length() > MAX_PLACE_URL_LENGTH) {
+            throw new BaseException("장소 URL은 최대 %d자까지 가능합니다.".formatted(MAX_PLACE_URL_LENGTH));
         }
     }
 

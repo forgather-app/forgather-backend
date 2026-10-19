@@ -19,17 +19,17 @@ import com.forgather.global.exception.BaseException;
 
 class SpacePlaceTest {
 
-    @DisplayName("장소명 없이 카카오 정보가 있거나 카카오 정보 한쪽만 있으면 거부한다")
+    @DisplayName("장소명 없이 장소 정보가 있거나 장소 정보 한쪽만 있으면 거부한다")
     @ParameterizedTest
-    @MethodSource("invalidLocationCombinations")
-    void validateLocationCombinations(String name, String id, String url) {
+    @MethodSource("invalidPlaceCombinations")
+    void validatePlaceCombinations(String name, String id, String url) {
         // given: 최종 장소 값
         // when & then
         assertThatThrownBy(() -> new SpacePlace(name, id, url))
             .isInstanceOfSatisfying(BaseException.class, exception -> assertThat(exception.getStatusCode()).isEqualTo(400));
     }
 
-    static Stream<Arguments> invalidLocationCombinations() {
+    static Stream<Arguments> invalidPlaceCombinations() {
         return Stream.of(
             Arguments.of(null, "123", "https://place.map.kakao.com/123"),
             Arguments.of(null, "123", null),
@@ -47,15 +47,15 @@ class SpacePlaceTest {
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {" ", "\t\n"})
-    void normalizesAbsentLocationToEmptyStrings(String value) {
+    void normalizesAbsentPlaceToEmptyStrings(String value) {
         // given & when
-        SpacePlace location = new SpacePlace(value, value, value);
+        SpacePlace place = new SpacePlace(value, value, value);
 
         // then
         assertAll(
-            () -> assertThat(location.getPlaceName()).isEmpty(),
-            () -> assertThat(location.getPlaceId()).isEmpty(),
-            () -> assertThat(location.getPlaceUrl()).isEmpty()
+            () -> assertThat(place.getPlaceName()).isEmpty(),
+            () -> assertThat(place.getPlaceId()).isEmpty(),
+            () -> assertThat(place.getPlaceUrl()).isEmpty()
         );
     }
 
@@ -63,13 +63,13 @@ class SpacePlaceTest {
     @Test
     void allowsPlaceNameOnlyWithoutTrimming() {
         // given & when
-        SpacePlace location = new SpacePlace(" 전시장 ", null, null);
+        SpacePlace place = new SpacePlace(" 전시장 ", null, null);
 
         // then
         assertAll(
-            () -> assertThat(location.getPlaceName()).isEqualTo(" 전시장 "),
-            () -> assertThat(location.getPlaceId()).isEmpty(),
-            () -> assertThat(location.getPlaceUrl()).isEmpty()
+            () -> assertThat(place.getPlaceName()).isEqualTo(" 전시장 "),
+            () -> assertThat(place.getPlaceId()).isEmpty(),
+            () -> assertThat(place.getPlaceUrl()).isEmpty()
         );
     }
 
@@ -89,8 +89,8 @@ class SpacePlaceTest {
 
     @DisplayName("장소 저장 상한을 넘는 값은 400 예외를 던진다")
     @ParameterizedTest
-    @MethodSource("locationsExceedingStorageLength")
-    void validateLocationStorageLength(String name, String id, String url, String limit) {
+    @MethodSource("placesExceedingStorageLength")
+    void validatePlaceStorageLength(String name, String id, String url, String limit) {
         // given: 최종 장소 값
         // when & then
         assertThatThrownBy(() -> new SpacePlace(name, id, url))
@@ -98,34 +98,18 @@ class SpacePlaceTest {
             .hasMessageContaining(limit);
     }
 
-    static Stream<Arguments> locationsExceedingStorageLength() {
+    static Stream<Arguments> placesExceedingStorageLength() {
         return Stream.of(
             Arguments.of("전시장", "1".repeat(256), "https://place.map.kakao.com/" + "1".repeat(256), "255"),
             Arguments.of("전시장", "123", "https://place.map.kakao.com/" + "1".repeat(2023), "2048")
         );
     }
 
-    @DisplayName("카카오 ID는 숫자 문자열이고 URL은 해당 ID의 정확한 HTTPS 주소여야 한다")
-    @ParameterizedTest
-    @MethodSource("invalidKakaoPlaces")
-    void validateKakaoPlace(String id, String url) {
-        // given: 최종 장소 값
-        // when & then
-        assertThatThrownBy(() -> new SpacePlace("전시장", id, url)).isInstanceOf(BaseException.class);
-    }
-
-    static Stream<Arguments> invalidKakaoPlaces() {
-        return Stream.of(
-            Arguments.of("12a", "https://place.map.kakao.com/12a"),
-            Arguments.of("１２３", "https://place.map.kakao.com/１２３"),
-            Arguments.of(" 123", "https://place.map.kakao.com/ 123"),
-            Arguments.of("123", "http://place.map.kakao.com/123"),
-            Arguments.of("123", "https://example.com/123"),
-            Arguments.of("123", "https://place.map.kakao.com.evil.com/123"),
-            Arguments.of("123", "https://place.map.kakao.com/456"),
-            Arguments.of("123", "https://place.map.kakao.com/123?from=map"),
-            Arguments.of("123", "https://place.map.kakao.com/123/"),
-            Arguments.of("123", " https://place.map.kakao.com/123 ")
-        );
+    @DisplayName("장소 객체는 특정 제공자의 ID와 URL 형식을 제한하지 않는다")
+    @Test
+    void allowsProviderIndependentPlace() {
+        // given & when & then
+        assertThatCode(() -> new SpacePlace("전시장", "naver-123", "https://map.naver.com/place/123"))
+            .doesNotThrowAnyException();
     }
 }
