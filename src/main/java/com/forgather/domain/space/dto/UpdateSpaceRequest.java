@@ -50,6 +50,33 @@ public record UpdateSpaceRequest(
 
     @Schema(description = "전시 기간 삭제 여부. 새 날짜 쌍이 있으면 교체가 우선하며, 날짜가 없을 때 true면 삭제한다. false, null, 생략이면 유지한다.",
         example = "false", nullable = true)
-    Boolean isDeleteExhibitionPeriod
+    Boolean isDeleteExhibitionPeriod,
+
+    @Schema(
+        description = "장소명 (선택, 최대 50자, 장소명만 입력 가능). 수정 시 생략/null은 기존 값 유지, 빈 문자열/공백만 있는 값은 빈 문자열로 삭제. 값이 있는 문자열의 앞뒤 공백은 보존",
+        example = "포게더 전시관",
+        maxLength = 50,
+        nullable = true,
+        requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    String placeName,
+
+    @Schema(
+        description = "장소 ID (선택, 숫자 문자열, 장소명 필수, URL과 쌍으로 입력). 수정 시 생략/null은 기존 값 유지, 빈 문자열/공백만 있는 값은 빈 문자열로 삭제",
+        example = "123456789",
+        maxLength = 255,
+        nullable = true,
+        requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    String placeId,
+
+    @Schema(
+        description = "장소 URL (선택, 장소명 필수, ID와 쌍으로 입력). https://place.map.kakao.com/ + ID와 정확히 일치해야 함. 수정 시 생략/null은 기존 값 유지, 빈 문자열/공백만 있는 값은 빈 문자열로 삭제",
+        example = "https://place.map.kakao.com/123456789",
+        maxLength = 2048,
+        nullable = true,
+        requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    String placeUrl
 ) {
 }
