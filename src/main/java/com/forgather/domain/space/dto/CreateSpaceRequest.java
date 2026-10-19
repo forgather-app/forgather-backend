@@ -72,7 +72,9 @@ public record CreateSpaceRequest(
     String placeId,
 
     @Schema(
-        description = "장소 URL (선택, 장소명 필수, ID와 쌍으로 입력). https://place.map.kakao.com/ + ID와 정확히 일치해야 함. 생성 시 null, 빈 문자열, 공백만 있는 값은 빈 문자열로 저장",
+        description = "장소 URL (선택, 장소명 필수, ID와 쌍으로 입력). "
+            + "http://place.map.kakao.com/ + ID 또는 https://place.map.kakao.com/ + ID와 정확히 일치해야 함. "
+            + "입력한 URL은 변환 없이 저장. 생성 시 null, 빈 문자열, 공백만 있는 값은 빈 문자열로 저장",
         example = "https://place.map.kakao.com/123456789",
         maxLength = 2048,
         nullable = true,
