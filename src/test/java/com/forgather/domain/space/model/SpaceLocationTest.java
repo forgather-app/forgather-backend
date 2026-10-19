@@ -53,30 +53,30 @@ class SpaceLocationTest {
 
         // then
         assertAll(
-            () -> assertThat(location.getLocationName()).isEmpty(),
-            () -> assertThat(location.getKakaoPlaceId()).isEmpty(),
-            () -> assertThat(location.getKakaoPlaceUrl()).isEmpty()
+            () -> assertThat(location.getPlaceName()).isEmpty(),
+            () -> assertThat(location.getPlaceId()).isEmpty(),
+            () -> assertThat(location.getPlaceUrl()).isEmpty()
         );
     }
 
     @DisplayName("장소명만 저장하며 앞뒤 공백을 보존한다")
     @Test
-    void allowsLocationNameOnlyWithoutTrimming() {
+    void allowsPlaceNameOnlyWithoutTrimming() {
         // given & when
         SpaceLocation location = new SpaceLocation(" 전시장 ", null, null);
 
         // then
         assertAll(
-            () -> assertThat(location.getLocationName()).isEqualTo(" 전시장 "),
-            () -> assertThat(location.getKakaoPlaceId()).isEmpty(),
-            () -> assertThat(location.getKakaoPlaceUrl()).isEmpty()
+            () -> assertThat(location.getPlaceName()).isEqualTo(" 전시장 "),
+            () -> assertThat(location.getPlaceId()).isEmpty(),
+            () -> assertThat(location.getPlaceUrl()).isEmpty()
         );
     }
 
     @DisplayName("장소명은 기존 글자 수 기준 일반 문자, 이모지, 결합 문자 50자를 허용하고 51자는 거부한다")
     @ParameterizedTest
     @ValueSource(strings = {"가", "👨‍👩‍👧‍👦", "a\u0301"})
-    void validateLocationNameLength(String character) {
+    void validatePlaceNameLength(String character) {
         // given: 글자 수 경계값
         // when & then
         assertThatCode(() -> new SpaceLocation(character.repeat(50), null, null)).doesNotThrowAnyException();

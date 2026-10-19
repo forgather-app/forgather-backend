@@ -27,8 +27,8 @@ class SpaceLocationAcceptanceTest extends AcceptanceTest {
 
     private static final String PLACE_URL = "https://place.map.kakao.com/00123";
     private static final String FULL_LOCATION = """
-        {"name":"원래 전시", "locationName":"전시관", "kakaoPlaceId":"00123",
-         "kakaoPlaceUrl":"https://place.map.kakao.com/00123"}
+        {"name":"원래 전시", "placeName":"전시관", "placeId":"00123",
+         "placeUrl":"https://place.map.kakao.com/00123"}
         """;
 
     @Autowired
@@ -56,7 +56,7 @@ class SpaceLocationAcceptanceTest extends AcceptanceTest {
     @ParameterizedTest
     @ValueSource(strings = {
         "{\"name\":\"전시\"}",
-        "{\"name\":\"전시\",\"locationName\":null,\"kakaoPlaceId\":null,\"kakaoPlaceUrl\":null}"
+        "{\"name\":\"전시\",\"placeName\":null,\"placeId\":null,\"placeUrl\":null}"
     })
     void createsWithoutLocation(String request) throws Exception {
         // given
@@ -74,7 +74,7 @@ class SpaceLocationAcceptanceTest extends AcceptanceTest {
     @ValueSource(booleans = {false, true})
     void createsAndReadsLocation(boolean withKakao) throws Exception {
         // given
-        String request = withKakao ? FULL_LOCATION : "{\"name\":\"전시\",\"locationName\":\"전시관\"}";
+        String request = withKakao ? FULL_LOCATION : "{\"name\":\"전시\",\"placeName\":\"전시관\"}";
 
         // when
         String code = create(request);
@@ -86,7 +86,7 @@ class SpaceLocationAcceptanceTest extends AcceptanceTest {
 
     @DisplayName("장소 수정 요청에서 생략과 명시적 null은 기존 값을 유지한다")
     @ParameterizedTest
-    @ValueSource(strings = {"{}", "{\"locationName\":null,\"kakaoPlaceId\":null,\"kakaoPlaceUrl\":null}"})
+    @ValueSource(strings = {"{}", "{\"placeName\":null,\"placeId\":null,\"placeUrl\":null}"})
     void preservesOmittedAndNullLocation(String request) throws Exception {
         // given
         String code = create(FULL_LOCATION);
@@ -101,12 +101,12 @@ class SpaceLocationAcceptanceTest extends AcceptanceTest {
 
     @DisplayName("장소명만 수정하면 기존 카카오 연결을 보존한다")
     @Test
-    void changesOnlyLocationName() throws Exception {
+    void changesOnlyPlaceName() throws Exception {
         // given
         String code = create(FULL_LOCATION);
 
         // when
-        JsonNode updated = patch(code, "{\"locationName\":\"새 전시관\"}", 200);
+        JsonNode updated = patch(code, "{\"placeName\":\"새 전시관\"}", 200);
 
         // then
         assertLocation(updated, "새 전시관", "00123", PLACE_URL);
@@ -133,7 +133,7 @@ class SpaceLocationAcceptanceTest extends AcceptanceTest {
         String code = create(FULL_LOCATION);
 
         // when
-        JsonNode updated = patch(code, "{\"kakaoPlaceId\":\"\",\"kakaoPlaceUrl\":\"  \"}", 200);
+        JsonNode updated = patch(code, "{\"placeId\":\"\",\"placeUrl\":\"  \"}", 200);
 
         // then
         assertLocation(updated, "전시관", "", "");
@@ -148,7 +148,7 @@ class SpaceLocationAcceptanceTest extends AcceptanceTest {
 
         // when
         JsonNode updated = patch(code,
-            "{\"locationName\":\"  \",\"kakaoPlaceId\":\"\",\"kakaoPlaceUrl\":\"  \"}", 200);
+            "{\"placeName\":\"  \",\"placeId\":\"\",\"placeUrl\":\"  \"}", 200);
 
         // then
         assertLocation(updated, "", "", "");
@@ -161,7 +161,7 @@ class SpaceLocationAcceptanceTest extends AcceptanceTest {
         // given
         String code = create("{\"name\":\"전시\"}");
         String request = """
-            {"name":"전시", "kakaoPlaceId":"00123", "kakaoPlaceUrl":"https://place.map.kakao.com/00123"}
+            {"name":"전시", "placeId":"00123", "placeUrl":"https://place.map.kakao.com/00123"}
             """;
 
         // when
@@ -177,7 +177,7 @@ class SpaceLocationAcceptanceTest extends AcceptanceTest {
     void rollsBackGeneralNameAndLocationAfterInvalidPatch() throws Exception {
         // given
         String code = create(FULL_LOCATION);
-        String request = "{\"name\":\"바뀌면 안 되는 이름\",\"locationName\":\"\"}";
+        String request = "{\"name\":\"바뀌면 안 되는 이름\",\"placeName\":\"\"}";
 
         // when
         patch(code, request, 400);
@@ -201,9 +201,9 @@ class SpaceLocationAcceptanceTest extends AcceptanceTest {
 
         // then
         assertThat(item.path("spaceCode").asText()).isEqualTo(code);
-        assertThat(item.has("locationName")).isFalse();
-        assertThat(item.has("kakaoPlaceId")).isFalse();
-        assertThat(item.has("kakaoPlaceUrl")).isFalse();
+        assertThat(item.has("placeName")).isFalse();
+        assertThat(item.has("placeId")).isFalse();
+        assertThat(item.has("placeUrl")).isFalse();
     }
 
     private String create(String request) throws Exception {
@@ -232,11 +232,11 @@ class SpaceLocationAcceptanceTest extends AcceptanceTest {
 
     private void assertLocation(JsonNode response, String name, String id, String url) {
         JsonNode data = response.path("data");
-        assertThat(data.has("locationName")).isTrue();
-        assertThat(data.has("kakaoPlaceId")).isTrue();
-        assertThat(data.has("kakaoPlaceUrl")).isTrue();
-        assertThat(data.get("locationName")).isEqualTo(objectMapper.valueToTree(name));
-        assertThat(data.get("kakaoPlaceId")).isEqualTo(objectMapper.valueToTree(id));
-        assertThat(data.get("kakaoPlaceUrl")).isEqualTo(objectMapper.valueToTree(url));
+        assertThat(data.has("placeName")).isTrue();
+        assertThat(data.has("placeId")).isTrue();
+        assertThat(data.has("placeUrl")).isTrue();
+        assertThat(data.get("placeName")).isEqualTo(objectMapper.valueToTree(name));
+        assertThat(data.get("placeId")).isEqualTo(objectMapper.valueToTree(id));
+        assertThat(data.get("placeUrl")).isEqualTo(objectMapper.valueToTree(url));
     }
 }

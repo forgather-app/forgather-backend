@@ -112,11 +112,11 @@ public class SpaceService {
     }
 
     private void updateLocation(UpdateSpaceRequest request, Space space) {
-        if (request.locationName() != null || request.kakaoPlaceId() != null || request.kakaoPlaceUrl() != null) {
+        if (request.placeName() != null || request.placeId() != null || request.placeUrl() != null) {
             space.updateLocation(
-                getUpdatedLocationValue(request.locationName(), space.getLocationName()),
-                getUpdatedLocationValue(request.kakaoPlaceId(), space.getKakaoPlaceId()),
-                getUpdatedLocationValue(request.kakaoPlaceUrl(), space.getKakaoPlaceUrl())
+                getUpdatedLocationValue(request.placeName(), space.getPlaceName()),
+                getUpdatedLocationValue(request.placeId(), space.getPlaceId()),
+                getUpdatedLocationValue(request.placeUrl(), space.getPlaceUrl())
             );
         }
     }

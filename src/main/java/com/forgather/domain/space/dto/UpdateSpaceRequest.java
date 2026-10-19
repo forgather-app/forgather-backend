@@ -59,7 +59,7 @@ public record UpdateSpaceRequest(
         nullable = true,
         requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
-    String locationName,
+    String placeName,
 
     @Schema(
         description = "카카오 장소 ID (선택, 숫자 문자열, 장소명 필수, URL과 쌍으로 입력). 수정 시 생략/null은 기존 값 유지, 빈 문자열/공백만 있는 값은 빈 문자열로 삭제",
@@ -68,7 +68,7 @@ public record UpdateSpaceRequest(
         nullable = true,
         requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
-    String kakaoPlaceId,
+    String placeId,
 
     @Schema(
         description = "카카오 장소 URL (선택, 장소명 필수, ID와 쌍으로 입력). https://place.map.kakao.com/ + ID와 정확히 일치해야 함. 수정 시 생략/null은 기존 값 유지, 빈 문자열/공백만 있는 값은 빈 문자열로 삭제",
@@ -77,6 +77,6 @@ public record UpdateSpaceRequest(
         nullable = true,
         requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
-    String kakaoPlaceUrl
+    String placeUrl
 ) {
 }

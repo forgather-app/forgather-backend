@@ -728,9 +728,9 @@ class SpaceTest {
 
     private void assertLocation(Space space, String name, String id, String url) {
         assertAll(
-            () -> assertThat(space.getLocationName()).isEqualTo(name),
-            () -> assertThat(space.getKakaoPlaceId()).isEqualTo(id),
-            () -> assertThat(space.getKakaoPlaceUrl()).isEqualTo(url)
+            () -> assertThat(space.getPlaceName()).isEqualTo(name),
+            () -> assertThat(space.getPlaceId()).isEqualTo(id),
+            () -> assertThat(space.getPlaceUrl()).isEqualTo(url)
         );
     }
 

@@ -83,13 +83,13 @@ public class Space extends SoftDeleteEntity {
      * @param linkName    소개 링크 표시 이름 (선택, 최대 30자, 링크 URL이 있을 때만 입력 가능)
      * @param exhibitionStartDate 전시 시작일 (종료일과 함께 입력)
      * @param exhibitionEndDate 전시 종료일 (시작일과 함께 입력)
-     * @param locationName 장소명 (선택, 최대 50자)
-     * @param kakaoPlaceId 카카오 장소 ID (선택, 장소명과 URL이 있을 때만 입력 가능)
-     * @param kakaoPlaceUrl 카카오 장소 URL (선택, 장소명과 ID가 있을 때만 입력 가능)
+     * @param placeName 장소명 (선택, 최대 50자)
+     * @param placeId 카카오 장소 ID (선택, 장소명과 URL이 있을 때만 입력 가능)
+     * @param placeUrl 카카오 장소 URL (선택, 장소명과 ID가 있을 때만 입력 가능)
      */
     public Space(String code, String name, String description, boolean isPublic, String linkUrl, String linkName,
         LocalDate exhibitionStartDate, LocalDate exhibitionEndDate,
-        String locationName, String kakaoPlaceId, String kakaoPlaceUrl) {
+        String placeName, String placeId, String placeUrl) {
         SpaceExhibitionPeriod newExhibitionPeriod = createExhibitionPeriod(exhibitionStartDate, exhibitionEndDate);
         validateRequiredFields(code, name);
         // 설명과 소개 링크의 '값 없음'은 빈 문자열로 표현한다. 검증 전에 먼저 정규화한다.
@@ -108,23 +108,23 @@ public class Space extends SoftDeleteEntity {
         this.linkUrl = newLinkUrl;
         this.linkName = newLinkName;
         this.exhibitionPeriod = newExhibitionPeriod;
-        this.location = new SpaceLocation(locationName, kakaoPlaceId, kakaoPlaceUrl);
+        this.location = new SpaceLocation(placeName, placeId, placeUrl);
     }
 
-    public void updateLocation(String locationName, String kakaoPlaceId, String kakaoPlaceUrl) {
-        this.location = new SpaceLocation(locationName, kakaoPlaceId, kakaoPlaceUrl);
+    public void updateLocation(String placeName, String placeId, String placeUrl) {
+        this.location = new SpaceLocation(placeName, placeId, placeUrl);
     }
 
-    public String getLocationName() {
-        return location.getLocationName();
+    public String getPlaceName() {
+        return location.getPlaceName();
     }
 
-    public String getKakaoPlaceId() {
-        return location.getKakaoPlaceId();
+    public String getPlaceId() {
+        return location.getPlaceId();
     }
 
-    public String getKakaoPlaceUrl() {
-        return location.getKakaoPlaceUrl();
+    public String getPlaceUrl() {
+        return location.getPlaceUrl();
     }
 
     private void validateRequiredFields(String code, String name) {

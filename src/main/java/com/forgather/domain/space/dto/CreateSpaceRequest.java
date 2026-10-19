@@ -60,7 +60,7 @@ public record CreateSpaceRequest(
         nullable = true,
         requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
-    String locationName,
+    String placeName,
 
     @Schema(
         description = "카카오 장소 ID (선택, 숫자 문자열, 장소명 필수, URL과 쌍으로 입력). 생성 시 null, 빈 문자열, 공백만 있는 값은 빈 문자열로 저장",
@@ -69,7 +69,7 @@ public record CreateSpaceRequest(
         nullable = true,
         requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
-    String kakaoPlaceId,
+    String placeId,
 
     @Schema(
         description = "카카오 장소 URL (선택, 장소명 필수, ID와 쌍으로 입력). https://place.map.kakao.com/ + ID와 정확히 일치해야 함. 생성 시 null, 빈 문자열, 공백만 있는 값은 빈 문자열로 저장",
@@ -78,11 +78,11 @@ public record CreateSpaceRequest(
         nullable = true,
         requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
-    String kakaoPlaceUrl
+    String placeUrl
 ) {
 
     public Space toEntity(String spaceCode) {
         return new Space(spaceCode, name, description, isPublic, linkUrl, linkName,
-            exhibitionStartDate, exhibitionEndDate, locationName, kakaoPlaceId, kakaoPlaceUrl);
+            exhibitionStartDate, exhibitionEndDate, placeName, placeId, placeUrl);
     }
 }

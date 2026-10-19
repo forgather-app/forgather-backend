@@ -54,13 +54,13 @@ public record SpaceResponse(
     SpaceHostInfoResponse host,
 
     @Schema(description = "장소명 (장소가 없으면 빈 문자열)", example = "포게더 전시관")
-    String locationName,
+    String placeName,
 
     @Schema(description = "카카오 장소 ID (카카오 정보가 없으면 빈 문자열)", example = "123456789")
-    String kakaoPlaceId,
+    String placeId,
 
     @Schema(description = "카카오 장소 URL (카카오 정보가 없으면 빈 문자열)", example = "https://place.map.kakao.com/123456789")
-    String kakaoPlaceUrl
+    String placeUrl
 ) {
 
     public static SpaceResponse from(Space space, ProductPhoto spacePhoto, Long guestBookCardCount,
@@ -79,9 +79,9 @@ public record SpaceResponse(
             guestBookCardCount,
             space.isFeatured(),
             host,
-            space.getLocationName(),
-            space.getKakaoPlaceId(),
-            space.getKakaoPlaceUrl()
+            space.getPlaceName(),
+            space.getPlaceId(),
+            space.getPlaceUrl()
         );
     }
 }
