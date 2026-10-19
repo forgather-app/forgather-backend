@@ -62,7 +62,7 @@ public class Space extends SoftDeleteEntity {
     private SpaceExhibitionPeriod exhibitionPeriod;
 
     @Embedded
-    private SpaceLocation location;
+    private SpacePlace location;
 
     /**
      * 호스트가 지정한 '지금 축하받고 있는 스페이스'인지 여부.
@@ -108,11 +108,11 @@ public class Space extends SoftDeleteEntity {
         this.linkUrl = newLinkUrl;
         this.linkName = newLinkName;
         this.exhibitionPeriod = newExhibitionPeriod;
-        this.location = new SpaceLocation(placeName, placeId, placeUrl);
+        this.location = new SpacePlace(placeName, placeId, placeUrl);
     }
 
     public void updateLocation(String placeName, String placeId, String placeUrl) {
-        this.location = new SpaceLocation(placeName, placeId, placeUrl);
+        this.location = new SpacePlace(placeName, placeId, placeUrl);
     }
 
     public String getPlaceName() {

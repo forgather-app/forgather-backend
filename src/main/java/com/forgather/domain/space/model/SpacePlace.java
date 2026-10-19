@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class SpaceLocation {
+public class SpacePlace {
 
     private static final int MAX_PLACE_NAME_LENGTH = 50;
     private static final int PLACE_NAME_COLUMN_LENGTH = 500;
@@ -32,7 +32,7 @@ public class SpaceLocation {
     @Column(name = "place_url", nullable = false, length = MAX_KAKAO_PLACE_URL_LENGTH)
     private String placeUrl;
 
-    public SpaceLocation(String placeName, String placeId, String placeUrl) {
+    public SpacePlace(String placeName, String placeId, String placeUrl) {
         String newPlaceName = convertBlankToEmptyString(placeName);
         String newPlaceId = convertBlankToEmptyString(placeId);
         String newPlaceUrl = convertBlankToEmptyString(placeUrl);

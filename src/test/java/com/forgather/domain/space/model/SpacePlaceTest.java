@@ -17,7 +17,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import com.forgather.global.exception.BaseException;
 
-class SpaceLocationTest {
+class SpacePlaceTest {
 
     @DisplayName("장소명 없이 카카오 정보가 있거나 카카오 정보 한쪽만 있으면 거부한다")
     @ParameterizedTest
@@ -25,7 +25,7 @@ class SpaceLocationTest {
     void validateLocationCombinations(String name, String id, String url) {
         // given: 최종 장소 값
         // when & then
-        assertThatThrownBy(() -> new SpaceLocation(name, id, url))
+        assertThatThrownBy(() -> new SpacePlace(name, id, url))
             .isInstanceOfSatisfying(BaseException.class, exception -> assertThat(exception.getStatusCode()).isEqualTo(400));
     }
 
@@ -49,7 +49,7 @@ class SpaceLocationTest {
     @ValueSource(strings = {" ", "\t\n"})
     void normalizesAbsentLocationToEmptyStrings(String value) {
         // given & when
-        SpaceLocation location = new SpaceLocation(value, value, value);
+        SpacePlace location = new SpacePlace(value, value, value);
 
         // then
         assertAll(
@@ -63,7 +63,7 @@ class SpaceLocationTest {
     @Test
     void allowsPlaceNameOnlyWithoutTrimming() {
         // given & when
-        SpaceLocation location = new SpaceLocation(" 전시장 ", null, null);
+        SpacePlace location = new SpacePlace(" 전시장 ", null, null);
 
         // then
         assertAll(
@@ -79,10 +79,10 @@ class SpaceLocationTest {
     void validatePlaceNameLength(String character) {
         // given: 글자 수 경계값
         // when & then
-        assertThatCode(() -> new SpaceLocation(character.repeat(50), null, null)).doesNotThrowAnyException();
+        assertThatCode(() -> new SpacePlace(character.repeat(50), null, null)).doesNotThrowAnyException();
         // given: 최종 장소 값
         // when & then
-        assertThatThrownBy(() -> new SpaceLocation(character.repeat(51), null, null))
+        assertThatThrownBy(() -> new SpacePlace(character.repeat(51), null, null))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("50");
     }
@@ -93,7 +93,7 @@ class SpaceLocationTest {
     void validateLocationStorageLength(String name, String id, String url, String limit) {
         // given: 최종 장소 값
         // when & then
-        assertThatThrownBy(() -> new SpaceLocation(name, id, url))
+        assertThatThrownBy(() -> new SpacePlace(name, id, url))
             .isInstanceOfSatisfying(BaseException.class, exception -> assertThat(exception.getStatusCode()).isEqualTo(400))
             .hasMessageContaining(limit);
     }
@@ -111,7 +111,7 @@ class SpaceLocationTest {
     void validateKakaoPlace(String id, String url) {
         // given: 최종 장소 값
         // when & then
-        assertThatThrownBy(() -> new SpaceLocation("전시장", id, url)).isInstanceOf(BaseException.class);
+        assertThatThrownBy(() -> new SpacePlace("전시장", id, url)).isInstanceOf(BaseException.class);
     }
 
     static Stream<Arguments> invalidKakaoPlaces() {

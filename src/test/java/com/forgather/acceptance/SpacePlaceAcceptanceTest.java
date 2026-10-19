@@ -23,7 +23,7 @@ import io.restassured.module.mockmvc.RestAssuredMockMvc;
 
 @DisplayName("인수 테스트: 스페이스 장소 HTTP 계약")
 @AutoConfigureMockMvc
-class SpaceLocationAcceptanceTest extends AcceptanceTest {
+class SpacePlaceAcceptanceTest extends AcceptanceTest {
 
     private static final String PLACE_URL = "https://place.map.kakao.com/00123";
     private static final String FULL_LOCATION = """
