@@ -467,7 +467,8 @@ class SpaceServiceTest extends TestOnContainer {
 
     @DisplayName("장소 전체 정보 또는 장소명만 입력하면 생성한 스페이스에 저장된다")
     @ParameterizedTest
-    @CsvSource({"전시관, 00123, https://place.map.kakao.com/00123", "전시관,'',''"})
+    @CsvSource({"전시관, 00123, https://place.map.kakao.com/00123",
+        "전시관, 00123, http://place.map.kakao.com/00123", "전시관,'',''"})
     void createSpacePersistsPlace(String placeName, String placeId, String placeUrl) {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
@@ -516,7 +517,8 @@ class SpaceServiceTest extends TestOnContainer {
 
     @DisplayName("장소가 없는 스페이스에 전체 장소 또는 장소명만 수정해 저장한다")
     @ParameterizedTest
-    @CsvSource({"전시관, 00123, https://place.map.kakao.com/00123", "전시관,'',''"})
+    @CsvSource({"전시관, 00123, https://place.map.kakao.com/00123",
+        "전시관, 00123, http://place.map.kakao.com/00123", "전시관,'',''"})
     void updateSpaceAddsPlace(String placeName, String placeId, String placeUrl) {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
