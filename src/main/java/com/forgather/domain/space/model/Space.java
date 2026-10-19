@@ -61,6 +61,9 @@ public class Space extends SoftDeleteEntity {
     @Embedded
     private SpaceExhibitionPeriod exhibitionPeriod;
 
+    @Embedded
+    private SpaceLocation location;
+
     /**
      * 호스트가 지정한 '지금 축하받고 있는 스페이스'인지 여부.
      */
@@ -69,7 +72,8 @@ public class Space extends SoftDeleteEntity {
 
     /**
      * 스페이스를 생성한다.
-     * 필수값은 스페이스 이름뿐이며, 문자열 선택 값은 생략하면 빈 문자열로 저장한다.
+     * 코드와 이름은 필수이며, 설명과 소개 링크는 생략하면 빈 문자열로 저장한다.
+     * 장소 정보는 생략하면 빈 문자열로 저장한다.
      *
      * @param code        스페이스 코드 (필수, 10자)
      * @param name        스페이스 이름 (필수, 최대 30자)
@@ -77,12 +81,18 @@ public class Space extends SoftDeleteEntity {
      * @param isPublic    스페이스 공개 여부 (선택, 기본 false)
      * @param linkUrl     소개 링크 URL (선택, 최대 2048자)
      * @param linkName    소개 링크 표시 이름 (선택, 최대 30자, 링크 URL이 있을 때만 입력 가능)
+     * @param exhibitionStartDate 전시 시작일 (종료일과 함께 입력)
+     * @param exhibitionEndDate 전시 종료일 (시작일과 함께 입력)
+     * @param locationName 장소명 (선택, 최대 50자)
+     * @param kakaoPlaceId 카카오 장소 ID (선택, 장소명과 URL이 있을 때만 입력 가능)
+     * @param kakaoPlaceUrl 카카오 장소 URL (선택, 장소명과 ID가 있을 때만 입력 가능)
      */
     public Space(String code, String name, String description, boolean isPublic, String linkUrl, String linkName,
-        LocalDate exhibitionStartDate, LocalDate exhibitionEndDate) {
+        LocalDate exhibitionStartDate, LocalDate exhibitionEndDate,
+        String locationName, String kakaoPlaceId, String kakaoPlaceUrl) {
         SpaceExhibitionPeriod newExhibitionPeriod = createExhibitionPeriod(exhibitionStartDate, exhibitionEndDate);
         validateRequiredFields(code, name);
-        // 이 도메인은 '값 없음'을 NULL이 아니라 빈 문자열로 표현한다. 검증 전에 먼저 정규화한다.
+        // 설명과 소개 링크의 '값 없음'은 빈 문자열로 표현한다. 검증 전에 먼저 정규화한다.
         String newDescription = convertBlankToEmptyString(description);
         String newLinkUrl = convertBlankToEmptyString(linkUrl);
         String newLinkName = convertBlankToEmptyString(linkName);
@@ -98,6 +108,23 @@ public class Space extends SoftDeleteEntity {
         this.linkUrl = newLinkUrl;
         this.linkName = newLinkName;
         this.exhibitionPeriod = newExhibitionPeriod;
+        this.location = new SpaceLocation(locationName, kakaoPlaceId, kakaoPlaceUrl);
+    }
+
+    public void updateLocation(String locationName, String kakaoPlaceId, String kakaoPlaceUrl) {
+        this.location = new SpaceLocation(locationName, kakaoPlaceId, kakaoPlaceUrl);
+    }
+
+    public String getLocationName() {
+        return location.getLocationName();
+    }
+
+    public String getKakaoPlaceId() {
+        return location.getKakaoPlaceId();
+    }
+
+    public String getKakaoPlaceUrl() {
+        return location.getKakaoPlaceUrl();
     }
 
     private void validateRequiredFields(String code, String name) {

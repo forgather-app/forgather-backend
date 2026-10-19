@@ -94,6 +94,7 @@ public class SpaceService {
         space.update(request.name(), request.description(), request.isPublic(), request.linkUrl(),
             request.linkName());
         updateExhibitionPeriod(request, space);
+        updateLocation(request, space);
 
         return createSpaceResponse(space, host);
     }
@@ -108,6 +109,26 @@ public class SpaceService {
         if (startDate != null || endDate != null || isDeleteExhibitionPeriod) {
             space.updateExhibitionPeriod(startDate, endDate);
         }
+    }
+
+    private void updateLocation(UpdateSpaceRequest request, Space space) {
+        if (request.locationName() != null || request.kakaoPlaceId() != null || request.kakaoPlaceUrl() != null) {
+            space.updateLocation(
+                getUpdatedLocationValue(request.locationName(), space.getLocationName()),
+                getUpdatedLocationValue(request.kakaoPlaceId(), space.getKakaoPlaceId()),
+                getUpdatedLocationValue(request.kakaoPlaceUrl(), space.getKakaoPlaceUrl())
+            );
+        }
+    }
+
+    private String getUpdatedLocationValue(String requestedValue, String currentValue) {
+        if (requestedValue == null) {
+            return currentValue;
+        }
+        if (requestedValue.isBlank()) {
+            return "";
+        }
+        return requestedValue;
     }
 
     private SpaceResponse createSpaceResponse(Space space, Host viewer) {

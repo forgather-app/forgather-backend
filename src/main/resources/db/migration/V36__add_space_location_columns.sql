@@ -1,0 +1,4 @@
+ALTER TABLE `space`
+    ADD COLUMN `location_name` VARCHAR(500) NOT NULL DEFAULT '',
+    ADD COLUMN `kakao_place_id` VARCHAR(255) NOT NULL DEFAULT '',
+    ADD COLUMN `kakao_place_url` VARCHAR(2048) NOT NULL DEFAULT '';
