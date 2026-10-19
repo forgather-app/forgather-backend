@@ -81,6 +81,7 @@ auth:
     email: test@forgather.app
 
 kakao:
+  rest-api-key: test-kakao-rest-api-key
   native-app-key: test-kakao-native-app-key
   issuer: https://kauth.kakao.com
   jwks-url: http://localhost/kakao/.well-known/jwks.json
