@@ -71,14 +71,25 @@ class ClientVersionInterceptorTest {
             .isInstanceOf(UpgradeRequiredException.class);
     }
 
-    @DisplayName("앱 버전이 없거나 형식이 올바르지 않거나 최소 지원 버전 미만이면 차단한다.")
+    @DisplayName("앱 버전 형식이 올바르지 않으면 차단한다.")
     @ParameterizedTest
-    @ValueSource(strings = {"", "abc", "1.2", "1.1.9"})
-    void unsupportedAppVersionIsBlocked(String appVersion) {
+    @ValueSource(strings = {"", "abc", "1.2"})
+    void malformedAppVersionIsBlocked(String appVersion) {
         MockHttpServletRequest request = createRequest("IOS", appVersion);
 
         assertThatThrownBy(() -> enabledInterceptor().preHandle(request, response, handlerMethod))
-            .isInstanceOf(UpgradeRequiredException.class);
+            .isInstanceOf(UpgradeRequiredException.class)
+            .hasMessageContaining("형식");
+    }
+
+    @DisplayName("최소 지원 버전 미만인 앱 요청은 차단한다.")
+    @Test
+    void lowerAppVersionIsBlocked() {
+        MockHttpServletRequest request = createRequest("IOS", "1.1.9");
+
+        assertThatThrownBy(() -> enabledInterceptor().preHandle(request, response, handlerMethod))
+            .isInstanceOf(UpgradeRequiredException.class)
+            .hasMessageContaining(IOS_MINIMUM_VERSION);
     }
 
     @DisplayName("앱 버전 헤더가 없으면 차단한다.")
@@ -87,7 +98,8 @@ class ClientVersionInterceptorTest {
         MockHttpServletRequest request = createRequest("ANDROID", null);
 
         assertThatThrownBy(() -> enabledInterceptor().preHandle(request, response, handlerMethod))
-            .isInstanceOf(UpgradeRequiredException.class);
+            .isInstanceOf(UpgradeRequiredException.class)
+            .hasMessageContaining("헤더가 없습니다");
     }
 
     @DisplayName("CORS preflight 요청은 검증하지 않는다.")
@@ -123,7 +135,19 @@ class ClientVersionInterceptorTest {
 
         assertThatThrownBy(() -> new ClientVersionInterceptor(properties))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining("android");
+            .hasMessageContaining("android")
+            .hasMessageContaining("형식");
+    }
+
+    @DisplayName("최소 지원 버전 설정이 없으면 생성에 실패한다.")
+    @Test
+    void missingMinimumVersionFailsCreation() {
+        ClientVersionProperties properties = createProperties(true, "1.2.0", null);
+
+        assertThatThrownBy(() -> new ClientVersionInterceptor(properties))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("android")
+            .hasMessageContaining("설정이 없습니다");
     }
 
     private ClientVersionInterceptor enabledInterceptor() {

@@ -31,6 +31,11 @@ public class ClientVersionInterceptor implements HandlerInterceptor {
 
     // 잘못된 설정값으로 모든 앱 요청이 차단되지 않도록 애플리케이션 기동 시점에 실패시킨다
     private AppVersion parseMinimumVersion(String platform, String value) {
+        if (value == null) {
+            throw new IllegalStateException(
+                "client-version.minimum-app-version.%s 설정이 없습니다.".formatted(platform)
+            );
+        }
         return AppVersion.parse(value)
             .orElseThrow(() -> new IllegalStateException(
                 "client-version.minimum-app-version.%s 형식이 올바르지 않습니다. value: %s".formatted(platform, value)
@@ -59,12 +64,16 @@ public class ClientVersionInterceptor implements HandlerInterceptor {
     }
 
     private void validateAppVersion(AppVersion minimumVersion, String appVersionHeader) {
-        boolean isSupported = AppVersion.parse(appVersionHeader)
-            .map(appVersion -> !appVersion.isLowerThan(minimumVersion))
-            .orElse(false);
-        if (!isSupported) {
+        if (appVersionHeader == null) {
+            throw new UpgradeRequiredException("앱 업데이트가 필요합니다. 앱 버전 헤더가 없습니다.");
+        }
+        AppVersion appVersion = AppVersion.parse(appVersionHeader)
+            .orElseThrow(() -> new UpgradeRequiredException(
+                "앱 업데이트가 필요합니다. 앱 버전 형식이 올바르지 않습니다. 요청 버전: " + appVersionHeader
+            ));
+        if (appVersion.isLowerThan(minimumVersion)) {
             throw new UpgradeRequiredException(
-                "앱 업데이트가 필요합니다. 최소 지원 버전: %s, 요청 버전: %s".formatted(minimumVersion, appVersionHeader)
+                "앱 업데이트가 필요합니다. 최소 지원 버전: %s, 요청 버전: %s".formatted(minimumVersion, appVersion)
             );
         }
     }
