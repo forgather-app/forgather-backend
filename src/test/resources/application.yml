@@ -57,6 +57,12 @@ cors:
   allow-credentials: true
   max-age: 999999
 
+client-version:
+  enabled: false
+  minimum-app-version:
+    ios: 1.0.0
+    android: 1.0.0
+
 api:
   base-url: http://localhost:8080
 
