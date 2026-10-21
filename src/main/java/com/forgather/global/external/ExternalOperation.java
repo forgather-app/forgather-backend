@@ -16,6 +16,8 @@ public enum ExternalOperation {
 
     KAKAO_UNLINK(ExternalService.KAKAO, "unlink", true),
 
+    KAKAO_PLACE_SEARCH(ExternalService.KAKAO, "place-search", true),
+
     APPLE_JWKS(ExternalService.APPLE, "jwks", true),
 
     KAKAO_JWKS(ExternalService.KAKAO, "jwks", true),

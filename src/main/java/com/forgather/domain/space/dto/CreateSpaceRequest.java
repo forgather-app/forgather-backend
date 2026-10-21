@@ -51,11 +51,40 @@ public record CreateSpaceRequest(
 
     @Schema(description = "전시 종료일 (시작일과 함께 입력)", example = "2026-10-31", nullable = true)
     @JsonFormat(pattern = "uuuu-MM-dd", lenient = OptBoolean.FALSE)
-    LocalDate exhibitionEndDate
+    LocalDate exhibitionEndDate,
+
+    @Schema(
+        description = "장소명 (선택, 최대 50자, 장소명만 입력 가능). 생성 시 null, 빈 문자열, 공백만 있는 값은 빈 문자열로 저장. 값이 있는 문자열의 앞뒤 공백은 보존",
+        example = "포게더 전시관",
+        maxLength = 50,
+        nullable = true,
+        requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    String placeName,
+
+    @Schema(
+        description = "장소 ID (선택, 숫자 문자열, 장소명 필수, URL과 쌍으로 입력). 생성 시 null, 빈 문자열, 공백만 있는 값은 빈 문자열로 저장",
+        example = "123456789",
+        maxLength = 255,
+        nullable = true,
+        requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    String placeId,
+
+    @Schema(
+        description = "장소 URL (선택, 장소명 필수, ID와 쌍으로 입력). "
+            + "http://place.map.kakao.com/ + ID 또는 https://place.map.kakao.com/ + ID와 정확히 일치해야 함. "
+            + "입력한 URL은 변환 없이 저장. 생성 시 null, 빈 문자열, 공백만 있는 값은 빈 문자열로 저장",
+        example = "https://place.map.kakao.com/123456789",
+        maxLength = 2048,
+        nullable = true,
+        requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    )
+    String placeUrl
 ) {
 
     public Space toEntity(String spaceCode) {
         return new Space(spaceCode, name, description, isPublic, linkUrl, linkName,
-            exhibitionStartDate, exhibitionEndDate);
+            exhibitionStartDate, exhibitionEndDate, placeName, placeId, placeUrl);
     }
 }

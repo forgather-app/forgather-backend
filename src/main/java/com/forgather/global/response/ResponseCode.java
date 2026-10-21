@@ -30,6 +30,9 @@ public enum ResponseCode {
     // 외부 서비스 응답
     EXTERNAL_API_UNAVAILABLE,
 
+    // 클라이언트 버전 응답
+    UPGRADE_REQUIRED,
+
     // 서버 오류 응답
     INTERNAL_ERROR,
     ;

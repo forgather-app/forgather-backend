@@ -279,6 +279,7 @@ public class GlobalExceptionHandler {
             case CONFLICT -> ResponseCode.CONFLICT;
             case PAYLOAD_TOO_LARGE -> ResponseCode.PAYLOAD_TOO_LARGE;
             case UNSUPPORTED_MEDIA_TYPE -> ResponseCode.UNSUPPORTED_MEDIA_TYPE;
+            case UPGRADE_REQUIRED -> ResponseCode.UPGRADE_REQUIRED;
             default -> ResponseCode.BAD_REQUEST;
         };
     }

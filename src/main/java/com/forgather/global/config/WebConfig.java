@@ -17,6 +17,7 @@ import com.forgather.back_office.interceptor.AdminAuthInterceptor;
 import com.forgather.back_office.interceptor.LoginPageRedirectInterceptor;
 import com.forgather.back_office.resolver.LoginAdminUserArgumentResolver;
 import com.forgather.global.auth.resolver.LoginHostArgumentResolver;
+import com.forgather.global.client.ClientVersionInterceptor;
 import com.forgather.global.converter.MultipartJsonConverter;
 import com.forgather.global.logging.LoggingInterceptor;
 
@@ -28,6 +29,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     private final CorsProperties corsProperties;
     private final LoggingInterceptor loggingInterceptor;
+    private final ClientVersionInterceptor clientVersionInterceptor;
     private final AdminAuthInterceptor adminAuthInterceptor;
     private final LoginPageRedirectInterceptor loginPageRedirectInterceptor;
     private final LoginHostArgumentResolver loginHostArgumentResolver;
@@ -59,12 +61,27 @@ public class WebConfig implements WebMvcConfigurer {
             .order(1)
             .excludePathPatterns("/swagger-ui/**", "/v3/api-docs/**", "/css/**", "/js/**");
 
-        registry.addInterceptor(loginPageRedirectInterceptor)
+        // traceId가 담긴 로그를 남기기 위해 LoggingInterceptor 다음에 실행한다
+        registry.addInterceptor(clientVersionInterceptor)
             .order(2)
+            .addPathPatterns("/**")
+            .excludePathPatterns(
+                "/admin/**",
+                "/view/admin/**",
+                "/swagger-ui/**",
+                "/v3/api-docs/**",
+                "/actuator/**",
+                "/css/**",
+                "/js/**",
+                "/error"
+            );
+
+        registry.addInterceptor(loginPageRedirectInterceptor)
+            .order(3)
             .addPathPatterns("/view/admin/login");
 
         registry.addInterceptor(adminAuthInterceptor)
-            .order(3)
+            .order(4)
             .addPathPatterns("/view/admin/**", "/admin/**")
             .excludePathPatterns(
                 "/view/admin/login",
