@@ -2,6 +2,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 
 TRUNCATE TABLE host_term_history;
 TRUNCATE TABLE term;
+TRUNCATE TABLE notice;
 TRUNCATE TABLE guest_book_report;
 TRUNCATE TABLE guest_book_card_photo;
 TRUNCATE TABLE product_photo;
