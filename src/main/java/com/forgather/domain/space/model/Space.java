@@ -179,7 +179,7 @@ public class Space extends SoftDeleteEntity {
         SpaceExhibitionPeriod newPeriod = createExhibitionPeriod(startDate, endDate);
         GuestBookWritingPolicy newPolicy = policy == null ? this.guestBookWritingPolicy : policy;
         validateGuestBookWritingPolicy(newPolicy, newPeriod);
-        this.exhibitionPeriod = newPeriod;
+        exhibitionPeriod = newPeriod;
         this.guestBookWritingPolicy = newPolicy;
     }
 
