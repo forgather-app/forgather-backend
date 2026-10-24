@@ -25,11 +25,13 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 
 import com.forgather.container.TestOnContainer;
 
 @ActiveProfiles({"test", "outbox-state-test"})
 @SpringBootTest(classes = OutboxStateServiceTest.Config.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@Sql(scripts = "/cleanup.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 class OutboxStateServiceTest extends TestOnContainer {
 
     @Profile("outbox-state-test")
