@@ -59,8 +59,23 @@ public class OutboxService {
                 continue;
             }
 
+            OutboxTaskResult result;
             try {
-                OutboxTaskResult result = handler.process(outbox);
+                result = handler.process(outbox);
+            } catch (Exception e) {
+                log.warn("outbox 처리 실패. outboxId: {}, type: {}", outbox.getId(), outbox.getType(), e);
+                failedCount++;
+                try {
+                    if (!outboxStateService.retry(outbox.getId(), handler.getMaxFailCount())) {
+                        log.warn("재시도할 PROCESSING outbox가 없습니다. outboxId: {}", outbox.getId());
+                    }
+                } catch (Exception stateException) {
+                    log.error("outbox 실패 기록 중 오류가 발생했습니다. outboxId: {}", outbox.getId(), stateException);
+                }
+                continue;
+            }
+
+            try {
                 boolean updated = switch (result) {
                     case COMPLETED -> outboxStateService.complete(outbox.getId());
                     case CANCELED -> outboxStateService.cancel(outbox.getId());
@@ -76,15 +91,7 @@ public class OutboxService {
                     case FAILED -> failedCount++;
                 }
             } catch (Exception e) {
-                log.warn("outbox 처리 실패. outboxId: {}, type: {}", outbox.getId(), outbox.getType(), e);
-                failedCount++;
-                try {
-                    if (!outboxStateService.retry(outbox.getId(), handler.getMaxFailCount())) {
-                        log.warn("재시도할 PROCESSING outbox가 없습니다. outboxId: {}", outbox.getId());
-                    }
-                } catch (Exception stateException) {
-                    log.error("outbox 실패 기록 중 오류가 발생했습니다. outboxId: {}", outbox.getId(), stateException);
-                }
+                log.error("outbox 상태 변경 실패. outboxId: {}", outbox.getId(), e);
             }
         }
         return new OutboxProcessResult(succeededCount, failedCount, canceledCount);
