@@ -90,4 +90,40 @@ class SpaceExhibitionPeriodTest {
         // when & then
         assertThat(period).isNotEqualTo(other);
     }
+
+    @DisplayName("시작일과 종료일을 포함한 날짜에 전시가 진행 중이다")
+    @CsvSource({
+        "2026-10-19, false",
+        "2026-10-20, true",
+        "2026-10-22, true",
+        "2026-10-24, true",
+        "2026-10-25, false"
+    })
+    @ParameterizedTest
+    void checksOngoingIncludingBoundaries(LocalDate date, boolean expected) {
+        // given
+        SpaceExhibitionPeriod period = new SpaceExhibitionPeriod(
+            LocalDate.of(2026, 10, 20), LocalDate.of(2026, 10, 24));
+
+        // when
+        boolean result = period.isOngoing(date);
+
+        // then
+        assertThat(result).isEqualTo(expected);
+    }
+
+    @DisplayName("하루 전시는 해당 날짜에만 진행 중이다")
+    @CsvSource({"2026-10-21, false", "2026-10-22, true", "2026-10-23, false"})
+    @ParameterizedTest
+    void checksSingleDayExhibition(LocalDate date, boolean expected) {
+        // given
+        LocalDate exhibitionDate = LocalDate.of(2026, 10, 22);
+        SpaceExhibitionPeriod period = new SpaceExhibitionPeriod(exhibitionDate, exhibitionDate);
+
+        // when
+        boolean result = period.isOngoing(date);
+
+        // then
+        assertThat(result).isEqualTo(expected);
+    }
 }
