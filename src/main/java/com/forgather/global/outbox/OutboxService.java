@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.forgather.global.exception.BaseException;
+import com.forgather.global.external.exception.ExternalApiException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -66,8 +67,14 @@ public class OutboxService {
                 log.warn("outbox 처리 실패. outboxId: {}, type: {}", outbox.getId(), outbox.getType(), e);
                 failedCount++;
                 try {
-                    if (!outboxStateService.retry(outbox.getId(), handler.getMaxFailCount())) {
-                        log.warn("재시도할 PROCESSING outbox가 없습니다. outboxId: {}", outbox.getId());
+                    boolean isUpdated;
+                    if (e instanceof ExternalApiException externalException && !externalException.isRetryable()) {
+                        isUpdated = outboxStateService.fail(outbox.getId());
+                    } else {
+                        isUpdated = outboxStateService.retry(outbox.getId(), handler.getMaxFailCount());
+                    }
+                    if (!isUpdated) {
+                        log.warn("실패를 기록할 PROCESSING outbox가 없습니다. outboxId: {}", outbox.getId());
                     }
                 } catch (Exception stateException) {
                     log.error("outbox 실패 기록 중 오류가 발생했습니다. outboxId: {}", outbox.getId(), stateException);
