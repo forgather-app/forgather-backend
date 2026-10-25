@@ -19,12 +19,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.forgather.global.external.ExternalOperation;
+import com.forgather.global.external.exception.ExternalApiException;
+import com.forgather.global.external.exception.ExternalFailureType;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -106,7 +110,54 @@ class OutboxServiceFailureTest {
         );
     }
 
-    @DisplayName("핸들러 실행 실패는 기존대로 재시도 처리하고 다음 작업을 계속 실행한다")
+    @DisplayName("재시도 불가능한 외부 API 오류는 즉시 실패 처리하고 다음 작업을 계속 실행한다")
+    @ParameterizedTest
+    @EnumSource(value = ExternalFailureType.class, names = {"CALLER_ERROR", "MALFORMED_RESPONSE", "AUTH_REJECTED"})
+    void failsNonRetryableExternalFailure(ExternalFailureType type) {
+        // given
+        when(handler.process(first)).thenThrow(new ExternalApiException(ExternalOperation.KAKAO_UNLINK, type, "외부 호출 실패"));
+        when(handler.process(second)).thenReturn(OutboxTaskResult.COMPLETED);
+        when(stateService.fail(1L)).thenReturn(true);
+        when(stateService.complete(2L)).thenReturn(true);
+
+        // when
+        OutboxProcessResult result = service.process();
+
+        // then
+        assertAll(
+            () -> assertThat(result).isEqualTo(new OutboxProcessResult(1, 1, 0)),
+            () -> verify(stateService).fail(1L),
+            () -> verify(stateService, never()).retry(anyLong(), anyInt()),
+            () -> verify(handler).process(second)
+        );
+    }
+
+    @DisplayName("재시도 가능한 외부 API 오류는 재시도 처리하고 다음 작업을 계속 실행한다")
+    @ParameterizedTest
+    @EnumSource(value = ExternalFailureType.class, names = {
+        "RATE_LIMITED", "UPSTREAM_ERROR", "CONNECT_TIMEOUT", "READ_TIMEOUT", "CONNECTION_FAILED"
+    })
+    void retriesRetryableExternalFailure(ExternalFailureType type) {
+        // given
+        when(handler.process(first)).thenThrow(new ExternalApiException(ExternalOperation.KAKAO_UNLINK, type, "외부 호출 실패"));
+        when(handler.process(second)).thenReturn(OutboxTaskResult.COMPLETED);
+        when(handler.getMaxFailCount()).thenReturn(5);
+        when(stateService.retry(1L, 5)).thenReturn(true);
+        when(stateService.complete(2L)).thenReturn(true);
+
+        // when
+        OutboxProcessResult result = service.process();
+
+        // then
+        assertAll(
+            () -> assertThat(result).isEqualTo(new OutboxProcessResult(1, 1, 0)),
+            () -> verify(stateService).retry(1L, 5),
+            () -> verify(stateService, never()).fail(anyLong()),
+            () -> verify(handler).process(second)
+        );
+    }
+
+    @DisplayName("분류되지 않은 핸들러 실행 실패는 기존대로 재시도 처리하고 다음 작업을 계속 실행한다")
     @Test
     void retriesHandlerFailure() {
         // given
