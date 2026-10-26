@@ -1,26 +1,32 @@
 package com.forgather.fixture;
 
+import com.forgather.domain.space.model.GuestBookWritingPolicy;
 import com.forgather.domain.space.model.Space;
 
 public class SpaceFixture {
 
     public static Space createSpace() {
-        return new Space("1234567890", "name", "description", true, "", "", null, null, null, null, null);
+        return new Space("1234567890", "name", "description", true, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
     }
 
     public static Space createPrivateSpace() {
-        return new Space("0987654321", "name", "description", false, "", "", null, null, null, null, null);
+        return new Space("0987654321", "name", "description", false, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
     }
 
     public static Space createSpaceWithCode(String code) {
-        return new Space(code, "name", "description", true, "", "", null, null, null, null, null);
+        return new Space(code, "name", "description", true, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
     }
 
     public static Space createSpaceWithCodeAndName(String code, String name) {
-        return new Space(code, name, "description", true, "", "", null, null, null, null, null);
+        return new Space(code, name, "description", true, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
     }
 
     public static Space createSpaceWithLink(String linkUrl, String linkName) {
-        return new Space("1234567890", "name", "description", true, linkUrl, linkName, null, null, null, null, null);
+        return new Space("1234567890", "name", "description", true, linkUrl, linkName, null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
     }
 }

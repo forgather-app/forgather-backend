@@ -1,5 +1,7 @@
 package com.forgather.global.outbox;
 
+import java.time.LocalDateTime;
+
 import com.forgather.domain.model.BaseTimeEntity;
 
 import jakarta.persistence.Column;
@@ -38,6 +40,9 @@ public class Outbox extends BaseTimeEntity {
     @Column(name = "fail_count", nullable = false)
     private int failCount;
 
+    @Column(name = "lease_expires_at")
+    private LocalDateTime leaseExpiresAt;
+
     public Outbox(OutboxType type, OutboxStatus status, String payload, int failCount) {
         this.type = type;
         this.status = status;
@@ -47,15 +52,5 @@ public class Outbox extends BaseTimeEntity {
 
     public static Outbox pending(OutboxType type, String payload) {
         return new Outbox(type, OutboxStatus.PENDING, payload, 0);
-    }
-
-    public void complete() {
-        payload = null;
-        status = OutboxStatus.COMPLETED;
-    }
-
-    public void fail() {
-        failCount++;
-        status = OutboxStatus.FAILED;
     }
 }
