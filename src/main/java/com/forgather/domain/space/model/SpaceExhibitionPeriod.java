@@ -35,6 +35,10 @@ public class SpaceExhibitionPeriod {
         this.endDate = endDate;
     }
 
+    public boolean isOngoing(LocalDate date) {
+        return !date.isBefore(startDate) && !date.isAfter(endDate);
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) {

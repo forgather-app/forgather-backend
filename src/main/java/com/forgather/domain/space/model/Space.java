@@ -14,6 +14,8 @@ import com.forgather.global.util.TextLengthCounter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -26,6 +28,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Space extends SoftDeleteEntity {
 
+    private static final GuestBookWritingPolicy DEFAULT_GUEST_BOOK_WRITING_POLICY = GuestBookWritingPolicy.ALWAYS;
     private static final int CODE_LENGTH = 10;
     private static final int MAX_NAME_LENGTH = 30;
     private static final int MAX_DESCRIPTION_LENGTH = 500;
@@ -61,6 +64,10 @@ public class Space extends SoftDeleteEntity {
     @Embedded
     private SpaceExhibitionPeriod exhibitionPeriod;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "guest_book_writing_policy", nullable = false, length = 32)
+    private GuestBookWritingPolicy guestBookWritingPolicy = DEFAULT_GUEST_BOOK_WRITING_POLICY;
+
     @Embedded
     private SpacePlace place;
 
@@ -86,11 +93,15 @@ public class Space extends SoftDeleteEntity {
      * @param placeName 장소명 (선택, 최대 50자)
      * @param placeId 장소 ID (선택, 장소명과 URL이 있을 때만 입력 가능)
      * @param placeUrl 장소 URL (선택, 장소명과 ID가 있을 때만 입력 가능)
+     * @param guestBookWritingPolicy 방명록 작성 정책 (null이면 항상 허용)
      */
     public Space(String code, String name, String description, boolean isPublic, String linkUrl, String linkName,
         LocalDate exhibitionStartDate, LocalDate exhibitionEndDate,
-        String placeName, String placeId, String placeUrl) {
+        String placeName, String placeId, String placeUrl, GuestBookWritingPolicy guestBookWritingPolicy) {
         SpaceExhibitionPeriod newExhibitionPeriod = createExhibitionPeriod(exhibitionStartDate, exhibitionEndDate);
+        GuestBookWritingPolicy newPolicy = guestBookWritingPolicy == null
+            ? DEFAULT_GUEST_BOOK_WRITING_POLICY : guestBookWritingPolicy;
+        validateGuestBookWritingPolicy(newPolicy, newExhibitionPeriod);
         validateRequiredFields(code, name);
         // 설명과 소개 링크의 '값 없음'은 빈 문자열로 표현한다. 검증 전에 먼저 정규화한다.
         String newDescription = convertBlankToEmptyString(description);
@@ -108,6 +119,7 @@ public class Space extends SoftDeleteEntity {
         this.linkUrl = newLinkUrl;
         this.linkName = newLinkName;
         this.exhibitionPeriod = newExhibitionPeriod;
+        this.guestBookWritingPolicy = newPolicy;
         this.place = new SpacePlace(placeName, placeId, placeUrl);
     }
 
@@ -162,8 +174,29 @@ public class Space extends SoftDeleteEntity {
         this.linkName = newLinkName;
     }
 
-    public void updateExhibitionPeriod(LocalDate startDate, LocalDate endDate) {
-        this.exhibitionPeriod = createExhibitionPeriod(startDate, endDate);
+    public void updateExhibitionPeriodAndGuestBookWritingPolicy(LocalDate startDate, LocalDate endDate,
+        GuestBookWritingPolicy policy) {
+        SpaceExhibitionPeriod newPeriod = createExhibitionPeriod(startDate, endDate);
+        GuestBookWritingPolicy newPolicy = policy == null ? this.guestBookWritingPolicy : policy;
+        validateGuestBookWritingPolicy(newPolicy, newPeriod);
+        exhibitionPeriod = newPeriod;
+        this.guestBookWritingPolicy = newPolicy;
+    }
+
+    private void validateGuestBookWritingPolicy(GuestBookWritingPolicy policy, SpaceExhibitionPeriod period) {
+        if (policy == GuestBookWritingPolicy.EXHIBITION_PERIOD && period == null) {
+            throw new BaseException("전시 기간 제한 정책에는 전시 기간이 필요합니다. policy: " + policy);
+        }
+    }
+
+    public void validateGuestBookWriting(LocalDate date) {
+        if (!isGuestBookWritable(date)) {
+            throw new BaseException("전시 기간에만 방명록을 작성할 수 있습니다. spaceCode: " + code + ", date: " + date);
+        }
+    }
+
+    public boolean isGuestBookWritable(LocalDate date) {
+        return this.guestBookWritingPolicy.isWritable(exhibitionPeriod, date);
     }
 
     private SpaceExhibitionPeriod createExhibitionPeriod(LocalDate startDate, LocalDate endDate) {
