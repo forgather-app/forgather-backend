@@ -26,6 +26,50 @@ class NoticeTest {
             .satisfies(exception -> assertThat(((BaseException) exception).getStatusCode()).isEqualTo(400));
     }
 
+    @DisplayName("유효하지 않은 수정은 제목과 본문을 모두 원래 값으로 보존한다")
+    @ParameterizedTest(name = "[{index}]")
+    @MethodSource("invalidUpdates")
+    void rejectInvalidUpdateWithoutChangingNotice(String title, String body) {
+        // given
+        Notice notice = new Notice("원래 제목", "원래 본문");
+
+        // when
+        assertThatThrownBy(() -> notice.update(title, body))
+            .isInstanceOf(BaseException.class)
+            .satisfies(exception -> assertThat(((BaseException) exception).getStatusCode()).isEqualTo(400));
+
+        // then
+        assertThat(notice.getTitle()).isEqualTo("원래 제목");
+        assertThat(notice.getBody()).isEqualTo("원래 본문");
+    }
+
+    @DisplayName("공지 수정에서 null인 필드는 유지하고 전달한 필드만 변경한다")
+    @ParameterizedTest(name = "[{index}]")
+    @MethodSource("partialUpdates")
+    void updateOnlyProvidedFields(String title, String body, String expectedTitle, String expectedBody) {
+        // given
+        Notice notice = new Notice("원래 제목", "원래 본문");
+
+        // when
+        notice.update(title, body);
+
+        // then
+        assertThat(notice.getTitle()).isEqualTo(expectedTitle);
+        assertThat(notice.getBody()).isEqualTo(expectedBody);
+    }
+
+    static Stream<Arguments> partialUpdates() {
+        return Stream.of(
+            Arguments.of("새 제목", null, "새 제목", "원래 본문"),
+            Arguments.of(null, "새 본문", "원래 제목", "새 본문"),
+            Arguments.of(null, null, "원래 제목", "원래 본문")
+        );
+    }
+
+    static Stream<Arguments> invalidUpdates() {
+        return invalidNotices().filter(arguments -> arguments.get()[0] != null && arguments.get()[1] != null);
+    }
+
     static Stream<Arguments> invalidNotices() {
         return Stream.of(
             Arguments.of(null, "본문"), Arguments.of("", "본문"), Arguments.of(" \n\t", "본문"),
