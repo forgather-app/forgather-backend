@@ -87,8 +87,7 @@ class SpaceServiceTest extends TestOnContainer {
             null,
             null,
             null,
-            null
-        );
+            null, null);
 
         // when & then
         assertAll(
@@ -112,8 +111,7 @@ class SpaceServiceTest extends TestOnContainer {
             null,
             null,
             null,
-            null
-        );
+            null, null);
 
         // when
         CreateSpaceResponse response = spaceService.create(request, host);
@@ -473,7 +471,7 @@ class SpaceServiceTest extends TestOnContainer {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         CreateSpaceRequest request = new CreateSpaceRequest(
-            "전시", null, true, null, null, null, null, placeName, placeId, placeUrl);
+            "전시", null, true, null, null, null, null, placeName, placeId, placeUrl, null);
 
         // when
         CreateSpaceResponse response = spaceService.create(request, host);
@@ -490,7 +488,7 @@ class SpaceServiceTest extends TestOnContainer {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         CreateSpaceRequest request = new CreateSpaceRequest(
-            "전시", null, true, null, null, null, null, value, value, value);
+            "전시", null, true, null, null, null, null, value, value, value, null);
 
         // when
         CreateSpaceResponse response = spaceService.create(request, host);
@@ -524,7 +522,7 @@ class SpaceServiceTest extends TestOnContainer {
         Host host = hostRepository.save(HostFixture.createHost());
         Space space = saveSpaceOf(host, "1111111111");
         UpdateSpaceRequest request = new UpdateSpaceRequest(
-            null, null, null, null, null, null, null, null, placeName, placeId, placeUrl);
+            null, null, null, null, null, null, null, null, placeName, placeId, placeUrl, null);
 
         // when
         SpaceResponse response = spaceService.update(space.getCode(), request, host);
@@ -542,7 +540,7 @@ class SpaceServiceTest extends TestOnContainer {
         Space space = saveSpaceOf(host, "1111111111");
         space.updatePlace("전시관", "00123", "https://place.map.kakao.com/00123");
         UpdateSpaceRequest request = new UpdateSpaceRequest(
-            null, null, null, null, null, null, null, null, " 새 전시관 ", null, null);
+            null, null, null, null, null, null, null, null, " 새 전시관 ", null, null, null);
 
         // when
         spaceService.update(space.getCode(), request, host);
@@ -558,7 +556,7 @@ class SpaceServiceTest extends TestOnContainer {
         Host host = hostRepository.save(HostFixture.createHost());
         Space space = saveSpaceOf(host, "1111111111");
         space.updatePlace("전시관", "00123", "https://place.map.kakao.com/00123");
-        UpdateSpaceRequest request = new UpdateSpaceRequest("새 이름", null, null, null, null, null, null, null, null, null, null);
+        UpdateSpaceRequest request = new UpdateSpaceRequest("새 이름", null, null, null, null, null, null, null, null, null, null, null);
 
         // when
         spaceService.update(space.getCode(), request, host);
@@ -574,7 +572,7 @@ class SpaceServiceTest extends TestOnContainer {
         Host host = hostRepository.save(HostFixture.createHost());
         Space space = saveSpaceOf(host, "1111111111");
         space.updatePlace("전시관", "00123", "https://place.map.kakao.com/00123");
-        UpdateSpaceRequest request = new UpdateSpaceRequest(null, null, null, null, null, null, null, null, null, "", " ");
+        UpdateSpaceRequest request = new UpdateSpaceRequest(null, null, null, null, null, null, null, null, null, "", " ", null);
 
         // when
         spaceService.update(space.getCode(), request, host);
@@ -591,7 +589,7 @@ class SpaceServiceTest extends TestOnContainer {
         Host host = hostRepository.save(HostFixture.createHost());
         Space space = saveSpaceOf(host, "1111111111");
         space.updatePlace("전시관", "00123", "https://place.map.kakao.com/00123");
-        UpdateSpaceRequest request = new UpdateSpaceRequest(null, null, null, null, null, null, null, null, blank, blank, blank);
+        UpdateSpaceRequest request = new UpdateSpaceRequest(null, null, null, null, null, null, null, null, blank, blank, blank, null);
 
         // when
         SpaceResponse response = spaceService.update(space.getCode(), request, host);
@@ -608,7 +606,7 @@ class SpaceServiceTest extends TestOnContainer {
         Host host = hostRepository.save(HostFixture.createHost());
         Space space = saveSpaceOf(host, "1111111111");
         space.updatePlace("전시관", "00123", "https://place.map.kakao.com/00123");
-        UpdateSpaceRequest request = new UpdateSpaceRequest(null, null, null, null, null, null, null, null, null, "", null);
+        UpdateSpaceRequest request = new UpdateSpaceRequest(null, null, null, null, null, null, null, null, null, "", null, null);
 
         // when & then
         assertThatThrownBy(() -> spaceService.update(space.getCode(), request, host))
@@ -622,7 +620,7 @@ class SpaceServiceTest extends TestOnContainer {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         CreateSpaceRequest request = new CreateSpaceRequest(
-            "전시", null, true, null, null, null, null, "전시관", "123", "https://example.com/123");
+            "전시", null, true, null, null, null, null, "전시관", "123", "https://example.com/123", null);
 
         // when & then
         assertThatThrownBy(() -> spaceService.create(request, host)).isInstanceOf(BaseException.class);
@@ -636,7 +634,7 @@ class SpaceServiceTest extends TestOnContainer {
         Space space = saveSpaceOf(host, "1111111111");
         space.updatePlace("전시관", "00123", "https://place.map.kakao.com/00123");
         UpdateSpaceRequest request = new UpdateSpaceRequest(
-            null, null, null, null, null, null, null, null, null, "456", null);
+            null, null, null, null, null, null, null, null, null, "456", null, null);
 
         // when & then
         assertThatThrownBy(() -> spaceService.update(space.getCode(), request, host))
