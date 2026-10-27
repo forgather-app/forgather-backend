@@ -6,6 +6,7 @@ import org.hibernate.validator.constraints.URL;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.OptBoolean;
+import com.forgather.domain.space.model.GuestBookWritingPolicy;
 import com.forgather.global.validation.TextSize;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -79,6 +80,11 @@ public record UpdateSpaceRequest(
         nullable = true,
         requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
-    String placeUrl
+    String placeUrl,
+
+    @Schema(description = "방명록 작성 정책. ALWAYS는 항상 허용, EXHIBITION_PERIOD는 한국 날짜 기준 전시 기간에만 허용. "
+        + "기간 제한에는 전시 기간이 필요하며, 생략/null이면 기존 정책을 유지한다.",
+        example = "ALWAYS", nullable = true)
+    GuestBookWritingPolicy guestBookWritingPolicy
 ) {
 }

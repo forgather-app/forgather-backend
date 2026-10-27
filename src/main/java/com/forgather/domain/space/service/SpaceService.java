@@ -3,6 +3,7 @@ package com.forgather.domain.space.service;
 import static com.forgather.domain.guestbook.model.VisibilityStatus.VISIBLE;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -95,7 +96,7 @@ public class SpaceService {
         validateSpaceHost(space, host);
         space.update(request.name(), request.description(), request.isPublic(), request.linkUrl(),
             request.linkName());
-        updateExhibitionPeriod(request, space);
+        updateExhibitionPeriodAndGuestBookWritingPolicy(request, space);
         updatePlace(request, space);
 
         return createSpaceResponse(space, host);
@@ -104,13 +105,15 @@ public class SpaceService {
     /**
      * 전달 값이 있거나 삭제를 명시한 경우 update
      */
-    private static void updateExhibitionPeriod(UpdateSpaceRequest request, Space space) {
+    private static void updateExhibitionPeriodAndGuestBookWritingPolicy(UpdateSpaceRequest request, Space space) {
         LocalDate startDate = request.exhibitionStartDate();
         LocalDate endDate = request.exhibitionEndDate();
         boolean isDeleteExhibitionPeriod = Boolean.TRUE.equals(request.isDeleteExhibitionPeriod());
-        if (startDate != null || endDate != null || isDeleteExhibitionPeriod) {
-            space.updateExhibitionPeriod(startDate, endDate);
+        if (startDate == null && endDate == null && !isDeleteExhibitionPeriod) {
+            startDate = space.getExhibitionStartDate();
+            endDate = space.getExhibitionEndDate();
         }
+        space.updateExhibitionPeriodAndGuestBookWritingPolicy(startDate, endDate, request.guestBookWritingPolicy());
     }
 
     private void updatePlace(UpdateSpaceRequest request, Space space) {
@@ -138,7 +141,8 @@ public class SpaceService {
             space,
             findRepresentativePhoto(space),
             resolveGuestBookCardCount(space, viewer),
-            getHostInfo(space)
+            getHostInfo(space),
+            space.isGuestBookWritable(LocalDate.now(ZoneId.of("Asia/Seoul")))
         );
     }
 

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.forgather.domain.product.model.ProductPhoto;
+import com.forgather.domain.space.model.GuestBookWritingPolicy;
 import com.forgather.domain.space.model.Space;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -60,11 +61,19 @@ public record SpaceResponse(
     String placeId,
 
     @Schema(description = "장소 URL (장소 정보가 없으면 빈 문자열)", example = "https://place.map.kakao.com/123456789")
-    String placeUrl
+    String placeUrl,
+
+    @Schema(description = "방명록 작성 정책. ALWAYS: 항상 허용, EXHIBITION_PERIOD: 한국 날짜 기준 전시 기간에만 허용",
+        example = "ALWAYS")
+    GuestBookWritingPolicy guestBookWritingPolicy,
+
+    @Schema(description = "조회 시점의 정책과 한국 날짜 기준 방명록 작성 가능 여부. 실제 작성 요청에서도 재검증한다.",
+        example = "true")
+    boolean isGuestBookWritable
 ) {
 
     public static SpaceResponse from(Space space, ProductPhoto spacePhoto, Long guestBookCardCount,
-        SpaceHostInfoResponse host) {
+        SpaceHostInfoResponse host, boolean isGuestBookWritable) {
         return new SpaceResponse(
             space.getId(),
             space.getCode(),
@@ -81,7 +90,9 @@ public record SpaceResponse(
             host,
             space.getPlaceName(),
             space.getPlaceId(),
-            space.getPlaceUrl()
+            space.getPlaceUrl(),
+            space.getGuestBookWritingPolicy(),
+            isGuestBookWritable
         );
     }
 }
