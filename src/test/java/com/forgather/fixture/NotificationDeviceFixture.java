@@ -7,6 +7,7 @@ import com.forgather.domain.notification.model.NotificationDevice;
 public class NotificationDeviceFixture {
 
     public static final String TOKEN = "fcm-registration-token-0001";
+    public static final String OTHER_TOKEN = "fcm-registration-token-0002";
 
     public static NotificationDevice createDevice() {
         return createDeviceWithHost(HostFixture.createHost());
@@ -18,5 +19,9 @@ public class NotificationDeviceFixture {
 
     public static NotificationDevice createDeviceWithToken(String token) {
         return new NotificationDevice(HostFixture.createHost(), DevicePlatform.IOS, token);
+    }
+
+    public static NotificationDevice createDevice(Host host, DevicePlatform platform, String token) {
+        return new NotificationDevice(host, platform, token);
     }
 }

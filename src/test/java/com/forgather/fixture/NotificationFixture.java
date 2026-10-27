@@ -1,9 +1,12 @@
 package com.forgather.fixture;
 
+import java.util.List;
+
 import com.forgather.domain.host.model.Host;
 import com.forgather.domain.notification.model.Notification;
 import com.forgather.domain.notification.model.NotificationTarget;
 import com.forgather.domain.notification.model.NotificationType;
+import com.forgather.domain.notification.service.NotificationCommand;
 
 public class NotificationFixture {
 
@@ -36,5 +39,19 @@ public class NotificationFixture {
 
     public static Notification createWithTitleAndBody(String title, String body) {
         return new Notification(HostFixture.createHost(), NotificationType.PLACEHOLDER, title, body, null, null);
+    }
+
+    public static NotificationCommand createCommandWithHost(Host host) {
+        return createCommandWithHostAndDedupeKey(host, null);
+    }
+
+    public static NotificationCommand createCommandWithHostAndDedupeKey(Host host, String dedupeKey) {
+        return new NotificationCommand(
+            host,
+            NotificationType.PLACEHOLDER,
+            NotificationTarget.space(SPACE_CODE),
+            dedupeKey,
+            List.of(TEMPLATE_ARG)
+        );
     }
 }

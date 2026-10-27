@@ -33,6 +33,9 @@ import com.forgather.domain.host.repository.HostProfilePhotoRepository;
 import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.domain.host.repository.KakaoHostRepository;
 import com.forgather.domain.host.repository.jpa.HostProfilePhotoJpaRepository;
+import com.forgather.domain.notification.model.DevicePlatform;
+import com.forgather.domain.notification.repository.NotificationDeviceRepository;
+import com.forgather.domain.notification.service.NotificationDeviceService;
 import com.forgather.domain.product.model.Product;
 import com.forgather.domain.product.repository.ProductPhotoRepository;
 import com.forgather.domain.product.repository.ProductRepository;
@@ -44,6 +47,7 @@ import com.forgather.fixture.ExhibitionFixture;
 import com.forgather.fixture.GuestBookCardFixture;
 import com.forgather.fixture.GuestBookCardPhotoFixture;
 import com.forgather.fixture.HostFixture;
+import com.forgather.fixture.NotificationDeviceFixture;
 import com.forgather.fixture.ProductFixture;
 import com.forgather.fixture.ProductPhotoFixture;
 import com.forgather.fixture.SpaceFixture;
@@ -79,6 +83,8 @@ class WithdrawServiceTest extends TestOnContainer {
     private final SpacePhotoRepository spacePhotoRepository;
     private final ProductRepository productRepository;
     private final ProductPhotoRepository productPhotoRepository;
+    private final NotificationDeviceService notificationDeviceService;
+    private final NotificationDeviceRepository notificationDeviceRepository;
 
     @Autowired
     public WithdrawServiceTest(WithdrawService withdrawService, HostRepository hostRepository,
@@ -90,7 +96,8 @@ class WithdrawServiceTest extends TestOnContainer {
         GuestBookCardPhotoRepository guestBookCardPhotoRepository, ExhibitionRepository exhibitionRepository,
         ExhibitionHostRepository exhibitionHostRepository, ExhibitionJpaRepository exhibitionJpaRepository,
         ExhibitionHostJpaRepository exhibitionHostJpaRepository, OutboxService outboxService,
-        ObjectMapper objectMapper
+        ObjectMapper objectMapper, NotificationDeviceService notificationDeviceService,
+        NotificationDeviceRepository notificationDeviceRepository
     ) {
         this.withdrawService = withdrawService;
         this.hostRepository = hostRepository;
@@ -111,6 +118,8 @@ class WithdrawServiceTest extends TestOnContainer {
         this.spacePhotoRepository = spacePhotoRepository;
         this.productRepository = productRepository;
         this.productPhotoRepository = productPhotoRepository;
+        this.notificationDeviceService = notificationDeviceService;
+        this.notificationDeviceRepository = notificationDeviceRepository;
     }
 
     private SocialRevokePayload readPayload(Outbox outbox) throws JsonProcessingException {
@@ -271,5 +280,43 @@ class WithdrawServiceTest extends TestOnContainer {
 
         // then
         assertThat(outboxService.findPendingTasks(OutboxType.SOCIAL_REVOKE)).isEmpty();
+    }
+
+    @DisplayName("탈퇴하면 등록된 푸시 디바이스가 모두 삭제 처리되어 활성 디바이스가 남지 않는다.")
+    @Test
+    void deleteAllNotificationDevices() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        notificationDeviceRepository.save(
+            NotificationDeviceFixture.createDevice(host, DevicePlatform.IOS, NotificationDeviceFixture.TOKEN));
+        notificationDeviceRepository.save(
+            NotificationDeviceFixture.createDevice(host, DevicePlatform.ANDROID, NotificationDeviceFixture.OTHER_TOKEN));
+
+        // when
+        withdrawService.withdraw(host);
+
+        // then
+        assertThat(notificationDeviceService.findActiveDevices(host)).isEmpty();
+    }
+
+    @DisplayName("탈퇴해도 다른 호스트의 푸시 디바이스는 유지된다.")
+    @Test
+    void keepOtherHostNotificationDevices() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        Host otherHost = hostRepository.save(HostFixture.createHost());
+        notificationDeviceRepository.save(
+            NotificationDeviceFixture.createDevice(host, DevicePlatform.IOS, NotificationDeviceFixture.TOKEN));
+        notificationDeviceRepository.save(
+            NotificationDeviceFixture.createDevice(otherHost, DevicePlatform.IOS, NotificationDeviceFixture.OTHER_TOKEN));
+
+        // when
+        withdrawService.withdraw(host);
+
+        // then
+        assertAll(
+            () -> assertThat(notificationDeviceService.findActiveDevices(host)).isEmpty(),
+            () -> assertThat(notificationDeviceService.findActiveDevices(otherHost)).hasSize(1)
+        );
     }
 }
