@@ -14,7 +14,7 @@
         <div class="max-w-7xl mx-auto">
             <div class="mb-xl pb-lg border-b border-border-color">
                 <h2 class="text-3xl font-bold text-text-primary mb-xs">공지 관리</h2>
-                <p class="text-text-secondary">공지를 작성하고 등록된 공지를 확인합니다.</p>
+                <p class="text-text-secondary">공지를 작성하고 등록된 공지를 수정하거나 삭제합니다.</p>
             </div>
             <div class="flex flex-wrap items-center justify-between gap-md mb-lg">
                 <p id="totalCountInfo" class="text-sm text-text-secondary" aria-live="polite"></p>
@@ -44,7 +44,7 @@
     <dialog id="createModal" class="notice-modal p-lg bg-surface rounded-lg shadow-lg" aria-labelledby="createModalTitle">
         <div class="flex items-center justify-between gap-md mb-lg">
             <h3 id="createModalTitle" class="text-xl font-semibold">공지 작성</h3>
-            <button type="button" data-close="createModal" class="min-h-[44px] px-md cursor-pointer" aria-label="공지 작성 닫기">닫기</button>
+            <button type="button" id="closeNoticeFormBtn" data-close="createModal" class="min-h-[44px] px-md cursor-pointer" aria-label="공지 작성 닫기">닫기</button>
         </div>
         <form id="noticeForm">
             <label for="noticeTitle" class="block font-medium mb-sm">제목</label>
@@ -82,6 +82,11 @@
             <p id="detailDate" class="text-sm text-text-secondary mb-lg"></p>
             <div id="detailBody" class="notice-text text-text-primary"></div>
         </article>
+        <p id="detailActionError" role="alert" class="text-danger mt-lg" hidden></p>
+        <div class="flex justify-end gap-sm mt-lg">
+            <button id="editNoticeBtn" type="button" disabled class="px-lg py-2.5 min-h-[44px] border border-border-color rounded-lg cursor-pointer disabled:opacity-50">수정</button>
+            <button id="deleteNoticeBtn" type="button" disabled class="px-lg py-2.5 min-h-[44px] border border-border-color rounded-lg text-danger cursor-pointer disabled:opacity-50">삭제</button>
+        </div>
     </dialog>
     <div th:replace="~{admin/layout/fragments :: toast}"></div>
     <script th:src="@{/js/admin/auth.js}"></script>

@@ -386,6 +386,14 @@ const API = {
         return this.get(`/notices/${encodeURIComponent(noticeId)}`);
     },
 
+    async updateNotice(noticeId, title, body) {
+        return this.put(`/notices/${encodeURIComponent(noticeId)}`, {title, body});
+    },
+
+    async deleteNotice(noticeId) {
+        return this.delete(`/notices/${encodeURIComponent(noticeId)}`);
+    },
+
     async createNotice(title, body) {
         return this.post('/notices', {title, body});
     },

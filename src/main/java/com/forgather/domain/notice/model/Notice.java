@@ -25,7 +25,7 @@ public class Notice extends SoftDeleteEntity {
     @Column(nullable = false, length = 1000)
     private String title;
 
-    @Column(nullable = false, columnDefinition = "MEDIUMTEXT")
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String body;
 
     public Notice(String title, String body) {
@@ -33,6 +33,15 @@ public class Notice extends SoftDeleteEntity {
         validateText(body, "공지 본문", 10000);
         this.title = title;
         this.body = body;
+    }
+
+    public void update(String title, String body) {
+        String updatedTitle = title != null ? title : this.title;
+        String updatedBody = body != null ? body : this.body;
+        validateText(updatedTitle, "공지 제목", 100);
+        validateText(updatedBody, "공지 본문", 10000);
+        this.title = updatedTitle;
+        this.body = updatedBody;
     }
 
     private void validateText(String value, String field, int maxLength) {
