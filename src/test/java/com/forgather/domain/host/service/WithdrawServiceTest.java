@@ -55,9 +55,8 @@ import com.forgather.fixture.SpaceHostFixture;
 import com.forgather.fixture.SpacePhotoFixture;
 import com.forgather.global.external.social.SocialProvider;
 import com.forgather.global.outbox.Outbox;
-import com.forgather.global.outbox.OutboxService;
+import com.forgather.global.outbox.OutboxRepository;
 import com.forgather.global.outbox.OutboxStatus;
-import com.forgather.global.outbox.OutboxType;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -76,7 +75,7 @@ class WithdrawServiceTest extends TestOnContainer {
     private final ExhibitionHostRepository exhibitionHostRepository;
     private final ExhibitionJpaRepository exhibitionJpaRepository;
     private final ExhibitionHostJpaRepository exhibitionHostJpaRepository;
-    private final OutboxService outboxService;
+    private final OutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
     private final GuestBookCardRepository guestBookCardRepository;
     private final GuestBookCardPhotoRepository guestBookCardPhotoRepository;
@@ -95,7 +94,7 @@ class WithdrawServiceTest extends TestOnContainer {
         ProductPhotoRepository productPhotoRepository, GuestBookCardRepository guestBookCardRepository,
         GuestBookCardPhotoRepository guestBookCardPhotoRepository, ExhibitionRepository exhibitionRepository,
         ExhibitionHostRepository exhibitionHostRepository, ExhibitionJpaRepository exhibitionJpaRepository,
-        ExhibitionHostJpaRepository exhibitionHostJpaRepository, OutboxService outboxService,
+        ExhibitionHostJpaRepository exhibitionHostJpaRepository, OutboxRepository outboxRepository,
         ObjectMapper objectMapper, NotificationDeviceService notificationDeviceService,
         NotificationDeviceRepository notificationDeviceRepository
     ) {
@@ -111,7 +110,7 @@ class WithdrawServiceTest extends TestOnContainer {
         this.exhibitionHostRepository = exhibitionHostRepository;
         this.exhibitionJpaRepository = exhibitionJpaRepository;
         this.exhibitionHostJpaRepository = exhibitionHostJpaRepository;
-        this.outboxService = outboxService;
+        this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
         this.guestBookCardRepository = guestBookCardRepository;
         this.guestBookCardPhotoRepository = guestBookCardPhotoRepository;
@@ -233,7 +232,7 @@ class WithdrawServiceTest extends TestOnContainer {
         withdrawService.withdraw(host);
 
         // then
-        List<Outbox> outboxes = outboxService.findPendingTasks(OutboxType.SOCIAL_REVOKE);
+        List<Outbox> outboxes = outboxRepository.findAll();
         assertThat(outboxes).hasSize(1);
         Outbox outbox = outboxes.getFirst();
         SocialRevokePayload payload = readPayload(outbox);
@@ -258,7 +257,7 @@ class WithdrawServiceTest extends TestOnContainer {
         withdrawService.withdraw(host);
 
         // then
-        List<Outbox> outboxes = outboxService.findPendingTasks(OutboxType.SOCIAL_REVOKE);
+        List<Outbox> outboxes = outboxRepository.findAll();
         assertThat(outboxes).hasSize(1);
         SocialRevokePayload payload = readPayload(outboxes.getFirst());
         assertAll(
@@ -279,7 +278,7 @@ class WithdrawServiceTest extends TestOnContainer {
         withdrawService.withdraw(host);
 
         // then
-        assertThat(outboxService.findPendingTasks(OutboxType.SOCIAL_REVOKE)).isEmpty();
+        assertThat(outboxRepository.findAll()).isEmpty();
     }
 
     @DisplayName("탈퇴하면 등록된 푸시 디바이스가 모두 삭제 처리되어 활성 디바이스가 남지 않는다.")

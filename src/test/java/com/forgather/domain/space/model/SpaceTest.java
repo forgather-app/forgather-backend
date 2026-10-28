@@ -28,7 +28,8 @@ class SpaceTest {
 
         // when & then
         assertThatCode(
-            () -> new Space(spaceCode, name, "", false, "", "", null, null, null, null, null)
+            () -> new Space(spaceCode, name, "", false, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS)
         ).doesNotThrowAnyException();
     }
 
@@ -41,7 +42,8 @@ class SpaceTest {
         String linkName = "  ";
 
         // when
-        Space space = new Space("1234567890", "나의 졸업전시", description, false, linkUrl, linkName, null, null, null, null, null);
+        Space space = new Space("1234567890", "나의 졸업전시", description, false, linkUrl, linkName, null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
 
         // then
         assertAll(
@@ -55,7 +57,8 @@ class SpaceTest {
     @Test
     void createSpaceWithoutDescription() {
         // given & when
-        Space space = new Space("1234567890", "나의 졸업전시", null, false, null, null, null, null, null, null, null);
+        Space space = new Space("1234567890", "나의 졸업전시", null, false, null, null, null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
 
         // then
         assertThat(space.getDescription()).isEmpty();
@@ -65,7 +68,8 @@ class SpaceTest {
     @Test
     void createSpaceWithoutLink() {
         // given & when
-        Space space = new Space("1234567890", "나의 졸업전시", "설명", false, null, null, null, null, null, null, null);
+        Space space = new Space("1234567890", "나의 졸업전시", "설명", false, null, null, null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
 
         // then
         assertAll(
@@ -78,7 +82,8 @@ class SpaceTest {
     @Test
     void createSpaceWithLink() {
         // given & when
-        Space space = new Space("1234567890", "나의 졸업전시", "설명", false, "https://forgather.me", "포트폴리오", null, null, null, null, null);
+        Space space = new Space("1234567890", "나의 졸업전시", "설명", false, "https://forgather.me", "포트폴리오", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
 
         // then
         assertAll(
@@ -95,7 +100,8 @@ class SpaceTest {
 
         // when & then
         assertThatThrownBy(
-            () -> new Space(null, name, null, false, null, null, null, null, null, null, null)
+            () -> new Space(null, name, null, false, null, null, null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS)
         ).isInstanceOf(BaseNullPointerException.class)
             .hasMessageContaining("스페이스 코드");
     }
@@ -108,7 +114,8 @@ class SpaceTest {
 
         // when & then
         assertThatThrownBy(
-            () -> new Space(code, null, null, false, null, null, null, null, null, null, null)
+            () -> new Space(code, null, null, false, null, null, null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS)
         ).isInstanceOf(BaseNullPointerException.class)
             .hasMessageContaining("스페이스 이름");
     }
@@ -124,7 +131,8 @@ class SpaceTest {
 
         // when & then
         assertThatCode(
-            () -> new Space(spaceCode, name, description, false, "", "", null, null, null, null, null)
+            () -> new Space(spaceCode, name, description, false, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS)
         ).doesNotThrowAnyException();
     }
 
@@ -138,7 +146,8 @@ class SpaceTest {
 
         // when & then
         assertThatThrownBy(
-            () -> new Space("1234567890", invalidName, description, false, "", "", null, null, null, null, null)
+            () -> new Space("1234567890", invalidName, description, false, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS)
         ).isInstanceOf(BaseException.class)
             .hasMessageContaining("스페이스 이름");
     }
@@ -152,7 +161,8 @@ class SpaceTest {
 
         // when & then
         assertThatThrownBy(
-            () -> new Space("123456789", name, description, false, "", "", null, null, null, null, null)
+            () -> new Space("123456789", name, description, false, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS)
         ).isInstanceOf(BaseException.class)
             .hasMessageContaining("스페이스 코드");
     }
@@ -165,7 +175,8 @@ class SpaceTest {
         String description = getString(501);
 
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", name, description, false, "", "", null, null, null, null, null))
+        assertThatThrownBy(() -> new Space("1234567890", name, description, false, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("스페이스 설명");
     }
@@ -178,7 +189,8 @@ class SpaceTest {
         String description = character.repeat(500);
 
         // when
-        Space space = new Space("1234567890", "스페이스", description, false, null, null, null, null, null, null, null);
+        Space space = new Space("1234567890", "스페이스", description, false, null, null, null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
 
         // then
         assertThat(space.getDescription()).isEqualTo(description);
@@ -204,7 +216,8 @@ class SpaceTest {
     @ValueSource(strings = {" "})
     void createSpaceWithOnlyLinkUrl(String blankName) {
         // given & when
-        Space space = new Space("1234567890", "스페이스", "설명", false, "https://forgather.me", blankName, null, null, null, null, null);
+        Space space = new Space("1234567890", "스페이스", "설명", false, "https://forgather.me", blankName, null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
 
         // then
         assertAll(
@@ -219,7 +232,8 @@ class SpaceTest {
     @ValueSource(strings = {" "})
     void spaceLinkWithoutUrlValidationTest(String blankUrl) {
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, blankUrl, "포트폴리오", null, null, null, null, null))
+        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, blankUrl, "포트폴리오", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("함께 입력");
     }
@@ -229,7 +243,8 @@ class SpaceTest {
     @ParameterizedTest
     void spaceLinkUrlPatternValidationTest(String invalidUrl) {
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, invalidUrl, "포트폴리오", null, null, null, null, null))
+        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, invalidUrl, "포트폴리오", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("링크 URL 형식");
     }
@@ -239,7 +254,8 @@ class SpaceTest {
     @ParameterizedTest
     void spaceLinkUrlPatternValidationWithoutName(String invalidUrl) {
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, invalidUrl, null, null, null, null, null, null))
+        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, invalidUrl, null, null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("링크 URL 형식");
     }
@@ -249,7 +265,8 @@ class SpaceTest {
     @ParameterizedTest
     void createSpaceWithCaseInsensitiveSchemeLink(String linkUrl) {
         // given & when
-        Space space = new Space("1234567890", "나의 졸업전시", "설명", false, linkUrl, "포트폴리오", null, null, null, null, null);
+        Space space = new Space("1234567890", "나의 졸업전시", "설명", false, linkUrl, "포트폴리오", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
 
         // then
         assertThat(space.getLinkUrl()).isEqualTo(linkUrl);
@@ -262,7 +279,8 @@ class SpaceTest {
         String tooLongUrl = "https://forgather.me/" + getString(2048);
 
         // when & then
-        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, tooLongUrl, "포트폴리오", null, null, null, null, null))
+        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", false, tooLongUrl, "포트폴리오", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("링크 URL은 최대");
     }
@@ -275,7 +293,8 @@ class SpaceTest {
 
         // when & then
         assertThatThrownBy(
-            () -> new Space("1234567890", "스페이스", "설명", false, "https://forgather.me", tooLongName, null, null, null, null, null))
+            () -> new Space("1234567890", "스페이스", "설명", false, "https://forgather.me", tooLongName, null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS))
             .isInstanceOf(BaseException.class)
             .hasMessageContaining("링크 표시 이름은 최대");
     }
@@ -284,7 +303,8 @@ class SpaceTest {
     @Test
     void updateSpaceName() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null);
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
 
         // when
         space.update("새로운 스페이스", null, null, null, null);
@@ -302,7 +322,8 @@ class SpaceTest {
     @ParameterizedTest
     void updateSpaceDescription(String character) {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null);
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
         String description = character.repeat(500);
 
         // when
@@ -320,7 +341,8 @@ class SpaceTest {
     @Test
     void updateSpaceIsPublic() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null);
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
 
         // when
         space.update(null, null, true, null, null);
@@ -337,7 +359,8 @@ class SpaceTest {
     @Test
     void updateSpaceLink() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null);
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
 
         // when
         space.update(null, null, null, "https://forgather.me", "포트폴리오");
@@ -353,7 +376,8 @@ class SpaceTest {
     @Test
     void updateSpaceLinkToEmpty() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "https://forgather.me", "포트폴리오", null, null, null, null, null);
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "https://forgather.me", "포트폴리오", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
 
         // when
         space.update(null, null, null, "", "");
@@ -369,7 +393,8 @@ class SpaceTest {
     @Test
     void updateSpaceLinkUrlOnly() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null);
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
 
         // when
         space.update(null, null, null, "https://forgather.me", null);
@@ -437,7 +462,8 @@ class SpaceTest {
         LocalDate endDate = LocalDate.of(2026, 10, 20);
 
         // when
-        Space space = new Space("1234567890", "스페이스", "설명", false, null, null, startDate, endDate, null, null, null);
+        Space space = new Space("1234567890", "스페이스", "설명", false, null, null, startDate, endDate, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
 
         // then
         assertAll(
@@ -466,12 +492,12 @@ class SpaceTest {
     void updateExhibitionPeriod() {
         // given
         Space space = SpaceFixture.createSpace();
-        space.updateExhibitionPeriod(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 31));
+        space.updateExhibitionPeriodAndGuestBookWritingPolicy(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 31), null);
         LocalDate startDate = LocalDate.of(2026, 10, 19);
         LocalDate endDate = LocalDate.of(2026, 10, 20);
 
         // when
-        space.updateExhibitionPeriod(startDate, endDate);
+        space.updateExhibitionPeriodAndGuestBookWritingPolicy(startDate, endDate, null);
 
         // then
         assertAll(
@@ -485,12 +511,12 @@ class SpaceTest {
     void keepsExhibitionPeriodWhenReplacementFails() {
         // given
         Space space = SpaceFixture.createSpace();
-        space.updateExhibitionPeriod(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 31));
+        space.updateExhibitionPeriodAndGuestBookWritingPolicy(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 31), null);
         SpaceExhibitionPeriod previousPeriod = space.getExhibitionPeriod();
 
         // when & then
-        assertThatThrownBy(() -> space.updateExhibitionPeriod(
-            LocalDate.of(2026, 10, 20), LocalDate.of(2026, 10, 19)))
+        assertThatThrownBy(() -> space.updateExhibitionPeriodAndGuestBookWritingPolicy(
+            LocalDate.of(2026, 10, 20), LocalDate.of(2026, 10, 19), null))
             .isInstanceOf(BaseException.class);
         assertThat(space.getExhibitionPeriod()).isSameAs(previousPeriod);
     }
@@ -500,10 +526,10 @@ class SpaceTest {
     void clearExhibitionPeriod() {
         // given
         Space space = SpaceFixture.createSpace();
-        space.updateExhibitionPeriod(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 31));
+        space.updateExhibitionPeriodAndGuestBookWritingPolicy(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 31), null);
 
         // when
-        space.updateExhibitionPeriod(null, null);
+        space.updateExhibitionPeriodAndGuestBookWritingPolicy(null, null, null);
 
         // then
         assertAll(
@@ -517,7 +543,8 @@ class SpaceTest {
     @Test
     void createSpaceIsNotFeatured() {
         // given & when
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null);
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
 
         // then
         assertThat(space.isFeatured()).isFalse();
@@ -527,7 +554,8 @@ class SpaceTest {
     @Test
     void feature() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null);
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
 
         // when
         space.feature();
@@ -540,7 +568,8 @@ class SpaceTest {
     @Test
     void featureIsIdempotent() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null);
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
         space.feature();
 
         // when
@@ -554,7 +583,8 @@ class SpaceTest {
     @Test
     void unfeature() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null);
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
         space.feature();
 
         // when
@@ -568,7 +598,8 @@ class SpaceTest {
     @Test
     void unfeatureIsIdempotent() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null);
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
 
         // when
         space.unfeature();
@@ -585,7 +616,8 @@ class SpaceTest {
     @Test
     void deleteUnfeatures() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null);
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
         space.feature();
 
         // when
@@ -602,7 +634,8 @@ class SpaceTest {
     @Test
     void deleteIsIdempotent() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null);
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
         space.feature();
         space.delete();
         var deletedAt = space.getDeletedAt();
@@ -626,7 +659,8 @@ class SpaceTest {
     @Test
     void updateDoesNotChangeFeatured() {
         // given
-        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null);
+        Space space = new Space("1234567890", "스페이스", "스페이스 설명", false, "", "", null, null, null, null, null,
+            GuestBookWritingPolicy.ALWAYS);
         space.feature();
 
         // when
@@ -693,7 +727,8 @@ class SpaceTest {
     void createWithPlace() {
         // given & when
         Space space = new Space("1234567890", "스페이스", null, false, null, null, null, null,
-            "전시장", "123", "https://place.map.kakao.com/123");
+            "전시장", "123", "https://place.map.kakao.com/123",
+            GuestBookWritingPolicy.ALWAYS);
 
         // then
         assertPlace(space, "전시장", "123", "https://place.map.kakao.com/123");
@@ -704,7 +739,8 @@ class SpaceTest {
     void updatePlace() {
         // given
         Space space = new Space("1234567890", "스페이스", null, false, null, null, null, null,
-            "전시장", "123", "https://place.map.kakao.com/123");
+            "전시장", "123", "https://place.map.kakao.com/123",
+            GuestBookWritingPolicy.ALWAYS);
 
         // when
         space.updatePlace("다른 전시장", "456", "https://place.map.kakao.com/456");
@@ -718,12 +754,63 @@ class SpaceTest {
     void preservePlaceAfterInvalidUpdate() {
         // given
         Space space = new Space("1234567890", "스페이스", null, false, null, null, null, null,
-            "전시장", "123", "https://place.map.kakao.com/123");
+            "전시장", "123", "https://place.map.kakao.com/123",
+            GuestBookWritingPolicy.ALWAYS);
 
         // when & then
         assertThatThrownBy(() -> space.updatePlace(null, "123", "https://place.map.kakao.com/123"))
             .isInstanceOf(BaseException.class);
         assertPlace(space, "전시장", "123", "https://place.map.kakao.com/123");
+    }
+
+    @DisplayName("전시 기간 없이 기간 제한 정책으로 스페이스를 생성할 수 없다")
+    @Test
+    void rejectsCreationWithPeriodPolicyWithoutPeriod() {
+        // given
+        GuestBookWritingPolicy policy = GuestBookWritingPolicy.EXHIBITION_PERIOD;
+
+        // when & then
+        assertThatThrownBy(() -> new Space("1234567890", "스페이스", "설명", true, "", "",
+            null, null, null, null, null, policy))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("전시 기간 제한 정책에는 전시 기간이 필요합니다.");
+    }
+
+    @DisplayName("기간 없는 스페이스에 기간 제한 정책을 설정하면 거절하고 기존 상태를 유지한다")
+    @Test
+    void rejectsPeriodPolicyWithoutPeriodAndPreservesState() {
+        // given
+        Space space = SpaceFixture.createSpace();
+
+        // when & then
+        assertThatThrownBy(() -> space.updateExhibitionPeriodAndGuestBookWritingPolicy(
+            null, null, GuestBookWritingPolicy.EXHIBITION_PERIOD))
+            .isInstanceOf(BaseException.class)
+            .hasMessageContaining("전시 기간 제한 정책에는 전시 기간이 필요합니다.");
+        assertAll(
+            () -> assertThat(space.getGuestBookWritingPolicy()).isEqualTo(GuestBookWritingPolicy.ALWAYS),
+            () -> assertThat(space.getExhibitionPeriod()).isNull()
+        );
+    }
+
+    @DisplayName("기간 제한 정책에서 기간만 삭제하려 하면 정책과 기간을 모두 유지한다")
+    @Test
+    void preservesPolicyAndPeriodAfterRejectedDeletion() {
+        // given
+        Space space = SpaceFixture.createSpace();
+        LocalDate startDate = LocalDate.of(2040, 10, 20);
+        LocalDate endDate = LocalDate.of(2040, 10, 22);
+        space.updateExhibitionPeriodAndGuestBookWritingPolicy(startDate, endDate,
+            GuestBookWritingPolicy.EXHIBITION_PERIOD);
+
+        // when & then
+        assertThatThrownBy(() -> space.updateExhibitionPeriodAndGuestBookWritingPolicy(null, null, null))
+            .isInstanceOf(BaseException.class);
+        assertAll(
+            () -> assertThat(space.getGuestBookWritingPolicy()).isEqualTo(GuestBookWritingPolicy.EXHIBITION_PERIOD),
+            () -> assertThat(space.getExhibitionStartDate()).isEqualTo(startDate),
+            () -> assertThat(space.getExhibitionEndDate()).isEqualTo(endDate)
+        );
     }
 
     private void assertPlace(Space space, String name, String id, String url) {

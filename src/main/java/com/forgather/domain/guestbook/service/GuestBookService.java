@@ -5,6 +5,8 @@ import static com.forgather.domain.upload.domain.FilePathGenerator.generateConte
 import static com.forgather.domain.upload.domain.UploadCategory.GUESTBOOK;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +53,7 @@ public class GuestBookService {
     @Transactional
     public WriteGuestBookCardResponse writeCard(String spaceCode, WriteGuestBookCardRequest request) {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
+        space.validateGuestBookWriting(LocalDate.now(ZoneId.of("Asia/Seoul")));
         GuestBookCard guestBookCard = guestBookCardRepository.save(request.toEntity(space));
 
         GuestBookCardPhotos guestBookCardPhotos = getGuestBookCardPhotos(spaceCode, request, guestBookCard);
