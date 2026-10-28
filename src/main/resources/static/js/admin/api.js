@@ -378,6 +378,18 @@ const API = {
         return this.get('/hosts/search/by-name', { name, page, size, sort });
     },
 
+    async getNotices(page = 1) {
+        return this.get('/notices', {page});
+    },
+
+    async getNoticeDetail(noticeId) {
+        return this.get(`/notices/${encodeURIComponent(noticeId)}`);
+    },
+
+    async createNotice(title, body) {
+        return this.post('/notices', {title, body});
+    },
+
     /**
      * 보안 모니터링 요약 데이터 조회 API
      *
