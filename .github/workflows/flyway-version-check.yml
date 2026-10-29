@@ -1,0 +1,61 @@
+name: Flyway Version Check
+
+on:
+  pull_request:
+    branches:
+      - v2/develop
+      - v2/main
+
+permissions:
+  contents: read
+
+jobs:
+  check-flyway-versions:
+    name: Flyway Version Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # The default PR checkout contains the merge result with the base branch.
+      - name: Checkout merge result
+        uses: actions/checkout@v4
+
+      - name: Check for duplicate migration versions
+        shell: python
+        run: |
+          from collections import defaultdict
+          from pathlib import Path
+          import re
+          import sys
+
+          migrationDirectory = Path("src/main/resources/db/migration")
+          migrationsByVersion = defaultdict(list)
+
+          for migration in sorted(migrationDirectory.rglob("V*__*.sql")):
+              match = re.fullmatch(r"V([0-9]+(?:[._][0-9]+)*)__.+\.sql", migration.name)
+              if not match or not migration.is_file():
+                  continue
+
+              # Flyway ignores leading zeros and trailing zero version components.
+              versionParts = [int(part) for part in re.split(r"[._]", match.group(1))]
+              while len(versionParts) > 1 and versionParts[-1] == 0:
+                  versionParts.pop()
+              migrationsByVersion[tuple(versionParts)].append(migration)
+
+          if not migrationsByVersion:
+              print("::error::No versioned Flyway migrations found.")
+              sys.exit(1)
+
+          hasDuplicates = False
+          for version, migrations in sorted(migrationsByVersion.items()):
+              if len(migrations) < 2:
+                  continue
+              hasDuplicates = True
+              versionLabel = ".".join(map(str, version))
+              print(f"::error::Duplicate Flyway migration version: {versionLabel}")
+              for migration in migrations:
+                  print(f"  {str(migration)!r}")
+
+          if hasDuplicates:
+              sys.exit(1)
+
+          print(f"All {len(migrationsByVersion)} Flyway migration versions are unique.")
