@@ -12,6 +12,8 @@ TRUNCATE TABLE space_host_map;
 TRUNCATE TABLE host_apple;
 TRUNCATE TABLE host_kakao;
 TRUNCATE TABLE host_profile_photo;
+TRUNCATE TABLE notification;
+TRUNCATE TABLE notification_device;
 TRUNCATE TABLE space;
 TRUNCATE TABLE exhibition_time;
 TRUNCATE TABLE exhibition_photo;
