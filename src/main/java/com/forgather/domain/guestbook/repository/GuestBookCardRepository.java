@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.VisibilityStatus;
+import com.forgather.domain.guestbook.repository.dto.GuestBookArchiveCardDto;
 import com.forgather.domain.guestbook.repository.dto.GuestBookCardListDto;
 import com.forgather.domain.guestbook.repository.dto.SpaceGuestBookCountDto;
 import com.forgather.domain.space.model.Space;
@@ -115,6 +116,18 @@ public interface GuestBookCardRepository {
     );
 
     List<GuestBookCard> findAllBySpaceAndDeletedAtIsNull(Space space);
+
+    @Query("""
+        SELECT new com.forgather.domain.guestbook.repository.dto.GuestBookArchiveCardDto(
+            g.id, g.nickname, g.message, g.createdAt
+        )
+        FROM GuestBookCard g
+        WHERE g.space.id = :spaceId
+            AND g.visibilityStatus = com.forgather.domain.guestbook.model.VisibilityStatus.VISIBLE
+            AND g.deletedAt IS NULL
+        ORDER BY g.createdAt ASC, g.id ASC
+        """)
+    List<GuestBookArchiveCardDto> findArchiveCards(@Param("spaceId") Long spaceId);
 
     /**
      * 스페이스의 미삭제 방명록 카드를 벌크 UPDATE로 soft delete한다.
