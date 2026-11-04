@@ -23,21 +23,25 @@ public interface OutboxRepository extends JpaRepository<Outbox, Long> {
         UPDATE Outbox o
         SET o.status = com.forgather.global.outbox.OutboxStatus.PROCESSING,
             o.leaseExpiresAt = local datetime + :leaseDurationSeconds second,
+            o.claimToken = :claimToken,
             o.updatedAt = CURRENT_TIMESTAMP
         WHERE o.id = :id
           AND (o.status = com.forgather.global.outbox.OutboxStatus.PENDING
                OR (o.status = com.forgather.global.outbox.OutboxStatus.PROCESSING
                    AND o.leaseExpiresAt <= local datetime))
         """)
-    int claim(@Param("id") Long id, @Param("leaseDurationSeconds") long leaseDurationSeconds);
+    int claim(@Param("id") Long id, @Param("leaseDurationSeconds") long leaseDurationSeconds,
+        @Param("claimToken") String claimToken);
 
     @Modifying(flushAutomatically = true)
     @Query("""
         UPDATE Outbox o
-        SET o.status = :status, o.payload = null, o.leaseExpiresAt = null, o.updatedAt = CURRENT_TIMESTAMP
+        SET o.status = :status, o.payload = null, o.leaseExpiresAt = null, o.claimToken = null, o.updatedAt = CURRENT_TIMESTAMP
         WHERE o.id = :id AND o.status = com.forgather.global.outbox.OutboxStatus.PROCESSING
+            AND o.claimToken = :claimToken
         """)
-    int finishProcessing(@Param("id") Long id, @Param("status") OutboxStatus status);
+    int finishProcessing(@Param("id") Long id, @Param("claimToken") String claimToken,
+        @Param("status") OutboxStatus status);
 
     @Modifying(flushAutomatically = true)
     @Query("""
@@ -47,10 +51,12 @@ public interface OutboxRepository extends JpaRepository<Outbox, Long> {
                 THEN com.forgather.global.outbox.OutboxStatus.PENDING
                 ELSE com.forgather.global.outbox.OutboxStatus.FAILED END,
             o.failCount = o.failCount + 1,
-            o.leaseExpiresAt = null,
+            o.leaseExpiresAt = null, o.claimToken = null,
             o.updatedAt = CURRENT_TIMESTAMP
         WHERE o.id = :id AND o.status = com.forgather.global.outbox.OutboxStatus.PROCESSING
+            AND o.claimToken = :claimToken
         """)
-    int recordFailure(@Param("id") Long id, @Param("retryable") boolean retryable,
+    int recordFailure(@Param("id") Long id, @Param("claimToken") String claimToken,
+        @Param("retryable") boolean retryable,
         @Param("maxFailCount") int maxFailCount);
 }

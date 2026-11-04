@@ -5,12 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,7 +60,8 @@ class OutboxServiceFailureTest {
         when(stateService.findProcessable()).thenReturn(List.of(first, second));
         when(handler.supports(OutboxType.SOCIAL_REVOKE)).thenReturn(true);
         when(handler.getLeaseDurationSeconds()).thenReturn(20L);
-        when(stateService.processing(anyLong(), eq(20L))).thenReturn(true);
+        when(stateService.processing(anyLong(), eq(20L)))
+            .thenAnswer(invocation -> Optional.of("token-" + invocation.getArgument(0)));
     }
 
     @AfterEach
@@ -82,16 +85,16 @@ class OutboxServiceFailureTest {
         IllegalStateException failure = new IllegalStateException("상태 저장 실패");
         switch (taskResult) {
             case COMPLETED -> {
-                when(stateService.complete(1L)).thenThrow(failure);
-                when(stateService.complete(2L)).thenReturn(true);
+                when(stateService.complete(1L, "token-1")).thenThrow(failure);
+                when(stateService.complete(2L, "token-2")).thenReturn(true);
             }
             case CANCELED -> {
-                when(stateService.cancel(1L)).thenThrow(failure);
-                when(stateService.cancel(2L)).thenReturn(true);
+                when(stateService.cancel(1L, "token-1")).thenThrow(failure);
+                when(stateService.cancel(2L, "token-2")).thenReturn(true);
             }
             case FAILED -> {
-                when(stateService.fail(1L)).thenThrow(failure);
-                when(stateService.fail(2L)).thenReturn(true);
+                when(stateService.fail(1L, "token-1")).thenThrow(failure);
+                when(stateService.fail(2L, "token-2")).thenReturn(true);
             }
         }
 
@@ -101,7 +104,7 @@ class OutboxServiceFailureTest {
         // then
         assertAll(
             () -> assertThat(result).isEqualTo(new OutboxProcessResult(succeeded, failed, canceled)),
-            () -> verify(stateService, never()).retry(anyLong(), anyInt()),
+            () -> verify(stateService, never()).retry(anyLong(), anyString(), anyInt()),
             () -> verify(handler).process(second),
             () -> assertThat(logs.list).anySatisfy(event -> assertAll(
                 () -> assertThat(event.getLevel()).isEqualTo(Level.ERROR),
@@ -117,8 +120,8 @@ class OutboxServiceFailureTest {
         // given
         when(handler.process(first)).thenThrow(new ExternalApiException(ExternalOperation.KAKAO_UNLINK, type, "외부 호출 실패"));
         when(handler.process(second)).thenReturn(OutboxTaskResult.COMPLETED);
-        when(stateService.fail(1L)).thenReturn(true);
-        when(stateService.complete(2L)).thenReturn(true);
+        when(stateService.fail(1L, "token-1")).thenReturn(true);
+        when(stateService.complete(2L, "token-2")).thenReturn(true);
 
         // when
         OutboxProcessResult result = service.process();
@@ -126,8 +129,8 @@ class OutboxServiceFailureTest {
         // then
         assertAll(
             () -> assertThat(result).isEqualTo(new OutboxProcessResult(1, 1, 0)),
-            () -> verify(stateService).fail(1L),
-            () -> verify(stateService, never()).retry(anyLong(), anyInt()),
+            () -> verify(stateService).fail(1L, "token-1"),
+            () -> verify(stateService, never()).retry(anyLong(), anyString(), anyInt()),
             () -> verify(handler).process(second)
         );
     }
@@ -142,8 +145,8 @@ class OutboxServiceFailureTest {
         when(handler.process(first)).thenThrow(new ExternalApiException(ExternalOperation.KAKAO_UNLINK, type, "외부 호출 실패"));
         when(handler.process(second)).thenReturn(OutboxTaskResult.COMPLETED);
         when(handler.getMaxFailCount()).thenReturn(5);
-        when(stateService.retry(1L, 5)).thenReturn(true);
-        when(stateService.complete(2L)).thenReturn(true);
+        when(stateService.retry(1L, "token-1", 5)).thenReturn(true);
+        when(stateService.complete(2L, "token-2")).thenReturn(true);
 
         // when
         OutboxProcessResult result = service.process();
@@ -151,8 +154,8 @@ class OutboxServiceFailureTest {
         // then
         assertAll(
             () -> assertThat(result).isEqualTo(new OutboxProcessResult(1, 1, 0)),
-            () -> verify(stateService).retry(1L, 5),
-            () -> verify(stateService, never()).fail(anyLong()),
+            () -> verify(stateService).retry(1L, "token-1", 5),
+            () -> verify(stateService, never()).fail(anyLong(), anyString()),
             () -> verify(handler).process(second)
         );
     }
@@ -164,8 +167,8 @@ class OutboxServiceFailureTest {
         when(handler.process(first)).thenThrow(new IllegalStateException("외부 호출 실패"));
         when(handler.process(second)).thenReturn(OutboxTaskResult.COMPLETED);
         when(handler.getMaxFailCount()).thenReturn(5);
-        when(stateService.retry(1L, 5)).thenReturn(true);
-        when(stateService.complete(2L)).thenReturn(true);
+        when(stateService.retry(1L, "token-1", 5)).thenReturn(true);
+        when(stateService.complete(2L, "token-2")).thenReturn(true);
 
         // when
         OutboxProcessResult result = service.process();
@@ -173,9 +176,21 @@ class OutboxServiceFailureTest {
         // then
         assertAll(
             () -> assertThat(result).isEqualTo(new OutboxProcessResult(1, 1, 0)),
-            () -> verify(stateService).retry(1L, 5),
-            () -> verify(stateService, never()).complete(1L),
+            () -> verify(stateService).retry(1L, "token-1", 5),
+            () -> verify(stateService, never()).complete(1L, "token-1"),
             () -> verify(handler).process(second)
         );
     }
+    @DisplayName("선점 권한을 잃어 실패 기록이 거절되면 실패 건수에 포함하지 않는다")
+    @Test
+    void doesNotCountRejectedFailure() {
+        when(handler.process(first)).thenThrow(new IllegalStateException("외부 호출 실패"));
+        when(handler.process(second)).thenReturn(OutboxTaskResult.COMPLETED);
+        when(handler.getMaxFailCount()).thenReturn(5);
+        when(stateService.retry(1L, "token-1", 5)).thenReturn(false);
+        when(stateService.complete(2L, "token-2")).thenReturn(true);
+
+        assertThat(service.process()).isEqualTo(new OutboxProcessResult(1, 0, 0));
+    }
+
 }
