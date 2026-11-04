@@ -1,0 +1,41 @@
+.notice-modal {
+    width: min(100% - var(--spacing-xl), 48rem);
+    max-height: calc(100dvh - var(--spacing-xl));
+    overflow-y: auto;
+    color: var(--text-primary);
+    border: none;
+}
+
+.notice-modal::backdrop {
+    background: var(--text-primary);
+    opacity: 0.6;
+}
+
+.notice-text {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.75;
+}
+
+.notice-limit-exceeded,
+.notice-limit-warning {
+    color: var(--danger-color);
+}
+
+.notice-title-button {
+    display: block;
+    width: 100%;
+    min-height: 2.75rem;
+    text-align: left;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.notice-title-button:hover {
+    text-decoration: underline;
+}
+
+.notice-title-button:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: var(--spacing-xs);
+}
