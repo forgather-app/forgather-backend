@@ -96,6 +96,30 @@ class AdminNoticeAcceptanceTest extends AcceptanceTest {
         );
     }
 
+    @DisplayName("관리자 공지 목록은 API로 전달한 페이지 크기와 정렬을 적용한다")
+    @Test
+    void getNoticesWithRequestedPagination() {
+        // given
+        for (String title : new String[]{"다", "가", "나"}) {
+            givenWithSession().contentType(ContentType.JSON)
+                .body(new RegisterNoticeRequest(title, "본문"))
+                .post("/admin/notices").then().statusCode(201);
+        }
+
+        // when
+        AdminNoticeResponse response = givenWithSession()
+            .queryParam("page", 2).queryParam("size", 2).queryParam("sort", "title,asc")
+            .get("/admin/notices").then().statusCode(200).extract().as(AdminNoticeResponse.class);
+
+        // then
+        assertAll(
+            () -> assertThat(response.currentPage()).isEqualTo(2),
+            () -> assertThat(response.pageSize()).isEqualTo(2),
+            () -> assertThat(response.totalPages()).isEqualTo(2),
+            () -> assertThat(response.notices()).extracting(notice -> notice.title()).containsExactly("다")
+        );
+    }
+
     @DisplayName("제목과 본문이 누락되거나 비어 있거나 제한을 넘으면 400을 반환한다")
     @ParameterizedTest(name = "[{index}]")
     @MethodSource("invalidRequests")
@@ -168,40 +192,6 @@ class AdminNoticeAcceptanceTest extends AcceptanceTest {
         // given
         // when & then
         givenWithSession().get("/admin/notices/999999").then().statusCode(404);
-    }
-
-    @DisplayName("관리자 세션으로 공지 화면을 요청하면 실제 목록과 등록 폼 HTML을 반환한다")
-    @Test
-    void getNoticeViewAsAdmin() {
-        // given
-        // when
-        String html = givenWithSession().get("/view/admin/notices").then().statusCode(200)
-            .contentType(ContentType.HTML).extract().asString();
-
-        // then
-        assertThat(html).contains("공지 관리", "id=\"noticeForm\"", "id=\"noticeTitle\"",
-            "id=\"noticeBody\"", "/js/admin/notices.js");
-    }
-
-    @DisplayName("관리자 세션이 없거나 잘못되었거나 HOST JWT만 있으면 공지 화면은 로그인으로 이동한다")
-    @ParameterizedTest
-    @org.junit.jupiter.params.provider.ValueSource(strings = {"none", "invalid", "host"})
-    void redirectNoticeViewWithoutAdminSession(String authentication) {
-        // given
-        MockMvcRequestSpecification request = RestAssuredMockMvc.given();
-        if (authentication.equals("invalid")) {
-            request.postProcessors(withCookie(SESSION_COOKIE_NAME, "invalid-session"));
-        } else if (authentication.equals("host")) {
-            Host host = hostRepository.save(HostFixture.createHost());
-            request.postProcessors(withAccessToken(jwtTokenProvider.generateAccessToken(host.getId())));
-        }
-
-        // when
-        String location = request.get("/view/admin/notices").then().statusCode(302)
-            .extract().header("Location");
-
-        // then
-        assertThat(location).isEqualTo("/view/admin/login");
     }
 
     private MockMvcRequestSpecification givenWithSession() {

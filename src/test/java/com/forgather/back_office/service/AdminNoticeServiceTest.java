@@ -26,6 +26,7 @@ import com.forgather.back_office.dto.RegisterNoticeRequest;
 import com.forgather.container.TestOnContainer;
 import com.forgather.domain.notice.model.Notice;
 import com.forgather.domain.notice.repository.NoticeRepository;
+import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.NotFoundException;
 
 import jakarta.persistence.EntityManager;
@@ -72,7 +73,7 @@ class AdminNoticeServiceTest extends TestOnContainer {
         );
     }
 
-    @DisplayName("공지 목록이 비어 있으면 첫 페이지와 고정 크기의 빈 결과를 반환한다")
+    @DisplayName("공지 목록이 비어 있으면 요청한 페이지 크기의 빈 결과를 반환한다")
     @Test
     void getEmptyNotices() {
         // given
@@ -83,15 +84,15 @@ class AdminNoticeServiceTest extends TestOnContainer {
         assertAll(
             () -> assertThat(result.notices()).isEmpty(),
             () -> assertThat(result.currentPage()).isEqualTo(1),
-            () -> assertThat(result.pageSize()).isEqualTo(15),
+            () -> assertThat(result.pageSize()).isEqualTo(1),
             () -> assertThat(result.totalCount()).isZero(),
             () -> assertThat(result.totalPages()).isZero()
         );
     }
 
-    @DisplayName("목록은 요청 크기와 정렬을 무시하고 생성일과 id 역순으로 15건씩 조회한다")
+    @DisplayName("목록은 요청한 페이지 크기와 정렬을 적용한다")
     @Test
-    void listUsesFixedSizeAndStableLatestOrder() {
+    void listUsesRequestedSizeAndOrder() {
         // given
         List<Long> ids = new ArrayList<>();
         for (int i = 0; i < 16; i++) {
@@ -103,25 +104,32 @@ class AdminNoticeServiceTest extends TestOnContainer {
                 LocalDateTime.of(2026, 1, 1, 0, 0).plusDays(i / 2), ids.get(i));
         }
         entityManager.clear();
-        List<Long> expected = ids.reversed();
+        List<Long> expected = ids;
 
         // when
-        AdminNoticeResponse first = adminNoticeService.getAllNotices(PageRequest.of(0, 1, Sort.by("title")));
-        AdminNoticeResponse second = adminNoticeService.getAllNotices(PageRequest.of(1, 50));
+        AdminNoticeResponse first = adminNoticeService.getAllNotices(PageRequest.of(0, 5, Sort.by("createdAt", "id")));
+        AdminNoticeResponse second = adminNoticeService.getAllNotices(PageRequest.of(1, 5, Sort.by("createdAt", "id")));
 
         // then
         assertAll(
-            () -> assertThat(first.notices()).extracting(NoticeSummaryResponse::id).containsExactlyElementsOf(expected.subList(0, 15)),
-            () -> assertThat(second.notices()).extracting(NoticeSummaryResponse::id).containsExactly(expected.get(15)),
+            () -> assertThat(first.notices()).extracting(NoticeSummaryResponse::id).containsExactlyElementsOf(expected.subList(0, 5)),
+            () -> assertThat(second.notices()).extracting(NoticeSummaryResponse::id).containsExactlyElementsOf(expected.subList(5, 10)),
             () -> assertThat(first.currentPage()).isEqualTo(1),
             () -> assertThat(second.currentPage()).isEqualTo(2),
-            () -> assertThat(first.pageSize()).isEqualTo(15),
-            () -> assertThat(second.pageSize()).isEqualTo(15),
+            () -> assertThat(first.pageSize()).isEqualTo(5),
+            () -> assertThat(second.pageSize()).isEqualTo(5),
             () -> assertThat(first.totalCount()).isEqualTo(16),
             () -> assertThat(second.totalCount()).isEqualTo(16),
-            () -> assertThat(first.totalPages()).isEqualTo(2),
-            () -> assertThat(second.totalPages()).isEqualTo(2)
+            () -> assertThat(first.totalPages()).isEqualTo(4),
+            () -> assertThat(second.totalPages()).isEqualTo(4)
         );
+    }
+
+    @DisplayName("공지 ID가 null이면 명시적인 null 예외를 던진다")
+    @Test
+    void rejectNullNoticeId() {
+        assertThatThrownBy(() -> noticeRepository.getByIdAndDeletedAtIsNullOrThrow(null))
+            .isInstanceOf(BaseNullPointerException.class);
     }
 
     @DisplayName("상세를 조회하고 논리 삭제된 공지와 없는 공지는 조회에서 제외한다")
