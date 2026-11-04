@@ -73,8 +73,7 @@ import jakarta.servlet.http.Cookie;
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
     "space.pdf-export.function-name=pdf-test",
-    "space.pdf-export.region=ap-northeast-2",
-    "space.pdf-export.public-url-base=https://images.example.com/root/"
+    "space.pdf-export.region=ap-northeast-2"
 })
 @Import(SpacePdfExportIntegrationTest.Fakes.class)
 @AutoConfigureMockMvc
@@ -170,11 +169,9 @@ class SpacePdfExportIntegrationTest extends TestOnContainer {
         assertThat(snapshot).isEqualTo(objectMapper.readTree("""
             {"spaceName":"name","nickname":"포스티","guestbookInfos":[
               {"author":"older","message":"old message","createdAt":"2020-01-01T03:04:05",
-               "photoUrls":["https://images.example.com/root/second.jpg",
-                            "https://images.example.com/root/tied.jpg",
-                            "https://images.example.com/root/folder/%ED%95%9C%20%EA%B8%80%3F%23%25.jpg"]},
-              {"author":"tied","message":"same time","createdAt":"2020-01-01T03:04:05","photoUrls":[]},
-              {"author":"newer","message":"new message","createdAt":"2020-01-02T03:04:05","photoUrls":[]}
+               "photoPaths":["/second.jpg", "tied.jpg", "folder/한 글?#%.jpg"]},
+              {"author":"tied","message":"same time","createdAt":"2020-01-01T03:04:05","photoPaths":[]},
+              {"author":"newer","message":"new message","createdAt":"2020-01-02T03:04:05","photoPaths":[]}
             ]}
             """));
         assertThat(cardRepository.findByIdAndDeletedAtIsNull(older.getId()).orElseThrow().isRead()).isFalse();
@@ -306,13 +303,11 @@ class SpacePdfExportIntegrationTest extends TestOnContainer {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"missing-function", "missing-region", "missing-base", "invalid-base"})
+    @ValueSource(strings = {"missing-function", "missing-region"})
     void rejectsUnconfiguredFeatureWithoutSavingJob(String missing) {
         SpacePdfExportProperties properties = new SpacePdfExportProperties(
             missing.equals("missing-function") ? null : "pdf-test",
-            missing.equals("missing-region") ? " " : "ap-northeast-2",
-            missing.equals("missing-base") ? null : missing.equals("invalid-base") ? "file:///tmp/photos"
-                : "https://images.example.com");
+            missing.equals("missing-region") ? " " : "ap-northeast-2");
         SpacePdfExportService unconfigured = new SpacePdfExportService(spaceRepository, spaceHostRepository,
             cardRepository, photoRepository, exportRepository, properties, objectMapper, outboxService, eventPublisher);
 

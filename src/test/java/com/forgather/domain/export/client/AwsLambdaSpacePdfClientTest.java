@@ -32,7 +32,7 @@ class AwsLambdaSpacePdfClientTest {
     void sendsOnlyJobIdUsingEventInvocation() throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         AwsLambdaSpacePdfClient client = new AwsLambdaSpacePdfClient(sdkClient,
-            new SpacePdfExportProperties("pdf-function", "ap-northeast-2", "https://images.example.com"), mapper);
+            new SpacePdfExportProperties("pdf-function", "ap-northeast-2"), mapper);
         when(sdkClient.invoke(any(InvokeRequest.class))).thenReturn(InvokeResponse.builder().statusCode(202).build());
 
         client.generate("f12be7f2-9022-480f-8510-f61b516706c1");
@@ -48,7 +48,7 @@ class AwsLambdaSpacePdfClientTest {
     @ValueSource(ints = {200, 503})
     void rejectsResponsesOtherThanAccepted(int statusCode) {
         AsyncSpacePdfClient client = new AwsLambdaSpacePdfClient(sdkClient,
-            new SpacePdfExportProperties("pdf-function", "ap-northeast-2", "https://images.example.com"),
+            new SpacePdfExportProperties("pdf-function", "ap-northeast-2"),
             new ObjectMapper());
         when(sdkClient.invoke(any(InvokeRequest.class)))
             .thenReturn(InvokeResponse.builder().statusCode(statusCode).build());

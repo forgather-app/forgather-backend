@@ -13,7 +13,7 @@ class SpacePdfLambdaConfigTest {
     void failsBeanCreationWithInvalidConfigurationAsRootCause() {
         new ApplicationContextRunner()
             .withUserConfiguration(SpacePdfLambdaConfig.class)
-            .withBean(SpacePdfExportProperties.class, () -> new SpacePdfExportProperties(null, null, null))
+            .withBean(SpacePdfExportProperties.class, () -> new SpacePdfExportProperties(null, null))
             .run(context -> {
                 assertThat(context).hasFailed();
                 assertThat(context.getStartupFailure()).hasRootCauseExactlyInstanceOf(InvalidConfigurationException.class);
