@@ -71,22 +71,22 @@ public class SpacePdfExportService {
 
     private SpaceArchive createArchive(Space space, Host host) {
         List<GuestBookArchiveCardDto> cards = cardRepository.findArchiveCards(space.getId());
-        Map<Long, List<String>> photoUrls = createPhotoUrls(cards);
+        Map<Long, List<String>> photoPaths = findPhotoPaths(cards);
         List<SpaceArchive.GuestbookInfo> guestbooks = cards.stream()
             .map(card -> new SpaceArchive.GuestbookInfo(card.nickname(), card.message(),
-                card.createdAt().toString(), photoUrls.getOrDefault(card.id(), List.of())))
+                card.createdAt().toString(), photoPaths.getOrDefault(card.id(), List.of())))
             .toList();
         return new SpaceArchive(space.getName(), host.getNickname(), guestbooks);
     }
 
-    private Map<Long, List<String>> createPhotoUrls(List<GuestBookArchiveCardDto> cards) {
+    private Map<Long, List<String>> findPhotoPaths(List<GuestBookArchiveCardDto> cards) {
         if (cards.isEmpty()) {
             return Map.of();
         }
         List<Long> cardIds = cards.stream().map(GuestBookArchiveCardDto::id).toList();
         return photoRepository.findArchivePhotos(cardIds).stream()
             .collect(Collectors.groupingBy(GuestBookArchivePhotoDto::cardId,
-                Collectors.mapping(photo -> properties.publicUrl(photo.path()), Collectors.toList())));
+                Collectors.mapping(GuestBookArchivePhotoDto::path, Collectors.toList())));
     }
 
     private String serialize(SpaceArchive archive) {

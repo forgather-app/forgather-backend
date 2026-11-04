@@ -12,7 +12,7 @@ public record SpaceArchive(
         String author,
         String message,
         String createdAt,
-        List<String> photoUrls
+        List<String> photoPaths
     ) {
     }
 }
