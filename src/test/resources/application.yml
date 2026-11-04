@@ -113,3 +113,8 @@ apple:
 monitoring:
   prometheus-url: ""
   dashboard-url: ""
+
+space:
+  pdf-export:
+    function-name: forgather-pdf
+    region: ap-northeast-2

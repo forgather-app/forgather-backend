@@ -42,10 +42,19 @@ public class OutboxService {
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public OutboxProcessResult process() {
+        return processAll(outboxStateService.findProcessable());
+    }
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public OutboxProcessResult process(Long outboxId) {
+        return processAll(outboxRepository.findById(outboxId).stream().toList());
+    }
+
+    private OutboxProcessResult processAll(List<Outbox> outboxes) {
         int succeededCount = 0;
         int failedCount = 0;
         int canceledCount = 0;
-        for (Outbox outbox : outboxStateService.findProcessable()) {
+        for (Outbox outbox : outboxes) {
             OutboxHandler handler = findOutboxHandler(outbox);
             if (handler == null) {
                 log.error("처리 가능한 핸들러가 없습니다. outboxId: {}, type: {}", outbox.getId(), outbox.getType());
