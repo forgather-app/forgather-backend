@@ -13,6 +13,9 @@ document.addEventListener('DOMContentLoaded', function () {
     let detailRequest = 0;
     let currentNoticeId = null;
     let isSubmitting = false;
+    let formMode = 'create';
+    let editingNoticeId = null;
+    let loadedNotice = null;
     let toastTimeout;
 
     function updateCharacterCount(input, countId, warningId, limit) {
@@ -51,13 +54,18 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function closeModal(modal) {
-        if (modal === createModal && isSubmitting) return;
+        if (isSubmitting) return;
         modal.close();
     }
 
     [createModal, detailModal].forEach(modal => {
         modal.addEventListener('close', () => {
-            if (modal === detailModal) detailRequest++;
+            if (modal === detailModal) {
+                detailRequest++;
+                currentNoticeId = null;
+                loadedNotice = null;
+                updateActions();
+            }
             if (!createModal.open && !detailModal.open) document.body.classList.remove('modal-open');
         });
         modal.addEventListener('click', event => {
@@ -66,9 +74,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (event.clientX < bounds.left || event.clientX > bounds.right ||
                 event.clientY < bounds.top || event.clientY > bounds.bottom) closeModal(modal);
         });
-    });
-    createModal.addEventListener('cancel', event => {
-        if (isSubmitting) event.preventDefault();
+        modal.addEventListener('cancel', event => {
+            if (isSubmitting) event.preventDefault();
+        });
     });
     document.querySelectorAll('[data-close]').forEach(button => {
         button.addEventListener('click', () => closeModal(element(button.dataset.close)));
@@ -95,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function () {
         element('emptyMessage').hidden = notices.length !== 0;
     }
 
-    async function loadNotices(page = 1) {
+    async function loadNotices(page = 1, canCorrectPage = false) {
         const request = ++listRequest;
         currentPage = page;
         element('listLoading').hidden = false;
@@ -106,6 +114,9 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             const result = await API.getNotices(page);
             if (request !== listRequest) return;
+            if (canCorrectPage && page > Math.max(1, result.totalPages)) {
+                return await loadNotices(Math.max(1, result.totalPages));
+            }
             currentPage = result.currentPage;
             renderNotices(result.notices);
             element('totalCountInfo').textContent = `전체 ${result.totalCount.toLocaleString()}개`;
@@ -122,16 +133,59 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function updateActions() {
+        element('editNoticeBtn').disabled = isSubmitting || !loadedNotice;
+        element('deleteNoticeBtn').disabled = isSubmitting || !loadedNotice;
+    }
+
+    function setSubmitting(isBusy) {
+        isSubmitting = isBusy;
+        submitButton.disabled = isBusy;
+        titleInput.disabled = isBusy;
+        bodyInput.disabled = isBusy;
+        ['openCreateBtn', 'retryListBtn', 'retryDetailBtn'].forEach(id => {
+            element(id).disabled = isBusy;
+        });
+        document.querySelectorAll('[data-close]').forEach(button => {
+            button.disabled = isBusy;
+        });
+        updateActions();
+    }
+
+    function openForm(notice = null) {
+        if (isSubmitting) return;
+        formMode = notice ? 'edit' : 'create';
+        editingNoticeId = notice ? notice.id : null;
+        form.reset();
+        titleInput.value = notice ? notice.title : '';
+        bodyInput.value = notice ? notice.body : '';
+        const label = notice ? '공지 수정' : '공지 작성';
+        element('createModalTitle').textContent = label;
+        element('closeNoticeFormBtn').setAttribute('aria-label', `${label} 닫기`);
+        submitButton.textContent = notice ? '수정 저장' : '등록';
+        element('createError').hidden = true;
+        updateCharacterCounts();
+        openModal(createModal);
+    }
+
     function renderDetail(notice) {
+        loadedNotice = notice;
+        currentNoticeId = notice.id;
         element('detailTitle').textContent = notice.title;
         element('detailBody').textContent = notice.body;
         element('detailDate').textContent = `등록일: ${formatDate(notice.createdAt)}`;
         element('detailLoading').hidden = true;
         element('detailError').hidden = true;
         element('detailContent').hidden = false;
+        element('detailActionError').hidden = true;
+        updateActions();
     }
 
     async function loadDetail(noticeId) {
+        if (isSubmitting) return;
+        loadedNotice = null;
+        updateActions();
+        element('detailActionError').hidden = true;
         const request = ++detailRequest;
         currentNoticeId = noticeId;
         if (!detailModal.open) openModal(detailModal);
@@ -160,36 +214,63 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     element('retryDetailBtn').addEventListener('click', () => loadDetail(currentNoticeId));
     element('openCreateBtn').addEventListener('click', () => {
-        if (!isSubmitting) openModal(createModal);
+        openForm();
     });
     element('logoutBtn').addEventListener('click', () => Auth.logout());
+
+    element('editNoticeBtn').addEventListener('click', () => {
+        if (loadedNotice && !isSubmitting) openForm(loadedNotice);
+    });
+    element('deleteNoticeBtn').addEventListener('click', async () => {
+        if (isSubmitting || !loadedNotice) return;
+        if (!window.confirm('이 공지를 삭제하시겠습니까?')) return;
+        const noticeId = loadedNotice.id;
+        setSubmitting(true);
+        detailRequest++;
+        element('detailActionError').hidden = true;
+        try {
+            await API.deleteNotice(noticeId);
+            loadedNotice = null;
+            currentNoticeId = null;
+            detailModal.close();
+            await loadNotices(currentPage, true);
+            showToast('공지가 삭제되었습니다.');
+        } catch (error) {
+            element('detailActionError').textContent = error.message || '공지 삭제에 실패했습니다. 다시 시도해주세요.';
+            element('detailActionError').hidden = false;
+        } finally {
+            setSubmitting(false);
+        }
+    });
 
     form.addEventListener('submit', async event => {
         event.preventDefault();
         if (isSubmitting) return;
-        isSubmitting = true;
-        submitButton.disabled = true;
-        submitButton.textContent = '등록 중...';
+        const isEditing = formMode === 'edit';
+        const noticeId = editingNoticeId;
+        setSubmitting(true);
+        detailRequest++;
+        submitButton.textContent = isEditing ? '저장 중...' : '등록 중...';
         element('createError').hidden = true;
         try {
-            const notice = await API.createNotice(element('noticeTitle').value, element('noticeBody').value);
-            // 저장 이전에 시작된 상세 요청은 저장 결과를 덮어쓸 수 없다.
-            detailRequest++;
+            const notice = isEditing
+                ? await API.updateNotice(noticeId, titleInput.value, bodyInput.value)
+                : await API.createNotice(titleInput.value, bodyInput.value);
             form.reset();
+            editingNoticeId = null;
             updateCharacterCounts();
             createModal.close();
-            await loadNotices(1);
-            currentNoticeId = notice.id;
+            await loadNotices(isEditing ? currentPage : 1);
             renderDetail(notice);
             if (!detailModal.open) openModal(detailModal);
-            showToast('공지가 등록되었습니다.');
+            showToast(isEditing ? '공지가 수정되었습니다.' : '공지가 등록되었습니다.');
         } catch (error) {
-            element('createError').textContent = error.message || '공지 등록에 실패했습니다. 다시 시도해주세요.';
+            element('createError').textContent = error.message ||
+                (isEditing ? '공지 수정에 실패했습니다. 다시 시도해주세요.' : '공지 등록에 실패했습니다. 다시 시도해주세요.');
             element('createError').hidden = false;
         } finally {
-            isSubmitting = false;
-            submitButton.disabled = false;
-            submitButton.textContent = '등록';
+            setSubmitting(false);
+            submitButton.textContent = isEditing ? '수정 저장' : '등록';
         }
     });
 

@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page;
 import com.forgather.domain.notice.model.Notice;
 
 public record AdminNoticeResponse(
-    List<NoticeSummaryResponse> notices,
+    List<AdminNoticeSummaryResponse> notices,
     int currentPage,
     int pageSize,
     long totalCount,
@@ -15,7 +15,7 @@ public record AdminNoticeResponse(
 ) {
 
     public static AdminNoticeResponse from(Page<Notice> notices) {
-        return new AdminNoticeResponse(notices.map(NoticeSummaryResponse::from).toList(),
+        return new AdminNoticeResponse(notices.map(AdminNoticeSummaryResponse::from).toList(),
             notices.getNumber() + 1, notices.getSize(), notices.getTotalElements(), notices.getTotalPages());
     }
 }

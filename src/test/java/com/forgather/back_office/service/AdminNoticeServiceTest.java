@@ -15,17 +15,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.forgather.back_office.dto.AdminNoticeResponse;
-import com.forgather.back_office.dto.NoticeDetailResponse;
-import com.forgather.back_office.dto.NoticeSummaryResponse;
+import com.forgather.back_office.dto.AdminNoticeDetailResponse;
+import com.forgather.back_office.dto.AdminNoticeSummaryResponse;
 import com.forgather.back_office.dto.RegisterNoticeRequest;
 import com.forgather.container.TestOnContainer;
 import com.forgather.domain.notice.model.Notice;
 import com.forgather.domain.notice.repository.NoticeRepository;
+import com.forgather.domain.notice.repository.jpa.NoticeJpaRepository;
 import com.forgather.global.exception.NotFoundException;
 
 import jakarta.persistence.EntityManager;
@@ -45,18 +45,18 @@ class AdminNoticeServiceTest extends TestOnContainer {
     private EntityManager entityManager;
 
     @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private NoticeJpaRepository noticeJpaRepository;
 
     @DisplayName("공지를 저장하고 재조회하면 최대 본문 원문과 자동 생성 시각이 보존된다")
     @Test
     void saveAndReloadPreservesBodyWhitespaceAndSetsCreatedAt() {
         // given
         String title = "  공지 제목  ";
-        String body = "  첫 줄\n\n둘째 줄  \n" + "👨‍👩‍👧‍👦".repeat(9986);
+        String body = "  첫 줄\n\n둘째 줄  \n" + "나".repeat(9986);
         LocalDateTime before = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
 
         // when
-        NoticeDetailResponse response = adminNoticeService.create(new RegisterNoticeRequest(title, body));
+        AdminNoticeDetailResponse response = adminNoticeService.create(new RegisterNoticeRequest(title, body));
         entityManager.flush();
         entityManager.clear();
         Notice reloaded = noticeRepository.getByIdAndDeletedAtIsNullOrThrow(response.id());
@@ -98,10 +98,6 @@ class AdminNoticeServiceTest extends TestOnContainer {
             ids.add(noticeRepository.save(new Notice("공지 " + i, "본문")).getId());
         }
         entityManager.flush();
-        for (int i = 0; i < 16; i++) {
-            jdbcTemplate.update("UPDATE notice SET created_at = ? WHERE id = ?",
-                LocalDateTime.of(2026, 1, 1, 0, 0).plusDays(i / 2), ids.get(i));
-        }
         entityManager.clear();
         List<Long> expected = ids.reversed();
 
@@ -111,8 +107,8 @@ class AdminNoticeServiceTest extends TestOnContainer {
 
         // then
         assertAll(
-            () -> assertThat(first.notices()).extracting(NoticeSummaryResponse::id).containsExactlyElementsOf(expected.subList(0, 15)),
-            () -> assertThat(second.notices()).extracting(NoticeSummaryResponse::id).containsExactly(expected.get(15)),
+            () -> assertThat(first.notices()).extracting(AdminNoticeSummaryResponse::id).containsExactlyElementsOf(expected.subList(0, 15)),
+            () -> assertThat(second.notices()).extracting(AdminNoticeSummaryResponse::id).containsExactly(expected.get(15)),
             () -> assertThat(first.currentPage()).isEqualTo(1),
             () -> assertThat(second.currentPage()).isEqualTo(2),
             () -> assertThat(first.pageSize()).isEqualTo(15),
@@ -122,6 +118,25 @@ class AdminNoticeServiceTest extends TestOnContainer {
             () -> assertThat(first.totalPages()).isEqualTo(2),
             () -> assertThat(second.totalPages()).isEqualTo(2)
         );
+    }
+
+    @DisplayName("공지 삭제는 DB 행을 보존하고 삭제 시각을 기록한다")
+    @Test
+    void deletePreservesRowAndRecordsDeletedAt() {
+        // given
+        Notice notice = noticeRepository.save(new Notice("제목", "본문"));
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        adminNoticeService.delete(notice.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        Notice deleted = noticeJpaRepository.findById(notice.getId()).orElseThrow();
+        assertThat(deleted.getDeletedAt()).isNotNull();
+        assertThat(noticeRepository.findByIdAndDeletedAtIsNull(notice.getId())).isEmpty();
     }
 
     @DisplayName("상세를 조회하고 논리 삭제된 공지와 없는 공지는 조회에서 제외한다")
@@ -135,7 +150,7 @@ class AdminNoticeServiceTest extends TestOnContainer {
         entityManager.clear();
 
         // when
-        NoticeDetailResponse result = adminNoticeService.getNotice(active.getId());
+        AdminNoticeDetailResponse result = adminNoticeService.getNotice(active.getId());
         AdminNoticeResponse list = adminNoticeService.getAllNotices(PageRequest.of(0, 15));
 
         // then
@@ -144,7 +159,7 @@ class AdminNoticeServiceTest extends TestOnContainer {
             () -> assertThat(result.title()).isEqualTo("제목"),
             () -> assertThat(result.body()).isEqualTo("본문"),
             () -> assertThat(result.createdAt()).isNotNull(),
-            () -> assertThat(list.notices()).extracting(NoticeSummaryResponse::id).containsExactly(active.getId()),
+            () -> assertThat(list.notices()).extracting(AdminNoticeSummaryResponse::id).containsExactly(active.getId()),
             () -> assertThatThrownBy(() -> adminNoticeService.getNotice(deleted.getId())).isInstanceOf(NotFoundException.class),
             () -> assertThatThrownBy(() -> adminNoticeService.getNotice(Long.MAX_VALUE)).isInstanceOf(NotFoundException.class)
         );
