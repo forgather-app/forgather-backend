@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공지 관리 - Forgather Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin/tailwind-output.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/common.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/notices.css}">
+</head>
+<body class="bg-bg-color min-h-screen flex flex-col font-sans">
+    <header th:replace="~{admin/layout/fragments :: header(currentPage='notices')}"></header>
+    <main class="flex-1 py-xl px-md">
+        <div class="max-w-7xl mx-auto">
+            <div class="mb-xl pb-lg border-b border-border-color">
+                <h2 class="text-3xl font-bold text-text-primary mb-xs">공지 관리</h2>
+                <p class="text-text-secondary">공지를 작성하고 등록된 공지를 확인합니다.</p>
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-md mb-lg">
+                <p id="totalCountInfo" class="text-sm text-text-secondary" aria-live="polite"></p>
+                <button id="openCreateBtn" type="button" class="px-lg py-2.5 min-h-[44px] bg-primary text-white rounded-lg hover:bg-primary-hover cursor-pointer focus:ring-2 focus:ring-primary focus:ring-offset-2">공지 작성</button>
+            </div>
+            <p id="listLoading" role="status" class="text-text-secondary mb-md" hidden>공지를 불러오는 중...</p>
+            <div id="listError" role="alert" class="p-lg mb-lg bg-danger/10 text-danger rounded-lg" hidden>
+                <p id="listErrorMessage"></p>
+                <button id="retryListBtn" type="button" class="min-h-[44px] underline cursor-pointer">다시 시도</button>
+            </div>
+            <div class="bg-surface rounded-lg shadow-md overflow-hidden">
+                <table class="w-full table-fixed">
+                    <caption class="sr-only">등록된 공지 목록</caption>
+                    <thead><tr class="bg-neutral-100 border-b border-border-color">
+                        <th scope="col" class="px-lg py-md text-left text-sm">제목</th>
+                        <th scope="col" class="px-lg py-md text-left text-sm w-40">등록일</th>
+                    </tr></thead>
+                    <tbody id="noticesTableBody" class="divide-y divide-border-color"></tbody>
+                </table>
+                <p id="emptyMessage" class="p-lg text-center text-text-secondary" hidden>등록된 공지가 없습니다.</p>
+            </div>
+            <nav id="pagination" class="pagination" aria-label="공지 페이지" style="display: none;"></nav>
+        </div>
+    </main>
+    <footer th:replace="~{admin/layout/fragments :: footer}"></footer>
+
+    <dialog id="createModal" class="notice-modal p-lg bg-surface rounded-lg shadow-lg" aria-labelledby="createModalTitle">
+        <div class="flex items-center justify-between gap-md mb-lg">
+            <h3 id="createModalTitle" class="text-xl font-semibold">공지 작성</h3>
+            <button type="button" data-close="createModal" class="min-h-[44px] px-md cursor-pointer" aria-label="공지 작성 닫기">닫기</button>
+        </div>
+        <form id="noticeForm">
+            <label for="noticeTitle" class="block font-medium mb-sm">제목</label>
+            <input id="noticeTitle" name="title" type="text" required autofocus aria-describedby="titleHelp" class="w-full px-md py-2.5 border border-border-color rounded-lg focus:ring-2 focus:ring-primary">
+            <p id="titleHelp" class="text-sm text-text-secondary mt-xs mb-lg">
+                <span id="titleCount" aria-live="polite">0/100</span>
+                <span id="titleWarning" class="notice-limit-warning" role="alert" hidden>제목은 100자 이하로 입력해주세요.</span>
+            </p>
+            <label for="noticeBody" class="block font-medium mb-sm">본문</label>
+            <textarea id="noticeBody" name="body" required rows="10" aria-describedby="bodyHelp" class="w-full px-md py-md border border-border-color rounded-lg focus:ring-2 focus:ring-primary"></textarea>
+            <p id="bodyHelp" class="text-sm text-text-secondary mt-xs mb-lg">
+                <span id="bodyCount" aria-live="polite">0/10,000</span>
+                <span id="bodyWarning" class="notice-limit-warning" role="alert" hidden>본문은 10,000자 이하로 입력해주세요.</span>
+            </p>
+            <p id="createError" role="alert" class="text-danger mb-md" hidden></p>
+            <div class="flex justify-end gap-sm">
+                <button type="button" data-close="createModal" class="px-lg py-2.5 min-h-[44px] border border-border-color rounded-lg cursor-pointer">취소</button>
+                <button id="submitNoticeBtn" type="submit" class="px-lg py-2.5 min-h-[44px] bg-primary text-white rounded-lg hover:bg-primary-hover cursor-pointer disabled:opacity-50">등록</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="detailModal" class="notice-modal p-lg bg-surface rounded-lg shadow-lg" aria-labelledby="detailModalTitle">
+        <div class="flex items-center justify-between gap-md mb-lg">
+            <h3 id="detailModalTitle" class="text-xl font-semibold">공지 상세</h3>
+            <button type="button" data-close="detailModal" autofocus class="min-h-[44px] px-md cursor-pointer" aria-label="공지 상세 닫기">닫기</button>
+        </div>
+        <p id="detailLoading" role="status" hidden>공지를 불러오는 중...</p>
+        <div id="detailError" role="alert" class="text-danger" hidden>
+            <p id="detailErrorMessage"></p>
+            <button id="retryDetailBtn" type="button" class="min-h-[44px] underline cursor-pointer">다시 시도</button>
+        </div>
+        <article id="detailContent" hidden>
+            <h4 id="detailTitle" class="notice-text text-xl font-semibold mb-sm"></h4>
+            <p id="detailDate" class="text-sm text-text-secondary mb-lg"></p>
+            <div id="detailBody" class="notice-text text-text-primary"></div>
+        </article>
+    </dialog>
+    <div th:replace="~{admin/layout/fragments :: toast}"></div>
+    <script th:src="@{/js/admin/auth.js}"></script>
+    <script th:src="@{/js/admin/api.js}"></script>
+    <script th:src="@{/js/admin/pagination.js}"></script>
+    <script th:src="@{/js/admin/notices.js}"></script>
+</body>
+</html>
