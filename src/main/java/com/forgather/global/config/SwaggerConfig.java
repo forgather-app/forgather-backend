@@ -2,15 +2,20 @@ package com.forgather.global.config;
 
 import java.util.List;
 
+import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.forgather.global.auth.util.AuthCookieProvider;
+import com.forgather.global.client.ClientType;
+import com.forgather.global.client.ClientVersionInterceptor;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.media.StringSchema;
+import io.swagger.v3.oas.models.parameters.HeaderParameter;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 
@@ -19,6 +24,17 @@ public class SwaggerConfig {
 
     @Value("${api.base-url}")
     private String serverUrl;
+
+    @Bean
+    public OperationCustomizer clientTypeHeaderCustomizer() {
+        return (operation, handlerMethod) -> operation.addParametersItem(
+            new HeaderParameter()
+                .name(ClientVersionInterceptor.CLIENT_TYPE_HEADER)
+                .description("클라이언트 타입")
+                .required(true)
+                .schema(new StringSchema()._default(ClientType.WEB.name()))
+        );
+    }
 
     @Bean
     public OpenAPI openAPI() {
