@@ -102,6 +102,34 @@ class NotificationDeviceTest {
                 .hasMessageContaining("디바이스 토큰에는 공백을 포함할 수 없습니다.");
         }
 
+        @DisplayName("토큰에 ASCII가 아닌 문자가 있으면 예외를 던진다")
+        @ValueSource(strings = {"tokén", "토큰", "token😀", "token\u00a0"})
+        @ParameterizedTest
+        void throwExceptionWhenTokenContainsNonAscii(String token) {
+            // when & then
+            assertThatThrownBy(() -> createDeviceWithToken(token))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("디바이스 토큰은 ASCII 문자만 포함할 수 있습니다.");
+        }
+
+        @DisplayName("토큰에 경로 구분자 '/'가 있으면 예외를 던진다")
+        @ValueSource(strings = {"a/b", "/token", "token/"})
+        @ParameterizedTest
+        void throwExceptionWhenTokenContainsSlash(String token) {
+            // when & then
+            assertThatThrownBy(() -> createDeviceWithToken(token))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("디바이스 토큰에는 '/'를 포함할 수 없습니다.");
+        }
+
+        @DisplayName("FCM 토큰 문자 집합(영숫자, ':', '_', '-')은 허용한다")
+        @Test
+        void allowFcmTokenCharacters() {
+            // when & then
+            assertThatCode(() -> createDeviceWithToken("dGVzdC10b2tlbg:APA91bExample_Token-0001"))
+                .doesNotThrowAnyException();
+        }
+
         @DisplayName("토큰은 512자까지 허용한다")
         @Test
         void allowTokenAtMaxLength() {

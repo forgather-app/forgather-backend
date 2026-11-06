@@ -239,6 +239,22 @@ class NotificationDeviceAcceptanceTest extends AcceptanceTest {
             .body("message", containsString("디바이스 토큰에는 공백을 포함할 수 없습니다."));
     }
 
+    @DisplayName("토큰에 '/'가 있으면 400 BAD_REQUEST로 응답한다")
+    @Test
+    void rejectTokenWithSlash() {
+        // when & then
+        RestAssuredMockMvc.given()
+            .postProcessors(withAccessToken(accessToken))
+            .contentType(ContentType.JSON)
+            .body(registerRequest("IOS", "fcm/token"))
+            .when()
+            .put("/notifications/devices")
+            .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value())
+            .body("code", equalTo("BAD_REQUEST"))
+            .body("message", containsString("디바이스 토큰에는 '/'를 포함할 수 없습니다."));
+    }
+
     @DisplayName("토큰이 512자를 초과하면 400 VALIDATION_FAILED로 응답한다")
     @Test
     void rejectTooLongToken() {
