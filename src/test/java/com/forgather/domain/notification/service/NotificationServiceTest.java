@@ -1,5 +1,7 @@
 package com.forgather.domain.notification.service;
 
+import static com.forgather.fixture.ConstraintViolationFixture.foreignKeyViolation;
+import static com.forgather.fixture.ConstraintViolationFixture.uniqueViolation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -164,7 +166,8 @@ class NotificationServiceTest extends TestOnContainer {
         // given
         NotificationRepository repository = Mockito.mock(NotificationRepository.class);
         Mockito.when(repository.existsByDedupeKey(anyString())).thenReturn(false);
-        Mockito.when(repository.saveAndFlush(any())).thenThrow(new DataIntegrityViolationException("duplicate"));
+        Mockito.when(repository.saveAndFlush(any()))
+            .thenThrow(uniqueViolation("notification." + Notification.UK_DEDUPE_KEY));
         NotificationService service = new NotificationService(repository);
         NotificationCommand command =
             NotificationFixture.createCommandWithHostAndDedupeKey(HostFixture.createHostWithId(1L), "race-key");
@@ -172,6 +175,23 @@ class NotificationServiceTest extends TestOnContainer {
         // when & then
         assertThatThrownBy(() -> service.create(command))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("race-key");
+            .hasMessageContaining("race-key")
+            .hasCauseInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @DisplayName("dedupe_key가 아닌 제약 위반은 409로 바꾸지 않고 원본 예외를 그대로 전파한다")
+    @Test
+    void propagateOtherConstraintViolation() {
+        // given
+        NotificationRepository repository = Mockito.mock(NotificationRepository.class);
+        Mockito.when(repository.existsByDedupeKey(anyString())).thenReturn(false);
+        DataIntegrityViolationException violation = foreignKeyViolation("notification.FK_host_TO_notification");
+        Mockito.when(repository.saveAndFlush(any())).thenThrow(violation);
+        NotificationService service = new NotificationService(repository);
+        NotificationCommand command =
+            NotificationFixture.createCommandWithHostAndDedupeKey(HostFixture.createHostWithId(1L), "race-key");
+
+        // when & then
+        assertThatThrownBy(() -> service.create(command)).isSameAs(violation);
     }
 }

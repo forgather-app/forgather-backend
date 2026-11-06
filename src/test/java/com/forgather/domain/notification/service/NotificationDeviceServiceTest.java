@@ -1,5 +1,7 @@
 package com.forgather.domain.notification.service;
 
+import static com.forgather.fixture.ConstraintViolationFixture.foreignKeyViolation;
+import static com.forgather.fixture.ConstraintViolationFixture.uniqueViolation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -168,6 +170,29 @@ class NotificationDeviceServiceTest extends TestOnContainer {
         );
     }
 
+    /**
+     * token 컬럼은 utf8mb4_bin이다. 기본 collation(utf8mb4_0900_ai_ci)이면 대소문자만 다른 토큰이
+     * 같은 행으로 조회되어 다른 기기의 토큰이 새 호스트로 넘어가므로, MySQL 컨테이너에서 정확 일치를 확인한다.
+     */
+    @DisplayName("토큰은 대소문자를 구분해 조회하고 저장한다")
+    @Test
+    void tokenIsCaseSensitive() {
+        // given
+        Host host = saveHost();
+        notificationDeviceService.register(host, DevicePlatform.IOS, TOKEN);
+        String upperCaseToken = TOKEN.toUpperCase();
+
+        // when
+        notificationDeviceService.register(host, DevicePlatform.ANDROID, upperCaseToken);
+
+        // then
+        assertAll(
+            () -> assertThat(notificationDeviceJpaRepository.count()).isEqualTo(2),
+            () -> assertThat(getByToken(TOKEN).getPlatform()).isEqualTo(DevicePlatform.IOS),
+            () -> assertThat(getByToken(upperCaseToken).getPlatform()).isEqualTo(DevicePlatform.ANDROID)
+        );
+    }
+
     @DisplayName("본인 토큰을 해제하면 디바이스가 soft delete된다")
     @Test
     void deregisterOwnDevice() {
@@ -263,12 +288,30 @@ class NotificationDeviceServiceTest extends TestOnContainer {
         // given
         NotificationDeviceRepository repository = Mockito.mock(NotificationDeviceRepository.class);
         Mockito.when(repository.findByToken(anyString())).thenReturn(Optional.empty());
-        Mockito.when(repository.saveAndFlush(any())).thenThrow(new DataIntegrityViolationException("duplicate"));
+        Mockito.when(repository.saveAndFlush(any()))
+            .thenThrow(uniqueViolation("notification_device." + NotificationDevice.UK_TOKEN));
         NotificationDeviceService service = new NotificationDeviceService(repository);
 
         // when & then
         assertThatThrownBy(() -> service.register(HostFixture.createHostWithId(1L), DevicePlatform.IOS, TOKEN))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("디바이스 등록이 겹쳤습니다.");
+            .hasMessageContaining("디바이스 등록이 겹쳤습니다.")
+            .hasCauseInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @DisplayName("token UNIQUE가 아닌 제약 위반은 409로 바꾸지 않고 원본 예외를 그대로 전파한다")
+    @Test
+    void propagateOtherConstraintViolation() {
+        // given
+        NotificationDeviceRepository repository = Mockito.mock(NotificationDeviceRepository.class);
+        Mockito.when(repository.findByToken(anyString())).thenReturn(Optional.empty());
+        DataIntegrityViolationException violation =
+            foreignKeyViolation("notification_device.FK_host_TO_notification_device");
+        Mockito.when(repository.saveAndFlush(any())).thenThrow(violation);
+        NotificationDeviceService service = new NotificationDeviceService(repository);
+
+        // when & then
+        assertThatThrownBy(() -> service.register(HostFixture.createHostWithId(1L), DevicePlatform.IOS, TOKEN))
+            .isSameAs(violation);
     }
 }
