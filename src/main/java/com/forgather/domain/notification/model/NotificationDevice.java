@@ -36,6 +36,7 @@ import lombok.NoArgsConstructor;
 public class NotificationDevice extends SoftDeleteEntity {
 
     public static final int MAX_TOKEN_LENGTH = 512;
+    private static final int MAX_ASCII_CODE = 0x7F;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -104,6 +105,7 @@ public class NotificationDevice extends SoftDeleteEntity {
 
     /**
      * FCM 토큰은 공백 없는 ASCII 문자열이다. 길이 상한은 공개되지 않아 컬럼 길이로 제한한다.
+     * DELETE /notifications/devices/{token}의 경로 변수로 전달되므로 경로 구분자 '/'는 허용하지 않는다.
      */
     private void validateToken(String token) {
         if (token.isBlank()) {
@@ -111,6 +113,12 @@ public class NotificationDevice extends SoftDeleteEntity {
         }
         if (token.chars().anyMatch(Character::isWhitespace)) {
             throw new BaseException("디바이스 토큰에는 공백을 포함할 수 없습니다.");
+        }
+        if (token.chars().anyMatch(c -> c > MAX_ASCII_CODE)) {
+            throw new BaseException("디바이스 토큰은 ASCII 문자만 포함할 수 있습니다.");
+        }
+        if (token.indexOf('/') >= 0) {
+            throw new BaseException("디바이스 토큰에는 '/'를 포함할 수 없습니다.");
         }
         if (token.length() > MAX_TOKEN_LENGTH) {
             throw new BaseException("디바이스 토큰은 최대 %d자까지 가능합니다. token.length: %d"
