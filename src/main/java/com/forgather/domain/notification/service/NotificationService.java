@@ -8,6 +8,7 @@ import com.forgather.domain.notification.model.Notification;
 import com.forgather.domain.notification.repository.NotificationRepository;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.ConflictException;
+import com.forgather.global.exception.ConstraintViolations;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,6 +35,10 @@ public class NotificationService {
      * 호출자 트랜잭션을 rollback-only로 표시한 뒤이므로, 예외를 잡고 계속 진행하면 커밋 시
      * {@code UnexpectedRollbackException}이 난다. 여러 알림을 한 작업에서 만드는 호출자는
      * 알림마다 트랜잭션을 나누는 것이 안전하다.
+     * <p>
+     * UNIQUE 위반은 {@code UK_notification_dedupe_key} 위반일 때만 {@link ConflictException}으로 바꾼다.
+     * {@code saveAndFlush}는 호출자 트랜잭션에 쌓인 다른 테이블의 변경도 함께 flush하므로,
+     * 그 밖의 제약 위반은 원인이 가려지지 않도록 원본 예외를 그대로 전파한다.
      */
     @Transactional(noRollbackFor = ConflictException.class)
     public Notification create(NotificationCommand command) {
@@ -62,11 +67,22 @@ public class NotificationService {
         try {
             return notificationRepository.saveAndFlush(notification);
         } catch (DataIntegrityViolationException e) {
-            throw alreadyCreated(dedupeKey);
+            if (ConstraintViolations.isViolationOf(e, Notification.UK_DEDUPE_KEY)) {
+                throw alreadyCreated(dedupeKey, e);
+            }
+            throw e;
         }
     }
 
     private ConflictException alreadyCreated(String dedupeKey) {
-        return new ConflictException("이미 생성된 알림입니다. dedupeKey: " + dedupeKey);
+        return new ConflictException(alreadyCreatedMessage(dedupeKey));
+    }
+
+    private ConflictException alreadyCreated(String dedupeKey, Throwable cause) {
+        return new ConflictException(alreadyCreatedMessage(dedupeKey), cause);
+    }
+
+    private String alreadyCreatedMessage(String dedupeKey) {
+        return "이미 생성된 알림입니다. dedupeKey: " + dedupeKey;
     }
 }

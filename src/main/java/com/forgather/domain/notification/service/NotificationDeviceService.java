@@ -12,6 +12,7 @@ import com.forgather.domain.notification.model.DevicePlatform;
 import com.forgather.domain.notification.model.NotificationDevice;
 import com.forgather.domain.notification.repository.NotificationDeviceRepository;
 import com.forgather.global.exception.ConflictException;
+import com.forgather.global.exception.ConstraintViolations;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,6 +31,7 @@ public class NotificationDeviceService {
      * 토큰을 등록한다. 멱등이다.
      * 같은 토큰이 이미 있으면(soft delete된 행 포함) 그 행의 소유 호스트·플랫폼·활동 시각을 갱신하고 복구한다.
      * 없으면 새로 저장한다. 같은 토큰을 두 요청이 동시에 처음 등록하면 한쪽은 UNIQUE 위반이 나며 409로 응답한다.
+     * token UNIQUE 외의 제약 위반은 원인이 가려지지 않도록 원본 예외를 그대로 전파한다.
      */
     @Transactional
     public void register(Host host, DevicePlatform platform, String token) {
@@ -41,7 +43,10 @@ public class NotificationDeviceService {
         try {
             notificationDeviceRepository.saveAndFlush(new NotificationDevice(host, platform, token));
         } catch (DataIntegrityViolationException e) {
-            throw new ConflictException("디바이스 등록이 겹쳤습니다. 다시 시도해 주세요.");
+            if (ConstraintViolations.isViolationOf(e, NotificationDevice.UK_TOKEN)) {
+                throw new ConflictException("디바이스 등록이 겹쳤습니다. 다시 시도해 주세요.", e);
+            }
+            throw e;
         }
     }
 

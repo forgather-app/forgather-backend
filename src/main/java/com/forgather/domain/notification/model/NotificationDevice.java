@@ -21,6 +21,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,9 +32,17 @@ import lombok.NoArgsConstructor;
  */
 @Getter
 @Entity
-@Table(name = "notification_device")
+@Table(
+    name = "notification_device",
+    uniqueConstraints = @UniqueConstraint(name = NotificationDevice.UK_TOKEN, columnNames = "token")
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class NotificationDevice extends SoftDeleteEntity {
+
+    /**
+     * token UNIQUE 제약 이름 (V43). 동시 최초 등록의 UNIQUE 위반을 판별할 때 쓴다.
+     */
+    public static final String UK_TOKEN = "UK_notification_device_token";
 
     public static final int MAX_TOKEN_LENGTH = 512;
     private static final int MAX_ASCII_CODE = 0x7F;

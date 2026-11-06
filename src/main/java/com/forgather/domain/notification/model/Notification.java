@@ -22,6 +22,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,9 +33,17 @@ import lombok.NoArgsConstructor;
  */
 @Getter
 @Entity
-@Table(name = "notification")
+@Table(
+    name = "notification",
+    uniqueConstraints = @UniqueConstraint(name = Notification.UK_DEDUPE_KEY, columnNames = "dedupe_key")
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Notification extends SoftDeleteEntity {
+
+    /**
+     * dedupe_key UNIQUE 제약 이름 (V43). UNIQUE 위반이 중복 생성인지 판별할 때 쓴다.
+     */
+    public static final String UK_DEDUPE_KEY = "UK_notification_dedupe_key";
 
     private static final int MAX_TITLE_LENGTH = 100;
     private static final int MAX_BODY_LENGTH = 500;
