@@ -35,9 +35,9 @@ public class NotificationDeviceService {
      */
     @Transactional
     public void register(Host host, DevicePlatform platform, String token) {
-        NotificationDevice existing = notificationDeviceRepository.findByToken(token).orElse(null);
-        if (existing != null) {
-            existing.reassign(host, platform);
+        NotificationDevice device = notificationDeviceRepository.findByToken(token).orElse(null);
+        if (device != null) {
+            device.reassign(host, platform);
             return;
         }
         try {

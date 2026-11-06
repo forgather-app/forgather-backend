@@ -9,10 +9,10 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import jakarta.persistence.LockModeType;
-
 import com.forgather.domain.host.model.Host;
 import com.forgather.domain.notification.model.NotificationDevice;
+
+import jakarta.persistence.LockModeType;
 
 public interface NotificationDeviceRepository {
 
