@@ -13,6 +13,7 @@ import com.forgather.domain.host.repository.AppleHostRepository;
 import com.forgather.domain.host.repository.HostProfilePhotoRepository;
 import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.domain.host.repository.KakaoHostRepository;
+import com.forgather.domain.notification.service.NotificationDeviceService;
 import com.forgather.domain.space.service.SpaceService;
 import com.forgather.global.outbox.OutboxService;
 import com.forgather.global.outbox.OutboxType;
@@ -29,6 +30,7 @@ public class WithdrawService {
     private final HostRepository hostRepository;
     private final SpaceService spaceService;
     private final ExhibitionService exhibitionService;
+    private final NotificationDeviceService notificationDeviceService;
     private final OutboxService outboxService;
 
     @Transactional
@@ -58,6 +60,7 @@ public class WithdrawService {
     private void deleteHost(Host host, OauthHost oauthHost) {
         deleteOauthHost(oauthHost);
         hostProfilePhotoRepository.findByHostAndDeletedAtIsNull(host).ifPresent(HostProfilePhoto::delete);
+        notificationDeviceService.deleteAllByHost(host);
         spaceService.deleteAllByHost(host);
         exhibitionService.deleteAllByHost(host);
         host.delete();
