@@ -3,6 +3,7 @@
 -- dedupe_key는 스케줄 생성 알림의 중복 실행 방지 키. 이벤트 기반 알림은 NULL이며 UNIQUE는 NULL 중복을 허용한다.
 -- sent_at은 공급자가 전송 요청을 접수한 시각이다. 단말 도달 시각이 아니다.
 -- title·body는 표시 글자 수(제목 100자, 본문 500자)로 검증하므로 복합 이모지 저장 여유를 위해 컬럼은 10배로 잡는다 (V34와 같은 규칙).
+-- dedupe_key와 notification_device.token은 정확 일치 키이므로 기본 collation(utf8mb4_0900_ai_ci, 대소문자 무시) 대신 utf8mb4_bin을 지정한다.
 CREATE TABLE `notification`
 (
     `id`          BIGINT        NOT NULL AUTO_INCREMENT,
@@ -12,7 +13,7 @@ CREATE TABLE `notification`
     `body`        VARCHAR(5000) NOT NULL,
     `target_type` VARCHAR(30)   NULL,
     `target_key`  VARCHAR(255)  NULL,
-    `dedupe_key`  VARCHAR(255)  NULL,
+    `dedupe_key`  VARCHAR(255)  CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL,
     `read_at`     TIMESTAMP     NULL,
     `sent_at`     TIMESTAMP     NULL,
     `created_at`  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -38,7 +39,7 @@ CREATE TABLE `notification_device`
     `id`             BIGINT       NOT NULL AUTO_INCREMENT,
     `host_id`        BIGINT       NOT NULL,
     `platform`       VARCHAR(20)  NOT NULL,
-    `token`          VARCHAR(512) NOT NULL,
+    `token`          VARCHAR(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
     `last_active_at` TIMESTAMP    NOT NULL,
     `created_at`     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
