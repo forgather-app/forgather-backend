@@ -4,9 +4,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import jakarta.persistence.LockModeType;
 
 import com.forgather.domain.host.model.Host;
 import com.forgather.domain.notification.model.NotificationDevice;
@@ -25,6 +28,11 @@ public interface NotificationDeviceRepository {
      */
     Optional<NotificationDevice> findByToken(String token);
 
+    /**
+     * deregister용. 조회한 뒤 다른 호스트의 reassign이 먼저 커밋되면 전체 컬럼 UPDATE가 host_id를 되돌리고
+     * deleted_at을 세우므로, 행을 잠가 읽고(SELECT ... FOR UPDATE) 트랜잭션 종료까지 유지한다.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<NotificationDevice> findByTokenAndHostAndDeletedAtIsNull(String token, Host host);
 
     List<NotificationDevice> findAllByHostAndDeletedAtIsNull(Host host);
