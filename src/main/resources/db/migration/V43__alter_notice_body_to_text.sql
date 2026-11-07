@@ -1,0 +1,2 @@
+ALTER TABLE `notice`
+    MODIFY COLUMN `body` TEXT NOT NULL;
