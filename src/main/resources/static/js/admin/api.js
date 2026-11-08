@@ -386,8 +386,8 @@ const API = {
         return this.get(`/notices/${encodeURIComponent(noticeId)}`);
     },
 
-    async updateNotice(noticeId, title, body) {
-        return this.put(`/notices/${encodeURIComponent(noticeId)}`, {title, body});
+    async updateNotice(noticeId, changes) {
+        return this.put(`/notices/${encodeURIComponent(noticeId)}`, changes);
     },
 
     async deleteNotice(noticeId) {

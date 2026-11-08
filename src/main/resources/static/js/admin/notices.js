@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let isSubmitting = false;
     let formMode = 'create';
     let editingNoticeId = null;
+    let initialFormValues = null;
     let loadedNotice = null;
     let toastTimeout;
 
@@ -159,6 +160,8 @@ document.addEventListener('DOMContentLoaded', function () {
         form.reset();
         titleInput.value = notice ? notice.title : '';
         bodyInput.value = notice ? notice.body : '';
+        // 입력 요소가 줄바꿈을 정리한 뒤의 값을 기준으로 사용자 변경을 비교한다.
+        initialFormValues = {title: titleInput.value, body: bodyInput.value};
         const label = notice ? '공지 수정' : '공지 작성';
         element('createModalTitle').textContent = label;
         element('closeNoticeFormBtn').setAttribute('aria-label', `${label} 닫기`);
@@ -253,8 +256,15 @@ document.addEventListener('DOMContentLoaded', function () {
         submitButton.textContent = isEditing ? '저장 중...' : '등록 중...';
         element('createError').hidden = true;
         try {
+            const changes = {};
+            if (titleInput.value !== initialFormValues.title) {
+                changes.title = titleInput.value;
+            }
+            if (bodyInput.value !== initialFormValues.body) {
+                changes.body = bodyInput.value;
+            }
             const notice = isEditing
-                ? await API.updateNotice(noticeId, titleInput.value, bodyInput.value)
+                ? await API.updateNotice(noticeId, changes)
                 : await API.createNotice(titleInput.value, bodyInput.value);
             form.reset();
             editingNoticeId = null;
