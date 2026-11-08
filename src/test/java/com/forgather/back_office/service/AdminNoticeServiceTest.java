@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,12 +49,15 @@ class AdminNoticeServiceTest extends TestOnContainer {
     @Autowired
     private NoticeJpaRepository noticeJpaRepository;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     @DisplayName("공지를 저장하고 재조회하면 최대 본문 원문과 자동 생성 시각이 보존된다")
     @Test
     void saveAndReloadPreservesBodyWhitespaceAndSetsCreatedAt() {
         // given
         String title = "  공지 제목  ";
-        String body = "  첫 줄\n\n둘째 줄  \n" + "나".repeat(9986);
+        String body = "  첫 줄\n\n둘째 줄  \n" + "👨‍👩‍👧‍👦".repeat(9986);
         LocalDateTime before = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
 
         // when
@@ -73,7 +77,7 @@ class AdminNoticeServiceTest extends TestOnContainer {
         );
     }
 
-    @DisplayName("공지 목록이 비어 있으면 첫 페이지와 고정 크기의 빈 결과를 반환한다")
+    @DisplayName("공지 목록이 비어 있으면 요청한 페이지 크기의 빈 결과를 반환한다")
     @Test
     void getEmptyNotices() {
         // given
@@ -84,40 +88,44 @@ class AdminNoticeServiceTest extends TestOnContainer {
         assertAll(
             () -> assertThat(result.notices()).isEmpty(),
             () -> assertThat(result.currentPage()).isEqualTo(1),
-            () -> assertThat(result.pageSize()).isEqualTo(15),
+            () -> assertThat(result.pageSize()).isEqualTo(1),
             () -> assertThat(result.totalCount()).isZero(),
             () -> assertThat(result.totalPages()).isZero()
         );
     }
 
-    @DisplayName("목록은 요청 크기와 정렬을 무시하고 생성일과 id 역순으로 15건씩 조회한다")
+    @DisplayName("목록은 요청한 페이지 크기와 정렬을 적용한다")
     @Test
-    void listUsesFixedSizeAndStableLatestOrder() {
+    void listUsesRequestedSizeAndOrder() {
         // given
         List<Long> ids = new ArrayList<>();
         for (int i = 0; i < 16; i++) {
             ids.add(noticeRepository.save(new Notice("공지 " + i, "본문")).getId());
         }
         entityManager.flush();
+        for (int i = 0; i < 16; i++) {
+            jdbcTemplate.update("UPDATE notice SET created_at = ? WHERE id = ?",
+                LocalDateTime.of(2026, 1, 1, 0, 0).plusDays(i / 2), ids.get(i));
+        }
         entityManager.clear();
-        List<Long> expected = ids.reversed();
+        List<Long> expected = ids;
 
         // when
-        AdminNoticeResponse first = adminNoticeService.getAllNotices(PageRequest.of(0, 1, Sort.by("title")));
-        AdminNoticeResponse second = adminNoticeService.getAllNotices(PageRequest.of(1, 50));
+        AdminNoticeResponse first = adminNoticeService.getAllNotices(PageRequest.of(0, 5, Sort.by("createdAt", "id")));
+        AdminNoticeResponse second = adminNoticeService.getAllNotices(PageRequest.of(1, 5, Sort.by("createdAt", "id")));
 
         // then
         assertAll(
-            () -> assertThat(first.notices()).extracting(AdminNoticeSummaryResponse::id).containsExactlyElementsOf(expected.subList(0, 15)),
-            () -> assertThat(second.notices()).extracting(AdminNoticeSummaryResponse::id).containsExactly(expected.get(15)),
+            () -> assertThat(first.notices()).extracting(AdminNoticeSummaryResponse::id).containsExactlyElementsOf(expected.subList(0, 5)),
+            () -> assertThat(second.notices()).extracting(AdminNoticeSummaryResponse::id).containsExactlyElementsOf(expected.subList(5, 10)),
             () -> assertThat(first.currentPage()).isEqualTo(1),
             () -> assertThat(second.currentPage()).isEqualTo(2),
-            () -> assertThat(first.pageSize()).isEqualTo(15),
-            () -> assertThat(second.pageSize()).isEqualTo(15),
+            () -> assertThat(first.pageSize()).isEqualTo(5),
+            () -> assertThat(second.pageSize()).isEqualTo(5),
             () -> assertThat(first.totalCount()).isEqualTo(16),
             () -> assertThat(second.totalCount()).isEqualTo(16),
-            () -> assertThat(first.totalPages()).isEqualTo(2),
-            () -> assertThat(second.totalPages()).isEqualTo(2)
+            () -> assertThat(first.totalPages()).isEqualTo(4),
+            () -> assertThat(second.totalPages()).isEqualTo(4)
         );
     }
 

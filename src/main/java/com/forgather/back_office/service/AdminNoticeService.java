@@ -1,8 +1,6 @@
 package com.forgather.back_office.service;
 
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +28,9 @@ public class AdminNoticeService {
     @Transactional
     public AdminNoticeDetailResponse update(Long noticeId, UpdateNoticeRequest request) {
         Notice notice = noticeRepository.getByIdAndDeletedAtIsNullOrThrow(noticeId);
-        notice.update(request.title(), request.body());
+        String title = request.title() != null ? request.title() : notice.getTitle();
+        String body = request.body() != null ? request.body() : notice.getBody();
+        notice.update(title, body);
         return AdminNoticeDetailResponse.from(notice);
     }
 
@@ -41,9 +41,7 @@ public class AdminNoticeService {
     }
 
     public AdminNoticeResponse getAllNotices(Pageable pageable) {
-        PageRequest fixedPage = PageRequest.of(pageable.getPageNumber(), 15,
-            Sort.by(Sort.Direction.DESC, "createdAt", "id"));
-        return AdminNoticeResponse.from(noticeRepository.findAllByDeletedAtIsNull(fixedPage));
+        return AdminNoticeResponse.from(noticeRepository.findAllByDeletedAtIsNull(pageable));
     }
 
     public AdminNoticeDetailResponse getNotice(Long noticeId) {
