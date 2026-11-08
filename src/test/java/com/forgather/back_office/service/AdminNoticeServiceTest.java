@@ -26,6 +26,7 @@ import com.forgather.container.TestOnContainer;
 import com.forgather.domain.notice.model.Notice;
 import com.forgather.domain.notice.repository.NoticeRepository;
 import com.forgather.domain.notice.repository.jpa.NoticeJpaRepository;
+import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.NotFoundException;
 
 import jakarta.persistence.EntityManager;
@@ -137,6 +138,13 @@ class AdminNoticeServiceTest extends TestOnContainer {
         Notice deleted = noticeJpaRepository.findById(notice.getId()).orElseThrow();
         assertThat(deleted.getDeletedAt()).isNotNull();
         assertThat(noticeRepository.findByIdAndDeletedAtIsNull(notice.getId())).isEmpty();
+    }
+
+    @DisplayName("공지 ID가 null이면 명시적인 null 예외를 던진다")
+    @Test
+    void rejectNullNoticeId() {
+        assertThatThrownBy(() -> noticeRepository.getByIdAndDeletedAtIsNullOrThrow(null))
+            .isInstanceOf(BaseNullPointerException.class);
     }
 
     @DisplayName("상세를 조회하고 논리 삭제된 공지와 없는 공지는 조회에서 제외한다")

@@ -18,6 +18,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Notice extends SoftDeleteEntity {
 
+    private static final int MAX_TITLE_LENGTH = 100;
+    private static final int MAX_BODY_LENGTH = 10000;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -29,8 +32,8 @@ public class Notice extends SoftDeleteEntity {
     private String body;
 
     public Notice(String title, String body) {
-        validateText(title, "공지 제목", 100);
-        validateText(body, "공지 본문", 10000);
+        validateText(title, "공지 제목", MAX_TITLE_LENGTH);
+        validateText(body, "공지 본문", MAX_BODY_LENGTH);
         this.title = title;
         this.body = body;
     }
@@ -38,8 +41,8 @@ public class Notice extends SoftDeleteEntity {
     public void update(String title, String body) {
         String updatedTitle = title != null ? title : this.title;
         String updatedBody = body != null ? body : this.body;
-        validateText(updatedTitle, "공지 제목", 100);
-        validateText(updatedBody, "공지 본문", 10000);
+        validateText(updatedTitle, "공지 제목", MAX_TITLE_LENGTH);
+        validateText(updatedBody, "공지 본문", MAX_BODY_LENGTH);
         this.title = updatedTitle;
         this.body = updatedBody;
     }

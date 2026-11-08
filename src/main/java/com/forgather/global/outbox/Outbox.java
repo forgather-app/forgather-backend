@@ -43,6 +43,9 @@ public class Outbox extends BaseTimeEntity {
     @Column(name = "lease_expires_at")
     private LocalDateTime leaseExpiresAt;
 
+    @Column(name = "claim_token", length = 36)
+    private String claimToken;
+
     public Outbox(OutboxType type, OutboxStatus status, String payload, int failCount) {
         this.type = type;
         this.status = status;
