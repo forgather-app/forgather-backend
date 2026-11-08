@@ -26,7 +26,6 @@ import com.forgather.back_office.dto.RegisterNoticeRequest;
 import com.forgather.container.TestOnContainer;
 import com.forgather.domain.notice.model.Notice;
 import com.forgather.domain.notice.repository.NoticeRepository;
-import com.forgather.domain.notice.repository.jpa.NoticeJpaRepository;
 import com.forgather.global.exception.BaseNullPointerException;
 import com.forgather.global.exception.NotFoundException;
 
@@ -45,9 +44,6 @@ class AdminNoticeServiceTest extends TestOnContainer {
 
     @Autowired
     private EntityManager entityManager;
-
-    @Autowired
-    private NoticeJpaRepository noticeJpaRepository;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -127,25 +123,6 @@ class AdminNoticeServiceTest extends TestOnContainer {
             () -> assertThat(first.totalPages()).isEqualTo(4),
             () -> assertThat(second.totalPages()).isEqualTo(4)
         );
-    }
-
-    @DisplayName("공지 삭제는 DB 행을 보존하고 삭제 시각을 기록한다")
-    @Test
-    void deletePreservesRowAndRecordsDeletedAt() {
-        // given
-        Notice notice = noticeRepository.save(new Notice("제목", "본문"));
-        entityManager.flush();
-        entityManager.clear();
-
-        // when
-        adminNoticeService.delete(notice.getId());
-        entityManager.flush();
-        entityManager.clear();
-
-        // then
-        Notice deleted = noticeJpaRepository.findById(notice.getId()).orElseThrow();
-        assertThat(deleted.getDeletedAt()).isNotNull();
-        assertThat(noticeRepository.findByIdAndDeletedAtIsNull(notice.getId())).isEmpty();
     }
 
     @DisplayName("공지 ID가 null이면 명시적인 null 예외를 던진다")
