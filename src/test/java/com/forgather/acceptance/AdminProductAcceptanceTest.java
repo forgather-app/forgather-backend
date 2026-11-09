@@ -2,6 +2,7 @@ package com.forgather.acceptance;
 
 import static com.forgather.back_office.auth.session.SessionConstants.SESSION_COOKIE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
@@ -315,6 +316,30 @@ class AdminProductAcceptanceTest extends AcceptanceTest {
             .then()
             .statusCode(HttpStatus.UNAUTHORIZED.value())
             .body("code", equalTo("UNAUTHORIZED"));
+    }
+
+    @DisplayName("세션이 있으면 작품 관리 페이지를 렌더링한다.")
+    @Test
+    void renderProductsPage() {
+        givenWithSession()
+            .when()
+            .get("/view/admin/products")
+            .then()
+            .statusCode(HttpStatus.OK.value())
+            .contentType(containsString("text/html"))
+            .body(containsString("작품 관리 페이지"))
+            .body(containsString("/js/admin/products.js"));
+    }
+
+    @DisplayName("세션이 없으면 작품 관리 페이지 대신 로그인 페이지로 이동한다.")
+    @Test
+    void redirectProductsPageWithoutSession() {
+        RestAssuredMockMvc.given()
+            .when()
+            .get("/view/admin/products")
+            .then()
+            .statusCode(HttpStatus.FOUND.value())
+            .header("Location", equalTo("/view/admin/login"));
     }
 
     private void createProducts(Space space, int count) {
