@@ -15,9 +15,12 @@ import com.forgather.back_office.dto.AdminProductFilterRequest;
 import com.forgather.back_office.dto.AdminProductResponse;
 import com.forgather.back_office.dto.AdminProductSummaryResponse;
 import com.forgather.back_office.repository.AdminProductRepository;
+import com.forgather.domain.host.model.Host;
 import com.forgather.domain.product.model.Product;
 import com.forgather.domain.product.model.ProductPhoto;
 import com.forgather.domain.product.repository.ProductPhotoRepository;
+import com.forgather.domain.space.model.SpaceHost;
+import com.forgather.domain.space.repository.SpaceHostRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +36,7 @@ public class AdminProductService {
 
     private final AdminProductRepository adminProductRepository;
     private final ProductPhotoRepository productPhotoRepository;
+    private final SpaceHostRepository spaceHostRepository;
 
     public AdminProductResponse getAllProducts(Pageable pageable) {
         Page<AdminProductSummaryResponse> products = adminProductRepository.findAllActive(withTieBreak(pageable));
@@ -67,10 +71,13 @@ public class AdminProductService {
 
     public AdminProductDetailResponse getProductDetail(Long productId) {
         Product product = adminProductRepository.getActiveByIdWithSpaceOrThrow(productId);
+        Host host = spaceHostRepository.findBySpaceAndDeletedAtIsNullWithHost(product.getSpace())
+            .map(SpaceHost::getHost)
+            .orElse(null);
         List<ProductPhoto> photos = productPhotoRepository.findAllByProductAndDeletedAtIsNull(product).stream()
             .sorted(PHOTO_ORDER)
             .toList();
-        return AdminProductDetailResponse.of(product, photos);
+        return AdminProductDetailResponse.of(product, host, photos);
     }
 
     /**

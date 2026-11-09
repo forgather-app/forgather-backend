@@ -538,6 +538,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const modalProductTitle = document.getElementById('modalProductTitle');
     const modalAuthorName = document.getElementById('modalAuthorName');
     const modalSpace = document.getElementById('modalSpace');
+    const modalHost = document.getElementById('modalHost');
+    const visitSpaceBtn = document.getElementById('visitSpaceBtn');
     const modalVideoUrl = document.getElementById('modalVideoUrl');
     const modalVideoPosition = document.getElementById('modalVideoPosition');
     const modalCreatedAt = document.getElementById('modalCreatedAt');
@@ -554,6 +556,12 @@ document.addEventListener('DOMContentLoaded', function () {
      */
     let requestedProductId = null;
     let lastFocusedElement = null;
+
+    /**
+     * 현재 모달에 표시된 작품이 속한 스페이스 코드
+     * - 게스트 페이지로 이동 버튼이 사용한다. 모달이 닫혀 있으면 null
+     */
+    let currentSpaceCode = null;
 
     // 공용 CSS(.modal-overlay)의 transition 시간과 같다.
     const MODAL_TRANSITION_MS = 300;
@@ -598,6 +606,8 @@ document.addEventListener('DOMContentLoaded', function () {
         modalLoading.style.display = 'none';
         modalError.style.display = 'none';
         modalContent.style.display = 'none';
+        visitSpaceBtn.style.display = 'none';
+        currentSpaceCode = null;
     }
 
     function showModalLoading() {
@@ -631,7 +641,6 @@ document.addEventListener('DOMContentLoaded', function () {
             <tr>
                 <td class="px-3 py-2 text-sm text-text-primary">${escapeHtml(photo.sortOrder)}</td>
                 <td class="px-3 py-2 text-sm text-text-primary truncate" title="${escapeHtml(photo.originalName)}">${textOrPlaceholder(photo.originalName)}</td>
-                <td class="px-3 py-2 text-xs text-text-secondary font-mono break-all">${escapeHtml(photo.path)}</td>
                 <td class="px-3 py-2 text-sm text-text-secondary text-right whitespace-nowrap">${formatCapacity(photo.capacity)}</td>
             </tr>
         `).join('');
@@ -671,6 +680,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <span class="font-medium">${escapeHtml(data.space.name)}</span>
             <span class="ml-2 font-mono text-xs text-text-muted">${escapeHtml(data.space.code)}</span>
         `;
+        renderHost(data.host);
         renderVideoUrl(data.videoUrl);
         modalVideoPosition.textContent = data.videoUrl
             ? (data.isVideoAfterPhoto ? '사진 뒤' : '사진 앞')
@@ -686,6 +696,50 @@ document.addEventListener('DOMContentLoaded', function () {
 
         renderPhotos(data.photos || []);
         modalContent.style.display = 'block';
+
+        currentSpaceCode = data.space.code;
+        visitSpaceBtn.style.display = 'block';
+    }
+
+    /**
+     * 호스트 렌더링
+     * - 이름과 닉네임을 함께 보여준다. 닉네임이 없거나 이름과 같으면 이름만 보여준다.
+     * - 호스트가 탈퇴했거나 스페이스에 연결되지 않았으면 null이 온다.
+     *
+     * @param {object|null} host - 호스트 (id, name, nickname)
+     */
+    function renderHost(host) {
+        if (!host) {
+            modalHost.innerHTML = '<span class="text-text-muted">없음 (탈퇴 또는 미연결)</span>';
+            return;
+        }
+        const nickname = host.nickname && host.nickname !== host.name
+            ? `<span class="ml-2 text-xs text-text-secondary">닉네임: ${escapeHtml(host.nickname)}</span>`
+            : '';
+        modalHost.innerHTML = `<span class="font-medium">${escapeHtml(host.name)}</span>${nickname}`;
+    }
+
+    /**
+     * 게스트 페이지 URL 생성 (spaces.js와 같은 규칙)
+     *
+     * - api.forgather.app → forgather.app
+     * - api.dev.forgather.app → dev.forgather.app
+     * - 그 외(localhost 등) → dev.forgather.app
+     *
+     * @param {string} spaceCode - 스페이스 코드
+     * @returns {string} https://{guestDomain}/guest/{spaceCode}/home
+     */
+    function getSpacePageUrl(spaceCode) {
+        const hostname = window.location.hostname;
+        let guestDomain;
+        if (hostname === 'api.forgather.app') {
+            guestDomain = 'forgather.app';
+        } else if (hostname === 'api.dev.forgather.app') {
+            guestDomain = 'dev.forgather.app';
+        } else {
+            guestDomain = 'dev.forgather.app';
+        }
+        return `https://${guestDomain}/guest/${encodeURIComponent(spaceCode)}/home`;
     }
 
     /**
@@ -787,6 +841,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     closeModalBtn.addEventListener('click', closeModal);
     closeModalFooterBtn.addEventListener('click', closeModal);
+
+    // 게스트 페이지로 이동: 새 탭에서 열고 opener 접근을 차단한다
+    visitSpaceBtn.addEventListener('click', function () {
+        if (currentSpaceCode) {
+            window.open(getSpacePageUrl(currentSpaceCode), '_blank', 'noopener,noreferrer');
+        }
+    });
 
     // 오버레이(모달 바깥 영역) 클릭 시 닫기
     modal.addEventListener('click', function (event) {

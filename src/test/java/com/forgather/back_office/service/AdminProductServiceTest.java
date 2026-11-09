@@ -28,12 +28,17 @@ import com.forgather.back_office.dto.AdminProductPhotoResponse;
 import com.forgather.back_office.dto.AdminProductResponse;
 import com.forgather.back_office.dto.AdminProductSummaryResponse;
 import com.forgather.container.TestOnContainer;
+import com.forgather.domain.host.model.Host;
+import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.domain.product.model.Product;
 import com.forgather.domain.product.model.ProductPhoto;
 import com.forgather.domain.product.repository.ProductPhotoRepository;
 import com.forgather.domain.product.repository.ProductRepository;
 import com.forgather.domain.space.model.Space;
+import com.forgather.domain.space.model.SpaceHost;
+import com.forgather.domain.space.repository.SpaceHostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
+import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.ProductFixture;
 import com.forgather.fixture.ProductPhotoFixture;
 import com.forgather.fixture.SpaceFixture;
@@ -58,6 +63,12 @@ class AdminProductServiceTest extends TestOnContainer {
 
     @Autowired
     private ProductPhotoRepository productPhotoRepository;
+
+    @Autowired
+    private HostRepository hostRepository;
+
+    @Autowired
+    private SpaceHostRepository spaceHostRepository;
 
     @Autowired
     private EntityManager entityManager;
@@ -322,11 +333,13 @@ class AdminProductServiceTest extends TestOnContainer {
         );
     }
 
-    @DisplayName("작품 상세를 조회하면 소속 스페이스와 삭제되지 않은 사진을 정렬 순서대로 반환한다.")
+    @DisplayName("작품 상세를 조회하면 소속 스페이스, 호스트, 삭제되지 않은 사진을 정렬 순서대로 반환한다.")
     @Test
     void getProductDetail() {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", "졸업 전시"));
+        Host host = hostRepository.save(HostFixture.createHostWithName("검은수염"));
+        spaceHostRepository.save(new SpaceHost(space, host));
         Product product = productRepository.save(new Product(space, "고귀한 의자", "검은수염", "150 x 200\n조심히 다뤄주세요.",
             "https://youtu.be/lkuAxAVgAX0", false));
         productPhotoRepository.save(ProductPhotoFixture.createProductPhotoWithProductAndOrder(product, 3));
@@ -352,11 +365,36 @@ class AdminProductServiceTest extends TestOnContainer {
             () -> assertThat(result.createdAt()).isNotNull(),
             () -> assertThat(result.space().code()).isEqualTo("1111111111"),
             () -> assertThat(result.space().name()).isEqualTo("졸업 전시"),
+            () -> assertThat(result.host().id()).isEqualTo(host.getId()),
+            () -> assertThat(result.host().name()).isEqualTo("검은수염"),
+            () -> assertThat(result.host().nickname()).isEqualTo("검은수염"),
             () -> assertThat(result.photos())
                 .extracting(AdminProductPhotoResponse::sortOrder)
                 .containsExactly(1, 2, 3),
-            () -> assertThat(result.photos().getFirst().path()).isEqualTo("path1"),
+            () -> assertThat(result.photos().getFirst().originalName()).isEqualTo("originalName1"),
             () -> assertThat(result.photos().getFirst().capacity()).isEqualTo(1024L)
+        );
+    }
+
+    @DisplayName("호스트가 연결되지 않았거나 탈퇴한 스페이스의 작품을 상세 조회하면 호스트는 null이다.")
+    @Test
+    void getProductDetailWithoutHost() {
+        // given
+        Space space = spaceRepository.save(SpaceFixture.createSpace());
+        Product product = productRepository.save(ProductFixture.createProductWithSpace(space));
+        Host withdrawnHost = hostRepository.save(HostFixture.createHost());
+        spaceHostRepository.save(new SpaceHost(space, withdrawnHost));
+        withdrawnHost.delete();
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        AdminProductDetailResponse result = adminProductService.getProductDetail(product.getId());
+
+        // then
+        assertAll(
+            () -> assertThat(result.id()).isEqualTo(product.getId()),
+            () -> assertThat(result.host()).isNull()
         );
     }
 

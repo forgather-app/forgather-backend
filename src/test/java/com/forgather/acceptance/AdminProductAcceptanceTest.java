@@ -22,12 +22,17 @@ import com.forgather.back_office.dto.AdminProductSummaryResponse;
 import com.forgather.back_office.model.AdminSession;
 import com.forgather.back_office.model.AdminUser;
 import com.forgather.back_office.repository.AdminUserRepository;
+import com.forgather.domain.host.model.Host;
+import com.forgather.domain.host.repository.HostRepository;
 import com.forgather.domain.product.model.Product;
 import com.forgather.domain.product.repository.ProductPhotoRepository;
 import com.forgather.domain.product.repository.ProductRepository;
 import com.forgather.domain.space.model.Space;
+import com.forgather.domain.space.model.SpaceHost;
+import com.forgather.domain.space.repository.SpaceHostRepository;
 import com.forgather.domain.space.repository.SpaceRepository;
 import com.forgather.fixture.AdminUserFixture;
+import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.ProductFixture;
 import com.forgather.fixture.ProductPhotoFixture;
 import com.forgather.fixture.SpaceFixture;
@@ -53,6 +58,12 @@ class AdminProductAcceptanceTest extends AcceptanceTest {
 
     @Autowired
     private ProductPhotoRepository productPhotoRepository;
+
+    @Autowired
+    private HostRepository hostRepository;
+
+    @Autowired
+    private SpaceHostRepository spaceHostRepository;
 
     @Autowired
     private SessionManager sessionManager;
@@ -238,11 +249,13 @@ class AdminProductAcceptanceTest extends AcceptanceTest {
             .body("code", equalTo("UNAUTHORIZED"));
     }
 
-    @DisplayName("작품을 상세 조회하면 소속 스페이스와 사진 목록을 함께 반환한다.")
+    @DisplayName("작품을 상세 조회하면 소속 스페이스, 호스트, 사진 목록을 함께 반환한다.")
     @Test
     void getProductDetail() {
         // given
         Space space = spaceRepository.save(SpaceFixture.createSpaceWithCodeAndName("1111111111", "졸업 전시"));
+        Host host = hostRepository.save(HostFixture.createHostWithName("검은수염"));
+        spaceHostRepository.save(new SpaceHost(space, host));
         Product product = productRepository.save(ProductFixture.createProductWithSpaceAndTitle(space, "고귀한 의자"));
         productPhotoRepository.save(ProductPhotoFixture.createProductPhotoWithProductAndOrder(product, 2));
         productPhotoRepository.save(ProductPhotoFixture.createProductPhotoWithProductAndOrder(product, 1));
@@ -264,6 +277,8 @@ class AdminProductAcceptanceTest extends AcceptanceTest {
             () -> assertThat(result.isVideoAfterPhoto()).isTrue(),
             () -> assertThat(result.space().code()).isEqualTo("1111111111"),
             () -> assertThat(result.space().name()).isEqualTo("졸업 전시"),
+            () -> assertThat(result.host().id()).isEqualTo(host.getId()),
+            () -> assertThat(result.host().name()).isEqualTo("검은수염"),
             () -> assertThat(result.photos())
                 .extracting(AdminProductPhotoResponse::sortOrder)
                 .containsExactly(1, 2)
@@ -288,7 +303,10 @@ class AdminProductAcceptanceTest extends AcceptanceTest {
             .as(AdminProductDetailResponse.class);
 
         // then
-        assertThat(result.photos()).isEmpty();
+        assertAll(
+            () -> assertThat(result.photos()).isEmpty(),
+            () -> assertThat(result.host()).isNull()
+        );
     }
 
     @DisplayName("존재하지 않는 작품을 상세 조회하면 NOT_FOUND를 반환한다.")

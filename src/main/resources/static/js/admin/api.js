@@ -446,10 +446,11 @@ const API = {
      * @param {number} productId - 조회할 작품 ID
      * @returns {Promise<object>} 작품 상세 응답 (AdminProductDetailResponse)
      * @returns {object} response.space - 소속 스페이스 요약 (id, code, name, isPublic, createdAt, updatedAt)
+     * @returns {object|null} response.host - 스페이스 호스트 (id, name, nickname). 탈퇴했거나 미연결이면 null
      * @returns {Array} response.photos - 삭제되지 않은 사진 목록 (sortOrder 오름차순)
      *
      * 사진 객체 구조 (AdminProductPhotoResponse):
-     * - id, sortOrder, originalName, path(S3 key), capacity(bytes), createdAt
+     * - id, sortOrder, originalName, capacity(bytes), createdAt (S3 경로는 내려주지 않음)
      *
      * 엔드포인트: GET /admin/products/{productId}
      */
