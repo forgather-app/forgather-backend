@@ -26,6 +26,38 @@ class NoticeTest {
             .satisfies(exception -> assertThat(((BaseException) exception).getStatusCode()).isEqualTo(400));
     }
 
+    @DisplayName("유효하지 않은 수정은 제목과 본문을 모두 원래 값으로 보존한다")
+    @ParameterizedTest(name = "[{index}]")
+    @MethodSource("invalidNotices")
+    void rejectInvalidUpdateWithoutChangingNotice(String title, String body) {
+        // given
+        Notice notice = new Notice("원래 제목", "원래 본문");
+
+        // when
+        assertThatThrownBy(() -> notice.update(title, body))
+            .isInstanceOf(BaseException.class)
+            .satisfies(exception -> assertThat(((BaseException) exception).getStatusCode()).isEqualTo(400));
+
+        // then
+        assertThat(notice.getTitle()).isEqualTo("원래 제목");
+        assertThat(notice.getBody()).isEqualTo("원래 본문");
+    }
+
+    @DisplayName("유효한 최종 제목과 본문으로 공지를 수정한다")
+    @ParameterizedTest(name = "[{index}]")
+    @MethodSource("maximumNotices")
+    void updateNotice(String title, String body) {
+        // given
+        Notice notice = new Notice("원래 제목", "원래 본문");
+
+        // when
+        notice.update(title, body);
+
+        // then
+        assertThat(notice.getTitle()).isEqualTo(title);
+        assertThat(notice.getBody()).isEqualTo(body);
+    }
+
     static Stream<Arguments> invalidNotices() {
         return Stream.of(
             Arguments.of(null, "본문"), Arguments.of("", "본문"), Arguments.of(" \n\t", "본문"),

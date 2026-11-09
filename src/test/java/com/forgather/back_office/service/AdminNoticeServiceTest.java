@@ -20,8 +20,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.forgather.back_office.dto.AdminNoticeResponse;
-import com.forgather.back_office.dto.NoticeDetailResponse;
-import com.forgather.back_office.dto.NoticeSummaryResponse;
+import com.forgather.back_office.dto.AdminNoticeDetailResponse;
+import com.forgather.back_office.dto.AdminNoticeSummaryResponse;
 import com.forgather.back_office.dto.RegisterNoticeRequest;
 import com.forgather.container.TestOnContainer;
 import com.forgather.domain.notice.model.Notice;
@@ -57,7 +57,7 @@ class AdminNoticeServiceTest extends TestOnContainer {
         LocalDateTime before = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
 
         // when
-        NoticeDetailResponse response = adminNoticeService.create(new RegisterNoticeRequest(title, body));
+        AdminNoticeDetailResponse response = adminNoticeService.create(new RegisterNoticeRequest(title, body));
         entityManager.flush();
         entityManager.clear();
         Notice reloaded = noticeRepository.getByIdAndDeletedAtIsNullOrThrow(response.id());
@@ -112,8 +112,8 @@ class AdminNoticeServiceTest extends TestOnContainer {
 
         // then
         assertAll(
-            () -> assertThat(first.notices()).extracting(NoticeSummaryResponse::id).containsExactlyElementsOf(expected.subList(0, 5)),
-            () -> assertThat(second.notices()).extracting(NoticeSummaryResponse::id).containsExactlyElementsOf(expected.subList(5, 10)),
+            () -> assertThat(first.notices()).extracting(AdminNoticeSummaryResponse::id).containsExactlyElementsOf(expected.subList(0, 5)),
+            () -> assertThat(second.notices()).extracting(AdminNoticeSummaryResponse::id).containsExactlyElementsOf(expected.subList(5, 10)),
             () -> assertThat(first.currentPage()).isEqualTo(1),
             () -> assertThat(second.currentPage()).isEqualTo(2),
             () -> assertThat(first.pageSize()).isEqualTo(5),
@@ -143,7 +143,7 @@ class AdminNoticeServiceTest extends TestOnContainer {
         entityManager.clear();
 
         // when
-        NoticeDetailResponse result = adminNoticeService.getNotice(active.getId());
+        AdminNoticeDetailResponse result = adminNoticeService.getNotice(active.getId());
         AdminNoticeResponse list = adminNoticeService.getAllNotices(PageRequest.of(0, 15));
 
         // then
@@ -152,7 +152,7 @@ class AdminNoticeServiceTest extends TestOnContainer {
             () -> assertThat(result.title()).isEqualTo("제목"),
             () -> assertThat(result.body()).isEqualTo("본문"),
             () -> assertThat(result.createdAt()).isNotNull(),
-            () -> assertThat(list.notices()).extracting(NoticeSummaryResponse::id).containsExactly(active.getId()),
+            () -> assertThat(list.notices()).extracting(AdminNoticeSummaryResponse::id).containsExactly(active.getId()),
             () -> assertThatThrownBy(() -> adminNoticeService.getNotice(deleted.getId())).isInstanceOf(NotFoundException.class),
             () -> assertThatThrownBy(() -> adminNoticeService.getNotice(Long.MAX_VALUE)).isInstanceOf(NotFoundException.class)
         );

@@ -38,6 +38,13 @@ public class Notice extends SoftDeleteEntity {
         this.body = body;
     }
 
+    public void update(String title, String body) {
+        validateText(title, "공지 제목", MAX_TITLE_LENGTH);
+        validateText(body, "공지 본문", MAX_BODY_LENGTH);
+        this.title = title;
+        this.body = body;
+    }
+
     private void validateText(String value, String field, int maxLength) {
         if (value == null || value.isBlank()) {
             throw new BaseException(field + "은 필수입니다.");
