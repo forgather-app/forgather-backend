@@ -17,6 +17,11 @@ public class ProductFixture {
             "https://youtu.be/WdppQtgN6TM?si=ZrY0t4IUeKbGSI7D", true);
     }
 
+    public static Product createProductWithSpaceAndTitle(Space space, String title) {
+        return new Product(space, title, "authorName", "description",
+            "https://youtu.be/WdppQtgN6TM?si=ZrY0t4IUeKbGSI7D", true);
+    }
+
     public static Product createProductWithTitle(String title) {
         return new Product(createSpace(), title, "authorName", "description",
             "https://youtu.be/WdppQtgN6TM?si=ZrY0t4IUeKbGSI7D", true);

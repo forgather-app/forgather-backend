@@ -32,4 +32,8 @@ public class ProductPhotoFixture {
     public static ProductPhoto createProductPhotoWithProduct(Product product) {
         return new ProductPhoto(product, "originalName", "path", 1024L, 1);
     }
+
+    public static ProductPhoto createProductPhotoWithProductAndOrder(Product product, int order) {
+        return new ProductPhoto(product, "originalName" + order, "path" + order, 1024L * order, order);
+    }
 }
