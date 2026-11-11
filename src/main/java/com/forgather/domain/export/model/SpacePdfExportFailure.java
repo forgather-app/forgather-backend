@@ -18,6 +18,9 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * Lambda가 저장한 PDF 추출 실패 이력을 백오피스에서 조회하는 엔티티.
+ */
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
