@@ -45,6 +45,19 @@ public class NotificationFixture {
         return createCommandWithHostAndDedupeKey(host, null);
     }
 
+    /**
+     * 템플릿(%d)과 맞지 않는 인자를 담아, 알림 생성이 렌더링 단계에서 실패하게 만든다.
+     */
+    public static NotificationCommand createInvalidTemplateCommandWithHost(Host host) {
+        return new NotificationCommand(
+            host,
+            NotificationType.PLACEHOLDER,
+            NotificationTarget.space(SPACE_CODE),
+            null,
+            List.of("not-a-number")
+        );
+    }
+
     public static NotificationCommand createCommandWithHostAndDedupeKey(Host host, String dedupeKey) {
         return new NotificationCommand(
             host,
