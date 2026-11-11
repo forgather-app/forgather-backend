@@ -281,7 +281,7 @@ class WithdrawServiceTest extends TestOnContainer {
         assertThat(outboxRepository.findAll()).isEmpty();
     }
 
-    @DisplayName("탈퇴하면 등록된 푸시 디바이스가 모두 삭제 처리되어 활성 디바이스가 남지 않는다.")
+    @DisplayName("탈퇴하면 등록된 푸시 디바이스가 모두 삭제되어 디바이스가 남지 않는다.")
     @Test
     void deleteAllNotificationDevices() {
         // given
@@ -295,7 +295,7 @@ class WithdrawServiceTest extends TestOnContainer {
         withdrawService.withdraw(host);
 
         // then
-        assertThat(notificationDeviceService.findActiveDevices(host)).isEmpty();
+        assertThat(notificationDeviceService.findAllByHost(host)).isEmpty();
     }
 
     @DisplayName("탈퇴해도 다른 호스트의 푸시 디바이스는 유지된다.")
@@ -314,8 +314,8 @@ class WithdrawServiceTest extends TestOnContainer {
 
         // then
         assertAll(
-            () -> assertThat(notificationDeviceService.findActiveDevices(host)).isEmpty(),
-            () -> assertThat(notificationDeviceService.findActiveDevices(otherHost)).hasSize(1)
+            () -> assertThat(notificationDeviceService.findAllByHost(host)).isEmpty(),
+            () -> assertThat(notificationDeviceService.findAllByHost(otherHost)).hasSize(1)
         );
     }
 }

@@ -6,7 +6,7 @@ import java.util.Objects;
 import org.springframework.http.HttpStatus;
 
 import com.forgather.domain.host.model.Host;
-import com.forgather.domain.model.SoftDeleteEntity;
+import com.forgather.domain.model.BaseTimeEntity;
 import com.forgather.global.exception.BaseException;
 import com.forgather.global.exception.BaseNullPointerException;
 
@@ -37,7 +37,7 @@ import lombok.NoArgsConstructor;
     uniqueConstraints = @UniqueConstraint(name = NotificationDevice.UK_TOKEN, columnNames = "token")
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class NotificationDevice extends SoftDeleteEntity {
+public class NotificationDevice extends BaseTimeEntity {
 
     /**
      * token UNIQUE 제약 이름 (V43). 동시 최초 등록의 UNIQUE 위반을 판별할 때 쓴다.
@@ -60,7 +60,7 @@ public class NotificationDevice extends SoftDeleteEntity {
     private DevicePlatform platform;
 
     /**
-     * 푸시 공급자(FCM)가 발급한 등록 토큰. soft delete된 행까지 포함해 DB UNIQUE다.
+     * 푸시 공급자(FCM)가 발급한 등록 토큰. DB UNIQUE다.
      */
     @Column(name = "token", nullable = false, length = MAX_TOKEN_LENGTH)
     private String token;
@@ -82,7 +82,7 @@ public class NotificationDevice extends SoftDeleteEntity {
 
     /**
      * 같은 토큰이 다시 등록될 때 호출한다.
-     * 소유 호스트와 플랫폼을 새 값으로 바꾸고 활동 시각을 갱신하며, 논리 삭제된 행이면 복구한다.
+     * 소유 호스트와 플랫폼을 새 값으로 바꾸고 활동 시각을 갱신한다.
      * 같은 호스트의 재등록(앱 재실행, 토큰 갱신 확인)도 이 메서드를 탄다.
      */
     public void reassign(Host host, DevicePlatform platform) {
@@ -90,7 +90,6 @@ public class NotificationDevice extends SoftDeleteEntity {
         this.host = host;
         this.platform = platform;
         this.lastActiveAt = LocalDateTime.now();
-        restore();
     }
 
     private void validateRequiredFields(Host host, DevicePlatform platform, String token) {

@@ -88,11 +88,11 @@ class NotificationDeviceAcceptanceTest extends AcceptanceTest {
             .body("code", equalTo("SUCCESS"));
     }
 
-    private List<NotificationDevice> activeDevicesOf(Host host) {
-        return notificationDeviceRepository.findAllByHostAndDeletedAtIsNull(host);
+    private List<NotificationDevice> devicesOf(Host host) {
+        return notificationDeviceRepository.findAllByHost(host);
     }
 
-    @DisplayName("푸시 디바이스 토큰을 등록하면 200과 함께 활성 디바이스가 생성된다")
+    @DisplayName("푸시 디바이스 토큰을 등록하면 200과 함께 디바이스가 생성된다")
     @Test
     void registerDevice() {
         // given
@@ -102,7 +102,7 @@ class NotificationDeviceAcceptanceTest extends AcceptanceTest {
         register(accessToken, body);
 
         // then
-        List<NotificationDevice> devices = activeDevicesOf(host);
+        List<NotificationDevice> devices = devicesOf(host);
         assertThat(devices).hasSize(1);
         assertAll(
             () -> assertThat(devices.getFirst().getPlatform()).isEqualTo(DevicePlatform.IOS),
@@ -120,7 +120,7 @@ class NotificationDeviceAcceptanceTest extends AcceptanceTest {
         register(accessToken, registerRequest("IOS", TOKEN));
 
         // then
-        assertThat(activeDevicesOf(host)).hasSize(1);
+        assertThat(devicesOf(host)).hasSize(1);
     }
 
     @DisplayName("다른 호스트가 같은 토큰을 등록하면 디바이스 소유자가 새 호스트로 바뀐다")
@@ -136,30 +136,29 @@ class NotificationDeviceAcceptanceTest extends AcceptanceTest {
 
         // then
         assertAll(
-            () -> assertThat(activeDevicesOf(host)).isEmpty(),
-            () -> assertThat(activeDevicesOf(otherHost)).hasSize(1),
-            () -> assertThat(activeDevicesOf(otherHost).getFirst().getPlatform()).isEqualTo(DevicePlatform.ANDROID)
+            () -> assertThat(devicesOf(host)).isEmpty(),
+            () -> assertThat(devicesOf(otherHost)).hasSize(1),
+            () -> assertThat(devicesOf(otherHost).getFirst().getPlatform()).isEqualTo(DevicePlatform.ANDROID)
         );
     }
 
-    @DisplayName("해제한 토큰을 다시 등록하면 기존 디바이스가 복구된다")
+    @DisplayName("해제한 토큰을 다시 등록하면 새 디바이스로 저장된다")
     @Test
-    void reRegisterRestoresDeregisteredDevice() {
+    void reRegisterAfterDeregisterCreatesNewDevice() {
         // given
         register(accessToken, registerRequest("IOS", TOKEN));
-        Long deviceId = notificationDeviceRepository.findByToken(TOKEN).orElseThrow().getId();
+        Long previousId = notificationDeviceRepository.findByToken(TOKEN).orElseThrow().getId();
         deregister(accessToken, TOKEN);
 
         // when
         register(accessToken, registerRequest("ANDROID", TOKEN));
 
         // then
-        NotificationDevice restored = notificationDeviceRepository.findByToken(TOKEN).orElseThrow();
+        NotificationDevice device = notificationDeviceRepository.findByToken(TOKEN).orElseThrow();
         assertAll(
-            () -> assertThat(restored.getId()).isEqualTo(deviceId),
-            () -> assertThat(restored.getDeletedAt()).isNull(),
-            () -> assertThat(restored.getPlatform()).isEqualTo(DevicePlatform.ANDROID),
-            () -> assertThat(activeDevicesOf(host)).hasSize(1)
+            () -> assertThat(device.getId()).isNotEqualTo(previousId),
+            () -> assertThat(device.getPlatform()).isEqualTo(DevicePlatform.ANDROID),
+            () -> assertThat(devicesOf(host)).hasSize(1)
         );
     }
 
@@ -270,7 +269,7 @@ class NotificationDeviceAcceptanceTest extends AcceptanceTest {
             .body("code", equalTo("VALIDATION_FAILED"));
     }
 
-    @DisplayName("본인 토큰을 해제하면 200과 함께 디바이스가 soft delete된다")
+    @DisplayName("본인 토큰을 해제하면 200과 함께 디바이스가 삭제된다")
     @Test
     void deregisterDevice() {
         // given
@@ -287,8 +286,8 @@ class NotificationDeviceAcceptanceTest extends AcceptanceTest {
 
         // then
         assertAll(
-            () -> assertThat(activeDevicesOf(host)).isEmpty(),
-            () -> assertThat(notificationDeviceRepository.findByToken(TOKEN).orElseThrow().getDeletedAt()).isNotNull()
+            () -> assertThat(devicesOf(host)).isEmpty(),
+            () -> assertThat(notificationDeviceRepository.findByToken(TOKEN)).isEmpty()
         );
     }
 
@@ -311,8 +310,8 @@ class NotificationDeviceAcceptanceTest extends AcceptanceTest {
 
         // then
         assertAll(
-            () -> assertThat(activeDevicesOf(host)).hasSize(1),
-            () -> assertThat(notificationDeviceRepository.findByToken(TOKEN).orElseThrow().getDeletedAt()).isNull()
+            () -> assertThat(devicesOf(host)).hasSize(1),
+            () -> assertThat(notificationDeviceRepository.findByToken(TOKEN)).isPresent()
         );
     }
 

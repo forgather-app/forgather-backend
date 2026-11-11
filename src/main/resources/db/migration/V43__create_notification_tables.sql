@@ -33,7 +33,10 @@ ALTER TABLE `notification`
     ADD CONSTRAINT `FK_host_TO_notification` FOREIGN KEY (`host_id`) REFERENCES `host` (`id`);
 
 -- 푸시 디바이스 토큰. 토큰은 호스트가 아니라 기기에 속하므로 호스트 테이블과 분리한다.
--- token은 soft delete된 행까지 포함해 UNIQUE. 같은 토큰이 다시 등록되면 기존 행의 소유자를 바꾸고 복구한다.
+-- 해제·탈퇴·무효 토큰은 물리 삭제한다(deleted_at 없음). 토큰의 원본은 기기이고 다음 포그라운드의 PUT으로 다시 등록되므로
+-- 복구할 데이터가 없고, 외부 식별자에 UNIQUE가 걸린 host_kakao·host_apple과 같은 규칙이다.
+-- token은 UNIQUE. 같은 토큰이 다시 등록되면 기존 행의 소유자를 바꾼다. (token, deleted_at) 복합 UNIQUE는
+-- MySQL이 NULL을 서로 다른 값으로 취급해 활성 행 중복을 막지 못하므로 쓰지 않는다.
 CREATE TABLE `notification_device`
 (
     `id`             BIGINT       NOT NULL AUTO_INCREMENT,
@@ -43,7 +46,6 @@ CREATE TABLE `notification_device`
     `last_active_at` TIMESTAMP    NOT NULL,
     `created_at`     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deleted_at`     TIMESTAMP    NULL,
     PRIMARY KEY (`id`),
     CONSTRAINT `UK_notification_device_token` UNIQUE (`token`)
 );

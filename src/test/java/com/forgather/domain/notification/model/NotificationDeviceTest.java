@@ -40,8 +40,7 @@ class NotificationDeviceTest {
             () -> assertThat(device.getHost()).isSameAs(host),
             () -> assertThat(device.getPlatform()).isEqualTo(DevicePlatform.ANDROID),
             () -> assertThat(device.getToken()).isEqualTo("token-1"),
-            () -> assertThat(device.getLastActiveAt()).isAfterOrEqualTo(before),
-            () -> assertThat(device.getDeletedAt()).isNull()
+            () -> assertThat(device.getLastActiveAt()).isAfterOrEqualTo(before)
         );
     }
 
@@ -176,20 +175,6 @@ class NotificationDeviceTest {
                 () -> assertThat(device.getToken()).isEqualTo(NotificationDeviceFixture.TOKEN),
                 () -> assertThat(device.getLastActiveAt()).isAfter(past)
             );
-        }
-
-        @DisplayName("논리 삭제된 디바이스를 재등록하면 복구된다")
-        @Test
-        void reassignRestoresDeletedDevice() {
-            // given
-            NotificationDevice device = createDevice();
-            device.delete();
-
-            // when
-            device.reassign(HostFixture.createHost(), DevicePlatform.IOS);
-
-            // then
-            assertThat(device.getDeletedAt()).isNull();
         }
 
         @DisplayName("재등록 호스트가 null이면 예외를 던진다")
