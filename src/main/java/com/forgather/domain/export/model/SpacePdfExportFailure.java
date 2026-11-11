@@ -47,6 +47,7 @@ public class SpacePdfExportFailure extends SoftDeleteEntity {
     @Column(nullable = false, length = 64)
     private String failureCondition;
 
+    @Column
     private Integer approximateInvokeCount;
 
     @Column(length = 255)
