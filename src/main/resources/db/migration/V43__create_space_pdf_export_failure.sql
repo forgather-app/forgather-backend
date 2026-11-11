@@ -17,7 +17,5 @@ CREATE TABLE space_pdf_export_failure (
     deleted_at DATETIME(6) NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_failure_invocation (function_arn, request_id),
-    KEY idx_failure_job (job_id, failed_at),
-    KEY idx_failure_time (failed_at),
-    KEY idx_failure_status (processing_status, failed_at)
+    KEY idx_failure_time (failed_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
