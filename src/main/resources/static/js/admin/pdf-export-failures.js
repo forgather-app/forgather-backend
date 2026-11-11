@@ -17,6 +17,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function formatRawEvent(rawEvent) {
+        if (typeof rawEvent !== 'string') return rawEvent;
+        // 숫자와 문자열 토큰을 변환하지 않고 JSON 구조 사이의 공백만 정리한다.
+        const tokens = rawEvent.match(/"(?:\\.|[^"\\])*"|[{}\[\],:]|[^\s{}\[\],:]+/g) ?? [];
+        const formatted = [];
+        let depth = 0;
+        tokens.forEach((token, index) => {
+            if (token === '{' || token === '[') {
+                formatted.push(token);
+                depth++;
+                const closing = token === '{' ? '}' : ']';
+                if (tokens[index + 1] !== closing) formatted.push('\n', '  '.repeat(depth));
+            } else if (token === '}' || token === ']') {
+                depth--;
+                const opening = token === '}' ? '{' : '[';
+                if (tokens[index - 1] !== opening) formatted.push('\n', '  '.repeat(depth));
+                formatted.push(token);
+            } else if (token === ',') {
+                formatted.push(',\n', '  '.repeat(depth));
+            } else if (token === ':') {
+                formatted.push(': ');
+            } else {
+                formatted.push(token);
+            }
+        });
+        return formatted.join('');
+    }
+
     function createCopyButton(label, text, statusId) {
         const button = document.createElement('button');
         button.type = 'button';
@@ -110,12 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const detail = await API.get(`/pdf/failures/${encodeURIComponent(id)}`);
             if (request !== detailRequest) return;
-            let rawEvent = detail.rawEvent;
-            try {
-                rawEvent = JSON.stringify(JSON.parse(rawEvent), null, 2);
-            } catch {
-                // JSON 파싱이 불가능하면 저장된 원문을 그대로 표시한다.
-            }
+            const rawEvent = detail.rawEvent;
             const fields = [
                 ['실패 시각', formatDate(detail.failedAt)],
                 ['실패 단계', stages[detail.stage] ?? detail.stage],
@@ -126,13 +149,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 ['작업 ID', detail.jobId],
                 ['요청 ID', detail.requestId],
                 ['함수 ARN', detail.functionArn],
-                ['원본 실패 이벤트', rawEvent],
+                ['원본 실패 이벤트', formatRawEvent(rawEvent), rawEvent],
                 ['처리 상태', statuses[detail.processingStatus] ?? detail.processingStatus],
                 ['처리 메모', detail.processingNote],
                 ['저장 시각', formatDate(detail.createdAt)],
                 ['실패 ID', detail.id]
             ];
-            fields.forEach(([label, value]) => {
+            fields.forEach(([label, value, copyValue = value]) => {
                 const isBlock = ['오류 메시지', '원본 실패 이벤트'].includes(label);
                 const hasInlineCopy = ['작업 ID', '함수 ARN', '요청 ID'].includes(label);
                 const group = document.createElement('div');
@@ -149,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     description.setAttribute('aria-label', label);
                 }
                 if (isBlock || hasInlineCopy) {
-                    const copyButton = createCopyButton(label, text, 'copyStatus');
+                    const copyButton = createCopyButton(label, String(copyValue ?? '-'), 'copyStatus');
                     (isBlock ? term : description).appendChild(copyButton);
                 }
                 group.append(term, description);
