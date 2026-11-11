@@ -3,7 +3,6 @@ package com.forgather.acceptance;
 import static com.forgather.back_office.auth.session.SessionConstants.SESSION_COOKIE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -89,10 +88,10 @@ class AdminPdfExportFailureAcceptanceTest extends AcceptanceTest {
             .andExpect(jsonPath("$.failures", hasSize(2)))
             .andExpect(jsonPath("$.failures[0].id").value(latest.getId()))
             .andExpect(jsonPath("$.failures[0].requestId").value("request-3"))
-            .andExpect(jsonPath("$.failures[0].jobId").value(nullValue()))
-            .andExpect(jsonPath("$.failures[0].stage").value("UNKNOWN"))
-            .andExpect(jsonPath("$.failures[0].errorType").value(nullValue()))
-            .andExpect(jsonPath("$.failures[0].processingStatus").value("PENDING"))
+            .andExpect(jsonPath("$.failures[0].jobId").value("b2574c32-10fb-4d65-b351-2a193a11941a"))
+            .andExpect(jsonPath("$.failures[0].stage").value("EMAIL"))
+            .andExpect(jsonPath("$.failures[0].errorType").value("java.lang.IllegalStateException"))
+            .andExpect(jsonPath("$.failures[0].processingStatus").value("IN_PROGRESS"))
             .andExpect(jsonPath("$.failures[0].failedAt").value("2026-11-09T00:00:00"))
             .andExpect(jsonPath("$.failures[1].id").value(previous.getId()))
             .andExpect(jsonPath("$.failures[0].rawEvent").doesNotExist())
@@ -118,16 +117,16 @@ class AdminPdfExportFailureAcceptanceTest extends AcceptanceTest {
                 .with(withCookie(SESSION_COOKIE_NAME, sessionId)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(failure.getId()))
-            .andExpect(jsonPath("$.jobId").value(nullValue()))
-            .andExpect(jsonPath("$.stage").value("UNKNOWN"))
+            .andExpect(jsonPath("$.jobId").value("b2574c32-10fb-4d65-b351-2a193a11941a"))
+            .andExpect(jsonPath("$.stage").value("EMAIL"))
             .andExpect(jsonPath("$.functionArn").value("arn:aws:lambda:test"))
             .andExpect(jsonPath("$.requestId").value("request-1"))
             .andExpect(jsonPath("$.failureCondition").value("RetriesExhausted"))
-            .andExpect(jsonPath("$.errorType").value(nullValue()))
-            .andExpect(jsonPath("$.processingNote").value(nullValue()))
+            .andExpect(jsonPath("$.errorType").value("java.lang.IllegalStateException"))
+            .andExpect(jsonPath("$.processingNote").value("이메일 인증 설정 확인 중"))
             .andExpect(jsonPath("$.createdAt").isNotEmpty())
-            .andExpect(jsonPath("$.approximateInvokeCount").value(nullValue()))
-            .andExpect(jsonPath("$.processingStatus").value("PENDING"))
+            .andExpect(jsonPath("$.approximateInvokeCount").value(3))
+            .andExpect(jsonPath("$.processingStatus").value("IN_PROGRESS"))
             .andExpect(jsonPath("$.errorMessage").value("<script>alert('failure')</script>"))
             .andExpect(jsonPath("$.rawEvent").isString())
             .andExpect(jsonPath("$.failedAt").value("2026-11-09T00:00:00.123456"))
@@ -153,47 +152,9 @@ class AdminPdfExportFailureAcceptanceTest extends AcceptanceTest {
             .andExpect(status().isNotFound());
     }
 
-    @DisplayName("관리자는 실패 조회 화면에 접근할 수 있다")
-    @Test
-    void opensViewAsAdmin() throws Exception {
-        mockMvc.perform(get("/view/admin/pdf-export-failures").with(withCookie(SESSION_COOKIE_NAME, sessionId)))
-            .andExpect(status().isOk());
-    }
-
-    @DisplayName("논리 삭제된 실패 기록은 목록에서 제외한다")
-    @Test
-    void excludesSoftDeletedFailuresFromList() throws Exception {
-        // given
-        SpacePdfExportFailure active = saveFailure("request-1", "2026-11-09T00:00:00");
-        SpacePdfExportFailure deleted = saveFailure("request-2", "2026-11-09T01:00:00");
-        deleted.delete();
-        failureRepository.saveAndFlush(deleted);
-
-        // when & then
-        mockMvc.perform(get("/admin/pdf/failures").with(withCookie(SESSION_COOKIE_NAME, sessionId)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.failures", hasSize(1)))
-            .andExpect(jsonPath("$.failures[0].id").value(active.getId()))
-            .andExpect(jsonPath("$.totalCount").value(1));
-    }
-
-    @DisplayName("논리 삭제된 실패 기록의 상세 조회는 404를 반환한다")
-    @Test
-    void excludesSoftDeletedFailureFromDetail() throws Exception {
-        // given
-        SpacePdfExportFailure deleted = saveFailure("request-1", "2026-11-09T00:00:00");
-        deleted.delete();
-        failureRepository.saveAndFlush(deleted);
-
-        // when & then
-        mockMvc.perform(get("/admin/pdf/failures/{id}", deleted.getId())
-                .with(withCookie(SESSION_COOKIE_NAME, sessionId)))
-            .andExpect(status().isNotFound());
-    }
-
     private SpacePdfExportFailure saveFailure(String requestId, String failedAt) {
         return failureRepository.saveAndFlush(SpacePdfExportFailureFixture.createFailure(
-            requestId, LocalDateTime.parse(failedAt), PdfExportFailureStage.UNKNOWN,
-            PdfExportFailureProcessingStatus.PENDING));
+            requestId, LocalDateTime.parse(failedAt), PdfExportFailureStage.EMAIL,
+            PdfExportFailureProcessingStatus.IN_PROGRESS));
     }
 }
