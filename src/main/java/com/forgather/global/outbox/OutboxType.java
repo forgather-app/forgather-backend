@@ -6,5 +6,6 @@ package com.forgather.global.outbox;
 public enum OutboxType {
 
     SOCIAL_REVOKE,
+    SPACE_PDF_EXPORT,
     ;
 }

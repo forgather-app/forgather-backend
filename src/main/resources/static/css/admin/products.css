@@ -1,0 +1,71 @@
+/* ==========================================================================
+   Products Page Styles
+
+   이 파일은 JavaScript에서 동적으로 생성하는 요소의 스타일만 포함합니다.
+   레이아웃과 일반 스타일은 Tailwind CSS 유틸리티로 처리합니다.
+   모달 애니메이션, body 스크롤 잠금, 테이블 스크롤 표시는 tailwind/input.css의 공용 스타일을 사용합니다.
+
+   Related file: templates/admin/products/list.html, static/js/admin/products.js
+   ========================================================================== */
+
+/* ==========================================================================
+   Badge Styles (JS 동적 생성 - products.js renderProductsTable())
+   - 영상 링크 유무 표시용 배지
+   ========================================================================== */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 9999px;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+.badge-success {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.badge-neutral {
+    background-color: #f5f5f5;
+    color: #737373;
+}
+
+/* ==========================================================================
+   Clickable Cell - 키보드 포커스 스타일 (접근성)
+   - 작품명 셀의 클릭 가능 요소에 적용
+   - 마우스 클릭 시에는 포커스 링을 숨기고 키보드 사용자에게만 표시
+   ========================================================================== */
+
+.clickable-cell span[role="button"]:focus {
+    outline: 2px solid var(--primary-color, #171717);
+    outline-offset: 2px;
+}
+
+.clickable-cell span[role="button"]:focus:not(:focus-visible) {
+    outline: none;
+}
+
+.clickable-cell span[role="button"]:focus-visible {
+    outline: 2px solid var(--primary-color, #171717);
+    outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Detail Modal (JS 동적 생성 - products.js showModalContent())
+   - 작품 설명은 최대 2000자이고 줄바꿈을 그대로 보여준다.
+   ========================================================================== */
+
+.description-block {
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 16rem;
+    overflow-y: auto;
+}
+
+.photo-table td {
+    vertical-align: top;
+}

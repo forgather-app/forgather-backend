@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -14,6 +15,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -68,13 +71,13 @@ class OutboxStateServiceTest extends TestOnContainer {
         Outbox task = pending();
 
         // when
-        boolean claimed = service.processing(task.getId(), 20);
+        Optional<String> claimed = service.processing(task.getId(), 20);
 
         // then
         assertAll(
-            () -> assertThat(claimed).isTrue(),
+            () -> assertThat(claimed).isPresent(),
             () -> assertThat(repository.findById(task.getId()).orElseThrow().getStatus()).isEqualTo(OutboxStatus.PROCESSING),
-            () -> assertThat(service.processing(task.getId(), 20)).isFalse()
+            () -> assertThat(service.processing(task.getId(), 20)).isEmpty()
         );
     }
 
@@ -87,11 +90,11 @@ class OutboxStateServiceTest extends TestOnContainer {
 
         // when
         try (ExecutorService workers = Executors.newFixedThreadPool(2)) {
-            Future<Boolean> first = workers.submit(() -> {
+            Future<Optional<String>> first = workers.submit(() -> {
                 start.await();
                 return service.processing(task.getId(), 20);
             });
-            Future<Boolean> second = workers.submit(() -> {
+            Future<Optional<String>> second = workers.submit(() -> {
                 start.await();
                 return service.processing(task.getId(), 20);
             });
@@ -99,7 +102,7 @@ class OutboxStateServiceTest extends TestOnContainer {
 
             // then
             assertThat(List.of(first.get(5, TimeUnit.SECONDS), second.get(5, TimeUnit.SECONDS)))
-                .containsExactlyInAnyOrder(true, false);
+                .filteredOn(Optional::isPresent).hasSize(1);
         }
     }
 
@@ -123,8 +126,8 @@ class OutboxStateServiceTest extends TestOnContainer {
         // then
         assertAll(
             () -> assertThat(processable).extracting(Outbox::getId).containsExactly(pending.getId(), expired.getId()),
-            () -> assertThat(service.processing(expired.getId(), 60)).isTrue(),
-            () -> assertThat(service.processing(active.getId(), 20)).isFalse()
+            () -> assertThat(service.processing(expired.getId(), 60)).isPresent(),
+            () -> assertThat(service.processing(active.getId(), 20)).isEmpty()
         );
     }
 
@@ -136,18 +139,19 @@ class OutboxStateServiceTest extends TestOnContainer {
 
         // when & then
         for (int attempt = 1; attempt <= 5; attempt++) {
-            assertThat(service.processing(task.getId(), 20)).isTrue();
-            assertThat(service.retry(task.getId(), 5)).isTrue();
+            String token = service.processing(task.getId(), 20).orElseThrow();
+            assertThat(service.retry(task.getId(), token, 5)).isTrue();
             Outbox stored = repository.findById(task.getId()).orElseThrow();
             int expectedFailCount = attempt;
             assertAll(
                 () -> assertThat(stored.getFailCount()).isEqualTo(expectedFailCount),
                 () -> assertThat(stored.getPayload()).isEqualTo("payload"),
+                () -> assertThat(stored.getClaimToken()).isNull(),
                 () -> assertThat(stored.getLeaseExpiresAt()).isNull(),
                 () -> assertThat(stored.getStatus()).isEqualTo(expectedFailCount < 5 ? OutboxStatus.PENDING : OutboxStatus.FAILED)
             );
         }
-        assertThat(service.processing(task.getId(), 20)).isFalse();
+        assertThat(service.processing(task.getId(), 20)).isEmpty();
     }
 
     @DisplayName("복구할 수 없는 작업 실패는 즉시 FAILED로 전환하고 payload를 보존한다")
@@ -155,10 +159,10 @@ class OutboxStateServiceTest extends TestOnContainer {
     void failsPermanently() {
         // given
         Outbox task = pending();
-        service.processing(task.getId(), 20);
+        String token = service.processing(task.getId(), 20).orElseThrow();
 
         // when
-        assertThat(service.fail(task.getId())).isTrue();
+        assertThat(service.fail(task.getId(), token)).isTrue();
 
         // then
         Outbox stored = repository.findById(task.getId()).orElseThrow();
@@ -166,6 +170,7 @@ class OutboxStateServiceTest extends TestOnContainer {
             () -> assertThat(stored.getStatus()).isEqualTo(OutboxStatus.FAILED),
             () -> assertThat(stored.getFailCount()).isEqualTo(1),
             () -> assertThat(stored.getPayload()).isEqualTo("payload"),
+            () -> assertThat(stored.getClaimToken()).isNull(),
             () -> assertThat(stored.getLeaseExpiresAt()).isNull()
         );
     }
@@ -182,4 +187,53 @@ class OutboxStateServiceTest extends TestOnContainer {
             () -> assertThat(repository.findById(task.getId()).orElseThrow().getStatus()).isEqualTo(OutboxStatus.PENDING)
         );
     }
+    @DisplayName("재선점 후 이전 토큰의 결과는 거절하고 현재 토큰의 결과만 반영한다")
+    @ParameterizedTest
+    @ValueSource(strings = {"COMPLETED", "CANCELED", "FAILED", "RETRY"})
+    void rejectsPreviousWorkerAfterReclaim(String result) {
+        Outbox task = pending();
+        String firstToken = service.processing(task.getId(), 20).orElseThrow();
+        expire(task.getId());
+        String secondToken = service.processing(task.getId(), 20).orElseThrow();
+
+        assertThat(secondToken).isNotEqualTo(firstToken);
+        assertThat(finish(task.getId(), firstToken, result)).isFalse();
+        assertThat(finish(task.getId(), null, result)).isFalse();
+        Outbox processing = repository.findById(task.getId()).orElseThrow();
+        assertAll(
+            () -> assertThat(processing.getStatus()).isEqualTo(OutboxStatus.PROCESSING),
+            () -> assertThat(processing.getFailCount()).isZero(),
+            () -> assertThat(processing.getPayload()).isEqualTo("payload"),
+            () -> assertThat(processing.getClaimToken()).isEqualTo(secondToken)
+        );
+
+        assertThat(finish(task.getId(), secondToken, result)).isTrue();
+        Outbox finished = repository.findById(task.getId()).orElseThrow();
+        assertThat(finished.getStatus()).isEqualTo(
+            result.equals("RETRY") ? OutboxStatus.PENDING : OutboxStatus.valueOf(result));
+        assertThat(finished.getClaimToken()).isNull();
+        assertThat(finished.getLeaseExpiresAt()).isNull();
+    }
+
+    @DisplayName("선점이 만료돼도 재선점 전에는 기존 토큰으로 완료할 수 있다")
+    @Test
+    void completesExpiredClaimBeforeReclaim() {
+        Outbox task = pending();
+        String token = service.processing(task.getId(), 20).orElseThrow();
+        expire(task.getId());
+
+        assertThat(service.complete(task.getId(), token)).isTrue();
+        assertThat(repository.findById(task.getId()).orElseThrow().getStatus()).isEqualTo(OutboxStatus.COMPLETED);
+    }
+
+    private boolean finish(Long id, String token, String result) {
+        return switch (result) {
+            case "COMPLETED" -> service.complete(id, token);
+            case "CANCELED" -> service.cancel(id, token);
+            case "FAILED" -> service.fail(id, token);
+            case "RETRY" -> service.retry(id, token, 5);
+            default -> throw new IllegalArgumentException(result);
+        };
+    }
+
 }

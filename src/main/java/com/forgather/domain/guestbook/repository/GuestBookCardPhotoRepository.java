@@ -9,9 +9,22 @@ import org.springframework.data.repository.query.Param;
 
 import com.forgather.domain.guestbook.model.GuestBookCard;
 import com.forgather.domain.guestbook.model.GuestBookCardPhoto;
+import com.forgather.domain.guestbook.repository.dto.GuestBookArchivePhotoDto;
 import com.forgather.domain.space.model.Space;
 
 public interface GuestBookCardPhotoRepository {
+
+    @Query("""
+        SELECT new com.forgather.domain.guestbook.repository.dto.GuestBookArchivePhotoDto(
+            p.guestBookCard.id, p.path
+        )
+        FROM GuestBookCardPhoto p
+        WHERE p.guestBookCard.id IN :cardIds
+            AND p.deletedAt IS NULL
+        ORDER BY p.createdAt ASC, p.id ASC
+        """)
+    List<GuestBookArchivePhotoDto> findArchivePhotos(@Param("cardIds") List<Long> cardIds);
+
     <S extends GuestBookCardPhoto> List<S> saveAll(Iterable<S> photos);
 
     List<GuestBookCardPhoto> findAllByGuestBookCardAndDeletedAtIsNull(GuestBookCard guestBookCard);

@@ -1,6 +1,7 @@
 package com.forgather.global.outbox;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -41,20 +42,32 @@ public class OutboxService {
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public OutboxProcessResult process() {
+        return processAll(outboxStateService.findProcessable());
+    }
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public OutboxProcessResult process(Long outboxId) {
+        return processAll(outboxRepository.findById(outboxId).stream().toList());
+    }
+
+    private OutboxProcessResult processAll(List<Outbox> outboxes) {
         int succeededCount = 0;
         int failedCount = 0;
         int canceledCount = 0;
-        for (Outbox outbox : outboxStateService.findProcessable()) {
+        for (Outbox outbox : outboxes) {
             OutboxHandler handler = findOutboxHandler(outbox);
             if (handler == null) {
                 log.error("처리 가능한 핸들러가 없습니다. outboxId: {}, type: {}", outbox.getId(), outbox.getType());
                 continue;
             }
 
+            String claimToken;
             try {
-                if (!outboxStateService.processing(outbox.getId(), handler.getLeaseDurationSeconds())) {
+                Optional<String> claimed = outboxStateService.processing(outbox.getId(), handler.getLeaseDurationSeconds());
+                if (claimed.isEmpty()) {
                     continue;
                 }
+                claimToken = claimed.get();
             } catch (Exception e) {
                 log.error("outbox 선점 실패. outboxId: {}", outbox.getId(), e);
                 continue;
@@ -65,16 +78,17 @@ public class OutboxService {
                 result = handler.process(outbox);
             } catch (Exception e) {
                 log.warn("outbox 처리 실패. outboxId: {}, type: {}", outbox.getId(), outbox.getType(), e);
-                failedCount++;
                 try {
                     boolean isUpdated;
                     if (e instanceof ExternalApiException externalException && !externalException.isRetryable()) {
-                        isUpdated = outboxStateService.fail(outbox.getId());
+                        isUpdated = outboxStateService.fail(outbox.getId(), claimToken);
                     } else {
-                        isUpdated = outboxStateService.retry(outbox.getId(), handler.getMaxFailCount());
+                        isUpdated = outboxStateService.retry(outbox.getId(), claimToken, handler.getMaxFailCount());
                     }
-                    if (!isUpdated) {
-                        log.warn("실패를 기록할 PROCESSING outbox가 없습니다. outboxId: {}", outbox.getId());
+                    if (isUpdated) {
+                        failedCount++;
+                    } else {
+                        log.warn("outbox 실패 기록 권한을 잃었습니다. outboxId: {}", outbox.getId());
                     }
                 } catch (Exception stateException) {
                     log.error("outbox 실패 기록 중 오류가 발생했습니다. outboxId: {}", outbox.getId(), stateException);
@@ -84,12 +98,12 @@ public class OutboxService {
 
             try {
                 boolean updated = switch (result) {
-                    case COMPLETED -> outboxStateService.complete(outbox.getId());
-                    case CANCELED -> outboxStateService.cancel(outbox.getId());
-                    case FAILED -> outboxStateService.fail(outbox.getId());
+                    case COMPLETED -> outboxStateService.complete(outbox.getId(), claimToken);
+                    case CANCELED -> outboxStateService.cancel(outbox.getId(), claimToken);
+                    case FAILED -> outboxStateService.fail(outbox.getId(), claimToken);
                 };
                 if (!updated) {
-                    log.warn("상태를 변경할 PROCESSING outbox가 없습니다. outboxId: {}", outbox.getId());
+                    log.warn("outbox 상태 변경 권한을 잃었습니다. outboxId: {}", outbox.getId());
                     continue;
                 }
                 switch (result) {

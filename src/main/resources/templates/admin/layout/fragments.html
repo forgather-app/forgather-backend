@@ -25,6 +25,13 @@
                     </a>
                 </li>
                 <li>
+                    <a th:href="@{/view/admin/products}"
+                       class="text-text-secondary hover:text-primary font-medium transition-colors duration-200 cursor-pointer px-sm py-xs rounded"
+                       th:classappend="${currentPage == 'products'} ? 'text-primary bg-neutral-100' : ''">
+                        작품
+                    </a>
+                </li>
+                <li>
                     <a th:href="@{/view/admin/hosts}"
                        class="text-text-secondary hover:text-primary font-medium transition-colors duration-200 cursor-pointer px-sm py-xs rounded"
                        th:classappend="${currentPage == 'hosts'} ? 'text-primary bg-neutral-100' : ''">
@@ -43,6 +50,13 @@
                        class="text-text-secondary hover:text-primary font-medium transition-colors duration-200 cursor-pointer px-sm py-xs rounded"
                        th:classappend="${currentPage == 'stats'} ? 'text-primary bg-neutral-100' : ''">
                         통계
+                    </a>
+                </li>
+                <li>
+                    <a th:href="@{/view/admin/notices}"
+                       class="text-text-secondary hover:text-primary font-medium transition-colors duration-200 cursor-pointer px-sm py-xs rounded"
+                       th:classappend="${currentPage == 'notices'} ? 'text-primary bg-neutral-100' : ''">
+                        공지
                     </a>
                 </li>
                 <li>
