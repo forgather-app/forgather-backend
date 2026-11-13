@@ -33,7 +33,7 @@ public class NotificationSettingController {
         description = "로그인한 호스트의 알림 설정을 조회합니다. 설정을 변경한 적이 없으면 기본값 true를 반환합니다.")
     @GetMapping
     public ResponseEntity<ApiResponse<NotificationSettingResponse>> getSetting(@LoginHost Host host) {
-        NotificationSettingResponse response = notificationSettingService.getSetting(host);
+        var response = notificationSettingService.getSetting(host);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -47,7 +47,7 @@ public class NotificationSettingController {
         @LoginHost Host host,
         @Valid @RequestBody UpdateNotificationSettingRequest request
     ) {
-        NotificationSettingResponse response = notificationSettingService.update(host, request.enabled());
+        var response = notificationSettingService.update(host, request.enabled());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

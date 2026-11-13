@@ -37,7 +37,7 @@ public class NotificationController {
         @LoginHost Host host,
         @PageableDefault(size = 15) Pageable pageable
     ) {
-        NotificationsResponse response = notificationService.getNotifications(host, pageable);
+        var response = notificationService.getNotifications(host, pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -46,7 +46,7 @@ public class NotificationController {
         description = "로그인한 호스트의 읽지 않은 알림 개수를 조회합니다. 99+ 같은 표시 상한은 클라이언트가 처리합니다.")
     @GetMapping("/unread-count")
     public ResponseEntity<ApiResponse<UnreadNotificationCountResponse>> countUnread(@LoginHost Host host) {
-        UnreadNotificationCountResponse response = notificationService.countUnread(host);
+        var response = notificationService.countUnread(host);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
