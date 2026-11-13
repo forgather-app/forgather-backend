@@ -1,9 +1,17 @@
 package com.forgather.domain.notification.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.forgather.domain.host.model.Host;
+import com.forgather.domain.notification.dto.NotificationsResponse;
+import com.forgather.domain.notification.dto.UnreadNotificationCountResponse;
 import com.forgather.domain.notification.model.Notification;
 import com.forgather.domain.notification.repository.NotificationRepository;
 import com.forgather.global.exception.BaseNullPointerException;
@@ -67,6 +75,35 @@ public class NotificationService {
             return notificationRepository.save(notification);
         }
         return saveWithDedupeKey(notification);
+    }
+
+    /**
+     * 호스트의 알림함 목록. 삭제된 알림은 제외한다.
+     * 요청 정렬은 무시하고 createdAt·id 내림차순으로 고정하며, 페이지 크기는 요청값을 쓴다.
+     */
+    public NotificationsResponse getNotifications(Host host, Pageable pageable) {
+        PageRequest fixedSort = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+            Sort.by(Sort.Direction.DESC, "createdAt", "id"));
+        return NotificationsResponse.from(notificationRepository.findAllByHostAndDeletedAtIsNull(host, fixedSort));
+    }
+
+    /**
+     * 호스트의 읽지 않은 알림 개수. 삭제된 알림은 제외한다.
+     */
+    public UnreadNotificationCountResponse countUnread(Host host) {
+        return new UnreadNotificationCountResponse(
+            notificationRepository.countByHostAndReadAtIsNullAndDeletedAtIsNull(host));
+    }
+
+    /**
+     * 호출 시점에 읽지 않은 호스트의 알림을 모두 읽음 처리한다. 멱등이다.
+     * 벌크 UPDATE 한 문장만 실행하고 같은 트랜잭션에서 알림을 다시 읽지 않아 영속성 컨텍스트와 어긋나지 않는다.
+     *
+     * @return 갱신된 행 수
+     */
+    @Transactional
+    public int readAll(Host host) {
+        return notificationRepository.readAllByHost(host, LocalDateTime.now());
     }
 
     private Notification saveWithDedupeKey(Notification notification) {
