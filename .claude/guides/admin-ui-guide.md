@@ -13,6 +13,8 @@ src/main/resources/
 │   │   └── fragments.html      # 공통 fragment
 │   ├── spaces/
 │   │   └── list.html           # 스페이스 목록
+│   ├── products/
+│   │   └── list.html           # 작품 목록 (스페이스 코드 필터, 작품명 검색, 상세 모달)
 │   ├── hosts/
 │   │   └── list.html           # 호스트 목록
 │   └── login.html              # 로그인 페이지
@@ -20,6 +22,7 @@ src/main/resources/
 │   ├── common.css              # 공통 스타일, CSS 변수 정의
 │   ├── login.css
 │   ├── spaces.css
+│   ├── products.css
 │   └── hosts.css
 └── static/js/admin/
     ├── auth.js                 # Auth 전역 객체
@@ -27,6 +30,7 @@ src/main/resources/
     ├── pagination.js           # PaginationUtil 전역 객체
     ├── login.js
     ├── spaces.js
+    ├── products.js
     └── hosts.js
 ```
 
@@ -108,6 +112,10 @@ await API.getSpaces(page, size);
 await API.getSpacesByFilters(page, size, filters);
 await API.getSpaceDetail(spaceCode);
 await API.getHosts(page, size);
+await API.getProducts(page, size, sort);
+await API.getProductsByFilters(page, size, { spaceCode }, sort);
+await API.searchProductsByTitle(title, page, size, sort);
+await API.getProductDetail(productId);
 ```
 
 ### Auth 객체 (`auth.js`)

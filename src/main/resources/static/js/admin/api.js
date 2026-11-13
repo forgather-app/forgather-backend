@@ -378,6 +378,86 @@ const API = {
         return this.get('/hosts/search/by-name', { name, page, size, sort });
     },
 
+    /**
+     * 작품 목록 조회 API
+     *
+     * @param {number} page - 페이지 번호 (1부터 시작)
+     * @param {number} size - 페이지 크기 (기본값: 15)
+     * @param {string} sort - 정렬 파라미터 (예: 'createdAt,desc')
+     * @returns {Promise<object>} 작품 목록 응답 (AdminProductResponse)
+     * @returns {Array} response.products - 작품 목록 배열
+     * @returns {number} response.currentPage - 현재 페이지 번호 (1부터 시작)
+     * @returns {number} response.pageSize - 페이지 크기
+     * @returns {number} response.totalCount - 전체 작품 개수
+     * @returns {number} response.totalPages - 전체 페이지 수
+     *
+     * 작품 객체 구조 (AdminProductSummaryResponse):
+     * - id, title, authorName, spaceCode, spaceName, videoUrl, photoCount, createdAt, updatedAt
+     *
+     * 엔드포인트: GET /admin/products
+     *
+     * 주의:
+     * - 정렬 값이 같은 작품은 서버가 id 정렬을 덧붙여 페이지 간 순서를 고정한다.
+     */
+    async getProducts(page = 1, size = 15, sort = 'createdAt,desc') {
+        return this.get('/products', {page, size, sort});
+    },
+
+    /**
+     * 작품 목록 조회 API (스페이스 코드 필터)
+     *
+     * @param {number} page - 페이지 번호 (1부터 시작)
+     * @param {number} size - 페이지 크기
+     * @param {object} filters - 필터 조건 객체
+     * @param {string|null} filters.spaceCode - 스페이스 코드 (완전 일치, 비어 있으면 파라미터에서 제외)
+     * @param {string} sort - 정렬 파라미터 (예: 'createdAt,desc')
+     * @returns {Promise<object>} 작품 목록 응답 (AdminProductResponse)
+     *
+     * 엔드포인트: GET /admin/products/search
+     */
+    async getProductsByFilters(page = 1, size = 15, filters = {}, sort = 'createdAt,desc') {
+        const params = {page, size, sort};
+
+        if (filters.spaceCode !== null && filters.spaceCode !== undefined && filters.spaceCode !== '') {
+            params.spaceCode = filters.spaceCode;
+        }
+
+        return this.get('/products/search', params);
+    },
+
+    /**
+     * 작품명 검색 API
+     *
+     * @param {string} title - 검색할 작품명 (부분 일치)
+     * @param {number} page - 페이지 번호 (1부터 시작)
+     * @param {number} size - 페이지 크기 (기본값: 15)
+     * @param {string} sort - 정렬 파라미터 (예: 'createdAt,desc')
+     * @returns {Promise<object>} 작품 목록 응답 (AdminProductResponse)
+     *
+     * 엔드포인트: GET /admin/products/search/by-title
+     */
+    async searchProductsByTitle(title, page = 1, size = 15, sort = 'createdAt,desc') {
+        return this.get('/products/search/by-title', {title, page, size, sort});
+    },
+
+    /**
+     * 작품 상세 조회 API
+     *
+     * @param {number} productId - 조회할 작품 ID
+     * @returns {Promise<object>} 작품 상세 응답 (AdminProductDetailResponse)
+     * @returns {object} response.space - 소속 스페이스 요약 (id, code, name, isPublic, createdAt, updatedAt)
+     * @returns {object|null} response.host - 스페이스 호스트 (id, name, nickname). 탈퇴했거나 미연결이면 null
+     * @returns {Array} response.photos - 삭제되지 않은 사진 목록 (sortOrder 오름차순)
+     *
+     * 사진 객체 구조 (AdminProductPhotoResponse):
+     * - id, sortOrder, originalName, capacity(bytes), createdAt (S3 경로는 내려주지 않음)
+     *
+     * 엔드포인트: GET /admin/products/{productId}
+     */
+    async getProductDetail(productId) {
+        return this.get(`/products/${encodeURIComponent(productId)}`);
+    },
+
     async getNotices(page = 1) {
         return this.get('/notices', {page});
     },
