@@ -17,8 +17,10 @@ import org.springframework.transaction.support.TransactionTemplate;
 import com.forgather.container.TestOnContainer;
 import com.forgather.domain.host.model.Host;
 import com.forgather.domain.host.repository.HostRepository;
+import com.forgather.domain.notification.repository.NotificationSettingRepository;
 import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.NotificationFixture;
+import com.forgather.fixture.NotificationSettingFixture;
 
 /**
  * 기능 트랜잭션과 알림 생성 트랜잭션의 분리를 검증한다.
@@ -42,6 +44,9 @@ class NotificationRequestedEventListenerTest extends TestOnContainer {
 
     @Autowired
     private HostRepository hostRepository;
+
+    @Autowired
+    private NotificationSettingRepository notificationSettingRepository;
 
     private long countNotifications() {
         Long count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM notification", Long.class);
@@ -159,5 +164,56 @@ class NotificationRequestedEventListenerTest extends TestOnContainer {
             () -> assertThat(countNotifications()).isEqualTo(1),
             () -> assertThat(notificationHostId()).isEqualTo(hostId[0])
         );
+    }
+
+    @DisplayName("알림 설정을 끈 호스트에게 요청하면 예외 없이 알림을 만들지 않는다")
+    @Test
+    void doNotCreateNotificationForDisabledHost() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        notificationSettingRepository.save(NotificationSettingFixture.createDisabled(host));
+        NotificationRequestedEvent event =
+            new NotificationRequestedEvent(NotificationFixture.createCommandWithHost(host));
+
+        // when
+        assertThatCode(() -> transactionTemplate.executeWithoutResult(status -> eventPublisher.publishEvent(event)))
+            .doesNotThrowAnyException();
+
+        // then
+        assertThat(countNotifications()).isZero();
+    }
+
+    @DisplayName("알림 설정을 켠 호스트에게 요청하면 커밋 뒤 알림이 생성된다")
+    @Test
+    void createNotificationForEnabledHost() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        notificationSettingRepository.save(NotificationSettingFixture.createEnabled(host));
+        NotificationRequestedEvent event =
+            new NotificationRequestedEvent(NotificationFixture.createCommandWithHost(host));
+
+        // when
+        transactionTemplate.executeWithoutResult(status -> eventPublisher.publishEvent(event));
+
+        // then
+        assertAll(
+            () -> assertThat(countNotifications()).isEqualTo(1),
+            () -> assertThat(notificationHostId()).isEqualTo(host.getId())
+        );
+    }
+
+    @DisplayName("알림 설정 행이 없는 호스트에게 요청하면 허용으로 간주해 알림이 생성된다")
+    @Test
+    void createNotificationForHostWithoutSetting() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        NotificationRequestedEvent event =
+            new NotificationRequestedEvent(NotificationFixture.createCommandWithHost(host));
+
+        // when
+        transactionTemplate.executeWithoutResult(status -> eventPublisher.publishEvent(event));
+
+        // then
+        assertThat(countNotifications()).isEqualTo(1);
     }
 }
