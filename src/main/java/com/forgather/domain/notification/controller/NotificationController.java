@@ -16,6 +16,8 @@ import com.forgather.global.auth.annotation.LoginHost;
 import com.forgather.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -31,10 +33,26 @@ public class NotificationController {
     @SecurityRequirement(name = "cookieAuth")
     @Operation(summary = "알림함 목록 조회",
         description = "로그인한 호스트의 알림을 조회합니다. 페이지는 1부터 시작하고 기본 크기는 15입니다. "
-            + "정렬은 요청과 관계없이 생성일과 id 내림차순입니다. 삭제된 알림은 포함하지 않습니다.")
+            + "정렬은 요청과 관계없이 생성일과 id 내림차순입니다. 삭제된 알림은 포함하지 않습니다.",
+        parameters = {
+            @Parameter(
+                name = "page",
+                description = "페이지 번호 (1부터 시작)",
+                schema = @Schema(type = "integer", minimum = "1"),
+                example = "1"
+            ),
+            @Parameter(
+                name = "size",
+                description = "페이지 크기",
+                schema = @Schema(type = "integer", minimum = "1"),
+                example = "15"
+            )
+        }
+    )
     @GetMapping
     public ResponseEntity<ApiResponse<NotificationsResponse>> getNotifications(
         @LoginHost Host host,
+        @Parameter(hidden = true)
         @PageableDefault(size = 15) Pageable pageable
     ) {
         var response = notificationService.getNotifications(host, pageable);
