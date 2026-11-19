@@ -67,6 +67,7 @@ class SpacePdfExportServiceTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(space, "id", 1L);
+        ReflectionTestUtils.setField(host, "id", 1L);
         spacePdfExportService = new SpacePdfExportService(
             spaceRepository, spaceHostRepository, guestBookCardRepository, guestBookCardPhotoRepository,
             spacePdfExportRepository, new SpacePdfExportProperties("pdf", "ap-northeast-2"),
