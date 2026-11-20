@@ -29,8 +29,8 @@ public class NotificationSettingController {
     private final NotificationSettingService notificationSettingService;
 
     @SecurityRequirement(name = "cookieAuth")
-    @Operation(summary = "알림 설정 조회",
-        description = "로그인한 호스트의 알림 설정을 조회합니다. 설정을 변경한 적이 없으면 기본값 true를 반환합니다.")
+    @Operation(summary = "푸시 알림 설정 조회",
+        description = "로그인한 호스트의 푸시 알림 수신 설정을 조회합니다. 설정을 변경한 적이 없으면 기본값 true를 반환합니다.")
     @GetMapping
     public ResponseEntity<ApiResponse<NotificationSettingResponse>> getSetting(@LoginHost Host host) {
         var response = notificationSettingService.getSetting(host);
@@ -38,16 +38,16 @@ public class NotificationSettingController {
     }
 
     @SecurityRequirement(name = "cookieAuth")
-    @Operation(summary = "알림 설정 변경",
-        description = "로그인한 호스트의 알림 수신 여부를 변경합니다. 끄면 그 뒤로 알림을 만들지 않으며, "
-            + "이미 생성된 알림은 알림함에 남습니다. 최초 저장 경합은 서버가 한 번 재시도하며, "
+    @Operation(summary = "푸시 알림 설정 변경",
+        description = "로그인한 호스트의 푸시 알림 수신 여부를 변경합니다. 끄면 푸시만 보내지 않으며, "
+            + "알림함 알림은 설정과 무관하게 계속 쌓입니다. 최초 저장 경합은 서버가 한 번 재시도하며, "
             + "재시도에서도 충돌하면 409 Conflict를 반환합니다.")
     @PatchMapping
     public ResponseEntity<ApiResponse<NotificationSettingResponse>> updateSetting(
         @LoginHost Host host,
         @Valid @RequestBody UpdateNotificationSettingRequest request
     ) {
-        var response = notificationSettingService.update(host, request.enabled());
+        var response = notificationSettingService.update(host, request.pushEnabled());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

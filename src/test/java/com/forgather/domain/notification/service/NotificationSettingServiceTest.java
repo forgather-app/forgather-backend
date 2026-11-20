@@ -92,9 +92,9 @@ class NotificationSettingServiceTest extends TestOnContainer {
         return count == null ? 0 : count;
     }
 
-    private Boolean enabledOf(Host host) {
+    private Boolean pushEnabledOf(Host host) {
         return jdbcTemplate.queryForObject(
-            "SELECT enabled FROM notification_setting WHERE host_id = ?", Boolean.class, host.getId());
+            "SELECT push_enabled FROM notification_setting WHERE host_id = ?", Boolean.class, host.getId());
     }
 
     private LocalDateTime updatedAtOf(Host host) {
@@ -123,7 +123,7 @@ class NotificationSettingServiceTest extends TestOnContainer {
 
         // then
         assertAll(
-            () -> assertThat(response.enabled()).isTrue(),
+            () -> assertThat(response.pushEnabled()).isTrue(),
             () -> assertThat(countSettings()).isZero()
         );
     }
@@ -139,39 +139,39 @@ class NotificationSettingServiceTest extends TestOnContainer {
         NotificationSettingResponse response = notificationSettingService.getSetting(host);
 
         // then
-        assertThat(response.enabled()).isFalse();
+        assertThat(response.pushEnabled()).isFalse();
     }
 
-    @DisplayName("설정 행이 없으면 알림을 허용한 것으로 판정한다")
+    @DisplayName("설정 행이 없으면 푸시 알림을 허용한 것으로 판정한다")
     @Test
-    void isEnabledWithoutRow() {
+    void isPushEnabledWithoutRow() {
         // given
         Host host = saveHost();
 
         // when & then
-        assertThat(notificationSettingService.isEnabled(host)).isTrue();
+        assertThat(notificationSettingService.isPushEnabled(host)).isTrue();
     }
 
-    @DisplayName("알림을 켠 설정 행이 있으면 알림을 허용한 것으로 판정한다")
+    @DisplayName("푸시 알림을 켠 설정 행이 있으면 푸시 알림을 허용한 것으로 판정한다")
     @Test
-    void isEnabledWithEnabledRow() {
+    void isPushEnabledWithEnabledRow() {
         // given
         Host host = saveHost();
         notificationSettingRepository.save(NotificationSettingFixture.createEnabled(host));
 
         // when & then
-        assertThat(notificationSettingService.isEnabled(host)).isTrue();
+        assertThat(notificationSettingService.isPushEnabled(host)).isTrue();
     }
 
-    @DisplayName("알림을 끈 설정 행이 있으면 알림을 허용하지 않은 것으로 판정한다")
+    @DisplayName("푸시 알림을 끈 설정 행이 있으면 푸시 알림을 허용하지 않은 것으로 판정한다")
     @Test
-    void isEnabledWithDisabledRow() {
+    void isPushEnabledWithDisabledRow() {
         // given
         Host host = saveHost();
         notificationSettingRepository.save(NotificationSettingFixture.createDisabled(host));
 
         // when & then
-        assertThat(notificationSettingService.isEnabled(host)).isFalse();
+        assertThat(notificationSettingService.isPushEnabled(host)).isFalse();
     }
 
     @DisplayName("설정 행이 없는 호스트의 설정을 변경하면 행을 만들고 요청한 값을 저장한다")
@@ -185,9 +185,9 @@ class NotificationSettingServiceTest extends TestOnContainer {
 
         // then
         assertAll(
-            () -> assertThat(response.enabled()).isFalse(),
+            () -> assertThat(response.pushEnabled()).isFalse(),
             () -> assertThat(countSettings()).isEqualTo(1),
-            () -> assertThat(enabledOf(host)).isFalse()
+            () -> assertThat(pushEnabledOf(host)).isFalse()
         );
     }
 
@@ -204,9 +204,9 @@ class NotificationSettingServiceTest extends TestOnContainer {
 
         // then
         assertAll(
-            () -> assertThat(response.enabled()).isFalse(),
+            () -> assertThat(response.pushEnabled()).isFalse(),
             () -> assertThat(countSettings()).isEqualTo(1),
-            () -> assertThat(enabledOf(host)).isFalse(),
+            () -> assertThat(pushEnabledOf(host)).isFalse(),
             () -> assertThat(updatedAtOf(host)).isAfter(staleTime)
         );
     }
@@ -227,9 +227,9 @@ class NotificationSettingServiceTest extends TestOnContainer {
 
         // then
         assertAll(
-            () -> assertThat(response.enabled()).isTrue(),
+            () -> assertThat(response.pushEnabled()).isTrue(),
             () -> assertThat(countSettings()).isEqualTo(1),
-            () -> assertThat(enabledOf(host)).isTrue(),
+            () -> assertThat(pushEnabledOf(host)).isTrue(),
             () -> assertThat(updatedAtOf(host)).isAfter(staleTime)
         );
     }
@@ -256,9 +256,9 @@ class NotificationSettingServiceTest extends TestOnContainer {
         // then
         assertAll(
             () -> assertThat(countSettings()).isEqualTo(1),
-            () -> assertThat(enabledOf(host)).isFalse(),
+            () -> assertThat(pushEnabledOf(host)).isFalse(),
             () -> Mockito.verify(repository, Mockito.times(1)).saveAndFlush(any()),
-            () -> Mockito.verify(repository, Mockito.times(1)).updateEnabledByHost(any(), eq(false), any())
+            () -> Mockito.verify(repository, Mockito.times(1)).updatePushEnabledByHost(any(), eq(false), any())
         );
     }
 
@@ -279,7 +279,7 @@ class NotificationSettingServiceTest extends TestOnContainer {
         Mockito.doAnswer(invocation -> {
             Object found = realRepository().answer(invocation);
             otherRequest.executeWithoutResult(status ->
-                notificationSettingRepository.updateEnabledByHost(host, false, LocalDateTime.now()));
+                notificationSettingRepository.updatePushEnabledByHost(host, false, LocalDateTime.now()));
             return found;
         }).doAnswer(realRepository()).when(repository).findByHost(any());
         NotificationSettingService service = new NotificationSettingService(repository, transactionTemplate);
@@ -289,9 +289,9 @@ class NotificationSettingServiceTest extends TestOnContainer {
 
         // then
         assertAll(
-            () -> assertThat(response.enabled()).isTrue(),
+            () -> assertThat(response.pushEnabled()).isTrue(),
             () -> assertThat(countSettings()).isEqualTo(1),
-            () -> assertThat(enabledOf(host)).isTrue()
+            () -> assertThat(pushEnabledOf(host)).isTrue()
         );
     }
 
@@ -314,7 +314,7 @@ class NotificationSettingServiceTest extends TestOnContainer {
             .hasMessageContaining("알림 설정 저장이 겹쳤습니다.")
             .hasCauseInstanceOf(DataIntegrityViolationException.class);
         Mockito.verify(repository, Mockito.times(2)).saveAndFlush(any());
-        Mockito.verify(repository, Mockito.never()).updateEnabledByHost(any(), anyBoolean(), any());
+        Mockito.verify(repository, Mockito.never()).updatePushEnabledByHost(any(), anyBoolean(), any());
     }
 
     @DisplayName("host_id UNIQUE가 아닌 제약 위반은 재시도하지 않고 원본 예외를 그대로 전파한다")

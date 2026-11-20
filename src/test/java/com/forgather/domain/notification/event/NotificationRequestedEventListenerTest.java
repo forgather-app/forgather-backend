@@ -166,29 +166,15 @@ class NotificationRequestedEventListenerTest extends TestOnContainer {
         );
     }
 
-    @DisplayName("알림 설정을 끈 호스트에게 요청하면 예외 없이 알림을 만들지 않는다")
+    /**
+     * 알림 설정은 푸시 수신 여부만 뜻한다. 알림함 알림은 설정과 무관하게 만들어져야 한다.
+     */
+    @DisplayName("푸시 알림 설정을 끈 호스트에게 요청해도 커밋 뒤 알림함 알림이 생성된다")
     @Test
-    void doNotCreateNotificationForDisabledHost() {
+    void createNotificationEvenWhenPushDisabled() {
         // given
         Host host = hostRepository.save(HostFixture.createHost());
         notificationSettingRepository.save(NotificationSettingFixture.createDisabled(host));
-        NotificationRequestedEvent event =
-            new NotificationRequestedEvent(NotificationFixture.createCommandWithHost(host));
-
-        // when
-        assertThatCode(() -> transactionTemplate.executeWithoutResult(status -> eventPublisher.publishEvent(event)))
-            .doesNotThrowAnyException();
-
-        // then
-        assertThat(countNotifications()).isZero();
-    }
-
-    @DisplayName("알림 설정을 켠 호스트에게 요청하면 커밋 뒤 알림이 생성된다")
-    @Test
-    void createNotificationForEnabledHost() {
-        // given
-        Host host = hostRepository.save(HostFixture.createHost());
-        notificationSettingRepository.save(NotificationSettingFixture.createEnabled(host));
         NotificationRequestedEvent event =
             new NotificationRequestedEvent(NotificationFixture.createCommandWithHost(host));
 
@@ -200,20 +186,5 @@ class NotificationRequestedEventListenerTest extends TestOnContainer {
             () -> assertThat(countNotifications()).isEqualTo(1),
             () -> assertThat(notificationHostId()).isEqualTo(host.getId())
         );
-    }
-
-    @DisplayName("알림 설정 행이 없는 호스트에게 요청하면 허용으로 간주해 알림이 생성된다")
-    @Test
-    void createNotificationForHostWithoutSetting() {
-        // given
-        Host host = hostRepository.save(HostFixture.createHost());
-        NotificationRequestedEvent event =
-            new NotificationRequestedEvent(NotificationFixture.createCommandWithHost(host));
-
-        // when
-        transactionTemplate.executeWithoutResult(status -> eventPublisher.publishEvent(event));
-
-        // then
-        assertThat(countNotifications()).isEqualTo(1);
     }
 }

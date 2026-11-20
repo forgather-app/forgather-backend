@@ -30,10 +30,9 @@ import lombok.RequiredArgsConstructor;
  * <p>
  * 단건 알림 생성은 모두 {@link com.forgather.domain.notification.event.NotificationRequestedEvent}를 발행해 리스너를 거친다.
  * 스케줄러도 같다. 트랜잭션 밖에서 발행하면 fallbackExecution으로 즉시 처리되고, 이벤트마다 새 트랜잭션이 열리며
- * 중복 키 충돌은 건너뛴다. 수신 호스트의 알림 설정 게이트가 리스너에 있으므로 {@link #create(NotificationCommand)}를
- * 직접 호출하면 설정을 우회한다. 직접 호출은 리스너와 테스트만 한다.
- * 호스트 전원 대상의 대량 생성(공지 fan-out)은 이 메서드 대신 {@code INSERT … SELECT}를 쓰고,
- * 그 WHERE에서 설정이 꺼진 호스트를 제외한다.
+ * 중복 키 충돌은 건너뛴다. 직접 호출은 리스너와 테스트만 한다.
+ * 호스트의 알림 설정은 푸시 수신 여부만 뜻하므로 알림 생성 단계에서는 확인하지 않는다. 알림함 알림은 항상 만든다.
+ * 호스트 전원 대상의 대량 생성(공지 fan-out)은 이 메서드 대신 {@code INSERT … SELECT}를 쓴다.
  * <p>
  * 의존 방향은 기능 도메인 → notification → host이며, 이 서비스는 호출자를 모른다.
  */

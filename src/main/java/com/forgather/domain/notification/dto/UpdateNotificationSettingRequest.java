@@ -5,8 +5,8 @@ import jakarta.validation.constraints.NotNull;
 
 public record UpdateNotificationSettingRequest(
 
-    @Schema(description = "알림 수신 여부", example = "false")
+    @Schema(description = "푸시 알림 수신 여부", example = "false")
     @NotNull
-    Boolean enabled
+    Boolean pushEnabled
 ) {
 }

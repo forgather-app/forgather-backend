@@ -34,12 +34,12 @@ public interface NotificationSettingRepository {
     @Modifying(flushAutomatically = true)
     @Query("""
         UPDATE NotificationSetting s
-        SET s.enabled = :enabled, s.updatedAt = :now
+        SET s.pushEnabled = :pushEnabled, s.updatedAt = :now
         WHERE s.host = :host
         """)
-    int updateEnabledByHost(
+    int updatePushEnabledByHost(
         @Param("host") Host host,
-        @Param("enabled") boolean enabled,
+        @Param("pushEnabled") boolean pushEnabled,
         @Param("now") LocalDateTime now
     );
 }

@@ -15,20 +15,20 @@ import com.forgather.global.exception.BaseNullPointerException;
 
 class NotificationSettingTest {
 
-    @DisplayName("호스트와 알림 수신 여부로 생성하면 두 값이 그대로 저장된다")
+    @DisplayName("호스트와 푸시 알림 수신 여부로 생성하면 두 값이 그대로 저장된다")
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void createSetting(boolean enabled) {
+    void createSetting(boolean pushEnabled) {
         // given
         Host host = HostFixture.createHost();
 
         // when
-        NotificationSetting setting = new NotificationSetting(host, enabled);
+        NotificationSetting setting = new NotificationSetting(host, pushEnabled);
 
         // then
         assertAll(
             () -> assertThat(setting.getHost()).isSameAs(host),
-            () -> assertThat(setting.isEnabled()).isEqualTo(enabled)
+            () -> assertThat(setting.isPushEnabled()).isEqualTo(pushEnabled)
         );
     }
 

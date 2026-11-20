@@ -21,7 +21,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 호스트별 알림 설정. 호스트와 1:1이며, 행이 없으면 허용으로 간주한다.
+ * 호스트별 푸시 알림 수신 설정. 호스트와 1:1이며, 행이 없으면 허용으로 간주한다.
+ * 알림함(인앱) 알림은 이 설정과 무관하게 항상 만들어지고, 이 설정은 푸시를 보낼지만 결정한다.
  * 삭제 경로가 없는 설정 행이라 soft delete하지 않고, 탈퇴 시에도 행을 남긴다.
  * <p>
  * 상태 변경 메서드를 두지 않는다. 기존 행의 갱신은 리포지토리의 명시적 UPDATE로만 한다.
@@ -50,15 +51,15 @@ public class NotificationSetting extends BaseTimeEntity {
     private Host host;
 
     /**
-     * 알림 수신 여부. 꺼져 있으면 알림을 만들지 않는다.
+     * 푸시 알림 수신 여부. 꺼져 있어도 알림함 알림은 만들어지고, 푸시만 보내지 않는다.
      */
-    @Column(name = "enabled", nullable = false)
-    private boolean enabled;
+    @Column(name = "push_enabled", nullable = false)
+    private boolean pushEnabled;
 
-    public NotificationSetting(Host host, boolean enabled) {
+    public NotificationSetting(Host host, boolean pushEnabled) {
         validateHost(host);
         this.host = host;
-        this.enabled = enabled;
+        this.pushEnabled = pushEnabled;
     }
 
     private void validateHost(Host host) {

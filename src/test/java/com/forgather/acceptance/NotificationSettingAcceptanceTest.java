@@ -50,13 +50,13 @@ class NotificationSettingAcceptanceTest extends AcceptanceTest {
         accessToken = jwtTokenProvider.generateAccessToken(host.getId());
     }
 
-    private Map<String, Object> updateRequest(Object enabled) {
+    private Map<String, Object> updateRequest(Object pushEnabled) {
         Map<String, Object> body = new HashMap<>();
-        body.put("enabled", enabled);
+        body.put("pushEnabled", pushEnabled);
         return body;
     }
 
-    private boolean getEnabled() {
+    private boolean getPushEnabled() {
         return RestAssuredMockMvc.given()
             .postProcessors(withAccessToken(accessToken))
             .when()
@@ -65,7 +65,7 @@ class NotificationSettingAcceptanceTest extends AcceptanceTest {
             .statusCode(HttpStatus.OK.value())
             .extract()
             .jsonPath()
-            .getBoolean("data.enabled");
+            .getBoolean("data.pushEnabled");
     }
 
     private ValidatableMockMvcResponse update(Map<String, Object> body) {
@@ -83,33 +83,33 @@ class NotificationSettingAcceptanceTest extends AcceptanceTest {
         return count == null ? 0 : count;
     }
 
-    @DisplayName("설정을 변경한 적이 없으면 알림 설정 조회에 true를 응답하고 설정 행을 만들지 않는다")
+    @DisplayName("설정을 변경한 적이 없으면 푸시 알림 설정 조회에 true를 응답하고 설정 행을 만들지 않는다")
     @Test
     void getDefaultSetting() {
         // when
-        boolean enabled = getEnabled();
+        boolean pushEnabled = getPushEnabled();
 
         // then
         assertAll(
-            () -> assertThat(enabled).isTrue(),
+            () -> assertThat(pushEnabled).isTrue(),
             () -> assertThat(countSettings()).isZero()
         );
     }
 
-    @DisplayName("알림 설정을 끄면 200과 함께 변경한 값을 응답하고 이후 조회에도 반영된다")
+    @DisplayName("푸시 알림 설정을 끄면 200과 함께 변경한 값을 응답하고 이후 조회에도 반영된다")
     @Test
     void disableSetting() {
         // when
         update(updateRequest(false))
             .statusCode(HttpStatus.OK.value())
             .body("code", equalTo("SUCCESS"))
-            .body("data.enabled", equalTo(false));
+            .body("data.pushEnabled", equalTo(false));
 
         // then
-        assertThat(getEnabled()).isFalse();
+        assertThat(getPushEnabled()).isFalse();
     }
 
-    @DisplayName("끈 알림 설정을 다시 켜면 이후 조회에 true가 반영되고 설정 행은 하나로 유지된다")
+    @DisplayName("끈 푸시 알림 설정을 다시 켜면 이후 조회에 true가 반영되고 설정 행은 하나로 유지된다")
     @Test
     void enableSettingAgain() {
         // given
@@ -118,27 +118,27 @@ class NotificationSettingAcceptanceTest extends AcceptanceTest {
         // when
         update(updateRequest(true))
             .statusCode(HttpStatus.OK.value())
-            .body("data.enabled", equalTo(true));
+            .body("data.pushEnabled", equalTo(true));
 
         // then
         assertAll(
-            () -> assertThat(getEnabled()).isTrue(),
+            () -> assertThat(getPushEnabled()).isTrue(),
             () -> assertThat(countSettings()).isEqualTo(1)
         );
     }
 
-    @DisplayName("알림 수신 여부가 없으면 400 VALIDATION_FAILED로 응답한다")
+    @DisplayName("푸시 알림 수신 여부가 없으면 400 VALIDATION_FAILED로 응답한다")
     @Test
-    void rejectMissingEnabled() {
+    void rejectMissingPushEnabled() {
         // when & then
         update(updateRequest(null))
             .statusCode(HttpStatus.BAD_REQUEST.value())
             .body("code", equalTo("VALIDATION_FAILED"));
     }
 
-    @DisplayName("알림 수신 여부가 불리언으로 읽히지 않는 값이면 400 BAD_REQUEST로 응답한다")
+    @DisplayName("푸시 알림 수신 여부가 불리언으로 읽히지 않는 값이면 400 BAD_REQUEST로 응답한다")
     @Test
-    void rejectNonBooleanEnabled() {
+    void rejectNonBooleanPushEnabled() {
         // when & then
         update(updateRequest("yes"))
             .statusCode(HttpStatus.BAD_REQUEST.value())
