@@ -27,6 +27,18 @@ public class NotificationFixture {
         );
     }
 
+    public static Notification createReadNotificationWithHost(Host host) {
+        Notification notification = createNotificationWithHost(host);
+        notification.read();
+        return notification;
+    }
+
+    public static Notification createDeletedNotificationWithHost(Host host) {
+        Notification notification = createNotificationWithHost(host);
+        notification.delete();
+        return notification;
+    }
+
     public static Notification createNotificationWithDedupeKey(String dedupeKey) {
         return Notification.of(
             HostFixture.createHost(),
