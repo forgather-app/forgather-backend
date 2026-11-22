@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.equalTo;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -176,7 +177,7 @@ class SpacePdfExportAcceptanceTest extends AcceptanceTest {
         LocalDateTime now = LocalDateTime.parse(time);
         LocalDate today = now.toLocalDate();
         currentDateTime.when(LocalDateTime::now).thenReturn(now);
-        currentDate.when(LocalDate::now).thenReturn(today);
+        currentDate.when(() -> LocalDate.now(ZoneId.of("Asia/Seoul"))).thenReturn(today);
     }
 
     private Space createSpace(Host owner, String code) {

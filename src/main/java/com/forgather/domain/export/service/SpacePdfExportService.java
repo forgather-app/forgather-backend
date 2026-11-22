@@ -1,6 +1,7 @@
 package com.forgather.domain.export.service;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -87,7 +88,7 @@ public class SpacePdfExportService {
     }
 
     private long countTodayRequests(Long hostId) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
         return exportRepository.countByHostIdAndCreatedAtRange(hostId,
             today.atStartOfDay(), today.plusDays(1).atStartOfDay());
     }
