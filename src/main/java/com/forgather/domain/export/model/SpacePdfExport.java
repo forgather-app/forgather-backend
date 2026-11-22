@@ -33,21 +33,26 @@ public class SpacePdfExport extends BaseTimeEntity {
     @Column(nullable = false, length = 320)
     private String email;
 
-    public SpacePdfExport(String jobId, String snapshot, String email) {
+    @Column(name = "host_id")
+    private Long hostId;
+
+    public SpacePdfExport(String jobId, String snapshot, String email, Long hostId) {
         validateRequiredField(jobId, "작업 ID");
         validateRequiredField(snapshot, "스냅샷");
         validateRequiredField(email, "이메일");
+        validateRequiredField(hostId, "요청자 ID");
         this.jobId = jobId;
         this.snapshot = snapshot;
         this.email = email;
+        this.hostId = hostId;
     }
 
-    private void validateRequiredField(String value, String fieldName) {
+    private void validateRequiredField(Object value, String fieldName) {
         if (value == null) {
             throw new BaseNullPointerException("PDF 추출 항목(%s)에 null을 입력할 수 없습니다.".formatted(fieldName),
                 HttpStatus.BAD_REQUEST);
         }
-        if (value.isBlank()) {
+        if (value instanceof String text && text.isBlank()) {
             throw new BaseException("PDF 추출 항목(%s)에 공백만 입력할 수 없습니다.".formatted(fieldName));
         }
     }

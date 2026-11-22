@@ -24,13 +24,14 @@ class SpacePdfExportTest {
     @Test
     void createsExport() {
         // given & when
-        SpacePdfExport export = new SpacePdfExport(JOB_ID, SNAPSHOT, EMAIL);
+        SpacePdfExport export = new SpacePdfExport(JOB_ID, SNAPSHOT, EMAIL, 1L);
 
         // then
         assertAll(
             () -> assertThat(export.getJobId()).isEqualTo(JOB_ID),
             () -> assertThat(export.getSnapshot()).isEqualTo(SNAPSHOT),
-            () -> assertThat(export.getEmail()).isEqualTo(EMAIL)
+            () -> assertThat(export.getEmail()).isEqualTo(EMAIL),
+            () -> assertThat(export.getHostId()).isEqualTo(1L)
         );
     }
 
@@ -39,11 +40,13 @@ class SpacePdfExportTest {
     void rejectsNullFields() {
         // when & then
         assertAll(
-            () -> assertThatThrownBy(() -> new SpacePdfExport(null, SNAPSHOT, EMAIL))
+            () -> assertThatThrownBy(() -> new SpacePdfExport(null, SNAPSHOT, EMAIL, 1L))
                 .isExactlyInstanceOf(BaseNullPointerException.class),
-            () -> assertThatThrownBy(() -> new SpacePdfExport(JOB_ID, null, EMAIL))
+            () -> assertThatThrownBy(() -> new SpacePdfExport(JOB_ID, null, EMAIL, 1L))
                 .isExactlyInstanceOf(BaseNullPointerException.class),
-            () -> assertThatThrownBy(() -> new SpacePdfExport(JOB_ID, SNAPSHOT, null))
+            () -> assertThatThrownBy(() -> new SpacePdfExport(JOB_ID, SNAPSHOT, null, 1L))
+                .isExactlyInstanceOf(BaseNullPointerException.class),
+            () -> assertThatThrownBy(() -> new SpacePdfExport(JOB_ID, SNAPSHOT, EMAIL, null))
                 .isExactlyInstanceOf(BaseNullPointerException.class)
         );
     }
@@ -54,11 +57,11 @@ class SpacePdfExportTest {
     void rejectsBlankFields(String blank) {
         // when & then
         assertAll(
-            () -> assertThatThrownBy(() -> new SpacePdfExport(blank, SNAPSHOT, EMAIL))
+            () -> assertThatThrownBy(() -> new SpacePdfExport(blank, SNAPSHOT, EMAIL, 1L))
                 .isExactlyInstanceOf(BaseException.class),
-            () -> assertThatThrownBy(() -> new SpacePdfExport(JOB_ID, blank, EMAIL))
+            () -> assertThatThrownBy(() -> new SpacePdfExport(JOB_ID, blank, EMAIL, 1L))
                 .isExactlyInstanceOf(BaseException.class),
-            () -> assertThatThrownBy(() -> new SpacePdfExport(JOB_ID, SNAPSHOT, blank))
+            () -> assertThatThrownBy(() -> new SpacePdfExport(JOB_ID, SNAPSHOT, blank, 1L))
                 .isExactlyInstanceOf(BaseException.class)
         );
     }

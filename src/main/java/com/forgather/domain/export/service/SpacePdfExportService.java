@@ -1,5 +1,7 @@
 package com.forgather.domain.export.service;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -18,6 +20,7 @@ import com.forgather.domain.export.dto.ExportSpacePdfRequest;
 import com.forgather.domain.export.dto.ExportSpacePdfResponse;
 import com.forgather.domain.export.dto.SpaceArchive;
 import com.forgather.domain.export.dto.SpacePdfExportPayload;
+import com.forgather.domain.export.dto.SpacePdfExportUsageResponse;
 import com.forgather.domain.export.event.SpacePdfExportRequested;
 import com.forgather.domain.export.model.SpacePdfExport;
 import com.forgather.domain.export.repository.SpacePdfExportRepository;
@@ -43,6 +46,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SpacePdfExportService {
 
+    private static final long DAILY_LIMIT = 5L;
+
     private final SpaceRepository spaceRepository;
     private final SpaceHostRepository spaceHostRepository;
     private final GuestBookCardRepository cardRepository;
@@ -61,12 +66,31 @@ public class SpacePdfExportService {
         Space space = spaceRepository.getByCodeAndDeletedAtIsNullOrThrow(spaceCode);
         spaceHostRepository.getBySpaceAndHostAndDeletedAtIsNullOrThrow(space, host);
         properties.validateConfigured();
+        if (countTodayRequests(host.getId()) >= DAILY_LIMIT) {
+            throw new BaseException("오늘 PDF 추출 요청 횟수를 모두 사용했습니다. 하루 최대 %d회 요청할 수 있습니다."
+                .formatted(DAILY_LIMIT), HttpStatus.BAD_REQUEST);
+        }
         SpaceArchive archive = createArchive(space, host);
         String jobId = UUID.randomUUID().toString();
-        exportRepository.save(new SpacePdfExport(jobId, serialize(archive), request.email()));
+        exportRepository.save(new SpacePdfExport(jobId, serialize(archive), request.email(), host.getId()));
         Outbox outbox = outboxService.save(OutboxType.SPACE_PDF_EXPORT, new SpacePdfExportPayload(jobId));
         eventPublisher.publishEvent(new SpacePdfExportRequested(outbox.getId()));
         return new ExportSpacePdfResponse(jobId);
+    }
+
+    @Transactional(readOnly = true)
+    public SpacePdfExportUsageResponse getUsage(Host host) {
+        if (host == null) {
+            throw new UnauthorizedException("로그인이 필요합니다.");
+        }
+        long count = countTodayRequests(host.getId());
+        return new SpacePdfExportUsageResponse(count, DAILY_LIMIT);
+    }
+
+    private long countTodayRequests(Long hostId) {
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        return exportRepository.countByHostIdAndCreatedAtRange(hostId,
+            today.atStartOfDay(), today.plusDays(1).atStartOfDay());
     }
 
     private SpaceArchive createArchive(Space space, Host host) {
