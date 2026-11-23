@@ -17,8 +17,10 @@ import org.springframework.transaction.support.TransactionTemplate;
 import com.forgather.container.TestOnContainer;
 import com.forgather.domain.host.model.Host;
 import com.forgather.domain.host.repository.HostRepository;
+import com.forgather.domain.notification.repository.NotificationSettingRepository;
 import com.forgather.fixture.HostFixture;
 import com.forgather.fixture.NotificationFixture;
+import com.forgather.fixture.NotificationSettingFixture;
 
 /**
  * 기능 트랜잭션과 알림 생성 트랜잭션의 분리를 검증한다.
@@ -42,6 +44,9 @@ class NotificationRequestedEventListenerTest extends TestOnContainer {
 
     @Autowired
     private HostRepository hostRepository;
+
+    @Autowired
+    private NotificationSettingRepository notificationSettingRepository;
 
     private long countNotifications() {
         Long count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM notification", Long.class);
@@ -158,6 +163,28 @@ class NotificationRequestedEventListenerTest extends TestOnContainer {
         assertAll(
             () -> assertThat(countNotifications()).isEqualTo(1),
             () -> assertThat(notificationHostId()).isEqualTo(hostId[0])
+        );
+    }
+
+    /**
+     * 알림 설정은 푸시 수신 여부만 뜻한다. 알림함 알림은 설정과 무관하게 만들어져야 한다.
+     */
+    @DisplayName("푸시 알림 설정을 끈 호스트에게 요청해도 커밋 뒤 알림함 알림이 생성된다")
+    @Test
+    void createNotificationEvenWhenPushDisabled() {
+        // given
+        Host host = hostRepository.save(HostFixture.createHost());
+        notificationSettingRepository.save(NotificationSettingFixture.createDisabled(host));
+        NotificationRequestedEvent event =
+            new NotificationRequestedEvent(NotificationFixture.createCommandWithHost(host));
+
+        // when
+        transactionTemplate.executeWithoutResult(status -> eventPublisher.publishEvent(event));
+
+        // then
+        assertAll(
+            () -> assertThat(countNotifications()).isEqualTo(1),
+            () -> assertThat(notificationHostId()).isEqualTo(host.getId())
         );
     }
 }

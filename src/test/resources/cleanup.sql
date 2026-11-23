@@ -15,6 +15,7 @@ TRUNCATE TABLE host_kakao;
 TRUNCATE TABLE host_profile_photo;
 TRUNCATE TABLE notification;
 TRUNCATE TABLE notification_device;
+TRUNCATE TABLE notification_setting;
 TRUNCATE TABLE space;
 TRUNCATE TABLE exhibition_time;
 TRUNCATE TABLE exhibition_photo;
