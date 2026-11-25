@@ -13,6 +13,8 @@ TRUNCATE TABLE space_host_map;
 TRUNCATE TABLE host_apple;
 TRUNCATE TABLE host_kakao;
 TRUNCATE TABLE host_profile_photo;
+TRUNCATE TABLE notification;
+TRUNCATE TABLE notification_device;
 TRUNCATE TABLE space;
 TRUNCATE TABLE exhibition_time;
 TRUNCATE TABLE exhibition_photo;
@@ -24,5 +26,6 @@ TRUNCATE TABLE admin_user;
 TRUNCATE TABLE social_revoke_fail_log;
 TRUNCATE TABLE outbox;
 TRUNCATE TABLE space_pdf_export;
+TRUNCATE TABLE space_pdf_export_failure;
 
 SET FOREIGN_KEY_CHECKS = 1;

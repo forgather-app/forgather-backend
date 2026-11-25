@@ -1,0 +1,21 @@
+CREATE TABLE space_pdf_export_failure (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    job_id VARCHAR(255) NULL,
+    stage VARCHAR(16) NOT NULL,
+    function_arn VARCHAR(512) COLLATE utf8mb4_bin NOT NULL,
+    request_id VARCHAR(64) COLLATE utf8mb4_bin NOT NULL,
+    failure_condition VARCHAR(64) NOT NULL,
+    approximate_invoke_count INT NULL,
+    error_type VARCHAR(255) NULL,
+    error_message MEDIUMTEXT NULL,
+    raw_event JSON NOT NULL,
+    processing_status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    processing_note TEXT NULL,
+    failed_at DATETIME(6) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+    deleted_at DATETIME(6) NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_failure_invocation (function_arn, request_id),
+    KEY idx_failure_time (failed_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

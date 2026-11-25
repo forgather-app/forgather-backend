@@ -96,6 +96,8 @@ public class WebConfig implements WebMvcConfigurer {
             .setViewName("admin/login");
         registry.addViewController("/view/admin/spaces")
             .setViewName("admin/spaces/list");
+        registry.addViewController("/view/admin/pdf-export-failures")
+            .setViewName("admin/pdf-export-failures/list");
         registry.addViewController("/view/admin/products")
             .setViewName("admin/products/list");
         registry.addViewController("/view/admin/notices")

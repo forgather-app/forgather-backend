@@ -27,13 +27,22 @@ public class SwaggerConfig {
 
     @Bean
     public OperationCustomizer clientTypeHeaderCustomizer() {
-        return (operation, handlerMethod) -> operation.addParametersItem(
-            new HeaderParameter()
-                .name(ClientVersionInterceptor.CLIENT_TYPE_HEADER)
-                .description("클라이언트 타입")
-                .required(true)
-                .schema(new StringSchema()._default(ClientType.WEB.name()))
-        );
+        return (operation, handlerMethod) -> {
+            boolean hasClientTypeHeader = operation.getParameters() != null
+                && operation.getParameters().stream().anyMatch(parameter ->
+                    "header".equals(parameter.getIn())
+                        && ClientVersionInterceptor.CLIENT_TYPE_HEADER.equals(parameter.getName()));
+            if (hasClientTypeHeader) {
+                return operation;
+            }
+            return operation.addParametersItem(
+                new HeaderParameter()
+                    .name(ClientVersionInterceptor.CLIENT_TYPE_HEADER)
+                    .description("클라이언트 타입")
+                    .required(true)
+                    .schema(new StringSchema()._default(ClientType.WEB.name()))
+            );
+        };
     }
 
     @Bean
